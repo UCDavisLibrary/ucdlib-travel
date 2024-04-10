@@ -1,0 +1,47 @@
+version: '3'
+services:
+  app:
+    image: {{APP_IMAGE_NAME_TAG}}
+    env_file:
+      - .env
+    ports:
+      - ${APP_HOST_PORT:-{{APP_HOST_PORT}}}:${APP_CONTAINER_PORT:-{{APP_CONTAINER_PORT}}}
+    depends_on:
+      - db
+    restart: always
+    command: ./start-server.sh
+  init:
+    image: {{APP_IMAGE_NAME_TAG}}
+    env_file:
+      - .env
+    depends_on:
+      - db
+    environment:
+      GOOGLE_APPLICATION_CREDENTIALS: /etc/service-account.json
+      GC_BACKUP_BUCKET: {{GC_BACKUP_BUCKET}}
+      BACKUP_FILE_NAME: {{BACKUP_FILE_NAME}}
+    volumes:
+      - ../gc-reader-key.json:/etc/service-account.json
+    command: ./deploy-utils/init/init.sh
+  backup:
+    image: {{APP_IMAGE_NAME_TAG}}
+    env_file:
+      - .env
+    depends_on:
+      - db
+    environment:
+      GOOGLE_APPLICATION_CREDENTIALS: /etc/service-account.json
+      GC_BACKUP_BUCKET: {{GC_BACKUP_BUCKET}}
+      BACKUP_FILE_NAME: {{BACKUP_FILE_NAME}}
+    volumes:
+      - ../gc-writer-key.json:/etc/service-account.json
+    command: ./deploy-utils/backup/entrypoint.sh
+  db:
+    image: {{POSTGRES_IMAGE_NAME_TAG}}
+    env_file:
+      - .env
+    restart: always
+    volumes:
+      - db-data:/var/lib/postgresql/data
+volumes:
+  db-data:

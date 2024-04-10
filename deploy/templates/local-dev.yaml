@@ -1,0 +1,80 @@
+version: '3'
+services:
+  app:
+    image: {{APP_IMAGE_NAME_TAG}}
+    env_file:
+      - .env
+    ports:
+      - ${APP_HOST_PORT:-{{APP_HOST_PORT}}}:${APP_CONTAINER_PORT:-{{APP_CONTAINER_PORT}}}
+    depends_on:
+      - db
+    environment:
+      APP_ENV: ${APP_ENV:-dev}
+      PGUSER: 'postgres'
+      PGHOST: 'db'
+      PGDATABASE: 'postgres'
+      PGPASSWORD: 'localhost'
+      PGPORT: 5432
+    volumes:
+      - ../../src/api:/app/api
+      - ../../src/client:/app/client
+      - ../../src/lib:/app/lib
+      - ../../src/index.js:/app/index.js
+      - ../../src/package.json:/app/package.json
+      - ../../src/package-lock.json:/app/package-lock.json
+    command: ./start-server.sh
+  init:
+    image: {{APP_IMAGE_NAME_TAG}}
+    env_file:
+      - .env
+    depends_on:
+      - db
+    environment:
+      # RUN_INIT: true
+      INIT_DATA_ENV: ${INIT_DATA_ENV:-localhost}
+      PGUSER: 'postgres'
+      PGHOST: 'db'
+      PGDATABASE: 'postgres'
+      PGPASSWORD: 'localhost'
+      PGPORT: 5432
+      GOOGLE_APPLICATION_CREDENTIALS: /etc/service-account.json
+      GC_BACKUP_BUCKET: {{GC_BACKUP_BUCKET}}
+      BACKUP_FILE_NAME: {{BACKUP_FILE_NAME}}
+    volumes:
+      - ../utils/init:/app/deploy-utils/init
+      - ../../gc-reader-key.json:/etc/service-account.json
+    command: ./deploy-utils/init/init.sh
+  backup:
+    image: {{APP_IMAGE_NAME_TAG}}
+    env_file:
+      - .env
+    depends_on:
+      - db
+    environment:
+      # RUN_BACKUP: true
+      BACKUP_DATA_ENV: ${BACKUP_DATA_ENV:-localhost}
+      PGUSER: 'postgres'
+      PGHOST: 'db'
+      PGDATABASE: 'postgres'
+      PGPASSWORD: 'localhost'
+      PGPORT: 5432
+      GOOGLE_APPLICATION_CREDENTIALS: /etc/service-account.json
+      GC_BACKUP_BUCKET: {{GC_BACKUP_BUCKET}}
+      BACKUP_FILE_NAME: {{BACKUP_FILE_NAME}}
+    volumes:
+      - ../utils/backup:/app/deploy-utils/backup
+      - ../../gc-writer-key.json:/etc/service-account.json
+    command: ./deploy-utils/backup/entrypoint.sh
+  db:
+    image: {{POSTGRES_IMAGE_NAME_TAG}}
+    environment:
+      POSTGRES_PASSWORD: localhost
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ../../deploy/db-entrypoint:/docker-entrypoint-initdb.d
+  adminer:
+    image: {{ADMINER_IMAGE_NAME_TAG}}
+    ports:
+      - ${ADMINER_HOST_PORT:-8080}:8080
+volumes:
+  db-data:
