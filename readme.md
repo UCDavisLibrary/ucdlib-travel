@@ -1,4 +1,6 @@
-# Simple Single Page Application (SPA)
+# UCDLIB Travel APP
+
+TODO: DOCUMENTATION
 
 This template is for a [cork-app-utils](https://github.com/UCDavisLibrary/cork-app-utils) SPA with an Express server without any dependencies on other repositories.
 
