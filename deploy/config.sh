@@ -15,10 +15,8 @@ fi
 # this when you cut a new version of the app!
 APP_VERSION=v0.0.9.${BUILD_NUM}
 
-# TODO: change to match name of your app
-# This will be used to name the container image among other things
-# So make it descriptive and unique
-APP_SLUG=simple-spa
+# This is used anywhere a name is needed for the app
+APP_SLUG=ucdlib-travel
 
 # App url and ports
 APP_HOST=localhost:3000
@@ -29,7 +27,7 @@ APP_CONTAINER_PORT=3000
 # Repository tags/branchs
 # Tags should always be used for production deployments
 # Branches can be used for development deployments
-REPO_TAG=main
+REPO_TAG=dev
 
 # Dependency tags/branches
 # TODO: change these versions to match current LTS versions

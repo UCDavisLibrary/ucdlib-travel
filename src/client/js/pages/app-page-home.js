@@ -20,14 +20,6 @@ export default class AppPageHome extends Mixin(LitElement)
   }
 
   /**
-   * @description Disables the shadowdom
-   * @returns
-   */
-  createRenderRoot() {
-    return this;
-  }
-
-  /**
    * @description bound to AppStateModel app-state-update event
    * @param {Object} state - AppStateModel state
    */

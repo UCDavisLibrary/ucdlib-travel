@@ -1,20 +1,17 @@
 version: '3'
 services:
   app:
-    image: gcr.io/digital-ucdavis-edu/simple-spa:main
+    image: gcr.io/digital-ucdavis-edu/ucdlib-travel:dev
     env_file:
       - .env
     ports:
       - ${APP_HOST_PORT:-3000}:${APP_CONTAINER_PORT:-3000}
     depends_on:
       - db
-    deploy:
-      restart_policy:
-        condition: on-failure
-        max_attempts: 5
+    restart: always
     command: ./start-server.sh
   init:
-    image: gcr.io/digital-ucdavis-edu/simple-spa:main
+    image: gcr.io/digital-ucdavis-edu/ucdlib-travel:dev
     env_file:
       - .env
     depends_on:
@@ -24,10 +21,10 @@ services:
       GC_BACKUP_BUCKET: 
       BACKUP_FILE_NAME: db.sql.gz
     volumes:
-      - ../../gc-reader-key.json:/etc/service-account.json
+      - ../gc-reader-key.json:/etc/service-account.json
     command: ./deploy-utils/init/init.sh
   backup:
-    image: gcr.io/digital-ucdavis-edu/simple-spa:main
+    image: gcr.io/digital-ucdavis-edu/ucdlib-travel:dev
     env_file:
       - .env
     depends_on:
@@ -37,16 +34,13 @@ services:
       GC_BACKUP_BUCKET: 
       BACKUP_FILE_NAME: db.sql.gz
     volumes:
-      - ../../gc-writer-key.json:/etc/service-account.json
+      - ../gc-writer-key.json:/etc/service-account.json
     command: ./deploy-utils/backup/entrypoint.sh
   db:
     image: postgres:15.3
     env_file:
       - .env
-    deploy:
-      restart_policy:
-        condition: on-failure
-        max_attempts: 5
+    restart: always
     volumes:
       - db-data:/var/lib/postgresql/data
 volumes:

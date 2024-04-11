@@ -1,25 +1,19 @@
-# UCDLIB Travel APP
+# UC Davis Library Travel, Training, and Professional Development Approval Application
 
 TODO: DOCUMENTATION
 
-This template is for a [cork-app-utils](https://github.com/UCDavisLibrary/cork-app-utils) SPA with an Express server without any dependencies on other repositories.
+## Local Development
 
-It uses 
- - ucdlib-theme for SPA themed elements
- - Postgres for a database
- - Google Cloud for devops procedures such as building, backup, and data initialization
- - OIDC (keycloak) for auth
+To get the app up and running on your machine:
 
-## Setup
+1. `cd deploy`
+2. `./cmds/init-local-dev.sh`
+3. `./cmds/build-local-dev.sh`
+4. `./cmds/generate-deployment-files.sh`
+5. A directory called `ucdlib-travel-local-dev` will have been created.
+6. Enter it, and run `docker compose up`
 
-To use this template when starting your own application:
-1. Clone/checkout this repo.
-2. `cp -R ./simple-spa path/to/your/app`
-3. Search for `TODO:` in the project, and follow corresponding instructions
-4. Follow the Local Development section below to get your app up and running.
-5. Clean up your repository... replace this readme, delete todos, etc.
-6. When setting your production env file, make sure to include the [COMPOSE_PROJECT_NAME](https://docs.docker.com/compose/environment-variables/envvars/#compose_project_name) variable. Otherwise, your services will have generic names like `deploy-db-1`. You could also change the name of the deploy directory.
-
+To start the JS/SCSS watch process run `cd src/client && npm run watch`
 
 ## Directory Structure
 
@@ -52,19 +46,6 @@ src:
           - utils: Any shared code.
     - index.js: Entry point for application.
 ```
-
-## Local Development
-
-To get the app up and running on your machine:
-
-1. `cd deploy`
-2. `./cmds/init-local-dev.sh`
-3. `./cmds/build-local-dev.sh`
-4. `./cmds/generate-deployment-files.sh`
-5. A directory called `$APP_SLUG-local-dev` will have been created.
-6. Enter it, and run `docker compose up`
-
-To start the JS/SCSS watch process run `cd src/client && npm run watch`
 
 ## Backup/Init Utilities
 
