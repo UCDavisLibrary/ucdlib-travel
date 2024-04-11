@@ -35,6 +35,13 @@ export default class AccessToken {
   }
 
   /**
+   * @description Returns true if user has report access to this client
+   */
+    get hasReportAccess(){
+      return this._inRoleList('report-access');
+  }
+
+  /**
    * @description Returns list of roles assigned to user for this client
    */
   get resourceAccessRoles(){

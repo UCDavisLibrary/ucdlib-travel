@@ -9,7 +9,7 @@ class ServerConfig {
     this.env = process?.env?.APP_ENV === 'dev' ? 'dev' : 'prod';
 
     // TODO: Replace these with your own app title
-    this.title = this.getEnv('APP_TITLE', 'UC Davis Library Simple SPA');
+    this.title = this.getEnv('APP_TITLE', 'UC Davis Library Travel App');
 
     // TODO: Replace these with the routes that your SPA should handle
     this.routes = ['foo'];
@@ -38,9 +38,9 @@ class ServerConfig {
 
       // passed to the browser-side keycloak library initialization
       keycloakJsClient: {
-        url: this.getEnv('APP_KEYCLOAK_URL', 'https://sandbox.auth.library.ucdavis.edu'),
+        url: this.getEnv('APP_KEYCLOAK_URL', 'https://auth.library.ucdavis.edu'),
         realm: this.getEnv('APP_KEYCLOAK_REALM', 'internal'),
-        clientId: this.getEnv('APP_KEYCLOAK_CLIENT_ID', 'simple-spa-client')
+        clientId: this.getEnv('APP_KEYCLOAK_CLIENT_ID', 'travel-app')
       },
       oidcScope: this.getEnv('APP_OIDC_SCOPE', 'profile roles ucd-ids'),
       serverCacheExpiration: this.getEnv('APP_SERVER_CACHE_EXPIRATION', '10 minutes')
