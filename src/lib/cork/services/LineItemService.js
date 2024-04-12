@@ -1,12 +1,12 @@
 import BaseService from "./BaseService.js";
-import FooStore from '../stores/FooStore.js';
+import LineItemStore from '../stores/LineItemStore.js';
 import { appConfig } from '../../appGlobals.js';
 
-class FooService extends BaseService {
+class LineItemService extends BaseService {
 
   constructor() {
     super();
-    this.store = FooStore;
+    this.store = LineItemStore;
   }
 
   getFoo(){
@@ -21,5 +21,5 @@ class FooService extends BaseService {
 
 }
 
-const service = new FooService();
+const service = new LineItemService();
 export default service;

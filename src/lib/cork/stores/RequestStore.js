@@ -1,6 +1,6 @@
 import {BaseStore} from '@ucd-lib/cork-app-utils';
 
-class FooStore extends BaseStore {
+class RequestStore extends BaseStore {
 
   constructor() {
     super();
@@ -41,5 +41,5 @@ class FooStore extends BaseStore {
 
 }
 
-const store = new FooStore();
+const store = new RequestStore();
 export default store;

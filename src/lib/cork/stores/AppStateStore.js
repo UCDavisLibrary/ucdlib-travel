@@ -11,7 +11,18 @@ class AppStateStoreImpl extends AppStateStore {
     // TODO: Replace these with your own default values
     this.breadcrumbs = {
       home: {text: 'Home', link: '/'},
-      foo: {text: 'Foo', link: '/foo'}
+      request: {text: 'Request', link: '/request'},
+      requestNew: {text: 'New Request', link: '/request/new'},
+      reimbursement: {text: 'Reimbursement', link: '/reimbursement'},
+      reimbursementNew: {text: 'New Reimbursement', link: '/reimbursement/new'},
+      reports: {text: 'Reports', link: '/reports'},
+      approver: {text: 'Approver', link: '/approver'},
+      employeeAllocation: {text: 'Employee Allocation', link: '/employee-allocation'},
+      employeeAllocationNew: {text: 'New Employee Allocation', link: '/employee-allocation/new'},
+      settings: {text: 'Settings', link: '/settings'},
+      lineItems: {text: 'Line Items', link: '/line-items'},
+      fundingSources: {text: 'Funding Sources', link: '/funding-sources'},
+
     };
 
     this.userProfile = {};

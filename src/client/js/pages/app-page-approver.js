@@ -1,10 +1,10 @@
 import { LitElement } from 'lit';
-import { render } from "./app-page-foo.tpl.js";
+import { render } from "./app-page-approver.tpl.js";
 import { LitCorkUtils, Mixin } from "../../../lib/appGlobals.js";
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 
 
-export default class AppPageFoo extends Mixin(LitElement)
+export default class AppPageApprover extends Mixin(LitElement)
   .with(LitCorkUtils, MainDomElement) {
 
 
@@ -19,7 +19,7 @@ export default class AppPageFoo extends Mixin(LitElement)
     this.render = render.bind(this);
     this.fooData = [];
 
-    this._injectModel('AppStateModel', 'FooModel');
+    this._injectModel('AppStateModel', 'ApproverModel');
   }
 
   /**
@@ -30,7 +30,7 @@ export default class AppPageFoo extends Mixin(LitElement)
     if ( this.id !== state.page ) return;
 
     this.AppStateModel.showLoading();
-    this.AppStateModel.setTitle('Foo');
+    this.AppStateModel.setTitle('Approver');
 
     const breadcrumbs = [
       this.AppStateModel.store.breadcrumbs.home,
@@ -49,7 +49,7 @@ export default class AppPageFoo extends Mixin(LitElement)
    */
   async getPageData(){
     const promises = [];
-    promises.push(this.FooModel.getFoo());
+    promises.push(this.ApproverModel.getFoo());
     const resolvedPromises = await Promise.all(promises);
     return resolvedPromises;
   }
@@ -65,4 +65,4 @@ export default class AppPageFoo extends Mixin(LitElement)
 
 }
 
-customElements.define('app-page-foo', AppPageFoo);
+customElements.define('app-page-approver', AppPageApprover);

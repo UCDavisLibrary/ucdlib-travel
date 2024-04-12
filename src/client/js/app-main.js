@@ -23,7 +23,18 @@ AppStateModel.init(appConfig.routes);
 
 // import data models
 // TODO: Replace with your own models
-import "../../lib/cork/models/FooModel.js";
+import "../../lib/cork/models/EmployeeModel.js";
+import "../../lib/cork/models/RequestModel.js";
+import "../../lib/cork/models/ApproverModel.js";
+import "../../lib/cork/models/ReimbursementModel.js";
+import "../../lib/cork/models/ReportsModel.js";
+import "../../lib/cork/models/SettingsModel.js";
+import "../../lib/cork/models/EmailModel.js";
+import "../../lib/cork/models/ExpenditureOptionModel.js";
+import "../../lib/cork/models/FundingSourcesModel.js";
+import "../../lib/cork/models/LineItemModel.js";
+import "../../lib/cork/models/EmployeeAllocationModel.js";
+
 
 // auth
 // TODO: If not using auth, you can remove these imports

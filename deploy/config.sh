@@ -38,7 +38,7 @@ ADMINER_TAG=4.8.1 # for local dev only
 # Container Registery
 # TODO: decide whether to use public or private container registry
 CONTAINER_REG_ORG=gcr.io/ucdlib-pubreg # public
-CONTAINER_REG_ORG=gcr.io/digital-ucdavis-edu # private
+# CONTAINER_REG_ORG=gcr.io/digital-ucdavis-edu # private
 if [[ ! -z $LOCAL_BUILD ]]; then
   CONTAINER_REG_ORG='localhost/local-dev'
 fi

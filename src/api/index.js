@@ -12,7 +12,17 @@ if ( config.auth.requireAuth ) {
 
 // TODO: add your api routes here
 // API routes are mounted at config.apiRoot
-foo(router);
+request(router);
+approver(router);
+reimbursement(router);
+reports(router);
+settings(router)
+funding_sources(router)
+line_item(router)
+employee_allocation(router)
+expenditure_option(router)
+
+
 
 export default (app) => {
   app.use(config.apiRoot, router);

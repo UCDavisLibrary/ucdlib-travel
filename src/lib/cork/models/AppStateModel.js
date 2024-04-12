@@ -58,9 +58,52 @@ class AppStateModelImpl extends AppStateModel {
     const route = this.getPathByIndex(0, update);
 
     // TODO: Replace these with your own route->pageid mappings
-    if ( route === 'foo' ){
-      p = 'foo';
+    if ( route === 'request' ){
+      p = 'request';
     }
+    else if ( route === 'request-new' ){
+      p = 'request-new';
+    }
+    else if ( route === 'request-single' ){
+      p = 'request-single';
+    }
+    else if ( route === 'reimbursement' ){
+      p = 'reimbursement';
+    }
+    else if ( route === 'reimbursement-new' ){
+      p = 'reimbursement-new';
+    }
+    else if ( route === 'reimbursement-single' ){
+      p = 'reimbursement-single';
+    }
+    else if ( route === 'reports' ){
+      p = 'reports';
+    }
+    else if ( route === 'approver' ){
+      p = 'approver';
+    }
+    else if ( route === 'approver-single' ){
+      p = 'approver-single';
+    }
+    else if ( route === 'employee-allocation-new' ){
+      p = 'employee-allocation-new';
+    }
+    else if ( route === 'employee-allocation' ){
+      p = 'employee-allocation';
+    }
+    else if ( route === 'employee-allocation-single' ){
+      p = 'employee-allocation-single';
+    }
+    else if ( route === 'settings' ){
+      p = 'settings';
+    }
+    else if ( route === 'line-items' ){
+      p = 'line-items';
+    }
+    else if ( route === 'funding-sources' ){
+      p = 'funding-sources';
+    }
+
     update.page = p;
 
   }

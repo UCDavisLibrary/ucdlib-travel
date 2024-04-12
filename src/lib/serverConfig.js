@@ -9,10 +9,10 @@ class ServerConfig {
     this.env = process?.env?.APP_ENV === 'dev' ? 'dev' : 'prod';
 
     // TODO: Replace these with your own app title
-    this.title = this.getEnv('APP_TITLE', 'UC Davis Library Simple SPA');
+    this.title = this.getEnv('APP_TITLE', 'Travel, Training, and Professional Development');
 
     // TODO: Replace these with the routes that your SPA should handle
-    this.routes = ['foo'];
+    this.routes = ['approver', 'funding-sources', 'line-items', 'reimbursement', 'reports', 'request', 'settings', 'employee-allocation', 'logout'];
 
     this.apiRoot = this.getEnv('APP_API_ROOT', '/api');
 
@@ -23,8 +23,8 @@ class ServerConfig {
 
     // TODO: Replace these with your own app slug
     this.assetFileNames = {
-      css: 'ucdlib-simple-spa.css',
-      js: 'ucdlib-simple-spa.js'
+      css: 'ucdlib-travel.css',
+      js: 'ucdlib-travel.js'
     }
 
     // sets robots meta tag to discourage search engines from indexing the site
@@ -40,7 +40,7 @@ class ServerConfig {
       keycloakJsClient: {
         url: this.getEnv('APP_KEYCLOAK_URL', 'https://sandbox.auth.library.ucdavis.edu'),
         realm: this.getEnv('APP_KEYCLOAK_REALM', 'internal'),
-        clientId: this.getEnv('APP_KEYCLOAK_CLIENT_ID', 'simple-spa-client')
+        clientId: this.getEnv('APP_KEYCLOAK_CLIENT_ID', 'ucdlib-travel-client')
       },
       oidcScope: this.getEnv('APP_OIDC_SCOPE', 'profile roles ucd-ids'),
       serverCacheExpiration: this.getEnv('APP_SERVER_CACHE_EXPIRATION', '10 minutes')

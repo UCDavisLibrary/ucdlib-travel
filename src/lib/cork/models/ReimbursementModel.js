@@ -1,16 +1,16 @@
 import {BaseModel} from '@ucd-lib/cork-app-utils';
-import FooService from '../services/FooService.js';
-import FooStore from '../stores/FooStore.js';
+import ReimbursementService from '../services/ReimbursementService.js';
+import ReimbursementStore from '../stores/ReimbursementStore.js';
 
-class FooModel extends BaseModel {
+class ReimbursementModel extends BaseModel {
 
   constructor() {
     super();
 
-    this.store = FooStore;
-    this.service = FooService;
+    this.store = ReimbursementStore;
+    this.service = ReimbursementService;
 
-    this.register('FooModel');
+    this.register('ReimbursementModel');
   }
 
   async getFoo(){
@@ -27,5 +27,5 @@ class FooModel extends BaseModel {
 
 }
 
-const model = new FooModel();
+const model = new ReimbursementModel();
 export default model;
