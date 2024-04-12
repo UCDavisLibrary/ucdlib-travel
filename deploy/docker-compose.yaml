@@ -1,7 +1,7 @@
 version: '3'
 services:
   app:
-    image: gcr.io/digital-ucdavis-edu/ucdlib-travel:dev
+    image: gcr.io/ucdlib-pubreg/ucdlib-travel:dev
     env_file:
       - .env
     ports:
@@ -11,7 +11,7 @@ services:
     restart: always
     command: ./start-server.sh
   init:
-    image: gcr.io/digital-ucdavis-edu/ucdlib-travel:dev
+    image: gcr.io/ucdlib-pubreg/ucdlib-travel:dev
     env_file:
       - .env
     depends_on:
@@ -24,7 +24,7 @@ services:
       - ../gc-reader-key.json:/etc/service-account.json
     command: ./deploy-utils/init/init.sh
   backup:
-    image: gcr.io/digital-ucdavis-edu/ucdlib-travel:dev
+    image: gcr.io/ucdlib-pubreg/ucdlib-travel:dev
     env_file:
       - .env
     depends_on:
