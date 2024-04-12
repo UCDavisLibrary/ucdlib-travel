@@ -9,7 +9,7 @@ class ServerConfig {
     this.env = process?.env?.APP_ENV === 'dev' ? 'dev' : 'prod';
 
     // TODO: Replace these with your own app title
-    this.title = this.getEnv('APP_TITLE', 'UC Davis Library Travel App');
+    this.title = this.getEnv('APP_TITLE', 'UC Davis Library Travel, Training, and Professional Development');
 
     // TODO: Replace these with the routes that your SPA should handle
     this.routes = ['foo'];

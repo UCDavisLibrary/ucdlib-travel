@@ -31,14 +31,7 @@ export default class AccessToken {
    * @description Returns true if user has admin access to this client
    */
   get hasAdminAccess(){
-    return this._inRoleList('admin-access');
-  }
-
-  /**
-   * @description Returns true if user has report access to this client
-   */
-    get hasReportAccess(){
-      return this._inRoleList('report-access');
+    return [this._inRoleList('admin-access'), this._inRoleList('report-access')];
   }
 
   /**
