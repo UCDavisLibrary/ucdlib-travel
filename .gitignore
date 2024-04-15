@@ -6,5 +6,4 @@ src/client/public/js/dist
 src/client/public/css
 gc-writer-key.json
 gc-reader-key.json
-#TODO: replace with your own local dev directory
-simple-spa-local-dev
+ucdlib-travel-local-dev
