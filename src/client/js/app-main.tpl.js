@@ -43,6 +43,7 @@ return html`
   <!-- TODO: Replace these with your own pages -->
   <ucdlib-pages id='main-pages' selected=${this.page}>
     <app-page-alt-state id=${this._notLoadedPageId} .state=${this.pageState} .errorMessage=${this.errorMessage}></app-page-alt-state>
+    <app-page-foo id='foo'></app-page-foo>
     <app-page-home id='home'></app-page-home>
     <app-page-admin id='admin'></app-page-admin>
     <app-page-approver id='approver'></app-page-approver>

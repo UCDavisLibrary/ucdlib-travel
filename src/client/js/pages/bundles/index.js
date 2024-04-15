@@ -8,7 +8,10 @@
 // TODO: Replace these with your own bundle->pageid mappings
 const defs = {
   all : [
-    'home', 'foo'
+    'home', 'foo', 'admin', 
+    'approver', 'reimbursement', 
+    'reimbursement-new', 'reports', 
+    'request', 'request-new'
   ]
 };
 

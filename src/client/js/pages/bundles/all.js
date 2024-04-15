@@ -6,3 +6,10 @@
 // TODO: Replace these with your own pages
 import "../app-page-home.js";
 import "../app-page-foo.js";
+import "../app-page-admin.js";
+import "../app-page-approver.js";
+import "../app-page-reimbursement.js";
+import "../app-page-reimbursement-new.js";
+import "../app-page-reports.js";
+import "../app-page-request.js";
+import "../app-page-request-new.js";

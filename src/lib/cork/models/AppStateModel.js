@@ -60,6 +60,20 @@ class AppStateModelImpl extends AppStateModel {
     // TODO: Replace these with your own route->pageid mappings
     if ( route === 'foo' ){
       p = 'foo';
+    } else if ( route === 'admin' ){
+      p = 'admin';
+    } else if ( route === 'approver' ){
+      p = 'approver';
+    } else if ( route === 'reimbursement' ){
+      p = 'reimbursement';
+    } else if ( route === 'reimbursement-new' ){
+      p = 'reimbursement-new';
+    } else if ( route === 'reports' ){
+      p = 'reports';
+    } else if ( route === 'request' ){
+      p = 'request';
+    } else if ( route === 'request-new' ){
+      p = 'request-new';
     }
     update.page = p;
 
