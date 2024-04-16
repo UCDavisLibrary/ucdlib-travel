@@ -7,21 +7,21 @@
 
 // TODO: Replace these with your own bundle->pageid mappings
 const defs = {
-  all : [
-    'home', 'foo'    
-  ],
+  // all : [
+  //   'home', 'foo'    
+  // ],
 
-  approvalRequests: [
+  "approval-requests": [
     'approval-request', 'approval-request-new', 'approver'
   ],
-  admin: [
+  "admin": [
     'admin', 'admin-approvers', 'admin-settings', 
     'admin-allocations', 'admin-items', 'admin-reimbursement'
   ],
-  reports: [
+  "reports": [
     'reports'
   ],
-  reimbursementRequests: [
+  "reimbursement-requests": [
     'reimbursement', 'reimbursement-new'
   ]
 };

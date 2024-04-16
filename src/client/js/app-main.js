@@ -33,8 +33,9 @@ import AuthModel from "../../lib/cork/models/AuthModel.js";
 Registry.ready();
 
 // registry of app page bundles - pages are dynamically loaded on appStateUpdate
-import bundles from "./pages/bundles";
+import bundles from "./pages/bundles/index.js";
 import "./pages/app-page-alt-state.js";
+import "./pages/app-page-home.js";
 
 /**
  * @class AppMain
@@ -209,9 +210,7 @@ export default class AppMain extends Mixin(LitElement)
    */
   _loadBundle(bundle, page='') {
 
-    if( bundle == 'all' ) {
-      return import(/* webpackChunkName: "pages-all" */ "./pages/bundles/all.js");
-    } else if( bundle == 'approval-requests' ) {
+    if( bundle == 'approval-requests' ) {
       return import(/* webpackChunkName: "approval-requests" */ "./pages/bundles/approval-requests.js");
     } else if( bundle == 'admin' ) {
       return import(/* webpackChunkName: "admin" */ "./pages/bundles/admin.js");
