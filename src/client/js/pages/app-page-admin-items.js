@@ -1,9 +1,9 @@
 import { LitElement } from 'lit';
-import {render} from "./app-page-request.tpl.js";
+import {render} from "./app-page-admin-items.tpl.js";
 import { LitCorkUtils, Mixin } from "../../../lib/appGlobals.js";
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 
-export default class AppPageRequest extends Mixin(LitElement)
+export default class AppPageAdminItems extends Mixin(LitElement)
 .with(LitCorkUtils, MainDomElement) {
 
   static get properties() {
@@ -19,4 +19,4 @@ export default class AppPageRequest extends Mixin(LitElement)
 
 }
 
-customElements.define('app-page-request', AppPageRequest);
+customElements.define('app-page-admin-items', AppPageAdminItems);

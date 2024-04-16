@@ -1,9 +1,9 @@
 import { LitElement } from 'lit';
-import {render} from "./app-page-request-new.tpl.js";
+import {render} from "./app-page-approval-request.tpl.js";
 import { LitCorkUtils, Mixin } from "../../../lib/appGlobals.js";
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 
-export default class AppPageRequestNew extends Mixin(LitElement)
+export default class AppPageApprovalRequest extends Mixin(LitElement)
 .with(LitCorkUtils, MainDomElement) {
 
   static get properties() {
@@ -19,4 +19,4 @@ export default class AppPageRequestNew extends Mixin(LitElement)
 
 }
 
-customElements.define('app-page-request-new', AppPageRequestNew);
+customElements.define('app-page-approval-request', AppPageApprovalRequest);
