@@ -23,6 +23,15 @@ export default class AccessToken {
   /**
    * @description Returns true if user has basic access to this client
    */
+  get canAccessReports(){
+    if ( this.hasAdminAccess ) return true;
+    if (this._inRoleList('report-access','resource')) return true;
+    return false;
+  }
+
+  /**
+   * @description Returns true if user has basic access to this client
+   */
   get hasBasicAccess(){
     return this._inRoleList('basic-access');
   }
@@ -31,7 +40,7 @@ export default class AccessToken {
    * @description Returns true if user has admin access to this client
    */
   get hasAdminAccess(){
-    return [this._inRoleList('admin-access'), this._inRoleList('report-access')];
+    return this._inRoleList('admin-access');
   }
 
   /**
