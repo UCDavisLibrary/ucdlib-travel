@@ -12,7 +12,7 @@ class ServerConfig {
     this.title = this.getEnv('APP_TITLE', 'UC Davis Library Simple SPA');
 
     // TODO: Replace these with the routes that your SPA should handle
-    this.routes = ['request', 'approver', 'reimbursement', 'reports', 'admin'];
+    this.routes = ['approval-request', 'approver', 'reimbursement', 'reports', 'admin'];
 
     this.apiRoot = this.getEnv('APP_API_ROOT', '/api');
 

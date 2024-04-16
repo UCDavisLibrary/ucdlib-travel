@@ -62,6 +62,16 @@ class AppStateModelImpl extends AppStateModel {
       p = 'foo';
     } else if ( route === 'admin' ){
       p = 'admin';
+    } else if ( route === 'admin-approvers' ){
+      p = 'admin-approvers';
+    } else if ( route === 'admin-settings' ){
+      p = 'admin-settings';
+    } else if ( route === 'admin-allocations' ){
+      p = 'admin-allocations';
+    } else if ( route === 'admin-items' ){
+      p = 'admin-items';
+    } else if ( route === 'admin-reimbursement' ){
+      p = 'admin-reimbursement';
     } else if ( route === 'approver' ){
       p = 'approver';
     } else if ( route === 'reimbursement' ){
@@ -70,10 +80,10 @@ class AppStateModelImpl extends AppStateModel {
       p = 'reimbursement-new';
     } else if ( route === 'reports' ){
       p = 'reports';
-    } else if ( route === 'request' ){
-      p = 'request';
-    } else if ( route === 'request-new' ){
-      p = 'request-new';
+    } else if ( route === 'approval-request' ){
+      p = 'approval-request';
+    } else if ( route === 'approval-request-new' ){
+      p = 'approval-request-new';
     }
     update.page = p;
 

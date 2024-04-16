@@ -33,7 +33,7 @@ import AuthModel from "../../lib/cork/models/AuthModel.js";
 Registry.ready();
 
 // registry of app page bundles - pages are dynamically loaded on appStateUpdate
-import bundles from "./pages/bundles/index.js";
+import bundles from "./pages/bundles";
 import "./pages/app-page-alt-state.js";
 
 /**
@@ -209,10 +209,18 @@ export default class AppMain extends Mixin(LitElement)
    */
   _loadBundle(bundle, page='') {
 
-    if( bundle == 'all' ) {
-      return import(/* webpackChunkName: "pages" */ "./pages/bundles/all.js");
+    if( bundle == 'main' ) {
+      return import(/* webpackChunkName: "pages" */ "./pages/bundles/main.js");
+    } else if( bundle == 'approval-requests' ) {
+      return import(/* webpackChunkName: "pages" */ "./pages/bundles/approval-requests.js");
+    } else if( bundle == 'admin' ) {
+      return import(/* webpackChunkName: "pages" */ "./pages/bundles/admin.js");
+    } else if( bundle == 'reports' ) {
+      return import(/* webpackChunkName: "pages" */ "./pages/bundles/reports.js");
+    } else if( bundle == 'reimbursement-requests' ) {
+      return import(/* webpackChunkName: "pages" */ "./pages/bundles/reimbursement-requests.js");
     }
-    console.warn(`AppMain: bundle ${bundle} not found for page ${page}. Check pages/bundles/index.js`);
+    console.warn(`AppMain: bundle ${bundle} not found for page ${page}. Check pages/bundles`);
     return false;
   }
 
