@@ -209,16 +209,16 @@ export default class AppMain extends Mixin(LitElement)
    */
   _loadBundle(bundle, page='') {
 
-    if( bundle == 'main' ) {
-      return import(/* webpackChunkName: "pages" */ "./pages/bundles/main.js");
+    if( bundle == 'all' ) {
+      return import(/* webpackChunkName: "pages-all" */ "./pages/bundles/all.js");
     } else if( bundle == 'approval-requests' ) {
-      return import(/* webpackChunkName: "pages" */ "./pages/bundles/approval-requests.js");
+      return import(/* webpackChunkName: "approval-requests" */ "./pages/bundles/approval-requests.js");
     } else if( bundle == 'admin' ) {
-      return import(/* webpackChunkName: "pages" */ "./pages/bundles/admin.js");
+      return import(/* webpackChunkName: "admin" */ "./pages/bundles/admin.js");
     } else if( bundle == 'reports' ) {
-      return import(/* webpackChunkName: "pages" */ "./pages/bundles/reports.js");
+      return import(/* webpackChunkName: "reports" */ "./pages/bundles/reports.js");
     } else if( bundle == 'reimbursement-requests' ) {
-      return import(/* webpackChunkName: "pages" */ "./pages/bundles/reimbursement-requests.js");
+      return import(/* webpackChunkName: "reimbursement-requests" */ "./pages/bundles/reimbursement-requests.js");
     }
     console.warn(`AppMain: bundle ${bundle} not found for page ${page}. Check pages/bundles`);
     return false;
