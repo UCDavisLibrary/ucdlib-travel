@@ -15,3 +15,7 @@ source ./config.sh
 
 touch ../gc-writer-key.json
 touch ../gc-reader-key.json
+
+./cmds/get-env.sh -f -l
+./cmds/get-reader-key.sh
+./cmds/get-writer-key.sh

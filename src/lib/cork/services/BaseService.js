@@ -1,8 +1,6 @@
 import { BaseService } from '@ucd-lib/cork-app-utils';
 import { appConfig } from '../../appGlobals.js';
 
-// TODO: If not using auth, you can remove this file
-
 /**
  * @class BaseServiceImp
  * @description Extends the cork-app-utils BaseService to add auth headers to requests
