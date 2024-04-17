@@ -8,7 +8,6 @@ class AppStateStoreImpl extends AppStateStore {
     super();
     this.defaultPage = 'home';
 
-    // TODO: Replace these with your own default values
     this.breadcrumbs = {
       home: {text: 'Home', link: '/'},
       foo: {text: 'Foo', link: '/foo'}

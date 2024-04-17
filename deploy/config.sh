@@ -30,15 +30,12 @@ APP_CONTAINER_PORT=3000
 REPO_TAG=dev
 
 # Dependency tags/branches
-# TODO: change these versions to match current LTS versions
-NODE_TAG=18
-POSTGRES_TAG=15.3
+NODE_TAG=20
+POSTGRES_TAG=16
 ADMINER_TAG=4.8.1 # for local dev only
 
 # Container Registery
-# TODO: decide whether to use public or private container registry
-CONTAINER_REG_ORG=gcr.io/ucdlib-pubreg # public
-CONTAINER_REG_ORG=gcr.io/digital-ucdavis-edu # private
+CONTAINER_REG_ORG=gcr.io/ucdlib-pubreg
 if [[ ! -z $LOCAL_BUILD ]]; then
   CONTAINER_REG_ORG='localhost/local-dev'
 fi
@@ -77,11 +74,10 @@ JS_BUNDLES=(
   $CLIENT_DIR
 )
 
-# TODO: If using init/backup utilities, set the following
 # Google Cloud
-GC_READER_KEY_SECRET="" # name of secret in secret manager for reading from bucket
-GC_WRITER_KEY_SECRET="" # name of secret in secret manager for writing to bucket
-GC_BACKUP_BUCKET="" # name of bucket that will be used for database backups
+GC_READER_KEY_SECRET="itis-backup-reader-key" # name of secret in secret manager for reading from bucket
+GC_WRITER_KEY_SECRET="itis-backup-writer-key" # name of secret in secret manager for writing to bucket
+GC_BACKUP_BUCKET="itis-backups/travel" # name of bucket that will be used for database backups
 BACKUP_FILE_NAME="db.sql.gz"
 # You may also need to set additional variables in your env file:
 # RUN_INIT/INIT_DATA_ENV - used to hydrate db on startup

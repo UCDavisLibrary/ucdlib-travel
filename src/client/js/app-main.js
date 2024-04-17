@@ -22,11 +22,9 @@ import AppStateModel from "../../lib/cork/models/AppStateModel.js";
 AppStateModel.init(appConfig.routes);
 
 // import data models
-// TODO: Replace with your own models
 import "../../lib/cork/models/FooModel.js";
 
 // auth
-// TODO: If not using auth, you can remove these imports
 import Keycloak from 'keycloak-js';
 import AuthModel from "../../lib/cork/models/AuthModel.js";
 

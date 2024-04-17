@@ -8,4 +8,6 @@ set -e
 CMDS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd $CMDS_DIR/../..
 
+source ./deploy/config.sh
+
 gcloud secrets versions access latest --secret=$GC_WRITER_KEY_SECRET > gc-writer-key.json
