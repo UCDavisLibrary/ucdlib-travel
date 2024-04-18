@@ -33,6 +33,7 @@ Registry.ready();
 // registry of app page bundles - pages are dynamically loaded on appStateUpdate
 import bundles from "./pages/bundles/index.js";
 import "./pages/app-page-alt-state.js";
+import "./pages/app-page-home.js";
 
 /**
  * @class AppMain
@@ -207,10 +208,16 @@ export default class AppMain extends Mixin(LitElement)
    */
   _loadBundle(bundle, page='') {
 
-    if( bundle == 'all' ) {
-      return import(/* webpackChunkName: "pages" */ "./pages/bundles/all.js");
+    if( bundle == 'approval-requests' ) {
+      return import(/* webpackChunkName: "approval-requests" */ "./pages/bundles/approval-requests.js");
+    } else if( bundle == 'admin' ) {
+      return import(/* webpackChunkName: "admin" */ "./pages/bundles/admin.js");
+    } else if( bundle == 'reports' ) {
+      return import(/* webpackChunkName: "reports" */ "./pages/bundles/reports.js");
+    } else if( bundle == 'reimbursement-requests' ) {
+      return import(/* webpackChunkName: "reimbursement-requests" */ "./pages/bundles/reimbursement-requests.js");
     }
-    console.warn(`AppMain: bundle ${bundle} not found for page ${page}. Check pages/bundles/index.js`);
+    console.warn(`AppMain: bundle ${bundle} not found for page ${page}. Check pages/bundles`);
     return false;
   }
 
