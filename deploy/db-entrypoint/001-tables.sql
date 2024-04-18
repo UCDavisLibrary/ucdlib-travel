@@ -31,6 +31,8 @@ CREATE TABLE funding_source (
     has_cap BOOLEAN DEFAULT FALSE,
     cap_default NUMERIC,
     require_description BOOLEAN DEFAULT FALSE,
+    form_order INTEGER NOT NULL DEFAULT 0,
+    hide_from_form BOOLEAN DEFAULT FALSE,
     archived BOOLEAN DEFAULT FALSE
 );
 COMMENT ON TABLE funding_source IS 'Funding sources that users can select from when creating a travel approval request.';
@@ -53,6 +55,7 @@ COMMENT ON COLUMN approver_type.hide_from_fund_assignment IS 'If true, this appr
 CREATE TABLE approver_type_employee (
     approver_type_id INTEGER REFERENCES approver_type(approver_type_id),
     employee_kerberos VARCHAR(100) REFERENCES employee(kerberos),
+    approval_order INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (approver_type_id, employee_kerberos)
 );
 
@@ -126,6 +129,7 @@ CREATE TABLE expenditure_option (
     expenditure_option_id SERIAL PRIMARY KEY,
     label VARCHAR(200) NOT NULL,
     description TEXT,
+    form_order INTEGER NOT NULL DEFAULT 0,
     archived BOOLEAN DEFAULT FALSE
 );
 COMMENT ON TABLE expenditure_option IS 'Line item expenditure options that can be selected by users when creating a travel approval request.';
