@@ -10,9 +10,21 @@ return html`
     </ucdlib-branding-bar>
 
     <!-- TODO: Replace these with your own primary nav links -->
+
     <ucd-theme-primary-nav>
-      <a href='/foo'>Foo</a>
+      <a href='/approval-request/new'>Submit a Request</a>
+      <a href='/approval-request'>Your Submitted Request</a>
+      <a href='/approver'>Approve a Request</a>
+      <a href='/reports'>Reports</a>
     </ucd-theme-primary-nav>
+
+    <ucd-theme-quick-links title="Application Administration" style-modifiers="highlight">
+      <a href="/admin/appovers">Approvers and Funding Sources</a>
+      <a href="/admin/settings">General Settings</a>
+      <a href="/admin/allocations">Employee Allocations</a>
+      <a href="/admin/items">Line Items</a>
+      <a href="/admin/reimbursement">Reimbursement Requests</a>
+    </ucd-theme-quick-links>
   </ucd-theme-header>
   <!-- <ucdlib-iam-alert></ucdlib-iam-alert> -->
 
@@ -31,8 +43,20 @@ return html`
   <!-- TODO: Replace these with your own pages -->
   <ucdlib-pages id='main-pages' selected=${this.page}>
     <app-page-alt-state id=${this._notLoadedPageId} .state=${this.pageState} .errorMessage=${this.errorMessage}></app-page-alt-state>
-    <app-page-home id='home'></app-page-home>
     <app-page-foo id='foo'></app-page-foo>
+    <app-page-home id='home'></app-page-home>
+    <app-page-admin id='admin'></app-page-admin>
+    <app-page-admin-approvers id='admin-approvers'></app-page-admin-approvers>
+    <app-page-admin-settings id='admin-settings'></app-page-admin-settings>
+    <app-page-admin-allocations id='admin-allocations'></app-page-admin-allocations>
+    <app-page-admin-items id='admin-items'></app-page-admin-items>
+    <app-page-admin-reimbursement id='admin-reimbursement'></app-page-admin-reimbursement>
+    <app-page-approver id='approver'></app-page-approver>
+    <app-page-reimbursement id='reimbursement'></app-page-reimbursement>
+    <app-page-reimbursement-new id='reimbursement-new'></app-page-reimbursement-new>
+    <app-page-reports id='reports'></app-page-reports>
+    <app-page-approval-request id='approval-request'></app-page-approval-request>
+    <app-page-approval-request-new id='approval-request-new'></app-page-approval-request-new>
   </ucdlib-pages>
 
 `;}
