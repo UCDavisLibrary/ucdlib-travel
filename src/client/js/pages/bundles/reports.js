@@ -1,2 +1,2 @@
-import "../app-page-reports.js";
+import "../reports/app-page-reports.js";
 

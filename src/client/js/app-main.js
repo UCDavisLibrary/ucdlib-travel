@@ -4,6 +4,7 @@ import { render } from "./app-main.tpl.js";
 // brand components
 import '@ucd-lib/theme-elements/brand/ucd-theme-primary-nav/ucd-theme-primary-nav.js';
 import '@ucd-lib/theme-elements/brand/ucd-theme-header/ucd-theme-header.js';
+import '@ucd-lib/theme-elements/brand/ucd-theme-quick-links/ucd-theme-quick-links.js'
 import '@ucd-lib/theme-elements/ucdlib/ucdlib-branding-bar/ucdlib-branding-bar.js';
 import '@ucd-lib/theme-elements/ucdlib/ucdlib-pages/ucdlib-pages.js';
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
@@ -22,7 +23,6 @@ import AppStateModel from "../../lib/cork/models/AppStateModel.js";
 AppStateModel.init(appConfig.routes);
 
 // import data models
-import "../../lib/cork/models/FooModel.js";
 
 // auth
 import Keycloak from 'keycloak-js';
@@ -111,6 +111,15 @@ export default class AppMain extends Mixin(LitElement)
    */
   async _onAppStateUpdate(state) {
     const { page } = state;
+    if ( ['home', 'page-not-loaded'].includes(page) ) {
+      this.page = page;
+      window.scroll(0,0);
+      return;
+    }
+    if ( !page ) {
+      this.AppStateModel.showError('Page not found');
+      return;
+    }
 
     const bundle = this._getBundleName(page);
     let bundleAlreadyLoaded = true;
@@ -218,7 +227,7 @@ export default class AppMain extends Mixin(LitElement)
       return import(/* webpackChunkName: "reimbursement-requests" */ "./pages/bundles/reimbursement-requests.js");
     }
     console.warn(`AppMain: bundle ${bundle} not found for page ${page}. Check pages/bundles`);
-    return false;
+    return true;
   }
 
 }

@@ -10,7 +10,16 @@ class AppStateStoreImpl extends AppStateStore {
 
     this.breadcrumbs = {
       home: {text: 'Home', link: '/'},
-      foo: {text: 'Foo', link: '/foo'}
+      'approval-request-new': {text: 'New', link: '/approval-request/new'},
+      'approval-requests': {text: 'Your Approval Requests', link: '/approval-request'},
+      'approver': {text: 'Approve a Request', link: '/approver'},
+      'reports': {text: 'Reports', link: '/reports'},
+      'admin': {text: 'Admin', link: '/admin'},
+      'admin-allocations': {text: 'Employee Allocations', link: '/admin/allocations'},
+      'admin-approvers': {text: 'Approvers and Funding Sources', link: '/admin/approvers'},
+      'admin-reimbursement': {text: 'Reimbursement Requests', link: '/admin/reimbursement'},
+      'admin-settings': {text: 'General Settings', link: '/admin/settings'},
+      'admin-line-items': {text: 'Line Items', link: '/admin/items'}
     };
 
     this.userProfile = {};
