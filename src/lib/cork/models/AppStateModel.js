@@ -31,7 +31,6 @@ class AppStateModelImpl extends AppStateModel {
     }
     this.stripStateFromHash(update);
     this._setPage(update);
-    this.setBreadcrumbs(false, update);
     this.closeNav();
 
     let res = super.set(update);
@@ -54,36 +53,49 @@ class AppStateModelImpl extends AppStateModel {
    */
   _setPage(update){
     if ( !update ) return;
-    let p = this.store.defaultPage;
-    const route = this.getPathByIndex(0, update);
+    let p = '';
+    const baseRoute = this.getPathByIndex(0, update);
+    const secondaryRoute = this.getPathByIndex(1, update);
+    const tertiaryRoute = this.getPathByIndex(2, update);
 
-    // TODO: Replace these with your own route->pageid mappings
-    if ( route === 'foo' ){
-      p = 'foo';
-    } else if ( route === 'admin' ){
-      p = 'admin';
-    } else if ( route === 'admin-approvers' ){
-      p = 'admin-approvers';
-    } else if ( route === 'admin-settings' ){
-      p = 'admin-settings';
-    } else if ( route === 'admin-allocations' ){
-      p = 'admin-allocations';
-    } else if ( route === 'admin-items' ){
-      p = 'admin-items';
-    } else if ( route === 'admin-reimbursement' ){
-      p = 'admin-reimbursement';
-    } else if ( route === 'approver' ){
+    if ( !baseRoute ) {
+      p = this.store.defaultPage;
+    }
+
+    else if ( baseRoute === 'admin' ){
+      if ( secondaryRoute === 'approvers' ){
+        p = 'admin-approvers';
+      } else if ( secondaryRoute === 'settings' ){
+        p = 'admin-settings';
+      } else if ( secondaryRoute === 'allocations' ){
+        p = 'admin-allocations';
+      } else if ( secondaryRoute === 'line-items' ){
+        p = 'admin-line-items';
+      } else if ( secondaryRoute === 'reimbursement' ){
+        p = 'admin-reimbursement';
+      } else if ( !secondaryRoute ) {
+        p = 'admin';
+      }
+    }
+
+    else if ( baseRoute === 'approval-request' ){
+      if ( secondaryRoute ){
+        if ( secondaryRoute === 'new' ){
+          p = 'approval-request-new';
+        } else if ( tertiaryRoute ){
+          p = 'approval-request';
+        }
+      } else {
+        p = 'approval-requests';
+      }
+    }
+
+    else if ( baseRoute === 'approver' ){
       p = 'approver';
-    } else if ( route === 'reimbursement' ){
-      p = 'reimbursement';
-    } else if ( route === 'reimbursement-new' ){
-      p = 'reimbursement-new';
-    } else if ( route === 'reports' ){
+    }
+
+    else if ( baseRoute === 'reports' ){
       p = 'reports';
-    } else if ( route === 'approval-request' ){
-      p = 'approval-request';
-    } else if ( route === 'approval-request-new' ){
-      p = 'approval-request-new';
     }
     update.page = p;
 
@@ -216,7 +228,11 @@ class AppStateModelImpl extends AppStateModel {
    * @description Close the app's primary nav menu
    */
   closeNav(){
-    const ele = document.querySelector('ucd-theme-header');
+    let ele = document.querySelector('ucd-theme-header');
+    if ( ele ) {
+      ele.close();
+    }
+    ele = document.querySelector('ucd-theme-quick-links');
     if ( ele ) {
       ele.close();
     }

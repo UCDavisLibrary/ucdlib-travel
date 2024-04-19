@@ -1,6 +1,6 @@
 import { LitElement } from 'lit';
 import {render} from "./app-page-reimbursement.tpl.js";
-import { LitCorkUtils, Mixin } from "../../../lib/appGlobals.js";
+import { LitCorkUtils, Mixin } from "../../../../lib/appGlobals.js";
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 
 export default class AppPageReimbursement extends Mixin(LitElement)
@@ -8,7 +8,7 @@ export default class AppPageReimbursement extends Mixin(LitElement)
 
   static get properties() {
     return {
-      
+
     }
   }
 
@@ -16,6 +16,8 @@ export default class AppPageReimbursement extends Mixin(LitElement)
   constructor() {
     super();
     this.render = render.bind(this);
+
+    this._injectModel('AppStateModel');
   }
 
 }
