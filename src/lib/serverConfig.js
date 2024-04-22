@@ -10,7 +10,6 @@ class ServerConfig {
 
     this.title = this.getEnv('APP_TITLE', 'Travel, Training, and Professional Development');
 
-    // TODO: Replace these with the routes that your SPA should handle
     this.routes = ['approval-request', 'approver', 'reimbursement', 'reports', 'admin'];
 
     this.apiRoot = this.getEnv('APP_API_ROOT', '/api');
@@ -20,7 +19,6 @@ class ServerConfig {
       host: this.getEnv('APP_HOST_PORT', 3000), // server port on host machine
     }
 
-    // TODO: Replace these with your own app slug
     this.assetFileNames = {
       css: 'ucdlib-travel.css',
       js: 'ucdlib-travel.js'
@@ -43,6 +41,13 @@ class ServerConfig {
       oidcScope: this.getEnv('APP_OIDC_SCOPE', 'profile roles ucd-ids'),
       serverCacheExpiration: this.getEnv('APP_SERVER_CACHE_EXPIRATION', '12 hours')
     };
+
+    this.libraryIam = {
+      url: this.getEnv('UCDLIB_PERSONNEL_API_USER_URL', 'https://iam.staff.library.ucdavis.edu/json'),
+      user: this.getEnv('UCDLIB_PERSONNEL_API_USER', ''),
+      key: this.getEnv('UCDLIB_PERSONNEL_API_KEY', ''),
+      serverCacheExpiration: this.getEnv('UCDLIB_PERSONNEL_API_CACHE_EXPIRATION', '24 hours')
+    }
   }
 
   /**
