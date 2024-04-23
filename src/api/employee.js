@@ -9,7 +9,7 @@ export default (api) => {
   api.get('/employee', protect('hasBasicAccess'), async (req, res) => {
 
 
-    res.json({config: employee.configured});
+    res.json({test: await employee.queryIam({department: [19,22]})});
 
   });
 

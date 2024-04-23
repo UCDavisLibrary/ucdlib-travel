@@ -19,10 +19,18 @@ COMMENT ON TABLE department IS 'Historical department information. Most departme
 CREATE TABLE employee (
     kerberos VARCHAR(100) PRIMARY KEY,
     first_name VARCHAR(100) NOT NULL,
-    last_name VARCHAR(100) NOT NULL,
-    department_id INTEGER REFERENCES department(department_id)
+    last_name VARCHAR(100) NOT NULL
 );
 COMMENT ON TABLE employee IS 'Historical employee information. Most employee information is pulled from our IAM system';
+
+CREATE TABLE employee_department (
+    employee_department_id SERIAL PRIMARY KEY,
+    employee_kerberos VARCHAR(100) REFERENCES employee(kerberos),
+    department_id INTEGER REFERENCES department(department_id),
+    start_date DATE NOT NULL DEFAULT NOW(),
+    end_date DATE
+)
+COMMENT ON TABLE employee_department IS 'Mapping table for employees and departments.';
 
 CREATE TABLE funding_source (
     funding_source_id SERIAL PRIMARY KEY,
