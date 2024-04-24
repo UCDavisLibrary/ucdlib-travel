@@ -15,7 +15,8 @@ class Employee {
     // DB cache keys
     this.cacheKeys = {
       singleEmployee: 'ucdlib-iam-employee',
-      employeeQuery: 'ucdlib-iam-employees'
+      employeeQuery: 'ucdlib-iam-employees',
+      titleCodes: 'ucdlib-iam-title-codes'
     };
 
     this.idTypes = [
@@ -27,6 +28,39 @@ class Employee {
     ];
   }
 
+  /**
+   * @description Get an array of all UC PATH title codes that are primary appointment of library employees
+   * @param {Boolean} skipCache - Will not use local db cache
+   * @returns {Object} {res, error} - where res is an array of title code objects
+   */
+  async getActiveTitleCodes(skipCache=false){
+
+    if ( !skipCache ) {
+      const cacheRes = await cache.get(this.cacheKeys.titleCodes, this.cacheKeys.titleCodes, this.api.config.serverCacheExpiration);
+      if ( cacheRes.res?.rows?.length ) {
+        return cacheRes.res.rows[0].data;
+      }
+    }
+
+    const res = await this.api.get('/active-titles');
+    if ( res.error ) return res;
+
+    if ( !skipCache ){
+      await cache.set(this.cacheKeys.titleCodes, this.cacheKeys.titleCodes, res);
+    }
+
+    return res;
+  };
+
+  /**
+   * @description Query the library IAM API for employee records
+   * @param {Object} query - Query object with the following available properties:
+   * - name: Employee name
+   * - department: Array of department numbers
+   * - title-code: Array of title codes
+   * @param {Boolean} skipCache - Will not use local db cache
+   * @returns {Object} {res, error} - where res is an array of records
+   */
   async queryIam(query={}, skipCache=false){
 
     // ensure certain query props are arrays and then make them comma separated strings
@@ -53,7 +87,7 @@ class Employee {
     if ( res.error ) return res;
 
     // Update cache
-    if ( !skipCache ){
+    if ( !skipCache && res.res.length ){
       await cache.set(this.cacheKeys.employeeQuery, cacheKey, res);
     }
 
@@ -111,8 +145,12 @@ class Employee {
       supervisor: true,
       'department-head': true
     };
-    const res = await this.api.get(`/employees/${idsNotInCache.join(',')}`, queryParams);
-    if ( res.error ) return res;
+    let res = await this.api.get(`/employees/${idsNotInCache.join(',')}`, queryParams);
+    if ( res.error && res.error.is404  && !returnSingle) {
+      res = {res: []};
+    } else if ( res.error ) {
+      return res;
+    }
 
     (Array.isArray(res.res) ? res.res : [res.res]).forEach(record => {
       const id = record[idTypeObj.responseProp];
