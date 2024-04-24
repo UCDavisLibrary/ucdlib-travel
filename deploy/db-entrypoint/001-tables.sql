@@ -10,11 +10,12 @@ CREATE TABLE cache (
 COMMENT ON TABLE cache IS 'Cache table for storing http requests and other data';
 
 CREATE TABLE department (
-    department_id SERIAL PRIMARY KEY,
+    department_id INTEGER PRIMARY KEY,
     label VARCHAR(200) NOT NULL,
     archived BOOLEAN DEFAULT FALSE
 );
 COMMENT ON TABLE department IS 'Historical department information. Most department information is pulled from our IAM system';
+COMMENT ON COLUMN department.department_id IS 'The group ID from the Library IAM system.';
 
 CREATE TABLE employee (
     kerberos VARCHAR(100) PRIMARY KEY,
@@ -29,7 +30,7 @@ CREATE TABLE employee_department (
     department_id INTEGER REFERENCES department(department_id),
     start_date DATE NOT NULL DEFAULT NOW(),
     end_date DATE
-)
+);
 COMMENT ON TABLE employee_department IS 'Mapping table for employees and departments.';
 
 CREATE TABLE funding_source (

@@ -129,7 +129,7 @@ class AppStateModelImpl extends AppStateModel {
   stripStateFromHash(update){
     if ( !update || !update.location || !update.location.hash ) return;
     let hash = new URLSearchParams(update.location.hash);
-    const toStrip = ['state', 'session_state', 'code'];
+    const toStrip = ['state', 'session_state', 'code', 'iss'];
     let replace = false;
     for (const key of toStrip) {
       if ( hash.has(key) ) {
