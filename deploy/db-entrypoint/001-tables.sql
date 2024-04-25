@@ -82,9 +82,9 @@ CREATE TABLE settings (
     value TEXT NOT NULL,
     label VARCHAR(200),
     description TEXT,
+    default_value TEXT,
     use_default_value BOOLEAN DEFAULT FALSE,
     keywords TEXT,
-    hide_on_settings_page BOOLEAN DEFAULT FALSE,
     settings_page_order INTEGER DEFAULT 0,
     input_type VARCHAR(100) DEFAULT 'text',
     categories TEXT[],
@@ -93,7 +93,6 @@ CREATE TABLE settings (
 COMMENT ON TABLE settings IS 'Settings table for storing key-value pairs of configuration data. So we dont have to hard code so many values in the application.';
 COMMENT ON COLUMN settings.use_default_value IS 'The value will be ignored and the hardcoded default value will be used instead.';
 COMMENT ON COLUMN settings.keywords IS 'Just to help with searching for settings.';
-COMMENT ON COLUMN settings.hide_on_settings_page IS 'If true, this setting will not be displayed on the settings page.';
 COMMENT ON COLUMN settings.settings_page_order IS 'The order in which this setting will be displayed on the settings page.';
 COMMENT ON COLUMN settings.input_type IS 'The type of input to use for this setting. Options are text, textarea, checkbox, number';
 COMMENT ON COLUMN settings.categories IS 'List of categories that this setting belongs to - for easier querying by client';
