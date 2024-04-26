@@ -1,6 +1,10 @@
 import pg from "./pg.js";
 import EntityFields from "../utils/EntityFields.js";
 
+/**
+ * @class Settings
+ * @description Model for settings table where application settings are stored such as custom html to display on a page
+ */
 class Settings {
 
   constructor(){
