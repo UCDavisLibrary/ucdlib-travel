@@ -18,26 +18,29 @@ class SettingsStore extends BaseStore {
   byCategoryLoading(request, category) {
     this._setByCategoryState({
       state : this.STATE.LOADING,
-      request
-    }, category);
+      request,
+      category
+    });
   }
 
   byCategoryLoaded(payload, category) {
     this._setByCategoryState({
       state : this.STATE.LOADED,
-      payload
-    }, category);
+      payload,
+      category
+    });
   }
 
   byCategoryError(error, category) {
     this._setByCategoryState({
       state : this.STATE.ERROR,
-      error
-    }, category);
+      error,
+      category
+    });
   }
 
-  _setByCategoryState(state, category) {
-    this.data.byCategory[category] = state;
+  _setByCategoryState(state) {
+    this.data.byCategory[state.category] = state;
     this.emit(this.events.CATEGORY_FETCHED, state);
   }
 
