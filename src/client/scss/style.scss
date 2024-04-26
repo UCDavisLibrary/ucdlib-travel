@@ -1,3 +1,4 @@
 @use '@ucd-lib/theme-sass/style-ucdlib.scss' as style;
 @use './fonts.scss' as fonts;
-@use './custom.scss' as custom;
+@use './global.scss' as global;
+@use './pages/admin/settings.scss' as adminSettings;
