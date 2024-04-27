@@ -8,7 +8,8 @@ return html`
         <p>Home Page</p>
 
 
-
+      <!-- Delete this Button function it is for testing only and
+           cooresponding click function (this._makeToastActive) -->
         <button
         id="toastButton"
         @click=${this._makeToastActive}
