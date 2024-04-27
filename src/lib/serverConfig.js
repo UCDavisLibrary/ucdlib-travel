@@ -42,7 +42,7 @@ class ServerConfig {
       serverCacheExpiration: this.getEnv('APP_SERVER_CACHE_EXPIRATION', '12 hours')
     };
 
-    this.libraryIam = {
+    this.libraryIamApi = {
       url: this.getEnv('UCDLIB_PERSONNEL_API_USER_URL', 'https://iam.staff.library.ucdavis.edu/json'),
       user: this.getEnv('UCDLIB_PERSONNEL_API_USER', ''),
       key: this.getEnv('UCDLIB_PERSONNEL_API_KEY', ''),

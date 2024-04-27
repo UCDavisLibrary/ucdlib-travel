@@ -8,7 +8,8 @@ export default class AppPageAdminSettings extends Mixin(LitElement)
 
   static get properties() {
     return {
-
+      settings: {type: Array},
+      searchString: {type: String}
     }
   }
 
@@ -16,7 +17,11 @@ export default class AppPageAdminSettings extends Mixin(LitElement)
     super();
     this.render = render.bind(this);
 
-    this._injectModel('AppStateModel');
+    this.settingsCategory = 'admin-settings';
+    this.settings = [];
+    this.searchString = '';
+
+    this._injectModel('AppStateModel', 'SettingsModel');
   }
 
   /**
@@ -25,6 +30,7 @@ export default class AppPageAdminSettings extends Mixin(LitElement)
    */
   async _onAppStateUpdate(state) {
     if ( this.id !== state.page ) return;
+    this.AppStateModel.showLoading();
 
     this.AppStateModel.setTitle('General Settings');
 
@@ -34,6 +40,64 @@ export default class AppPageAdminSettings extends Mixin(LitElement)
       this.AppStateModel.store.breadcrumbs[this.id]
     ];
     this.AppStateModel.setBreadcrumbs(breadcrumbs);
+
+    this.SettingsModel.getByCategory(this.settingsCategory);
+  }
+
+  /**
+   * @description bound to SettingsModel settings-category-fetched event
+   * @param {Object} e - cork-app-utils state where payload is an array of settings objects
+   */
+  _onSettingsCategoryFetched(e) {
+    if ( e.category !== this.settingsCategory ) return;
+    if ( e.state === 'loaded' ) {
+      this.searchString = '';
+      this._setSettingsProperty(e.payload);
+      this.AppStateModel.showLoaded(this.id)
+    } else if ( e.state === 'error' ) {
+      this.AppStateModel.showError(e, 'Unable to load settings.');
+    }
+  }
+
+  /**
+   * @description sets the element's settings property
+   * which is used to render the inputs for the settings form on the page
+   */
+  _setSettingsProperty(settings) {
+    if ( !settings || !Array.isArray(settings) ) {
+      this.settings = [];
+      return;
+    }
+    settings = settings.map(setting => {
+      setting = {...setting};
+      setting.hidden = false;
+      setting.updated = false;
+      return setting;
+    }).sort((a, b) => {
+      if ( a.settingsPageOrder === b.settingsPageOrder ) return 0;
+      return a.settingsPageOrder < b.settingsPageOrder ? -1 : 1;
+    });
+
+    this.settings = settings;
+    console.log('settings', settings);
+  }
+
+  _onSettingDefaultToggle(settingsId){
+    let setting = this.settings.find(s => s.settingsId === settingsId);
+    if ( !setting ) return;
+    setting.useDefaultValue = !setting.useDefaultValue;
+    setting.updated = true;
+    this.requestUpdate();
+    console.log('setting', setting);
+  }
+
+  _onSettingValueChange(settingsId, value){
+    let setting = this.settings.find(s => s.settingsId === settingsId);
+    if ( !setting ) return;
+    setting.value = value;
+    setting.updated = true;
+    this.requestUpdate();
+    console.log('setting', setting);
   }
 
 }

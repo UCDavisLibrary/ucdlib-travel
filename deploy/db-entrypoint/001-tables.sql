@@ -10,19 +10,28 @@ CREATE TABLE cache (
 COMMENT ON TABLE cache IS 'Cache table for storing http requests and other data';
 
 CREATE TABLE department (
-    department_id SERIAL PRIMARY KEY,
+    department_id INTEGER PRIMARY KEY,
     label VARCHAR(200) NOT NULL,
     archived BOOLEAN DEFAULT FALSE
 );
 COMMENT ON TABLE department IS 'Historical department information. Most department information is pulled from our IAM system';
+COMMENT ON COLUMN department.department_id IS 'The group ID from the Library IAM system.';
 
 CREATE TABLE employee (
     kerberos VARCHAR(100) PRIMARY KEY,
     first_name VARCHAR(100) NOT NULL,
-    last_name VARCHAR(100) NOT NULL,
-    department_id INTEGER REFERENCES department(department_id)
+    last_name VARCHAR(100) NOT NULL
 );
 COMMENT ON TABLE employee IS 'Historical employee information. Most employee information is pulled from our IAM system';
+
+CREATE TABLE employee_department (
+    employee_department_id SERIAL PRIMARY KEY,
+    employee_kerberos VARCHAR(100) REFERENCES employee(kerberos),
+    department_id INTEGER REFERENCES department(department_id),
+    start_date DATE NOT NULL DEFAULT NOW(),
+    end_date DATE
+);
+COMMENT ON TABLE employee_department IS 'Mapping table for employees and departments.';
 
 CREATE TABLE funding_source (
     funding_source_id SERIAL PRIMARY KEY,
@@ -73,9 +82,9 @@ CREATE TABLE settings (
     value TEXT NOT NULL,
     label VARCHAR(200),
     description TEXT,
+    default_value TEXT,
     use_default_value BOOLEAN DEFAULT FALSE,
     keywords TEXT,
-    hide_on_settings_page BOOLEAN DEFAULT FALSE,
     settings_page_order INTEGER DEFAULT 0,
     input_type VARCHAR(100) DEFAULT 'text',
     categories TEXT[],
@@ -84,7 +93,6 @@ CREATE TABLE settings (
 COMMENT ON TABLE settings IS 'Settings table for storing key-value pairs of configuration data. So we dont have to hard code so many values in the application.';
 COMMENT ON COLUMN settings.use_default_value IS 'The value will be ignored and the hardcoded default value will be used instead.';
 COMMENT ON COLUMN settings.keywords IS 'Just to help with searching for settings.';
-COMMENT ON COLUMN settings.hide_on_settings_page IS 'If true, this setting will not be displayed on the settings page.';
 COMMENT ON COLUMN settings.settings_page_order IS 'The order in which this setting will be displayed on the settings page.';
 COMMENT ON COLUMN settings.input_type IS 'The type of input to use for this setting. Options are text, textarea, checkbox, number';
 COMMENT ON COLUMN settings.categories IS 'List of categories that this setting belongs to - for easier querying by client';

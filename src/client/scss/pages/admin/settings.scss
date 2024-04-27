@@ -1,0 +1,20 @@
+app-page-admin-settings {
+  .setting-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .setting-header label {
+    flex-grow: 1;
+  }
+  .setting-description {
+    font-size: .875rem;
+    color: #4C4C4C;
+  }
+  @media (max-width: 500px) {
+    .l-container--narrow {
+      width: 100%;
+    }
+  }
+
+}
