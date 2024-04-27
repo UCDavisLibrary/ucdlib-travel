@@ -6,6 +6,17 @@ return html`
     <div class='l-basic--flipped'>
       <div class="l-content">
         <p>Home Page</p>
+
+
+
+        <button
+        id="toastButton"
+        @click=${this._makeToastActive}
+        type='button'
+        class="btn btn--alt btn--block u-space-mt border-box">Test Toast
+      </button>
+      <travel-toast></travel-toast>
+
       </div>
     </div>
   </div>

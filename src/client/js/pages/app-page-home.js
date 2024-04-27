@@ -2,12 +2,13 @@ import { LitElement } from 'lit';
 import { render } from "./app-page-home.tpl.js";
 import { LitCorkUtils, Mixin } from "../../../lib/appGlobals.js";
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
-
+ 
 export default class AppPageHome extends Mixin(LitElement)
   .with(LitCorkUtils, MainDomElement) {
 
   static get properties() {
     return {
+      toastActive: {type: Boolean, attribute: 'toastActive'},
 
     }
   }
@@ -15,9 +16,12 @@ export default class AppPageHome extends Mixin(LitElement)
   constructor() {
     super();
     this.render = render.bind(this);
-
+    this.toastActive = false;
     this._injectModel('AppStateModel');
+
+
   }
+
 
   /**
    * @description bound to AppStateModel app-state-update event
@@ -48,6 +52,26 @@ export default class AppPageHome extends Mixin(LitElement)
     const resolvedPromises = await Promise.all(promises);
     return resolvedPromises;
   }
+
+
+  /**
+   * @description For testing toast component
+   */
+  async _makeToastActive(){
+    console.log("Check Home Page Component to make changes")
+    /* Pushing in object with multiple messages */
+    // let practice = [{"message": "Samplessss", "type": "information"}, 
+    //                 {"message": "Samplessss2", "type": "information"},
+    //                 {"message": "Samplessss3", "type": "information"}
+    //                ];
+
+    /* Pushing in object with single message */
+    // let practice = {"message": "Samplessss", "type": "information"};
+    
+    /* Trigger for toast */
+    this.AppStateModel.showToast(practice);
+  }
+
 
 }
 

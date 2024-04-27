@@ -12,6 +12,8 @@ class AppStateModelImpl extends AppStateModel {
 
     this.store = AppStateStore;
 
+    this.queuedToast = [];
+    this.queueAmount = 0;
     if ( appConfig.auth?.requireAuth ) {
       this.inject('AuthModel');
     }
@@ -166,19 +168,39 @@ class AppStateModelImpl extends AppStateModel {
 
     this.store.emit('breadcrumb-update', b);
   }
+ 
+  /**
+   * @description Show dismissable toast banner in popup. Will disappear on next app-state-update event
+   * @param {Object|Array} options Toast message if object, multiple if Array:
+   * this.queuedToast = [{"message": "Samplessss", "type": "success"}, 
+   *                     {"message": "Samplessss2", "type": "success"},
+   *                     {"message": "Samplessss3", "type": "success"}
+   *                    ];
+   * 
+   * let option = {"message": "Samplessss", "type": "success"};
+   */
+  showToast(option){
+    if ( typeof option === 'object' ){
+      if(Array.isArray(option)) {
+        this.queuedToast = option;
+      }
+      else {
+        this.queuedToast.push(option);
+      }
+    } else return;
+
+    this.queueAmount = this.queuedToast.length;
+    this.store.emit('toast-update', this.queuedToast);
+    
+  }
+
 
   /**
-   * @description Show dismissable alert banner at top of page. Will disappear on next app-state-update event
-   * @param {Object|String} options Alert message if string, config if object:
-   * {message: 'alert!'
-   * brandColor: 'double-decker'
-   * }
+   * @description Dismissing all toasts in the queue
    */
-  showAlertBanner(options){
-    if ( typeof options === 'string' ){
-      options = {message: options};
-    }
-    this.store.emit('alert-banner-update', options);
+  dismissToast(){
+    this.queuedToast= [];    
+      console.log("Queue Has Been Emptied.");
   }
 
   /**

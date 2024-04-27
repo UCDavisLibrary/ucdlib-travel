@@ -32,8 +32,12 @@ Registry.ready();
 
 // registry of app page bundles - pages are dynamically loaded on appStateUpdate
 import bundles from "./pages/bundles/index.js";
+
 import "./pages/app-page-alt-state.js";
 import "./pages/app-page-home.js";
+
+// global components
+import "./components/travel-toast.js"
 
 /**
  * @class AppMain
