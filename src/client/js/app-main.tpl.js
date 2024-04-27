@@ -28,7 +28,7 @@ return html`
       <a href="/admin/line-items">Line Items</a>
     </ucd-theme-quick-links>
   </ucd-theme-header>
-
+  
   <section ?hidden=${!this.pageIsLoaded || !this.showPageTitle}>
     <h1 class="page-title">${this.pageTitle}</h1>
   </section>
@@ -40,7 +40,6 @@ return html`
       </li>
     `)}
   </ol>
-
   <ucdlib-pages id='main-pages' selected=${this.page}>
     <app-page-alt-state id=${this._notLoadedPageId} .state=${this.pageState} .errorMessage=${this.errorMessage}></app-page-alt-state>
     <app-page-foo id='foo'></app-page-foo>
