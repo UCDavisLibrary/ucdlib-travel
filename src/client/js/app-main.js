@@ -22,7 +22,10 @@ import { appConfig, LitCorkUtils, Mixin } from "../../lib/appGlobals.js";
 import AppStateModel from "../../lib/cork/models/AppStateModel.js";
 AppStateModel.init(appConfig.routes);
 
-// import data models
+// import cork models
+import "../../lib/cork/models/DepartmentModel.js";
+import "../../lib/cork/models/EmployeeModel.js";
+import "../../lib/cork/models/SettingsModel.js";
 
 // auth
 import Keycloak from 'keycloak-js';

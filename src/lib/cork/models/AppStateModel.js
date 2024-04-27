@@ -131,7 +131,7 @@ class AppStateModelImpl extends AppStateModel {
   stripStateFromHash(update){
     if ( !update || !update.location || !update.location.hash ) return;
     let hash = new URLSearchParams(update.location.hash);
-    const toStrip = ['state', 'session_state', 'code'];
+    const toStrip = ['state', 'session_state', 'code', 'iss'];
     let replace = false;
     for (const key of toStrip) {
       if ( hash.has(key) ) {
@@ -214,7 +214,7 @@ class AppStateModelImpl extends AppStateModel {
    * @description Show the app's error page
    * @param {String|Object} msg Error message to show or cork-app-utils response object
    */
-  showError(msg=''){
+  showError(msg='', fallbackMessage=''){
     let errorMessage = ''
     if ( typeof msg === 'object' ) {
       console.error(msg);
@@ -226,6 +226,8 @@ class AppStateModelImpl extends AppStateModel {
         errorMessage = 'You are not authorized to view this page';
       }else if ( msg?.error?.message ) {
         errorMessage = msg?.error?.message;
+      } else {
+        errorMessage = fallbackMessage;
       }
     } else {
       errorMessage = msg;
