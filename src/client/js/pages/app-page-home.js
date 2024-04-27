@@ -66,10 +66,13 @@ export default class AppPageHome extends Mixin(LitElement)
     //                ];
 
     /* Pushing in object with single message */
-    // let practice = {"message": "Samplessss", "type": "information"};
+    let practice = {"message": "Samplessss", "type": "information"};
     
     /* Trigger for toast */
     this.AppStateModel.showToast(practice);
+    document.querySelector("#toastButton").disabled = true;
+
+
   }
 
 
