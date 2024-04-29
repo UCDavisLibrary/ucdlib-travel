@@ -8,15 +8,12 @@ export default class AppPageHome extends Mixin(LitElement)
 
   static get properties() {
     return {
-      toastActive: {type: Boolean, attribute: 'toastActive'},
-
     }
   }
 
   constructor() {
     super();
     this.render = render.bind(this);
-    this.toastActive = false;
     this._injectModel('AppStateModel');
 
 
@@ -51,28 +48,6 @@ export default class AppPageHome extends Mixin(LitElement)
     //promises.push(this.YourModel.getData());
     const resolvedPromises = await Promise.all(promises);
     return resolvedPromises;
-  }
-
-
-  /**
-   * @description For testing toast component
-   */
-  async _makeToastActive(){
-    console.log("Check Home Page Component to make changes")
-    /* Pushing in object with multiple messages */
-    // let practice = [{"message": "Samplessss", "type": "information"}, 
-    //                 {"message": "Samplessss2", "type": "information"},
-    //                 {"message": "Samplessss3", "type": "information"}
-    //                ];
-
-    /* Pushing in object with single message */
-    let practice = {"message": "Samplessss", "type": "information"};
-    
-    /* Trigger for toast */
-    this.AppStateModel.showToast(practice);
-    document.querySelector("#toastButton").disabled = true;
-
-
   }
 
 

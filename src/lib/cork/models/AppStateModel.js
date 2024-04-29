@@ -180,17 +180,10 @@ class AppStateModelImpl extends AppStateModel {
    * let option = {"message": "Samplessss", "type": "success"};
    */
   showToast(option){
-    if ( typeof option === 'object' ){
-      if(Array.isArray(option)) {
-        this.queuedToast = option;
-      }
-      else {
-        this.queuedToast.push(option);
-      }
-    } else return;
-
-    this.queueAmount = this.queuedToast.length;
-    this.store.emit('toast-update', this.queuedToast);
+    if ( Array.isArray(option) ) return;
+    
+    if( typeof option === 'object' ) 
+      this.store.emit('toast-update', option);
     
   }
 
@@ -198,8 +191,8 @@ class AppStateModelImpl extends AppStateModel {
   /**
    * @description Dismissing all toasts in the queue
    */
-  dismissToast(){
-    this.queuedToast= [];    
+  dismissToast(queue){
+    queue = [];    
       console.log("Queue Has Been Emptied.");
   }
 
