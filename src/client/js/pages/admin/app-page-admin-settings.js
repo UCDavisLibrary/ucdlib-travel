@@ -42,7 +42,7 @@ export default class AppPageAdminSettings extends Mixin(LitElement)
    */
   async _onAppStateUpdate(state) {
     if ( this.id !== state.page ) return;
-    this.AppStateModel.showLoading();
+    this.SettingsModel.getByCategory(this.settingsCategory);
 
     this.AppStateModel.setTitle('General Settings');
 
@@ -52,8 +52,6 @@ export default class AppPageAdminSettings extends Mixin(LitElement)
       this.AppStateModel.store.breadcrumbs[this.id]
     ];
     this.AppStateModel.setBreadcrumbs(breadcrumbs);
-
-    this.SettingsModel.getByCategory(this.settingsCategory);
   }
 
   /**
@@ -68,6 +66,8 @@ export default class AppPageAdminSettings extends Mixin(LitElement)
       this.AppStateModel.showLoaded(this.id)
     } else if ( e.state === 'error' ) {
       this.AppStateModel.showError(e, 'Unable to load settings.');
+    } else if ( e.state === 'loading' ) {
+      this.AppStateModel.showLoading();
     }
   }
 
