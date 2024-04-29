@@ -1,5 +1,5 @@
 import { LitElement } from 'lit';
-import {render} from "./travel-toast.tpl.js";
+import {render, styles} from "./app-toast.tpl.js";
 import { LitCorkUtils, Mixin } from "../../../lib/appGlobals.js";
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 
@@ -10,8 +10,8 @@ import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-el
  
    this.AppStateModel.showToast(object);
  */
-export default class TravelToast extends Mixin(LitElement)
-.with(LitCorkUtils, MainDomElement)  {
+export default class AppToast extends Mixin(LitElement)
+.with(LitCorkUtils)  {
 
   static get properties() {
     return {
@@ -21,9 +21,16 @@ export default class TravelToast extends Mixin(LitElement)
       nopopup:{type: Boolean, attribute: 'nopopup'},
       amount: {type: Number, attribute: 'amount'},
       hidden: {type: Boolean},
+      animation: {type: Boolean},
+      time: {type: Number, attribute: 'time'}
 
     }
   }
+
+  static get styles() {
+    return styles();
+  }
+
 
   constructor() {
     super();
@@ -31,20 +38,9 @@ export default class TravelToast extends Mixin(LitElement)
     this.hidden=true;
     this.popup=false;
     this.queue = [];
-    // this.item = {};
+    this.animations;
+    this.time = 5000;
     this._injectModel('AppStateModel');
-
-  }
-
-    /**
-   * @method _onAppStateUpdate
-   * @description bound to AppStateModel app-state-update event
-   *
-   * @param {Object} e
-   */
-  async _onAppStateUpdate() {
-    // this.hidden = true;
-
 
   }
 
@@ -55,26 +51,29 @@ export default class TravelToast extends Mixin(LitElement)
     _onToastUpdate(items){
       this.hidden = false;
 
-      for (let i in items){
+      this.queue.push(items)
+      this.queueAmount = this.queue.length;
+
+      for (let i in this.queue){
         
         setTimeout(() => {
-          document.querySelector(".toast").classList.add("movein");
-          let item = items.shift();
+          this.animation = true;
+          let item = this.queue.shift();
           this.item = Object.assign({}, this.item, item);
           if ( !this.item.message ) return;
           
           this.text = this.item.message;
           this.type = this.item.type || 'information';
             
-          this.AppStateModel.queueAmount--;
-          if(this.AppStateModel.queueAmount == 0) {
+          this.queueAmount--;
+          if(this.queueAmount == 0) {
             setTimeout(() => {
-              document.querySelector(".toast").classList.add("moveout");
-            }, 5000 );
+              this.animation = false;
+            }, this.time );
           }
-        }, 5000 * i );
+        }, this.time * i );
       }
     }
 }
 
-customElements.define('travel-toast', TravelToast);
+customElements.define('app-toast', AppToast);

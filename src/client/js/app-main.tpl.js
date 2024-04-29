@@ -58,5 +58,6 @@ return html`
     <app-page-approval-request id='approval-request'></app-page-approval-request>
     <app-page-approval-request-new id='approval-request-new'></app-page-approval-request-new>
   </ucdlib-pages>
+  <app-toast></app-toast>
 
 `;}

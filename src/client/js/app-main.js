@@ -40,7 +40,7 @@ import "./pages/app-page-alt-state.js";
 import "./pages/app-page-home.js";
 
 // global components
-import "./components/travel-toast.js"
+import "./components/app-toast.js"
 
 /**
  * @class AppMain
