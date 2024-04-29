@@ -15,8 +15,9 @@ export default class AppPageAdminLineItems extends Mixin(LitElement)
   constructor() {
     super();
     this.render = render.bind(this);
+    this.settingsCategory = 'admin-line-items';
 
-    this._injectModel('AppStateModel');
+    this._injectModel('AppStateModel', 'SettingsModel');
   }
 
   /**
@@ -25,6 +26,7 @@ export default class AppPageAdminLineItems extends Mixin(LitElement)
    */
   async _onAppStateUpdate(state) {
     if ( this.id !== state.page ) return;
+    this.AppStateModel.showLoading();
 
     this.AppStateModel.setTitle('Line Items');
 
@@ -34,7 +36,28 @@ export default class AppPageAdminLineItems extends Mixin(LitElement)
       this.AppStateModel.store.breadcrumbs[this.id]
     ];
     this.AppStateModel.setBreadcrumbs(breadcrumbs);
+
+    try {
+      const d = await this.getPageData();
+      const hasError = d.some(e => e.state === 'error');
+      if ( !hasError ) this.AppStateModel.showLoaded(this.id);
+      this.requestUpdate();
+    } catch(e) {
+      this.AppStateModel.showError(this.id);
+    }
+
   }
+
+  /**
+   * @description Get any data required for rendering this page
+   */
+    async getPageData(){
+      const promises = [];
+      promises.push(this.SettingsModel.getByCategory(this.settingsCategory));
+      const resolvedPromises = await Promise.all(promises);
+      return resolvedPromises;
+    }
+
 
 }
 
