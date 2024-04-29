@@ -48,7 +48,8 @@ function renderSetting(setting){
         .value=${value}
         ?disabled=${setting.useDefaultValue}
         @input=${(e) => this._onSettingValueInput(setting.settingsId, e.target.value)}
-        ?hidden=${setting.useDefaultValue}></textarea>
+        rows="5"
+      ></textarea>
     `;
   }
 
