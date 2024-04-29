@@ -1,10 +1,27 @@
 import { html } from 'lit';
 
+import '@ucd-lib/theme-elements/brand/ucd-theme-search-form/ucd-theme-search-form.js'
+
 export function render() {
 return html`
-  <div class='l-gutter l-container--narrow'>
+  <div class='l-gutter l-container--narrow u-space-mb--large'>
+    <ucd-theme-search-form
+      placeholder='Search settings'
+      class='u-space-mb'
+      .value=${this.searchString}
+      @search=${this._onSearch}>
+    </ucd-theme-search-form>
     <div>
       ${this.settings.map(setting => renderSetting.call(this, setting))}
+    </div>
+    <div ?hidden=${!this.noSettings} class='u-space-mt--large'>
+      <p>No settings match your search. <a class='pointer' @click=${this.clearAndFocusSearch}>Try another search term.</a></p>
+    </div>
+    <div class='sticky-update-bar'>
+      <button
+        class='btn btn--primary'
+        ?disabled=${!this.settingsHaveChanged}
+        @click=${this._onSaveSettings}>Save</button>
     </div>
   </div>
 `;}
@@ -21,7 +38,7 @@ function renderSetting(setting){
       type=${setting.inputType}
       .value=${value}
       ?disabled=${setting.useDefaultValue}
-      @input=${(e) => this._onSettingValueChange(setting.settingsId, e.target.value)}
+      @input=${(e) => this._onSettingValueInput(setting.settingsId, e.target.value)}
        />
   `;
   if ( setting.inputType == 'textarea' ) {
@@ -30,7 +47,7 @@ function renderSetting(setting){
         id="${inputId}"
         .value=${value}
         ?disabled=${setting.useDefaultValue}
-        @input=${(e) => this._onSettingValueChange(setting.settingsId, e.target.value)}
+        @input=${(e) => this._onSettingValueInput(setting.settingsId, e.target.value)}
         ?hidden=${setting.useDefaultValue}></textarea>
     `;
   }
