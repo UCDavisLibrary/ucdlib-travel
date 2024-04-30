@@ -135,7 +135,7 @@ COMMENT ON COLUMN approval_request_funding_source.accounting_code IS 'The accoun
 
 CREATE TABLE expenditure_option (
     expenditure_option_id SERIAL PRIMARY KEY,
-    label VARCHAR(200) NOT NULL,
+    label VARCHAR(50) NOT NULL,
     description TEXT,
     form_order INTEGER NOT NULL DEFAULT 0,
     archived BOOLEAN DEFAULT FALSE

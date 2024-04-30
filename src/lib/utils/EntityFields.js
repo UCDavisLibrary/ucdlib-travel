@@ -2,8 +2,11 @@
  * @class EntityFields
  * @description Used to define fields of an entity (usually a database table)
  * @param {Array} fields - array of field objects with the following properties:
- * - dbName {String} - name of the field in the database (should be snake_case)
- * - jsonName {String} - name of the field in JSON responses (should be camelCase)
+ * - dbName {String} REQUIRED - name of the field in the database (should be snake_case)
+ * - jsonName {String} REQUIRED - name of the field in JSON responses (should be camelCase)
+ * - label {String} OPTIONAL - human readable label for the field
+ * - required {Boolean} OPTIONAL - if the field is required
+ * - charLimit {Number} OPTIONAL - maximum number of characters allowed
  */
 export default class EntityFields {
    constructor(fields = []){
@@ -16,6 +19,7 @@ export default class EntityFields {
     * @returns {Object}
     */
    toJsonObj(obj={}) {
+    if ( typeof obj !== 'object' || Array.isArray(obj) ) return {};
     const out = {};
 
     this.fields.forEach(field => {
@@ -41,6 +45,8 @@ export default class EntityFields {
     * @returns {Object}
     */
    toDbObj(obj={}) {
+    if ( typeof obj !== 'object' || Array.isArray(obj) ) return {};
+
     const out = {};
 
     this.fields.forEach(field => {
@@ -58,4 +64,75 @@ export default class EntityFields {
    toDbArray(arr=[]) {
     return arr.map(obj => this.toDbObj(obj));
    }
+
+   /**
+    * @description Validate a record against the fields defined in this class
+    * @param {Object} record - object to validate
+    * @param {String} namingScheme - Schema of record keys: 'dbName' or 'jsonName'
+    * @param {Array} skipFields - array of field names to skip validation on
+    * @returns {Object} - {valid: Boolean, fieldsWithErrors: Array}
+    * Where fieldsWithErrors is an array of objects with the following properties:
+    * - All properties of the field object
+    * - errors {Array} - array of error objects with the following properties:
+    *  - errorType {String} - type of error
+    *  - message {String} - human readable error message for printing on a form
+    */
+   validate(record, skipFields=[], namingScheme='dbName') {
+    const out = {valid: true, fieldsWithErrors: []};
+
+    for (const field of this.fields) {
+      if ( skipFields.includes(field[namingScheme]) ) continue;
+      const value = record[field[namingScheme]];
+      this._validateRequired(field, value, out);
+      this._validateCharLimit(field, value, out);
+    }
+
+    return out;
+   }
+
+   /**
+    * @description Validate that a field is not empty
+    * @param {Object} field - field object
+    * @param {Any} value - value to validate
+    * @param {Object} out - output object from validate method
+    */
+   _validateRequired(field, value, out) {
+    if ( !field.required ) return;
+    const error = {errorType: 'required', message: 'This field is required'};
+    if (!value) {
+      out.valid = false;
+      this._pushError(out, field, error);
+    }
+   }
+
+   /**
+    * @description Validate that a field does not exceed the character limit
+    * @param {Object} field - field object
+    * @param {Any} value - value to validate
+    * @param {Object} out - output object from validate method
+    */
+   _validateCharLimit(field, value, out) {
+    if ( !field.charLimit ) return;
+    value = value ? value.toString() : '';
+    const error = {errorType: 'charLimit', message: `This field must be less than ${field.charLimit} characters`};
+    if (value && value.length > field.charLimit) {
+      out.valid = false;
+      this._pushError(out, field, error);
+    }
+   }
+
+   /**
+    * @description Add an error to the out array for given field
+    * @param {Object} out - output object from validate method
+    * @param {Object} field - field object
+    * @param {Object} error - error object with errorType and message properties
+    */
+   _pushError(out, field, error) {
+    const fieldInOutput = out.fieldsWithErrors.find(f => f.jsonName === field.jsonName);
+    if ( fieldInOutput ) {
+      fieldInOutput.errors.push(error);
+    } else {
+      out.fieldsWithErrors.push({...field, errors: [error]});
+    }
+  }
 }
