@@ -8,6 +8,7 @@ export default class AppPageHome extends Mixin(LitElement)
 
   static get properties() {
     return {
+
     }
   }
 

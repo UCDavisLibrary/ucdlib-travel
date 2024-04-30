@@ -12,8 +12,6 @@ class AppStateModelImpl extends AppStateModel {
 
     this.store = AppStateStore;
 
-    this.queuedToast = [];
-    this.queueAmount = 0;
     if ( appConfig.auth?.requireAuth ) {
       this.inject('AuthModel');
     }
@@ -171,17 +169,11 @@ class AppStateModelImpl extends AppStateModel {
  
   /**
    * @description Show dismissable toast banner in popup. Will disappear on next app-state-update event
-   * @param {Object|Array} options Toast message if object, multiple if Array:
-   * this.queuedToast = [{"message": "Samplessss", "type": "success"}, 
-   *                     {"message": "Samplessss2", "type": "success"},
-   *                     {"message": "Samplessss3", "type": "success"}
-   *                    ];
-   * 
-   * let option = {"message": "Samplessss", "type": "success"};
+   * @param {Object} options Toast message if object, does not except multiple:
    */
   showToast(option){
     if ( Array.isArray(option) ) return;
-    
+
     if( typeof option === 'object' ) 
       this.store.emit('toast-update', option);
     
@@ -191,9 +183,10 @@ class AppStateModelImpl extends AppStateModel {
   /**
    * @description Dismissing all toasts in the queue
    */
-  dismissToast(queue){
-    queue = [];    
-      console.log("Queue Has Been Emptied.");
+  dismissToast(){
+    let dismissMessage = "Toast Dismissed";
+ 
+    this.store.emit('toast-dismiss', {message: dismissMessage});
   }
 
   /**
