@@ -17,7 +17,7 @@ export default (api) => {
       console.error('Error in /settings/:category', data.error);
       return res.status(500).json({error: true, message: 'Error getting settings.'});
     }
-    res.json(data);
+    return res.json(data);
   });
 
   /**
@@ -33,6 +33,6 @@ export default (api) => {
       console.error('Error in PUT /settings', data.error);
       return res.status(500).json({error: true, message: 'Error updating settings.'});
     }
-    res.json({error: false});
+    return res.json({error: false});
   });
 };
