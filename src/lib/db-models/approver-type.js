@@ -29,13 +29,16 @@ class ApproverType {
        */
       async query(args={}){
         let res;
+        let archived = "f";
+
+        if(args.archived == true) archived = "t";
         
         if(Array.isArray(args.id)) {
             let v = pg.valuesArray(args.id);
-            res = await pg.query(`SELECT * FROM settings WHERE approver_type_id in $1 AND archived=$2`, [v, args.archived]);
+            res = await pg.query(`SELECT * FROM approver_type WHERE approver_type_id in $1 AND archived=$2`, [v, archived]);
 
         } else {
-            res = await pg.query(`SELECT * FROM settings WHERE approver_type_id in $1 AND archived=$2`, [args.id, args.archived]);
+            res = await pg.query(`SELECT * FROM approver_type WHERE approver_type_id in $1 AND archived=$2`, [args.id, archived]);
         }
 
         if( res.error ) return res;
@@ -52,6 +55,12 @@ class ApproverType {
        * @returns {Object} {error: false}
        */
        async create(data){
+        let text = `
+          INSERT INTO approver_type (type, query, data)
+          VALUES ($1, $2, $3)
+          ON CONFLICT (type, query) DO UPDATE SET data = $3, created = NOW()
+        `;
+
         const res = await pg.query(`SELECT * FROM settings WHERE categories && $1`, [categories]);
         if( res.error ) return res;
         return this.entityFields.toJsonArray(res.res.rows);
@@ -64,14 +73,20 @@ class ApproverType {
        * @returns {Object} {error: false}
        */
        async update(data){
-        if ( settings && !Array.isArray(settings) ) settings = [settings];
-        if ( !settings || !settings.length ) return pg.returnError('No settings provided');
+
+        {
+          
+          employees:{}
+        }
+        
+        if ( data && !Array.isArray(data) ) data = [data];
+        if ( !data || !data.length ) return pg.returnError('No data provided');
     
         const out = {error: false};
         const client = await pg.pool.connect();
         try {
           await client.query('BEGIN');
-          for( const setting of settings ){
+          for( const setting of data ){
             let sql = 'UPDATE settings SET ';
             const valueMap = {}
             for( const field of this.entityFields.fields ){
