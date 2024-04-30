@@ -17,7 +17,7 @@ export default class AppPageAdminLineItems extends Mixin(LitElement)
     this.render = render.bind(this);
     this.settingsCategory = 'admin-line-items';
 
-    this._injectModel('AppStateModel', 'SettingsModel');
+    this._injectModel('AppStateModel', 'SettingsModel', 'LineItemsModel');
   }
 
   /**
