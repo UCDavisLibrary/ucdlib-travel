@@ -4,3 +4,11 @@
 .pointer {
   cursor: pointer;
 }
+.icon-link {
+  text-decoration: none;
+  cursor: pointer;
+}
+.icon-link:hover {
+  color: var(--category-brand, #13639E);
+  filter: brightness(1.4);
+}
