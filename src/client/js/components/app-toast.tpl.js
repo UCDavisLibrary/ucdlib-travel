@@ -4,18 +4,19 @@ import {classMap} from 'lit/directives/class-map.js';
 export function styles() {
   const elementStyles = css`
     :host {
-      display: block;
+      position: fixed;
+      bottom: 10px;
+      left:10px;
     }
 
     .toast {
       width: 200px;
-      display:block;
+      display: flex;
       padding: 20px 38px 20px 38px;
       border-radius: 15px;
       background: #FFFFFF;
       box-shadow: 0px 4px 20px 0px #00000033;
       text-align:center;
-      position:relative;
       z-index:3;
     
     }
@@ -39,12 +40,6 @@ export function styles() {
       100% {opacity: 1;}
     }
     
-    
-    
-    .moveout {
-      -webkit-animation: cssOutAnimation 1s forwards; 
-      animation: cssOutAnimation 1s forwards;
-    }
     
     .moveout {
       -webkit-animation: cssOutAnimation 1s forwards; 
@@ -71,17 +66,22 @@ export function styles() {
 
     .icon { 
       font-size: 20px;
-      float: left; 
+      width:25%;
+    } 
+
+    .text { 
+      font-size: 20px;
+      width:75%;
     } 
 
     .icon-success {
-      color:green;
+      color:#3dae2b;
     }
     .icon-info {
       color:black;
     }     
     .icon-error {
-      color:red;
+      color: #c10230;
     }
 
   `;
@@ -103,17 +103,11 @@ export function render() {
 return html`
 
 ${!this.nopopup ? html`
-  <div  class=${classMap(classes)} >
+    <div class=${classMap(classes)} >
+      <span class="icon"> <i>${this.icon}</i></span> 
+      <span class="text">${this.text}</span> 
+    </div>
 
-    <span class="icon"> 
-      ${this.type == "success" ? html`<i>&#10003;</i>`: 
-          this.type == "error" ? html`<b><i>&#10005;</b></i>`: 
-                                 html``}
-                                  </span> 
-    <span class="text">${this.text}</span> 
-
-  </div>
-`:html``}
-
+`: html``}
 
 `;}

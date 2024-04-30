@@ -1,11 +1,19 @@
-import { LitElement } from 'lit';
+import { html, LitElement } from 'lit';
 import {render, styles} from "./app-toast.tpl.js";
 import { LitCorkUtils, Mixin } from "../../../lib/appGlobals.js";
-import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 
 
 /**
  * @description Component for handling sitewide toast 
+ * 
+ * item: the object that holds the display text and status
+ * text: the text that is displayed
+ * type: the status of the toast message
+ * nopopup: have the toast not pop up
+ * amount: the amount of objects in the queue of items
+ * hidden: the modal is hidden
+ * animation: queues up the animation
+ * time the amount of time the modal stays up
  * 
  
    this.AppStateModel.showToast(object);
@@ -40,9 +48,12 @@ export default class AppToast extends Mixin(LitElement)
     this.queue = [];
     this.animations;
     this.time = 5000;
+    this.icons;
+    this.queueAmount;
     this._injectModel('AppStateModel');
 
   }
+
 
    /**
    * @description Attached to AppStateModel toast-update event
@@ -65,6 +76,9 @@ export default class AppToast extends Mixin(LitElement)
           this.text = this.item.message;
           this.type = this.item.type || 'information';
             
+          if(this.type == "success") this.icon = html`&#10003;`;
+          else if(this.type == "error") this.icon = html`&#10005;`;
+
           this.queueAmount--;
           if(this.queueAmount == 0) {
             setTimeout(() => {
@@ -73,6 +87,31 @@ export default class AppToast extends Mixin(LitElement)
           }
         }, this.time * i );
       }
+    }
+
+
+    /**
+   * @description Attached to AppStateModel toast-dismiss event
+   * @param {Object} message
+   */
+     _onToastDismiss(message){
+
+      this.hidden = true;
+
+      this.queue = [];
+      this.queueAmount = 0;
+      this.text = "";
+      this.type = "";
+      this.animation = false;
+      this.item = {};
+
+      let toast = this.shadowRoot.querySelector(".toast");
+      toast.style.display = "none";
+      console.log(message.message);
+
+      
+      this.requestUpdate();
+
     }
 }
 
