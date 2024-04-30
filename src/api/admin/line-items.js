@@ -4,6 +4,9 @@ import protect from "../../lib/protect.js";
 
 export default (api) => {
 
+  /**
+   * @description Get array of active (non-archived) line items
+   */
   api.get('/line-items', protect('hasBasicAccess'), async (req, res) => {
     const data = await expenditureOptions.get({active: true});
     if( data.error ) {
@@ -14,13 +17,13 @@ export default (api) => {
     return res.json(data);
   });
 
+  /**
+   * @description Create a new line item
+   * @param {Object} req.body - new line item data
+   */
   api.post('/line-items', protect('hasAdminAccess'), async (req, res) => {
-    const test = {
-      label: 'Test Label',
-      description: 'Test Description',
-      formOrder: 1
-    };
-    const data = await expenditureOptions.create(test);
+    const payload = (typeof req.body === 'object') && !Array.isArray(req.body) ? req.body : {};
+    const data = await expenditureOptions.create(payload);
 
     if ( data.error && data.is400 ) {
       return res.status(400).json(data);
@@ -33,13 +36,14 @@ export default (api) => {
     return res.json(data);
   });
 
+  /**
+   * @description Update an array of line items
+   * @param {Object} req.body - A line item object
+   */
   api.put('/line-items', protect('hasAdminAccess'), async (req, res) => {
-    const test = {
-      expenditureOptionId: 10,
-      label: 'Updated label',
-      archived: true
-    };
-    const data = await expenditureOptions.update(test);
+
+    const payload = (typeof req.body === 'object') && !Array.isArray(req.body) ? req.body : {};
+    const data = await expenditureOptions.update(payload);
 
     if ( data.error && data.is400 ) {
       return res.status(400).json(data);
