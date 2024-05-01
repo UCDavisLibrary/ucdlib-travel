@@ -85,6 +85,7 @@ export default class EntityFields {
       const value = record[field[namingScheme]];
       this._validateRequired(field, value, out);
       this._validateCharLimit(field, value, out);
+      this._validateType(field, value, out);
     }
 
     return out;
@@ -118,6 +119,21 @@ export default class EntityFields {
     if (value && value.length > field.charLimit) {
       out.valid = false;
       this._pushError(out, field, error);
+    }
+   }
+
+   /**
+    * @description Validate that a field can be cast to a certain type
+    */
+   _validateType(field, value, out) {
+    if ( !field.validateType ) return;
+    const error = {errorType: 'validateType', message: `This field must be of type: ${field.validateType}`};
+    if (field.validateType == 'integer'  ) {
+      value = value || value === '0' || value === 0 ? value : NaN;
+      if ( !Number.isInteger(Number(value)) ) {
+        out.valid = false;
+        this._pushError(out, field, error);
+      }
     }
    }
 

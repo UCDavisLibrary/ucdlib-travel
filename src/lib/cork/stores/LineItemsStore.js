@@ -83,10 +83,11 @@ class LineItemsStore extends BaseStore {
     }, timestamp);
   }
 
-  lineItemsUpdatedError(error, timestamp) {
+  lineItemsUpdatedError(error, timestamp, payload) {
     this._setLineItemsUpdatedState({
       state : this.STATE.ERROR,
-      error
+      error,
+      payload
     }, timestamp);
   }
 
