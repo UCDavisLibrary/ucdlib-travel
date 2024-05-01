@@ -42,7 +42,7 @@ class LineItemsService extends BaseService {
       json: true,
       onLoading : request => this.store.lineItemsUpdatedLoading(request, timestamp),
       onLoad : result => this.store.lineItemsUpdatedLoaded(result.body, timestamp),
-      onError : e => this.store.lineItemsUpdatedError(e, timestamp)
+      onError : e => this.store.lineItemsUpdatedError(e, timestamp, payload)
     });
   }
 

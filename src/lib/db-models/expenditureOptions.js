@@ -18,7 +18,7 @@ class ExpenditureOptions {
         charLimit: 50
       },
       {dbName: 'description', jsonName: 'description'},
-      {dbName: 'form_order', jsonName: 'formOrder'},
+      {dbName: 'form_order', jsonName: 'formOrder', validateType: 'integer'},
       {dbName: 'archived', jsonName: 'archived'}
     ]);
   }
