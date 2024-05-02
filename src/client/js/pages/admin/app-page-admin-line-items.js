@@ -158,7 +158,7 @@ export default class AppPageAdminLineItems extends Mixin(LitElement)
         lineItem.validationHandler = new ValidationHandler(e);
         this.AppStateModel.showLoaded(this.id)
         this.requestUpdate();
-        // TODO: show error toast
+        this.AppStateModel.showToast({message: 'Error when updating the line item. Form data needs fixing.', type: 'error'})
 
       } else {
         // TODO: show error toast
@@ -171,7 +171,7 @@ export default class AppPageAdminLineItems extends Mixin(LitElement)
 
     } else if ( e.state === 'loaded' ) {
       this.AppStateModel.refresh();
-      // TODO: show success toast
+      this.AppStateModel.showToast({message: 'Line item updated successfully', type: 'success'});
     }
   }
 
