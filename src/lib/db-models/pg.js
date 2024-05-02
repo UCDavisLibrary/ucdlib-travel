@@ -1,6 +1,5 @@
 import pg from 'pg';
 const pool = new pg.Pool();
-console.log(pool);
 
 /**
  * @description Utility Wrapper around pg library

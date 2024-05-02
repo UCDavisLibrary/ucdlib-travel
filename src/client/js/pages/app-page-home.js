@@ -15,7 +15,7 @@ export default class AppPageHome extends Mixin(LitElement)
     super();
     this.render = render.bind(this);
 
-    this._injectModel('AppStateModel', 'AdminApproverTypeModel');
+    this._injectModel('AppStateModel');
   }
 
 
@@ -34,32 +34,6 @@ export default class AppPageHome extends Mixin(LitElement)
     ];
     this.AppStateModel.setBreadcrumbs(breadcrumbs);
 
-
-
-         /* Create */
-    // let data = {
-    //     "label": "xlabel",
-    //     "description": "xdescripton",
-    //     "systemGenerated": false,
-    //     "hideFromFundAssignment": false,
-    //     "archived": false,
-    //     "employees": []
-    //  };
-
-
-    let data = {
-      "label": "realfinallabel",
-      "description": "finaldescripton",
-      "systemGenerated": true,
-      "hideFromFundAssignment": false,
-      "archived": false,
-      "employees":[{
-        "employeeKerberos":"sbagg",
-        "approvalOrder": 77
-      }]
-     };   
-    let sample = await this.AdminApproverTypeModel.create(data);
-     console.log(sample);
     // const d = await this.getPageData();
     // const hasError = d.some(e => e.state === 'error');
     // if ( !hasError ) this.AppStateModel.showLoaded(this.id);
