@@ -30,7 +30,8 @@ export default class BaseServiceImp extends BaseService {
     if( options.json &&
       options.fetchOptions &&
       options.fetchOptions.body &&
-      typeof options.fetchOptions.body === 'object') {
+      typeof options.fetchOptions.body === 'object' &&
+      !Array.isArray(options.fetchOptions.body) ){
         options.fetchOptions.body = {...options.fetchOptions.body};
         delete options.fetchOptions.body.validationHandler
     }

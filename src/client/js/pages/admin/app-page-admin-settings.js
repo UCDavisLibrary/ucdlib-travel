@@ -76,8 +76,11 @@ export default class AppPageAdminSettings extends Mixin(LitElement)
    * Caches are automatically cleared as part of the 'SettingsModel.updateSettings' method
    */
   _onSettingsUpdated(e) {
-    console.log('settings updated', e);
-    // TODO: show toast
+    if ( e.state === 'loaded' ){
+      this.AppStateModel.showToast({message: 'Settings updated', type: 'success'});
+    } else if ( e.state === 'error' ) {
+      this.AppStateModel.showToast({message: 'Settings update failed', type: 'error'});
+    }
   }
 
   /**

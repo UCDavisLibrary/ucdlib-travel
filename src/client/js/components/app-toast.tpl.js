@@ -8,6 +8,7 @@ export function styles() {
       bottom: 2rem;
       left: 2rem;
       width: 95%;
+      z-index: 1000;
     }
 
     .toast {
@@ -18,7 +19,6 @@ export function styles() {
       background: #FFFFFF;
       box-shadow: 0px 4px 20px 0px #00000033;
       text-align:center;
-      z-index:3;
     }
 
     @media (min-width: 768px) {
