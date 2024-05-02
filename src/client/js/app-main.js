@@ -27,6 +27,7 @@ import "../../lib/cork/models/DepartmentModel.js";
 import "../../lib/cork/models/EmployeeModel.js";
 import "../../lib/cork/models/SettingsModel.js";
 import "../../lib/cork/models/AdminApproverTypeModel.js";
+import "../../lib/cork/models/LineItemsModel.js";
 
 // auth
 import Keycloak from 'keycloak-js';
@@ -36,8 +37,13 @@ Registry.ready();
 
 // registry of app page bundles - pages are dynamically loaded on appStateUpdate
 import bundles from "./pages/bundles/index.js";
+
 import "./pages/app-page-alt-state.js";
 import "./pages/app-page-home.js";
+
+// global components
+import "./components/app-toast.js";
+import "./components/app-dialog-modal.js";
 
 /**
  * @class AppMain

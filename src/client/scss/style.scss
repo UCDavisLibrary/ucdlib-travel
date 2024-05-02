@@ -1,4 +1,10 @@
 @use '@ucd-lib/theme-sass/style-ucdlib.scss' as style;
 @use './fonts.scss' as fonts;
 @use './global.scss' as global;
+
+// admin pages
 @use './pages/admin/settings.scss' as adminSettings;
+@use './pages//admin/line-items.scss' as adminLineItems;
+
+// components
+@use './components/dialog-modal.scss' as dialogModal;

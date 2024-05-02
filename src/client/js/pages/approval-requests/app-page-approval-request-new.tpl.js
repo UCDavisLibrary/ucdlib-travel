@@ -1,7 +1,6 @@
 import { html } from 'lit';
 
-export function render() { 
+export function render() {
 return html`
-
 
 `;}

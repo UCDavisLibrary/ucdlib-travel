@@ -166,19 +166,60 @@ class AppStateModelImpl extends AppStateModel {
 
     this.store.emit('breadcrumb-update', b);
   }
+ 
+  /**
+   * @description Show dismissable toast banner in popup. Will disappear on next app-state-update event
+   * @param {Object} options Toast object with the following properties:
+   * - message {String} - The message to display
+   * - type {String} - The type of toast. Options: 'information', 'error', 'success'
+   */
+  showToast(option){
+    if ( Array.isArray(option) ) return;
+
+    if( typeof option === 'object' ) 
+      this.store.emit('toast-update', option);
+    
+  }
 
   /**
-   * @description Show dismissable alert banner at top of page. Will disappear on next app-state-update event
-   * @param {Object|String} options Alert message if string, config if object:
-   * {message: 'alert!'
-   * brandColor: 'double-decker'
-   * }
+   * @description Show a modal dialog box. 
+   * To listen for the action event, add the _onDialogAction method to your element and then filter on e.action
+   * @param {Object} options Dialog object with the following properties:
+   * - title {String} - The title of the dialog (optional)
+   * - content {String} - The html content of the dialog (optional, but should probably be included)
+   * - actions {Array} - Array of objects with the following properties:
+   *  - text {String} - The text of the button
+   *  - value {String} - The action slug that is emitted when button is clicked
+   *  - invert {Boolean} - Invert the button color (optional)
+   *  - color {String} - The brand color string of the button (optional)
+   * - data {Object} - Any data to pass along in the action event (optional)
+   * 
+   * If the actions array is empty, a 'Dismiss' button will be added automatically
    */
-  showAlertBanner(options){
-    if ( typeof options === 'string' ){
-      options = {message: options};
+  showDialogModal(options={}){
+    if ( !options.actions ) {
+      options.actions = [{text: 'Dismiss', action: 'dismiss'}];
     }
-    this.store.emit('alert-banner-update', options);
+    if ( !options.data ) {
+      options.data = {};
+    }
+    if ( !options.title ) {
+      options.title = '';
+    }
+    if ( !options.content ) {
+      options.content = '';
+    }
+    this.store.emit('dialog-open', options);
+  }
+
+
+  /**
+   * @description Dismissing all toasts in the queue
+   */
+  dismissToast(){
+    let dismissMessage = "Toast Dismissed";
+ 
+    this.store.emit('toast-dismiss', {message: dismissMessage});
   }
 
   /**

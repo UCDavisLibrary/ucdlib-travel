@@ -1,3 +1,42 @@
 [hidden] {
   display: none !important;
 }
+
+.pointer {
+  cursor: pointer;
+}
+.icon-link {
+  text-decoration: none;
+  cursor: pointer;
+}
+.icon-link:hover {
+  color: var(--category-brand, #13639E);
+  filter: brightness(1.4);
+}
+.bold {
+  font-weight: 700;
+}
+
+
+.field-error {
+  input {
+    border: 1px solid #c10230;
+  }
+  textarea {
+    border: 1px solid #c10230;
+  }
+  .field-error-message {
+    color: #c10230;
+    display: block;
+  }
+  label {
+    color: #c10230;
+  }
+}
+.field-error-message {
+  display: none;
+}
+.field-help {
+  font-size: .875rem;
+  color: #13639e;
+}

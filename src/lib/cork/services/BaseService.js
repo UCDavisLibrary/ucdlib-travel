@@ -27,6 +27,15 @@ export default class BaseServiceImp extends BaseService {
       } catch (error) {}
     }
 
-    return await super.request(options);
+    if( options.json &&
+      options.fetchOptions &&
+      options.fetchOptions.body &&
+      typeof options.fetchOptions.body === 'object' &&
+      !Array.isArray(options.fetchOptions.body) ){
+        options.fetchOptions.body = {...options.fetchOptions.body};
+        delete options.fetchOptions.body.validationHandler
+    }
+    //return await super.request(options);
+    return super.request(options);
   }
 }
