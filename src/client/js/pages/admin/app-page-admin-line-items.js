@@ -171,7 +171,11 @@ export default class AppPageAdminLineItems extends Mixin(LitElement)
 
     } else if ( e.state === 'loaded' ) {
       this.AppStateModel.refresh();
-      this.AppStateModel.showToast({message: 'Line item updated successfully', type: 'success'});
+      if ( e.payload?.archived ) {
+        this.AppStateModel.showToast({message: 'Line item deleted successfully', type: 'success'});
+      } else {
+        this.AppStateModel.showToast({message: 'Line item updated successfully', type: 'success'});
+      }
     }
   }
 
@@ -219,6 +223,25 @@ export default class AppPageAdminLineItems extends Mixin(LitElement)
     } else {
       this.LineItemsModel.createLineItem(this.newLineItem);
     }
+  }
+
+  _onDeleteClick(lineItem){
+    this.AppStateModel.showDialogModal({
+      title : 'Delete Line Item',
+      content : 'Are you sure you want to delete this line item option?',
+      actions : [
+        {text: 'Delete', value: 'delete-line-item', color: 'double-decker'},
+        {text: 'Cancel', value: 'cancel', invert: true, color: 'primary'}
+      ],
+      data : {lineItem}
+    });
+  }
+
+  _onDialogAction(e){
+    if ( e.action !== 'delete-line-item' ) return;
+    const lineItem = e.data.lineItem;
+    lineItem.archived = true;
+    this.LineItemsModel.updateLineItem(lineItem);
   }
 
   /**

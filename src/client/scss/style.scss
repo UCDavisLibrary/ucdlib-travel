@@ -5,3 +5,6 @@
 // admin pages
 @use './pages/admin/settings.scss' as adminSettings;
 @use './pages//admin/line-items.scss' as adminLineItems;
+
+// components
+@use './components/dialog-modal.scss' as dialogModal;

@@ -32,7 +32,11 @@ function renderLineItem(item) {
           title='Edit line item'
           @click=${e => this._onEditClick(item)}
           class='icon-link'><i class="wonder-blue fa-solid fa-pen-to-square"></i></a>
-        <a title='Delete line item' class='icon-link double-decker'><i class="fa-solid fa-trash-can"></i></a>
+        <a 
+          title='Delete line item' 
+          @click=${e => this._onDeleteClick(item)}
+          class='icon-link double-decker'>
+          <i class="fa-solid fa-trash-can"></i></a>
       </div>
       <div>
         <div class='bold primary'>Description</div>
