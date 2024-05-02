@@ -166,19 +166,27 @@ class AppStateModelImpl extends AppStateModel {
 
     this.store.emit('breadcrumb-update', b);
   }
+ 
+  /**
+   * @description Show dismissable toast banner in popup. Will disappear on next app-state-update event
+   * @param {Object} options Toast message if object, does not except multiple:
+   */
+  showToast(option){
+    if ( Array.isArray(option) ) return;
+
+    if( typeof option === 'object' ) 
+      this.store.emit('toast-update', option);
+    
+  }
+
 
   /**
-   * @description Show dismissable alert banner at top of page. Will disappear on next app-state-update event
-   * @param {Object|String} options Alert message if string, config if object:
-   * {message: 'alert!'
-   * brandColor: 'double-decker'
-   * }
+   * @description Dismissing all toasts in the queue
    */
-  showAlertBanner(options){
-    if ( typeof options === 'string' ){
-      options = {message: options};
-    }
-    this.store.emit('alert-banner-update', options);
+  dismissToast(){
+    let dismissMessage = "Toast Dismissed";
+ 
+    this.store.emit('toast-dismiss', {message: dismissMessage});
   }
 
   /**
