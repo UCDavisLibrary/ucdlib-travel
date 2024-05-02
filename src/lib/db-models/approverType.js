@@ -31,8 +31,6 @@ class AdminApproverType {
         
         if(args["status"] == "archived") archive = "true";
          
-        console.log(args);
-
         if(Array.isArray(args["id"])) {
             let v = pg.valuesArray(args.id);
 
@@ -89,9 +87,7 @@ class AdminApproverType {
           'label', 'description', 'systemGenerated', 'hideFromFundAssignment',
           'archived'
         ];
-        console.log(data);
         let approverEmployee = data.employees;
-        console.log(approverEmployee);
 
         const values = [];
         let first = true;
@@ -116,14 +112,10 @@ class AdminApproverType {
           await client.query('BEGIN');
           const approverType = await client.query(text, values);
           out.res.push(approverType);
-          console.log("firstOut:", out);
 
           const approverTypeId = approverType.rows[0].approver_type_id;
-          console.log("approverTypeId:", approverTypeId);
 
           for (const a of approverEmployee) {
-            console.log("A:", a);
-            console.log("ID:", approverTypeId);
             const approverText = `
             INSERT INTO approver_type_employee (approver_type_id, employee_kerberos, approval_order)
             VALUES ($1, $2, $3)
@@ -140,8 +132,6 @@ class AdminApproverType {
         } finally {
           client.release();
         }
-
-        console.log("DB:",out);
 
         return out;
       
@@ -242,7 +232,7 @@ class AdminApproverType {
             WHERE approver_type_id = $${updateEmployeeClause.values.length + 1}
             RETURNING *
             `;
-            
+
             const r = await client.query(approverEmployeeText, [...updateEmployeeClause.values, id]);
             out.res.push(r);
           }
