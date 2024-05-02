@@ -29,6 +29,8 @@ class AppStateStoreImpl extends AppStateStore {
     this.events.BREADCRUMB_UPDATE = 'breadcrumb-update';
     this.events.TOAST_UPDATE = 'toast-update';
     this.events.TOAST_DISMISS = 'toast-dismiss';
+    this.events.DIALOG_OPEN = 'dialog-open';
+    this.events.DIALOG_ACTION = 'dialog-action';
 
   }
 }
