@@ -2,7 +2,6 @@ import { LitElement } from 'lit';
 import { render } from "./app-page-home.tpl.js";
 import { LitCorkUtils, Mixin } from "../../../lib/appGlobals.js";
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
-
 export default class AppPageHome extends Mixin(LitElement)
   .with(LitCorkUtils, MainDomElement) {
 
@@ -16,7 +15,7 @@ export default class AppPageHome extends Mixin(LitElement)
     super();
     this.render = render.bind(this);
 
-    this._injectModel('AppStateModel');
+    this._injectModel('AppStateModel', 'AdminApproverTypeModel');
   }
 
   /**
@@ -27,13 +26,39 @@ export default class AppPageHome extends Mixin(LitElement)
     if ( this.id !== state.page ) return;
     // this.AppStateModel.showLoading();
 
-    this.AppStateModel.setTitle('Home Page');
+
 
     const breadcrumbs = [
       this.AppStateModel.store.breadcrumbs.home
     ];
     this.AppStateModel.setBreadcrumbs(breadcrumbs);
 
+
+
+         /* Create */
+    // let data = {
+    //     "label": "xlabel",
+    //     "description": "xdescripton",
+    //     "systemGenerated": false,
+    //     "hideFromFundAssignment": false,
+    //     "archived": false,
+    //     "employees": []
+    //  };
+
+
+    let data = {
+      "label": "realfinallabel",
+      "description": "finaldescripton",
+      "systemGenerated": true,
+      "hideFromFundAssignment": false,
+      "archived": false,
+      "employees":[{
+        "employeeKerberos":"sbagg",
+        "approvalOrder": 77
+      }]
+     };   
+    let sample = await this.AdminApproverTypeModel.create(data);
+     console.log(sample);
     // const d = await this.getPageData();
     // const hasError = d.some(e => e.state === 'error');
     // if ( !hasError ) this.AppStateModel.showLoaded(this.id);

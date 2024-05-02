@@ -1,5 +1,6 @@
 import pg from 'pg';
 const pool = new pg.Pool();
+console.log(pool);
 
 /**
  * @description Utility Wrapper around pg library
@@ -19,7 +20,7 @@ class Pg {
    * @param {Array} values - Hydration values
    * @returns {Object} {res, err}
    */
-  async query(text, values){
+  async query(text, values){           
     const out = this.output;
     try {
       out.res = await pool.query(text, values);

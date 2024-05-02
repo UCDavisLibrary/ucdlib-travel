@@ -26,6 +26,7 @@ export default class BaseServiceImp extends BaseService {
         options.fetchOptions.headers.Authorization = `Bearer ${kc.token}`
       } catch (error) {}
     }
+
     return await super.request(options);
   }
 }
