@@ -5,20 +5,26 @@ export function styles() {
   const elementStyles = css`
     :host {
       position: fixed;
-      bottom: 10px;
-      left:10px;
+      bottom: 2rem;
+      left: 2rem;
+      width: 95%;
     }
 
     .toast {
-      width: 200px;
-      display: flex;
-      padding: 20px 38px 20px 38px;
+      max-width: 90%;
+      display: inline-flex;
+      padding: 1rem 1.5rem;
       border-radius: 15px;
       background: #FFFFFF;
       box-shadow: 0px 4px 20px 0px #00000033;
       text-align:center;
       z-index:3;
-    
+    }
+
+    @media (min-width: 768px) {
+      .toast {
+        max-width: 60%;
+      }
     }
     
     .movein {
@@ -65,23 +71,20 @@ export function styles() {
     }
 
     .icon { 
-      font-size: 20px;
-      width:25%;
+      margin-right: 1rem;
     } 
 
-    .text { 
-      font-size: 20px;
-      width:75%;
-    } 
-
-    .icon-success {
+    .type--success {
       color:#3dae2b;
+      border: 1px solid #3dae2b;
     }
-    .icon-info {
+    .type--info {
       color:black;
+      border: 1px solid black;
     }     
-    .icon-error {
+    .type--error {
       color: #c10230;
+      border: 1px solid #c10230;
     }
 
   `;
@@ -95,9 +98,9 @@ export function render() {
     "toast-hidden": this.hidden,
     "movein": this.animation,
     "moveout": !this.animation,
-    "icon-success": this.type == "success",
-    "icon-info": this.type == "info",
-    "icon-error": this.type == "error",
+    "type--success": this.type == "success",
+    "type--info": this.type == "info",
+    "type--error": this.type == "error",
 
   };  
 return html`
