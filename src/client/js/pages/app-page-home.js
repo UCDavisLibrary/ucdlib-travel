@@ -18,6 +18,7 @@ export default class AppPageHome extends Mixin(LitElement)
     this._injectModel('AppStateModel', 'AdminApproverTypeModel');
   }
 
+
   /**
    * @description bound to AppStateModel app-state-update event
    * @param {Object} state - AppStateModel state
@@ -73,6 +74,7 @@ export default class AppPageHome extends Mixin(LitElement)
     const resolvedPromises = await Promise.all(promises);
     return resolvedPromises;
   }
+
 
 }
 

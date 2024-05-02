@@ -71,6 +71,25 @@ class Pg {
     return this._toEqualsClause(queryObject, ', ');
   }
 
+  /**
+   * @description Converts an object to parameters of an INSERT clause
+   * @param {Object} obj - key value pairs for clause
+   * @returns {Object} {keys: ['foo', 'bar'], values: ['fooValue', 'barValue'], placeholders: ['$1', '$2']}
+   */
+  prepareObjectForInsert(obj){
+    const out = {keys: [], values: [], placeholders: []};
+    for (const k in obj) {
+      out.keys.push(k);
+      out.values.push(obj[k]);
+      out.placeholders.push(`$${out.values.length}`);
+    }
+
+    out.keysString = out.keys.join(', ');
+    out.valuesString = out.values.join(', ');
+    out.placeholdersString = out.placeholders.join(', ');
+    return out;
+  }
+
   _toEqualsClause(queryObject, sep=' AND '){
     let sql = '';
     const values = [];

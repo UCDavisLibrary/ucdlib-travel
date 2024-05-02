@@ -18,7 +18,7 @@ export default (api) => {
       console.error('Error in /settings/:category', data.error);
       return res.status(500).json({error: true, message: 'Error getting settings.'});
     }
-    res.json(data);
+    return res.json(data);
   });
 
   /**
@@ -26,7 +26,7 @@ export default (api) => {
    */
   api.put('/settings', protect('hasAdminAccess'), async (req, res) => {
     const settingsData = req.body;
-    if ( apiUtils.isArrayOfObjects(settingsData) ){
+    if ( !apiUtils.isArrayOfObjects(settingsData) ){
       return res.status(400).json({error: true, message: 'Settings data must be an array of objects.'});
     }
     const data = await settings.updateSettings(settingsData);
@@ -34,6 +34,6 @@ export default (api) => {
       console.error('Error in PUT /settings', data.error);
       return res.status(500).json({error: true, message: 'Error updating settings.'});
     }
-    res.json({error: false});
+    return res.json({error: false});
   });
 };
