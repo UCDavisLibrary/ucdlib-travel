@@ -6,6 +6,7 @@ class SettingsService extends BaseService {
   constructor() {
     super();
     this.store = SettingsStore;
+
   }
 
   getByCategory(category){
