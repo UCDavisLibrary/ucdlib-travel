@@ -161,7 +161,7 @@ export default class AppPageAdminLineItems extends Mixin(LitElement)
         this.AppStateModel.showToast({message: 'Error when updating the line item. Form data needs fixing.', type: 'error'})
 
       } else {
-        // TODO: show error toast
+        this.AppStateModel.showToast({message: 'An unknown error ocurred when updating the line item', type: 'error'})
         this.AppStateModel.showLoaded(this.id)
       }
       await this.waitController.waitForFrames(3);
@@ -184,9 +184,9 @@ export default class AppPageAdminLineItems extends Mixin(LitElement)
         this.newLineItem.validationHandler = new ValidationHandler(e);
         this.AppStateModel.showLoaded(this.id)
         this.requestUpdate();
-        // TODO: show error toast
+        this.AppStateModel.showToast({message: 'Error when creating the line item. Form data needs fixing.', type: 'error'})
       } else {
-        // TODO: show error toast
+        this.AppStateModel.showToast({message: 'An unknown error ocurred when creating the line item', type: 'error'})
         this.AppStateModel.showLoaded(this.id)
       }
       await this.waitController.waitForFrames(3);
@@ -196,7 +196,7 @@ export default class AppPageAdminLineItems extends Mixin(LitElement)
     } else if ( e.state === 'loaded' ) {
       this.newLineItem = {};
       this.AppStateModel.refresh();
-      // TODO: show success toast
+      this.AppStateModel.showToast({message: 'Line item created successfully', type: 'success'});
     }
   }
 
@@ -212,7 +212,7 @@ export default class AppPageAdminLineItems extends Mixin(LitElement)
       const lineItem = this.lineItems.find(item => item.expenditureOptionId == lineItemId);
       if ( !lineItem ) {
         console.error('Could not find line item with id', lineItemId);
-        // TODO: show error toast
+        this.AppStateModel.showToast({message: 'An unknown error ocurred', type: 'error'});
         return;
       }
       this.LineItemsModel.updateLineItem(lineItem);
