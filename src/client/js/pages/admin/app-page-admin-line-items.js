@@ -9,6 +9,7 @@ import ValidationHandler from "../../utils/ValidationHandler.js";
  * @description Admin page for managing expense line item options
  * aka what the user can select when submitting an approval request
  * @param {Array} lineItems - local copy of active line item objects from LineItemsModel
+ * @param {Object} newLineItem - new line item object being created
  */
 export default class AppPageAdminLineItems extends Mixin(LitElement)
 .with(LitCorkUtils, MainDomElement) {
@@ -175,6 +176,31 @@ export default class AppPageAdminLineItems extends Mixin(LitElement)
   }
 
   /**
+   * @description bound to LineItemsModel LINE_ITEM_CREATED event
+   */
+  async _onLineItemCreated(e){ 
+    if ( e.state === 'error' ) {
+      if ( e.error?.payload?.is400 ) {
+        this.newLineItem.validationHandler = new ValidationHandler(e);
+        this.AppStateModel.showLoaded(this.id)
+        this.requestUpdate();
+        // TODO: show error toast
+      } else {
+        // TODO: show error toast
+        this.AppStateModel.showLoaded(this.id)
+      }
+      await this.waitController.waitForFrames(3);
+      window.scrollTo(0, this.lastScrollPosition);
+    } else if ( e.state === 'loading' ) {
+      this.AppStateModel.showLoading();
+    } else if ( e.state === 'loaded' ) {
+      this.newLineItem = {};
+      this.AppStateModel.refresh();
+      // TODO: show success toast
+    }
+  }
+
+  /**
    * @description bound to line item form submit event (new or edit line item)
    */
   _onFormSubmit(e){
@@ -190,6 +216,8 @@ export default class AppPageAdminLineItems extends Mixin(LitElement)
         return;
       }
       this.LineItemsModel.updateLineItem(lineItem);
+    } else {
+      this.LineItemsModel.createLineItem(this.newLineItem);
     }
   }
 
