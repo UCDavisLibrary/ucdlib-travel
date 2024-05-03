@@ -2,7 +2,7 @@ import { LitElement } from 'lit';
 import {render} from "./app-page-admin-approvers.tpl.js";
 import { LitCorkUtils, Mixin } from "../../../../lib/appGlobals.js";
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
-
+import "../../components/app-approver-type.js"
 export default class AppPageAdminApprovers extends Mixin(LitElement)
 .with(LitCorkUtils, MainDomElement) {
 
@@ -34,7 +34,9 @@ export default class AppPageAdminApprovers extends Mixin(LitElement)
       this.AppStateModel.store.breadcrumbs[this.id]
     ];
     this.AppStateModel.setBreadcrumbs(breadcrumbs);
+
   }
+
 
 }
 
