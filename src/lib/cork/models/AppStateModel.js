@@ -68,7 +68,11 @@ class AppStateModelImpl extends AppStateModel {
       } else if ( secondaryRoute === 'settings' ){
         p = 'admin-settings';
       } else if ( secondaryRoute === 'allocations' ){
-        p = 'admin-allocations';
+        if ( tertiaryRoute === 'new' ){
+          p = 'admin-allocations-new';
+        } else {
+          p = 'admin-allocations';
+        }
       } else if ( secondaryRoute === 'line-items' ){
         p = 'admin-line-items';
       } else if ( secondaryRoute === 'reimbursement' ){
