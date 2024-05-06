@@ -59,15 +59,15 @@ export default class AppPageAdminLineItems extends Mixin(LitElement)
     ];
     this.AppStateModel.setBreadcrumbs(breadcrumbs);
 
-    try {
-      const d = await this.getPageData();
-      const hasError = d.some(e => e.state === 'error');
-      if ( !hasError ) this.AppStateModel.showLoaded(this.id);
-      this.requestUpdate();
-    } catch(e) {
-      this.AppStateModel.showError(this.id);
+    const d = await this.getPageData();
+    const hasError = d.some(e => e.status === 'rejected' || e.value.state === 'error');
+    if ( hasError ) {
+      this.AppStateModel.showError(d);
+      return;
     }
 
+    this.AppStateModel.showLoaded(this.id);
+    this.requestUpdate();
   }
 
   /**
@@ -182,7 +182,7 @@ export default class AppPageAdminLineItems extends Mixin(LitElement)
   /**
    * @description bound to LineItemsModel LINE_ITEM_CREATED event
    */
-  async _onLineItemCreated(e){ 
+  async _onLineItemCreated(e){
     if ( e.state === 'error' ) {
       if ( e.error?.payload?.is400 ) {
         this.newLineItem.validationHandler = new ValidationHandler(e);
@@ -251,7 +251,7 @@ export default class AppPageAdminLineItems extends Mixin(LitElement)
       const promises = [];
       promises.push(this.SettingsModel.getByCategory(this.settingsCategory));
       promises.push(this.LineItemsModel.getActiveLineItems());
-      const resolvedPromises = await Promise.all(promises);
+      const resolvedPromises = await Promise.allSettled(promises);
       return resolvedPromises;
     }
 
