@@ -170,7 +170,7 @@ class AppStateModelImpl extends AppStateModel {
 
     this.store.emit('breadcrumb-update', b);
   }
- 
+
   /**
    * @description Show dismissable toast banner in popup. Will disappear on next app-state-update event
    * @param {Object} options Toast object with the following properties:
@@ -180,13 +180,13 @@ class AppStateModelImpl extends AppStateModel {
   showToast(option){
     if ( Array.isArray(option) ) return;
 
-    if( typeof option === 'object' ) 
+    if( typeof option === 'object' )
       this.store.emit('toast-update', option);
-    
+
   }
 
   /**
-   * @description Show a modal dialog box. 
+   * @description Show a modal dialog box.
    * To listen for the action event, add the _onDialogAction method to your element and then filter on e.action
    * @param {Object} options Dialog object with the following properties:
    * - title {String} - The title of the dialog (optional)
@@ -197,7 +197,7 @@ class AppStateModelImpl extends AppStateModel {
    *  - invert {Boolean} - Invert the button color (optional)
    *  - color {String} - The brand color string of the button (optional)
    * - data {Object} - Any data to pass along in the action event (optional)
-   * 
+   *
    * If the actions array is empty, a 'Dismiss' button will be added automatically
    */
   showDialogModal(options={}){
@@ -222,7 +222,6 @@ class AppStateModelImpl extends AppStateModel {
    */
   dismissToast(){
     let dismissMessage = "Toast Dismissed";
- 
     this.store.emit('toast-dismiss', {message: dismissMessage});
   }
 
@@ -238,9 +237,23 @@ class AppStateModelImpl extends AppStateModel {
    * @param {String|Object} msg Error message to show or cork-app-utils response object
    */
   showError(msg='', fallbackMessage=''){
-    let errorMessage = ''
+    let errorMessage = '';
+
+    // if array, find and use first error
+    if ( Array.isArray(msg) ) {
+      msg = msg.find(m => m.status === 'rejected' || m.value.state === 'error');
+      if ( !msg ) msg = fallbackMessage;
+    }
+
     if ( typeof msg === 'object' ) {
       console.error(msg);
+
+      // is object from Promise.allSettled
+      if ( msg.status === 'fulfilled' ){
+        msg = msg.value;
+      }
+
+      // try to get error message from cork-app-utils response object
       if ( msg?.error?.response?.status == 404 ){
         errorMessage = 'Page not found';
       } else if ( msg?.error?.response?.status == 401 ){

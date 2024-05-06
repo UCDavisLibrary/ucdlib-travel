@@ -44,6 +44,9 @@ import "./pages/app-page-home.js";
 import "./components/app-toast.js";
 import "./components/app-dialog-modal.js";
 
+// utils
+import urlUtils from '../../lib/utils/urlUtils.js';
+
 /**
  * @class AppMain
  * @description The main app web component, which controls routing and other app-level functionality.
@@ -258,6 +261,11 @@ export default class AppMain extends Mixin(LitElement)
   kc.onAuthError = () => {AuthModel.redirectUnauthorized();};
   kc.onAuthSuccess = () => {
     customElements.define('app-main', AppMain);
+
+    // replace state in history to remove keycloak state
+    const hash = urlUtils.stripFromHash(['iss']);
+    window.history.replaceState(null, null, hash ? `#${hash}` : window.location.pathname);
+
     AuthModel.init();
     AuthModel._onAuthRefreshSuccess();
   };
