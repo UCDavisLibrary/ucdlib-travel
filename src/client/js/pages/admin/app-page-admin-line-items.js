@@ -225,6 +225,10 @@ export default class AppPageAdminLineItems extends Mixin(LitElement)
     }
   }
 
+  /**
+   * @description Bound to delete button for each line item
+   * @param {Object} lineItem - line item object to delete
+   */
   _onDeleteClick(lineItem){
     this.AppStateModel.showDialogModal({
       title : 'Delete Line Item',
@@ -237,6 +241,11 @@ export default class AppPageAdminLineItems extends Mixin(LitElement)
     });
   }
 
+  /**
+   * @description Callback for dialog-action AppStateModel event
+   * @param {Object} e - AppStateModel dialog-action event
+   * @returns
+   */
   _onDialogAction(e){
     if ( e.action !== 'delete-line-item' ) return;
     const lineItem = e.data.lineItem;
