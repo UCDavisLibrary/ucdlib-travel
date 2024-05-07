@@ -15,6 +15,7 @@ return html`
         <ucdlib-employee-search-advanced
           ${ref(this.employeeSearchRef)}
           .selectButtonText=${'Add to Allocation List'}
+          @employee-select=${this._onEmployeeSelect}
           .clearOnSelectConfirmation=${true}>
         </ucdlib-employee-search-advanced>
       </section>

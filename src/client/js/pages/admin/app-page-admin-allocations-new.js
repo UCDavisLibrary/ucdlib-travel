@@ -53,6 +53,10 @@ export default class AppPageAdminAllocationsNew extends Mixin(LitElement)
     this.requestUpdate();
   }
 
+  _onEmployeeSelect(e) {
+    console.log('Employee selected', e.detail);
+  }
+
   /**
    * @description Get all data required for rendering this page
    */

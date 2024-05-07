@@ -1,5 +1,7 @@
 import { html } from 'lit';
+
 import '@ucd-lib/theme-elements/brand/ucd-theme-slim-select/ucd-theme-slim-select.js'
+import '@ucd-lib/theme-elements/brand/ucd-theme-pagination/ucd-theme-pagination.js'
 
 /**
  * @description Main render function for this element
@@ -84,6 +86,10 @@ function renderForm(){
   `;
 }
 
+/**
+ * @description Render the results of the advanced employee search
+ * @returns {TemplateResult}
+ */
 function renderResults(){
   if ( !this._didSearch ) {
     return html``;
@@ -96,7 +102,7 @@ function renderResults(){
     `;
   }
 
-  const selectAllId = Math.random().toString(36).substring(7);
+  const selectAllId = Math.random().toString(36).substring(10);
   return html`
     <div>
       <div class='results-header'>
@@ -125,6 +131,14 @@ function renderResults(){
           </div>
         `)}
       </div>
+      <ucd-theme-pagination
+        ?hidden=${this.maxPage <= 1}
+        current-page=${this.page}
+        max-pages=${this.maxPage}
+        visible-link-count=5
+        @page-change=${e => this._onPaginationChange(e.detail.page)}
+        >
+      </ucd-theme-pagination>
       <button
         class='btn btn--alt3 btn--block'
         type='button'
