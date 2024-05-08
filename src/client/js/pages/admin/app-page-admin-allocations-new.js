@@ -27,7 +27,7 @@ export default class AppPageAdminAllocationsNew extends Mixin(LitElement)
     this.employeeSearchRef = createRef();
     this.waitController = new WaitController(this);
 
-    this._injectModel('AppStateModel');
+    this._injectModel('AppStateModel', 'FundingSourceModel');
   }
 
   /**
