@@ -3,6 +3,10 @@ import { ref } from 'lit/directives/ref.js';
 
 import "../../components/ucdlib-employee-search-advanced.js";
 
+/**
+ * @description Main render function
+ * @returns {TemplateResult}
+ */
 export function render() {
 
   return html`
@@ -28,6 +32,10 @@ export function render() {
   </div>
   `;}
 
+/**
+ * @description Render the form
+ * @returns {TemplateResult}
+ */
   function renderForm(){
     const page = 'app-page-admin-allocations-new';
 
@@ -53,6 +61,35 @@ export function render() {
                 type="date"
                 id="${page}--to"
                 @change=${e => this._onFormInput('endDate', e.target.value)}
+                >
+            </div>
+          </div>
+        </div>
+        <div class="l-2col u-space-mt--large">
+          <div class="l-first">
+            <div class="field-container">
+              <label for="${page}--funding-source">Funding Source <abbr title="Required">*</abbr></label>
+              <select id="${page}--funding-source" @change=${e => this._onFundingSourceSelect(e.target.value)}>
+                <option value='' ?selected=${!this.selectedFundingSource?.fundingSourceId}>Select a funding source</option>
+                ${this.fundingSources.map(fundingSource => html`
+                  <option
+                    value=${fundingSource.fundingSourceId}
+                    ?disabled=${!fundingSource.hasCap}
+                    ?selected=${this.selectedFundingSource?.fundingSourceId == fundingSource.fundingSourceId}>
+                    ${fundingSource.label}
+                  </option>
+                `)}
+              </select>
+            </div>
+          </div>
+          <div class="l-second">
+            <div class="field-container">
+              <label for="${page}--funding-amount">Amount <abbr title="Required">*</abbr></label>
+              <input
+                type="number"
+                id="${page}--funding-amount"
+                .value=${this.fundingAmount}
+                @change=${e => this._onFormInput('fundingAmount', e.target.value)}
                 >
             </div>
           </div>
@@ -90,7 +127,7 @@ export function render() {
           `)}
         </div>
       </fieldset>
-      <button type="submit" class='btn btn--primary'>Add Allocations</button>
+      <button type="submit" class='btn btn--primary'>Add New Allocations</button>
     </form>
     `;
   }

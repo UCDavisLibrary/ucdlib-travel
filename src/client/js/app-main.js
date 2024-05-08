@@ -24,6 +24,7 @@ AppStateModel.init(appConfig.routes);
 
 // import cork models
 import "../../lib/cork/models/DepartmentModel.js";
+import "../../lib/cork/models/EmployeeAllocationModel.js";
 import "../../lib/cork/models/EmployeeModel.js";
 import "../../lib/cork/models/FundingSourceModel.js";
 import "../../lib/cork/models/LineItemsModel.js";

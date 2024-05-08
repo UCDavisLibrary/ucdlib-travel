@@ -13,21 +13,34 @@ export default class AppPageAdminAllocationsNew extends Mixin(LitElement)
     return {
       employees: {type: Array},
       startDate: {type: String},
-      endDate: {type: String}
+      endDate: {type: String},
+      fundingAmount: {type: Number},
+      fundingSources: {type: Array},
+      selectedFundingSource: {type: Object}
     }
   }
 
   constructor() {
     super();
     this.render = render.bind(this);
-    this.employees = [];
-    this.startDate = '';
-    this.endDate = '';
+    this.fundingSources = [];
+    this.resetForm();
 
     this.employeeSearchRef = createRef();
     this.waitController = new WaitController(this);
 
-    this._injectModel('AppStateModel', 'FundingSourceModel');
+    this._injectModel('AppStateModel', 'FundingSourceModel', 'EmployeeAllocationModel');
+  }
+
+  /**
+   * @description Reset form state
+   */
+  resetForm(){
+    this.employees = [];
+    this.startDate = '';
+    this.endDate = '';
+    this.fundingAmount = 0;
+    this.selectedFundingSource = {};
   }
 
   /**
@@ -90,14 +103,59 @@ export default class AppPageAdminAllocationsNew extends Mixin(LitElement)
     return this.employees.find(e => e.kerberos === employee.kerberos);
   }
 
-  _onFormSubmit(e) {
+  /**
+   * @description Event handler for form submission
+   * @param {Event} e - Submit event
+   */
+  async _onFormSubmit(e) {
     e.preventDefault();
-    console.log('submit');
+    const payload = {
+      startDate: this.startDate,
+      endDate: this.endDate,
+      fundingSourceId: this.selectedFundingSource.fundingSourceId,
+      amount: this.fundingAmount,
+      employees: this.employees
+    };
+    console.log('submit', payload);
+    await this.EmployeeAllocationModel.createEmployeeAllocations(payload);
+
   }
 
+  /**
+   * @description Event handler for form input fields
+   * @param {String} prop - property name
+   * @param {*} value - input value
+   */
   _onFormInput(prop, value){
+    if ( prop === 'fundingAmount' ) value = Number(value);
     this[prop] = value;
     this.requestUpdate();
+  }
+
+  /**
+   * @description Event handler for when a funding source is selected
+   * @param {Object} fundingSourceId - funding source id
+   * @returns
+   */
+  _onFundingSourceSelect(fundingSourceId){
+    const fundingSource = this.fundingSources.find(f => f.fundingSourceId == fundingSourceId);
+    if ( !fundingSource ) {
+      this.selectedFundingSource = {};
+      this.fundingAmount = 0;
+      return;
+    }
+    this.selectedFundingSource = fundingSource;
+    this.fundingAmount = fundingSource.capDefault ? Number(fundingSource.capDefault) : 0;
+  }
+
+  /**
+   * @description Attached to active-funding-sources-fetched event from FundingSourceModel
+   * @param {Object} e - cork-app-utils event object
+   * @returns
+   */
+  _onActiveFundingSourcesFetched(e){
+    if ( e.state !== 'loaded' ) return;
+    this.fundingSources = e.payload;
   }
 
   /**
@@ -110,6 +168,7 @@ export default class AppPageAdminAllocationsNew extends Mixin(LitElement)
 
     const promises = [];
     promises.push(this.employeeSearchRef.value.init());
+    promises.push(this.FundingSourceModel.getActiveFundingSources());
     const resolvedPromises = await Promise.allSettled(promises);
 
     // flatten resolved promises - employee search returns an array of promises
