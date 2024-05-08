@@ -36,7 +36,7 @@ export default class UcdlibEmployeeSearchBasic extends Mixin(LitElement)
     this.totalResults = 0;
     this.resultCtNotShown = 0;
     this.error = false;
-    this.labelText = 'Existing Employee Search';
+    this.labelText = 'Search for a UC Davis Library Employee';
     this.hideLabel = false;
     this.status = 'idle';
     this.isSearching = false;
