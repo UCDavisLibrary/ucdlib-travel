@@ -24,10 +24,13 @@ AppStateModel.init(appConfig.routes);
 
 // import cork models
 import "../../lib/cork/models/DepartmentModel.js";
+import "../../lib/cork/models/EmployeeAllocationModel.js";
 import "../../lib/cork/models/EmployeeModel.js";
 import "../../lib/cork/models/SettingsModel.js";
 import "../../lib/cork/models/AdminApproverTypeModel.js";
+import "../../lib/cork/models/FundingSourceModel.js";
 import "../../lib/cork/models/LineItemsModel.js";
+import "../../lib/cork/models/SettingsModel.js";
 
 // auth
 import Keycloak from 'keycloak-js';
@@ -44,6 +47,9 @@ import "./pages/app-page-home.js";
 // global components
 import "./components/app-toast.js";
 import "./components/app-dialog-modal.js";
+
+// utils
+import urlUtils from '../../lib/utils/urlUtils.js';
 
 /**
  * @class AppMain
@@ -259,6 +265,11 @@ export default class AppMain extends Mixin(LitElement)
   kc.onAuthError = () => {AuthModel.redirectUnauthorized();};
   kc.onAuthSuccess = () => {
     customElements.define('app-main', AppMain);
+
+    // replace state in history to remove keycloak state
+    const hash = urlUtils.stripFromHash(['iss']);
+    window.history.replaceState(null, null, hash ? `#${hash}` : window.location.pathname);
+
     AuthModel.init();
     AuthModel._onAuthRefreshSuccess();
   };

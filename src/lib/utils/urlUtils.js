@@ -28,6 +28,21 @@ class UrlUtils {
     v.sort();
     return v.join(',');
   }
+
+  /**
+   * @description Strip keys from a hash
+   * @param {Array} keys - keys to strip from hash
+   * @param {String} hash - hash - default window.location.hash
+   * @returns {String}
+   */
+  stripFromHash(keys=[], hash){
+    hash = hash || window.location.hash;
+    hash = hash.replace(/^#/,'');
+    if ( !hash ) return '';
+    const searchParams = new URLSearchParams(hash);
+    keys.forEach(k => searchParams.delete(k));
+    return searchParams.toString();
+  }
 }
 
 export default new UrlUtils();

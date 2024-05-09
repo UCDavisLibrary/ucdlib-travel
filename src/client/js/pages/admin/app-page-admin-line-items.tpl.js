@@ -15,8 +15,8 @@ return html`
       <div ?hidden=${!this.showNewLineItemForm} class='new-line-item-form'>
         ${renderLineItemForm.call(this, this.newLineItem)}
       </div>
-      <button 
-        @click=${this._onNewClick} 
+      <button
+        @click=${this._onNewClick}
         ?disabled=${this.showNewLineItemForm}
         class='btn btn--primary'>Add New Line Item Option</button>
     </div>
@@ -32,8 +32,8 @@ function renderLineItem(item) {
           title='Edit line item'
           @click=${e => this._onEditClick(item)}
           class='icon-link'><i class="wonder-blue fa-solid fa-pen-to-square"></i></a>
-        <a 
-          title='Delete line item' 
+        <a
+          title='Delete line item'
           @click=${e => this._onDeleteClick(item)}
           class='icon-link double-decker'>
           <i class="fa-solid fa-trash-can"></i></a>
@@ -46,6 +46,11 @@ function renderLineItem(item) {
   `
 }
 
+/**
+ * @description Renders the form for editing or creating a line item
+ * @param {Object} item - Line Item object to edit or create
+ * @returns
+ */
 function renderLineItemForm(item) {
   if ( !item || Object.keys(item).length === 0 ) return html``;
   const itemId = item.expenditureOptionId || 'new';

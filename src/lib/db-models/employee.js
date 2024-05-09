@@ -4,7 +4,9 @@ import pg from "./pg.js";
 
 /**
  * @class Employee
- * @description Class for querying data about library employees
+ * @description Model for:
+ * 1. querying data about library employees
+ * 2. accessing and updating local database employee records and cache
  */
 class Employee {
 
@@ -26,6 +28,63 @@ class Employee {
       {methodParam: 'employee-id', responseProp: 'employee_id', name: 'Employee ID'},
       {methodParam: 'db-id', responseProp: 'id', name: 'Library IAM DB ID'}
     ];
+  }
+
+  /**
+   * @description Insert or update an employee record in the local database as part of a transaction
+   * @param {*} client - A connected pg pool that has already 'begun' e.g:
+   *  client = await pg.pool.connect()
+   *  await client.query('BEGIN')
+   * @param {Object} employee - A basic employee record object with the following properties:
+   * - kerberos: String (required)
+   * - firstName: String (optional)
+   * - lastName: String (optional)
+   * - department: Object (optional) - with the following properties:
+   *  - departmentId: String (required)
+   *  - label: String (optional)
+   */
+  async upsertInTransaction(client, employee){
+
+    if ( !employee.kerberos ) {
+      throw new Error('Employee record must have a kerberos id.');
+    }
+
+    // upsert department if it exists
+    const departmentId = employee?.department?.departmentId;
+    if ( departmentId ) {
+      const label = employee.department.label || '';
+      const departmentRes = await client.query('SELECT * FROM department WHERE department_id = $1', [departmentId]);
+      if ( departmentRes.rowCount ) {
+        if ( label && departmentRes.rows[0].label !== label ) {
+          await client.query('UPDATE department SET label = $1 WHERE department_id = $2', [label, departmentId]);
+        }
+      } else {
+        await client.query('INSERT INTO department (department_id, label) VALUES ($1, $2)', [departmentId, label]);
+      }
+    }
+
+    // upsert employee record
+    const kerberos = employee.kerberos;
+    const firstName = employee.firstName || '';
+    const lastName = employee.lastName || '';
+    const employeeRes = await client.query('SELECT * FROM employee WHERE kerberos = $1', [kerberos]);
+    if ( employeeRes.rowCount ) {
+      const existingEmployee = employeeRes.rows[0];
+      if ( firstName && lastName && (existingEmployee.first_name !== firstName || existingEmployee.last_name !== lastName) ) {
+        await client.query('UPDATE employee SET first_name = $1, last_name = $2 WHERE kerberos = $3', [firstName, lastName, kerberos]);
+      }
+    } else {
+      await client.query('INSERT INTO employee (kerberos, first_name, last_name) VALUES ($1, $2, $3)', [kerberos, firstName, lastName]);
+    }
+
+    // check department membership based on current date and department id
+    // update if necessary
+    if ( !departmentId ) return;
+    const now = new Date();
+    const membershipRes = await client.query('SELECT * FROM employee_department WHERE employee_kerberos = $1 AND department_id = $2 AND start_date <= $3 AND (end_date IS NULL OR end_date >= $3)', [kerberos, departmentId, now]);
+    if ( membershipRes.rowCount ) return;
+    await client.query('INSERT INTO employee_department (employee_kerberos, department_id, start_date) VALUES ($1, $2, $3)', [kerberos, departmentId, now]);
+    await client.query('UPDATE employee_department SET end_date = $1 WHERE employee_kerberos = $2 AND department_id != $3 AND end_date IS NULL', [now, kerberos, departmentId]);
   }
 
   /**
