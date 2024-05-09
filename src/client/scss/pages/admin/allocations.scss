@@ -20,6 +20,10 @@ app-page-admin-allocations-new {
   .employee-list--item {
     padding: .5rem;
 
+    &.already-exists {
+      background-color: #f8d7da !important;
+    }
+
     .name {
       font-weight: 700;
     }

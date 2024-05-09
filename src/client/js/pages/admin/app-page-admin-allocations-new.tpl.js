@@ -45,31 +45,39 @@ export function render() {
         <legend>Allocation</legend>
         <div class="l-2col">
           <div class="l-first">
-            <div class="field-container">
+            <div class="field-container ${this.validationHandler.errorClass('startDate')}">
               <label for="${page}--from">From <abbr title="Required">*</abbr></label>
               <input
                 type="date"
+                .value=${this.startDate}
                 id="${page}--from"
                 @change=${e => this._onFormInput('startDate', e.target.value)}
                 >
+                <div>${this.validationHandler.renderErrorMessages('startDate')}</div>
             </div>
           </div>
           <div class="l-second">
-            <div class="field-container">
+            <div class="field-container ${this.validationHandler.errorClass('endDate')}">
               <label for="${page}--to">To <abbr title="Required">*</abbr></label>
               <input
                 type="date"
+                .value=${this.endDate}
                 id="${page}--to"
                 @change=${e => this._onFormInput('endDate', e.target.value)}
                 >
+                <div>${this.validationHandler.renderErrorMessages('endDate')}</div>
             </div>
           </div>
         </div>
         <div class="l-2col u-space-mt--large">
           <div class="l-first">
-            <div class="field-container">
+            <div class="field-container ${this.validationHandler.errorClass('fundingSourceId')}">
               <label for="${page}--funding-source">Funding Source <abbr title="Required">*</abbr></label>
-              <select id="${page}--funding-source" @change=${e => this._onFundingSourceSelect(e.target.value)}>
+              <select
+                id="${page}--funding-source"
+                @change=${e => this._onFundingSourceSelect(e.target.value)}
+                .value=${this.selectedFundingSource?.fundingSourceId || ''}
+                >
                 <option value='' ?selected=${!this.selectedFundingSource?.fundingSourceId}>Select a funding source</option>
                 ${this.fundingSources.map(fundingSource => html`
                   <option
@@ -80,10 +88,11 @@ export function render() {
                   </option>
                 `)}
               </select>
+              <div>${this.validationHandler.renderErrorMessages('fundingSourceId')}</div>
             </div>
           </div>
           <div class="l-second">
-            <div class="field-container">
+            <div class="field-container ${this.validationHandler.errorClass('amount')}">
               <label for="${page}--funding-amount">Amount <abbr title="Required">*</abbr></label>
               <input
                 type="number"
@@ -92,11 +101,13 @@ export function render() {
                 @change=${e => this._onFormInput('fundingAmount', e.target.value)}
                 >
             </div>
+            <div>${this.validationHandler.renderErrorMessages('amount')}</div>
           </div>
         </div>
       </fieldset>
-      <fieldset>
+      <fieldset class='${this.validationHandler.errorClass('employees')}'>
         <legend>Employees</legend>
+        <div>${this.validationHandler.renderErrorMessages('employees')}</div>
         <div ?hidden=${this.employees.length > 0}>
           <p>No employees selected. Use search form to add employees to this list.</p>
         </div>
@@ -109,7 +120,7 @@ export function render() {
             <div class="l-second">Department</div>
           </div>
           ${this.employees.map(employee => html`
-            <div class="l-2col employee-list--item">
+            <div class="l-2col employee-list--item ${this.employeeAlreadyHasAllocation(employee) ? 'already-exists' : ''}">
               <div class="l-first flex">
                 <div class='x-container'>
                   <a
