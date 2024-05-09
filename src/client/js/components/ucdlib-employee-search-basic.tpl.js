@@ -5,78 +5,7 @@ export function styles() {
     :host {
       display: block;
     }
-    ucdlib-employee-search-basic {
-      max-width: 500px;
-      margin: auto;
-      display: block
-  }
-  
-  ucdlib-employee-search-basic .emp-search-top.field-container {
-      margin-bottom: 0
-  }
-  
-  ucdlib-employee-search-basic .emp-search-bar {
-      position: relative
-  }
-  
-  ucdlib-employee-search-basic .emp-search-bar input {
-      flex-grow: 1;
-      padding-right: 2rem
-  }
-  
-  ucdlib-employee-search-basic .emp-search-bar .emp-search-icon {
-      position: absolute;
-      width: 2.5rem;
-      min-width: 2.5rem;
-      height: 2.5rem;
-      min-height: 2.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      right: 0;
-      top: 0;
-      color: #022851
-  }
-  
-  ucdlib-employee-search-basic .emp-search-results-parent {
-      position: relative
-  }
-  
-  ucdlib-employee-search-basic .emp-search-results {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
-      z-index: 100;
-      background-color: #fffbed;
-      border-right: 1px solid #ffbf00;
-      border-left: 1px solid #ffbf00;
-      border-bottom: 1px solid #ffbf00;
-      color: #13639e;
-      max-height: 250px;
-      overflow-y: scroll
-  }
-  
-  ucdlib-employee-search-basic .emp-search-results .emp-search-result {
-      padding: .5rem .75rem
-  }
-  
-  ucdlib-employee-search-basic .emp-search-results .emp-search-result:hover {
-      background-color: #fde9ac
-  }
-  
-  ucdlib-employee-search-basic .emp-search-results .highlight {
-      font-weight: 700
-  }
-  
-  ucdlib-employee-search-basic .emp-search-results .muted {
-      font-weight: 400;
-      color: #545454
-  }
-  
-  ucdlib-employee-search-basic .emp-search-results .emp-search-more {
-      padding: .5rem .75rem
-  }
+    
   `;
 
   return [elementStyles];
@@ -87,7 +16,7 @@ return html`
 <div>
 <div>
   <div class="field-container emp-search-top">
-    <label ?hidden=${this.hideLabel}>${this.labelText}</label>
+    <label ?hidden=${this.hideLabel}>Employee(s)*</label>
     <div class='emp-search-bar'>
       <input
         @input=${(e) => this.query = e.target.value}
