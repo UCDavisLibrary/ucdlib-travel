@@ -7,6 +7,7 @@
  * - label {String} OPTIONAL - human readable label for the field
  * - required {Boolean} OPTIONAL - if the field is required
  * - charLimit {Number} OPTIONAL - maximum number of characters allowed
+ * - customValidation {Function} OPTIONAL - custom validation function
  */
 export default class EntityFields {
    constructor(fields = []){
@@ -88,6 +89,14 @@ export default class EntityFields {
       this._validateType(field, value, out);
     }
 
+    for (const field of this.fields) {
+      if ( skipFields.includes(field[namingScheme]) ) continue;
+      const value = record[field[namingScheme]];
+      if ( field.customValidation ) {
+        field.customValidation(field, value, out, record);
+      }
+    }
+
     return out;
    }
 
@@ -100,9 +109,9 @@ export default class EntityFields {
    _validateRequired(field, value, out) {
     if ( !field.required ) return;
     const error = {errorType: 'required', message: 'This field is required'};
-    if (!value) {
+    if ( value === undefined || value === null || value === '') {
       out.valid = false;
-      this._pushError(out, field, error);
+      this.pushError(out, field, error);
     }
    }
 
@@ -118,7 +127,7 @@ export default class EntityFields {
     const error = {errorType: 'charLimit', message: `This field must be less than ${field.charLimit} characters`};
     if (value && value.length > field.charLimit) {
       out.valid = false;
-      this._pushError(out, field, error);
+      this.pushError(out, field, error);
     }
    }
 
@@ -127,14 +136,30 @@ export default class EntityFields {
     */
    _validateType(field, value, out) {
     if ( !field.validateType ) return;
+    if ( value === undefined || value === null ) return;
+
     const error = {errorType: 'validateType', message: `This field must be of type: ${field.validateType}`};
     if (field.validateType == 'integer'  ) {
       value = value || value === '0' || value === 0 ? value : NaN;
       if ( !Number.isInteger(Number(value)) ) {
         out.valid = false;
-        this._pushError(out, field, error);
+        this.pushError(out, field, error);
+      }
+    } else if (field.validateType == 'date') {
+      // must be valid date in format YYYY-MM-DD
+      value = value.toString();
+      if ( !value.match(/^\d{4}-\d{2}-\d{2}$/) ) {
+        out.valid = false;
+        this.pushError(out, field, error);
+        return;
+      }
+      const date = new Date(value);
+      if ( isNaN(date.getTime()) ) {
+        out.valid = false;
+        this.pushError(out, field, error);
       }
     }
+
    }
 
    /**
@@ -143,12 +168,25 @@ export default class EntityFields {
     * @param {Object} field - field object
     * @param {Object} error - error object with errorType and message properties
     */
-   _pushError(out, field, error) {
+   pushError(out, field, error) {
     const fieldInOutput = out.fieldsWithErrors.find(f => f.jsonName === field.jsonName);
     if ( fieldInOutput ) {
       fieldInOutput.errors.push(error);
     } else {
       out.fieldsWithErrors.push({...field, errors: [error]});
     }
+  }
+
+  /**
+   * @description Check if a field has an error in the output object
+   * @param {Object} out - output object from validate method
+   * @param {Object|String} field - field object or jsonName of field
+   * @returns {Boolean}
+   */
+  fieldHasError(out, field) {
+    if ( typeof field === 'string' ) {
+      field = this.fields.find(f => f.jsonName === field);
+    }
+    return out.fieldsWithErrors.some(f => f.jsonName === field.jsonName);
   }
 }

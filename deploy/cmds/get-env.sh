@@ -33,7 +33,7 @@ while getopts "fl" opt; do
 done
 
 if [ "$LOCAL" = true ]; then
-  if [ -d "$LOCAL_DEV_DIRECTORY" ]; then
+  if [ ! -d "$LOCAL_DEV_DIRECTORY" ]; then
     mkdir -p "$LOCAL_DEV_DIRECTORY"
   fi
   ENV_PATH="$LOCAL_DEV_DIRECTORY/.env"
