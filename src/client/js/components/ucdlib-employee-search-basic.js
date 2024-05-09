@@ -54,7 +54,7 @@ export default class UcdlibEmployeeSearchBasic extends Mixin(LitElement)
    * @param {*} p - Changed properties
    */
     willUpdate(p) {
-      if ( p.has('query') && p.length > 2 ){
+      if ( p.has('query') ){
         if ( this.searchTimeout ) clearTimeout(this.searchTimeout);
         this.searchTimeout = setTimeout(() => {
           this.search();
