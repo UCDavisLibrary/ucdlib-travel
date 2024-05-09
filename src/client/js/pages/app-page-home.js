@@ -15,7 +15,8 @@ export default class AppPageHome extends Mixin(LitElement)
     super();
     this.render = render.bind(this);
 
-    this._injectModel('AppStateModel');
+    this._injectModel('AppStateModel', 'AdminApproverTypeModel');
+
   }
 
 
@@ -26,7 +27,7 @@ export default class AppPageHome extends Mixin(LitElement)
   async _onAppStateUpdate(state) {
     if ( this.id !== state.page ) return;
     // this.AppStateModel.showLoading();
-
+    this.AppStateModel.setTitle('Home Page');
 
 
     const breadcrumbs = [
@@ -37,6 +38,80 @@ export default class AppPageHome extends Mixin(LitElement)
     // const d = await this.getPageData();
     // const hasError = d.some(e => e.state === 'error');
     // if ( !hasError ) this.AppStateModel.showLoaded(this.id);
+
+            // /* Query */
+    // let data = [{id:[1, 2, 3], status:"active"}];
+    // let data = [{id:2, status:"active"}, ];
+    // let sample = await this.AdminApproverTypeModel.query(data);
+    // console.log(sample);
+
+         /* Create */
+     let data = {
+       "approverTypeId": 0,
+       "label": "bb88",
+       "description": "bb88",
+       "systemGenerated": false,
+       "hideFromFundAssignment": false,
+       "archived": false,
+       "employees": []
+    };
+
+
+    // let data = {
+    //   "approverTypeId": 0,
+    //   "label": "bb00",
+    //   "description": "bb00",
+    //   "systemGenerated": false,
+    //   "hideFromFundAssignment": false,
+    //   "archived": false,
+    //   "employees":[
+    //     {
+    //       "employee":{kerberos: "bbEmp003", first_name:"F", last_name:"G", department:null},
+    //       "approvalOrder": 71
+    //     },
+    //     {
+    //       "employee":{kerberos: "bbEmp002", first_name:"G", last_name:"H", department:null},
+    //       "approvalOrder": 71
+    //     }
+    //   ]
+    //  };   
+    let sample = await this.AdminApproverTypeModel.create(data);
+    console.log(sample);
+
+
+
+        // /* Update */
+    // let data = { 
+    //   "approverTypeId": 151,
+    //   "label": "bb99",
+    //   "description": "bb99",
+    //   "systemGenerated": false,
+    //   "hideFromFundAssignment": false,
+    //   "archived": false,
+    //   "employees": []
+    //  };
+
+    // let data = {
+    //   "approverTypeId": 151,
+    //   "label": "bb22",
+    //   "description": "bb22",
+    //   "systemGenerated": false,
+    //   "hideFromFundAssignment": false,
+    //   "archived": false,
+    //   "employees":[
+    //         {
+    //           "employee":{kerberos: "emBB", first_name:"anotherR", last_name:"anotherS", department:null},
+    //           "approvalOrder": 72 
+    //         },
+    //         {
+    //           "employee":{kerberos: "emBB2", first_name:"anotherS", last_name:"anotherT", department:null},
+    //           "approvalOrder": 72
+    //         }
+    //       ]
+    //  };
+    // let sample = await this.AdminApproverTypeModel.update(data);
+    // console.log(sample);
+
   }
 
   /**

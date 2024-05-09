@@ -10,11 +10,11 @@ class AdminApproverTypeService extends BaseService {
   }
 
   query(data){
-    let arrStr = encodeURIComponent(JSON.stringify(data));
+    data = this.sort(data);
     return this.request({
-      url : `/api/admin/approver-type?data=${arrStr}`,
+      url : `/api/admin/approver-type?id=${encodeURIComponent(JSON.stringify(data[0].id))}&status=${data[0].status}`,
 
-      checkCached: () => this.store.data.query[data],
+      checkCached: () => this.store.data.query[JSON.stringify(data)],
       onLoading : request => this.store.queryLoading(request, data),
       onLoad : result => this.store.queryLoaded(result.body, data),
       onError : e => this.store.queryError(e, data)
@@ -29,7 +29,6 @@ class AdminApproverTypeService extends BaseService {
         body : data
       },
       json: true,
-      checkCached: () => this.store.data.create[data],
       onLoading : request => this.store.createLoading(request, data),
       onLoad : result => this.store.createLoaded(result.body, data),
       onError : e => this.store.createError(e, data)
@@ -44,7 +43,6 @@ class AdminApproverTypeService extends BaseService {
         body : data
       },
       json: true,
-      checkCached: () => this.store.data.update[data],
       onLoading : request => this.store.updateLoading(request),
       onLoad : result => this.store.updateLoaded(result.body),
       onError : e => this.store.updateError(e)
@@ -52,6 +50,15 @@ class AdminApproverTypeService extends BaseService {
 
   }
 
+  sort(data){
+    let sortData = data.sort((a,b) => (a.id > b.id) ? 1 : ((b.id > a.id) ? -1 : 0));
+    for(var i = 0; i < sortData.length; i++) {
+        if (Array.isArray(sortData[i].id)) {
+            sortData[i].id;
+        }
+    }
+    return sortData;
+  }
 }
 
 const service = new AdminApproverTypeService();
