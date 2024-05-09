@@ -68,6 +68,19 @@ export default class AccessToken {
   }
 
   /**
+   * @description Returns employee object for logged in user
+   *  Employee object is used to track user actions in the system
+   *  and is the expected format for upsertInTransaction method in the employee model
+   */
+  get employeeObject(){
+    return {
+      kerberos: this.id,
+      firstName: this.token.given_name || '',
+      lastName: this.token.family_name || '',
+    }
+  }
+
+  /**
    * @description Returns username (kerberos) of logged in user
    */
   get id(){

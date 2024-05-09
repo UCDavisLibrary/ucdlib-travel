@@ -46,4 +46,14 @@ export default class ValidationHandler {
     `
   }
 
+  /**
+   * @description Get the error object for a field and error type
+   * @param {String} field - field name
+   * @param {String} errorType - error type set by the server
+   * @returns {Object|undefined}
+   */
+  getError(field, errorType){
+    return this.errorsByField[field] && this.errorsByField[field].find(e => e.errorType === errorType);
+  }
+
 }

@@ -5,7 +5,7 @@ export default (api) => {
 
   api.post('/employee-allocation', protect('hasAdminAccess'), async (req, res) => {
     const payload = (typeof req.body === 'object') && !Array.isArray(req.body) ? req.body : {};
-    const data = await employeeAllocation.create(payload);
+    const data = await employeeAllocation.create(payload, req.auth.token.employeeObject);
     if ( data.error && data.is400 ) {
       return res.status(400).json(data);
     }

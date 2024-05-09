@@ -158,6 +158,11 @@ export default class EntityFields {
         out.valid = false;
         this.pushError(out, field, error);
       }
+    } else if (field.validateType == 'number') {
+      if ( isNaN(Number(value)) ) {
+        out.valid = false;
+        this.pushError(out, field, error);
+      }
     }
 
    }

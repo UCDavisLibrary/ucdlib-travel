@@ -36,6 +36,13 @@
     color: #c10230;
   }
 }
+fieldset.field-error {
+  border-top: 3px solid #c10230;
+
+  > legend {
+    color: #c10230;
+  }
+}
 .field-error-message {
   display: none;
 }

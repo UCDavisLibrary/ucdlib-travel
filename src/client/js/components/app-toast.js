@@ -4,8 +4,8 @@ import { LitCorkUtils, Mixin } from "../../../lib/appGlobals.js";
 
 
 /**
- * @description Component for handling sitewide toast 
- * 
+ * @description Component for handling sitewide toast
+ *
  * item: the object that holds the display text and status
  * text: the text that is displayed
  * type: the status of the toast message
@@ -14,8 +14,8 @@ import { LitCorkUtils, Mixin } from "../../../lib/appGlobals.js";
  * hidden: the modal is hidden
  * animation: queues up the animation
  * time the amount of time the modal stays up
- * 
- 
+ *
+
    this.AppStateModel.showToast(object);
  */
 export default class AppToast extends Mixin(LitElement)
@@ -60,22 +60,22 @@ export default class AppToast extends Mixin(LitElement)
    * @param {Object} options
    */
     _onToastUpdate(items){
-      this.hidden = false;
 
       this.queue.push(items)
       this.queueAmount = this.queue.length;
 
       for (let i in this.queue){
-        
+
         setTimeout(() => {
           this.animation = true;
           let item = this.queue.shift();
           this.item = Object.assign({}, this.item, item);
           if ( !this.item.message ) return;
-          
+
           this.text = this.item.message;
           this.type = this.item.type || 'information';
-            
+          this.hidden = false;
+
           if(this.type == "success") this.icon = html`&#10003;`;
           else if(this.type == "error") this.icon = html`&#10005;`;
 
@@ -83,6 +83,7 @@ export default class AppToast extends Mixin(LitElement)
           if(this.queueAmount == 0) {
             setTimeout(() => {
               this.animation = false;
+              this.hidden = true;
             }, this.time );
           }
         }, this.time * i );
@@ -109,7 +110,7 @@ export default class AppToast extends Mixin(LitElement)
       toast.style.display = "none";
       console.log(message.message);
 
-      
+
       this.requestUpdate();
 
     }
