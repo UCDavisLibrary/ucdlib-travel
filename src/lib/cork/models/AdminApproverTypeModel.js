@@ -54,10 +54,6 @@ class AdminApproverTypeModel extends BaseModel {
     if ( !data ) {
       this.store.data.update = {};
     }
-    if ( this.store.data.create[data] ) {
-      delete this.store.data.create[data];
-    }
-
 
     return out;
   }
@@ -81,9 +77,6 @@ class AdminApproverTypeModel extends BaseModel {
 
     if ( !data ) {
       this.store.data.update = {};
-    }
-    if ( this.store.data.update[data] ) {
-      delete this.store.data.update[data];
     }
 
     return out;

@@ -1,5 +1,6 @@
 import pg from "./pg.js";
 import EntityFields from "../utils/EntityFields.js";
+import employeeModel from "./employee.js";
 
 /**
  * @class Admin Approver Type
@@ -65,38 +66,6 @@ class AdminApproverType {
 
         return data;
       }
-    
-
-
-      /**
-       * @description Check if Employee Exists in employee table and insert if not
-       * @param {Object} employee - Employee Object
-       */
-      async existsEmployee(employee){
-        const client = await pg.pool.connect();
-
-        let employeeExists = await pg.query(`SELECT * FROM employee WHERE kerberos = ($1)`, [employee.kerberos]);
-
-        let employeeObj = {
-          "kerberos":employee.kerberos, 
-          "first_name": employee.first_name, 
-          "last_name":employee.last_name, 
-          "department_id":employee.department
-        }; 
-
-        if(!employeeExists.res.rows.length) {
-          let data = pg.prepareObjectForInsert(employeeObj);
-          return await client.query(`INSERT INTO employee (${data.keysString}) VALUES (${data.placeholdersString}) RETURNING *`, data.values);
-        } else {
-          const updateEmployeeClause = pg.toUpdateClause(employeeObj);
-          return await client.query(`UPDATE employee SET ${updateEmployeeClause.sql}
-                    WHERE kerberos = $${updateEmployeeClause.values.length + 1}
-                    RETURNING *`, [...updateEmployeeClause.values, employee.kerberos]);;
-        }
-        
-      }
-
-
 
       /**
        * @description Check if Employee Exists in the approver_type table and delete to replace
@@ -142,7 +111,6 @@ class AdminApproverType {
 
         const client = await pg.pool.connect();
         const out = {res: [], err: false};
-
         await client.query('BEGIN');
 
         let approverEmployee = data.employees;
@@ -162,8 +130,9 @@ class AdminApproverType {
 
         if ( Object.keys(approverEmployee).length === 0 ) {
           const res = await pg.query(sql, data.values);
+
           if( res.error ) return res;
-          return this.entityFields.toJsonObj(res.res.rows);
+          return this.entityFields.toJsonObj(res.res.rows[0]);
         }
 
         try{
@@ -173,8 +142,8 @@ class AdminApproverType {
           const approverTypeId = approverType.rows[0].approver_type_id;
 
           for (const a of approverEmployee) {
-            const newEmployee = await this.existsEmployee(a.employee);
 
+            await employeeModel.upsertInTransaction(client, a.employee);
             const toEmployeeCreate = {};
             if ( approverTypeId ) {
               toEmployeeCreate['approver_type_id'] = approverTypeId;
@@ -260,7 +229,7 @@ class AdminApproverType {
 
           for (const a of approverEmployee) {
 
-            const newEmployee = await this.existsEmployee(a.employee);
+            await employeeModel.upsertInTransaction(client, a.employee);
 
             const toEmployeeUpdate = {};
             if ( approverTypeId ) {
