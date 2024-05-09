@@ -39,18 +39,6 @@ class AdminApproverTypeModel extends BaseModel {
    */
 
    async create(data) {
-    // payload = Array.isArray(payload) ? payload : [payload];
-    // let state = this.store.data.create;
-
-    if(data.systemGenerated && data.archived) {
-      console.error("System Generated ApproverTypes can not be archived.  Set Archive to false.");
-      return;
-    }
-    if(data.systemGenerated && data["employees"].length != 0) {
-      console.error("System Generated ApproverTypes can not have employees.  Set employees to an empty array.");
-      return;
-    }
-
     try {
       let state = this.store.data.create[data];;
 
@@ -62,6 +50,14 @@ class AdminApproverTypeModel extends BaseModel {
     } catch(e) {}
 
     const out = this.store.data.create;
+
+    if ( !data ) {
+      this.store.data.update = {};
+    }
+    if ( this.store.data.create[data] ) {
+      delete this.store.data.create[data];
+    }
+
 
     return out;
   }
@@ -83,10 +79,15 @@ class AdminApproverTypeModel extends BaseModel {
 
     const out = this.store.data.update;
 
+    if ( !data ) {
+      this.store.data.update = {};
+    }
+    if ( this.store.data.update[data] ) {
+      delete this.store.data.update[data];
+    }
+
     return out;
   }
-
-
 }
 
 const model = new AdminApproverTypeModel();
