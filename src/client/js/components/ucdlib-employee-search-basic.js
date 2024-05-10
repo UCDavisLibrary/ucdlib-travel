@@ -1,4 +1,5 @@
-import { LitElement } from 'lit';
+import { LitElement, html } from 'lit';
+import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import {render, styles} from "./ucdlib-employee-search-basic.tpl.js";
 import { LitCorkUtils, Mixin } from "../../../lib/appGlobals.js";
 
@@ -22,10 +23,6 @@ export default class UcdlibEmployeeSearchBasic extends Mixin(LitElement)
       selectedText: {state: true},
       selectedObject: {state: true},
     }
-  }
-
-  static get styles() {
-    return styles();
   }
 
   constructor() {
@@ -54,7 +51,7 @@ export default class UcdlibEmployeeSearchBasic extends Mixin(LitElement)
    * @param {*} p - Changed properties
    */
     willUpdate(p) {
-      if ( p.has('query') ){
+      if ( p.has('query') && this.query.length > 2 ){
         if ( this.searchTimeout ) clearTimeout(this.searchTimeout);
         this.searchTimeout = setTimeout(() => {
           this.search();
@@ -92,10 +89,10 @@ export default class UcdlibEmployeeSearchBasic extends Mixin(LitElement)
         return;
       }
       this.isSearching = true;
-      const r = await this.EmployeeModel.queryIam(this.query);
+      const r = await this.EmployeeModel.queryIam({name: this.query});
       this.isSearching = false;
       if ( r.state === 'loaded' ) {
-        this.results = r.payload.results;
+        this.results = r.payload.data;
         this.totalResults = r.payload.total;
         this.noResults = !this.results.length;
         this.error = false;
@@ -122,7 +119,7 @@ export default class UcdlibEmployeeSearchBasic extends Mixin(LitElement)
           detail.employee = this.selectedObject;
         }
         this.status = status;
-  
+
         this.dispatchEvent(new CustomEvent('status-change', {
           detail: detail
         }));
@@ -147,9 +144,8 @@ export default class UcdlibEmployeeSearchBasic extends Mixin(LitElement)
      */
     _renderResult(result){
       if ( !this.query) return html``;
-  
       // highlight search term
-      let name = `${result.firstName} ${result.lastName}`.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      let name = `${result.first_name} ${result.last_name}`.replace(/</g, '&lt;').replace(/>/g, '&gt;');
       const queries = this.query.replace(/</g, '').replace(/>/g, '').split(' ').filter(q => q);
       for (let query of queries) {
         const regex = new RegExp(query, 'gi');
@@ -170,7 +166,7 @@ export default class UcdlibEmployeeSearchBasic extends Mixin(LitElement)
      * @param {Object} result - an Employee object from the database
      */
     _onSelect(result){
-      this.selectedText = `${result.firstName} ${result.lastName}`;
+      this.selectedText = `${result.first_name} ${result.last_name}`;
       this.selectedObject = result;
       this.dispatchEvent(new CustomEvent('select', {
         detail: {employee: result}
