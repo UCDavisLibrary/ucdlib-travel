@@ -102,6 +102,14 @@ class Pg {
           sql += `${i > 0 ? sep : ''}${k} IN (${inClause})`;
           i += queryObject[k].length;
 
+        // if the value is an object with an operator key, use that operator
+        } else if ( typeof queryObject[k] === 'object' && queryObject[k].operator ){
+          const operator = queryObject[k].operator;
+          const value = queryObject[k].value;
+          values.push(value);
+          sql += `${i > 0 ? sep : ''}${k} ${operator} $${i+1}`;
+          i++;
+
         // else make an equals clause
         } else {
           values.push(queryObject[k]);

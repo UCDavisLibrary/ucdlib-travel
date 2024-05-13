@@ -38,6 +38,13 @@ class ApiUtils {
     if ( !asInt ) return out;
     return out.map(item => parseInt(item)).filter(item => !isNaN(item));
   }
+
+  /**
+   * @description Return a 403 response
+   */
+  do403(res){
+    return res.status(403).json({error: true, message: 'Not authorized to access this resource.'});
+  }
 }
 
 export default new ApiUtils();
