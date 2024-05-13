@@ -7,9 +7,11 @@ class EmployeeAllocationStore extends BaseStore {
 
     this.data = {
       employeeAllocationsCreated: {},
+      filters: {}
     };
     this.events = {
       EMPLOYEE_ALLOCATIONS_CREATED: 'employee-allocations-created',
+      EMPLOYEE_ALLOCATIONS_FILTERS_FETCHED: 'employee-allocations-filters-fetched'
     };
   }
 
@@ -40,6 +42,32 @@ class EmployeeAllocationStore extends BaseStore {
   _setEmployeeAllocationsCreatedState(state) {
     this.data.employeeAllocationsCreated[state.timestamp] = state;
     this.emit(this.events.EMPLOYEE_ALLOCATIONS_CREATED, state);
+  }
+
+  employeeAllocationsFiltersFetchedLoading(request) {
+    this._setEmployeeAllocationsFiltersFetchedState({
+      state : this.STATE.LOADING,
+      request
+    });
+  }
+
+  employeeAllocationsFiltersFetchedLoaded(payload) {
+    this._setEmployeeAllocationsFiltersFetchedState({
+      state : this.STATE.LOADED,
+      payload
+    });
+  }
+
+  employeeAllocationsFiltersFetchedError(error) {
+    this._setEmployeeAllocationsFiltersFetchedState({
+      state : this.STATE.ERROR,
+      error
+    });
+  }
+
+  _setEmployeeAllocationsFiltersFetchedState(state) {
+    this.data.filters = state;
+    this.emit(this.events.EMPLOYEE_ALLOCATIONS_FILTERS_FETCHED, state);
   }
 
 }

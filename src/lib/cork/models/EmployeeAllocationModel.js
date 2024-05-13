@@ -2,6 +2,11 @@ import {BaseModel} from '@ucd-lib/cork-app-utils';
 import EmployeeAllocationService from '../services/EmployeeAllocationService.js';
 import EmployeeAllocationStore from '../stores/EmployeeAllocationStore.js';
 
+/**
+ * @class EmployeeAllocationModel
+ * @description Model for employee allocations
+ * $ amount allocated to an employee for a specific funding source and time period
+ */
 class EmployeeAllocationModel extends BaseModel {
 
   constructor() {
@@ -13,6 +18,9 @@ class EmployeeAllocationModel extends BaseModel {
     this.register('EmployeeAllocationModel');
   }
 
+  /**
+   * @description Create employee allocations
+   */
   async createEmployeeAllocations(payload) {
     let timestamp = Date.now();
     try {
@@ -23,6 +31,21 @@ class EmployeeAllocationModel extends BaseModel {
       // todo clear cache
     }
     return state;
+  }
+
+  /**
+   * @description Get filter options for employee allocations
+   */
+  async getFilters(){
+    let state = this.store.data.filters;
+    try {
+      if( state && state.state === 'loading' ) {
+        await state.request;
+      } else {
+        await this.service.getFilters();
+      }
+    } catch(e) {}
+    return this.store.data.filters;
   }
 
 }

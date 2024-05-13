@@ -22,6 +22,17 @@ class EmployeeAllocationService extends BaseService {
     });
   }
 
+  getFilters() {
+    return this.request({
+      url : '/api/admin/employee-allocation/filters',
+      checkCached : () => this.store.data.filters,
+      onLoading : request => this.store.employeeAllocationsFiltersFetchedLoading(request),
+      onLoad : result => this.store.employeeAllocationsFiltersFetchedLoaded(result.body),
+      onError : e => this.store.employeeAllocationsFiltersFetchedError(e)
+    });
+
+  }
+
 }
 
 const service = new EmployeeAllocationService();

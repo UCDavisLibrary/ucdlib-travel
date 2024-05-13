@@ -78,6 +78,12 @@ class EmployeeAllocation {
     ]);
   }
 
+  /**
+   * @description Create a new employee allocation
+   * @param {Object} data - allocation data - see entityFields.
+   * Takes multiple employees (in the employees field) and creates an allocation for each.
+   * @param {Object} submittedBy - employee object of the user submitting the allocation
+   */
   async create(data, submittedBy={}){
 
     data = this.entityFields.toDbObj(data);
@@ -206,6 +212,162 @@ class EmployeeAllocation {
       error.message = 'End date must be after start date';
     }
     this.entityFields.pushError(out, field, error);
+  }
+
+  /**
+   * @description Get list of employee allocations
+   * @param {Object} kwargs - optional arguments including:
+   * - startDate: object - {value: string, operator: string} - start date in format YYYY-MM-DD (optional)
+   * - endDate: object - {value: string, operator: string} - end date in format YYYY-MM-DD (optional)
+   * - employees: array - array of employee kerberos ids to include (optional)
+   * - fundingSources: array - array of funding source ids to include (optional)
+   * - page: number - page number for pagination (optional) - default 1
+   */
+  async get(kwargs={}){
+    const page = Number(kwargs.page) ? Number(kwargs.page) : 1;
+
+    const pageSize = 10;
+    const whereArgs = {};
+    whereArgs['ea.deleted'] = false;
+    if ( kwargs.startDate ) {
+      whereArgs['ea.start_date'] = kwargs.startDate;
+    }
+    if ( kwargs.endDate ) {
+      whereArgs['ea.end_date'] = kwargs.endDate;
+    }
+    if ( kwargs.employees && kwargs.employees.length ) {
+      whereArgs['ea.employee_kerberos'] = kwargs.employees;
+    }
+    if ( kwargs.fundingSources && kwargs.fundingSources.length) {
+      whereArgs['ea.funding_source_id'] = kwargs.fundingSources;
+    }
+    const whereClause = pg.toWhereClause(whereArgs);
+
+
+    const countQuery = `
+    SELECT
+      COUNT(*) AS total
+    FROM
+      employee_allocation ea
+    WHERE ${whereClause.sql};
+    `;
+    const countRes = await pg.query(countQuery, whereClause.values);
+    if( countRes.error ) return countRes;
+    const total = countRes.res.rows[0].total;
+
+    const query = `
+    SELECT
+     ea.*,
+     json_build_object(
+        'kerberos', e.kerberos,
+        'firstName', e.first_name,
+        'lastName', e.last_name
+      ) AS employee
+    FROM
+      employee_allocation ea
+    JOIN
+      employee e ON e.kerberos = ea.employee_kerberos
+    WHERE ${whereClause.sql}
+    ORDER BY
+      ea.start_date DESC,
+      ea.end_date DESC
+    LIMIT ${pageSize} OFFSET ${pageSize * (page - 1)};
+    `;
+    const res = await pg.query(query, whereClause.values);
+    if( res.error ) return res;
+
+    const data = this.entityFields.toJsonArray(res.res.rows);
+    const totalPages = Math.ceil(total / pageSize);
+    return {total, totalPages, page, data};
+
+  }
+
+  /**
+   * @description Get list of employees with their total allocations
+   * @param {Object} kwargs - optional arguments including:
+   * - startDate: object - {value: string, operator: string} - start date in format YYYY-MM-DD (optional)
+   * - endDate: object - {value: string, operator: string} - end date in format YYYY-MM-DD (optional)
+   * - employees: array - array of employee kerberos ids to include (optional)
+   * @returns {Array|Object} Object with error property if error, otherwise array of employee objects:
+   * {
+   *  kerberos: string,
+   *  firstName: string,
+   *  lastName: string,
+   *  totalAllocation: number,
+   *  fundingSources: [
+   *   {
+   *   fundingSourceId: number,
+   *   label: string,
+   *   totalAllocation: number
+   *   }
+   *  ]
+   * }
+   */
+  async getTotalByUser(kwargs={}){
+    const whereArgs = {};
+    whereArgs['ea.deleted'] = false;
+    if ( kwargs.startDate ) {
+      whereArgs['ea.start_date'] = kwargs.startDate;
+    }
+    if ( kwargs.endDate ) {
+      whereArgs['ea.end_date'] = kwargs.endDate;
+    }
+    if ( kwargs.employees ) {
+      whereArgs['ea.employee_kerberos'] = kwargs.employees;
+    }
+    const whereClause = pg.toWhereClause(whereArgs);
+    const query = `
+    WITH allocations AS (
+      SELECT
+        ea.employee_kerberos,
+        ea.funding_source_id,
+        SUM(ea.amount) AS total_allocation
+      FROM
+        employee_allocation ea
+      WHERE ${whereClause.sql}
+      GROUP BY
+        ea.employee_kerberos, ea.funding_source_id
+    )
+    SELECT
+      e.kerberos,
+      e.first_name,
+      e.last_name,
+      COALESCE(SUM(a.total_allocation), 0) AS total_allocation,
+      (
+        SELECT
+          json_agg(json_build_object(
+            'fundingSourceId', f.funding_source_id,
+            'label', f.label,
+            'totalAllocation', fa.total_allocation
+          ))
+        FROM
+          allocations fa
+        JOIN
+          funding_source f ON f.funding_source_id = fa.funding_source_id
+        WHERE
+          fa.employee_kerberos = e.kerberos
+      ) AS funding_sources
+    FROM
+      allocations a
+    JOIN
+      employee e ON e.kerberos = a.employee_kerberos
+    GROUP BY
+      e.kerberos
+    HAVING
+      COALESCE(SUM(a.total_allocation), 0) > 0;
+    `;
+    const res = await pg.query(query, whereClause.values);
+    if( res.error ) return res;
+
+    const fields = new EntityFields([
+      {dbName: 'kerberos', jsonName: 'kerberos'},
+      {dbName: 'first_name', jsonName: 'firstName'},
+      {dbName: 'last_name', jsonName: 'lastName'},
+      {dbName: 'total_allocation', jsonName: 'totalAllocation'},
+      {dbName: 'funding_sources', jsonName: 'fundingSources'}
+    ]);
+    return fields.toJsonArray(res.res.rows);
+
   }
 
 }
