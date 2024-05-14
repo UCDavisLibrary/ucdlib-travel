@@ -36,7 +36,7 @@ return html`
     <div>
     ${this.results.map(result => html`
       <div class='emp-search-result pointer' @click=${() => this._onSelect(result)}>
-        ${this._renderResult(result)}
+        ${renderResult(result)}
       </div>
     `)}
     </div>
@@ -48,3 +48,31 @@ return html`
 <div class='brand-textbox u-space-mt--small' ?hidden=${this.status != 'no-results' || !this.isFocused }>No results matched your search!</div>
 </div>
 `;}
+
+/**
+ * @description Renders a single result item in the results dropdown
+ * @param {Object} result - an Employee object from the database
+ * @returns {TemplateResult}
+ */
+function renderResult(result){
+  let name = `${result.first_name} ${result.last_name}`.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  let department = getDepartment(result);
+  return html`
+    <div>${name}</div>
+    <div class='muted'>${result.title}, ${department}</div>
+  `;
+}
+
+     /**
+     * @description searches for employee department
+     * @param {Object} result - an Employee object from the database
+     */
+    // if item in results.group has key of type === 'Department', then return the name value of that object
+    function getDepartment(result){
+      if ( result.groups ) {
+        let department = result.groups.find(group => group.type === 'Department');
+        console.log(department);
+        if ( department ) return department.name;
+      }
+      return '';
+    }
