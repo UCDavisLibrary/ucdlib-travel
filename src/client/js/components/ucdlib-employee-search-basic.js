@@ -2,9 +2,31 @@ import { LitElement, html } from 'lit';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import {render, styles} from "./ucdlib-employee-search-basic.tpl.js";
 import { LitCorkUtils, Mixin } from "../../../lib/appGlobals.js";
+import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
+
+
+/**
+ * @description Advanced employee search component.
+ * Allows for searching the Library personnel database by name.
+ * And selecting employees to add to a field.
+ * @param {String} query - string entered into the search input field
+ * @param {String} labelText - string text label property for the search input field
+ * @param {Boolean} hideLabel - state of label visibility
+ * @param {Array} results - array of employee objects returned from search
+ * @param {Number} totalResults - total number of employees returned from search.payload.data.length
+ * @param {Number} resultCtNotShown - difference of payload.total and payload.data.length. Checks that all results are shown.
+ * @param {Boolean} noResults - total number of pages of search results. true is payload.data.length is 0
+ * @param {Boolean} error - true if component state is 'error'
+ * @param {String} status - status of input component. 'idle', 'searching', 'no-results', 'selected' bound to setStatus method
+ * @param {Boolean} isSearching - text is entered into the search input field and searching for results
+ * @param {Boolean} showDropdown - component initialization status. True if search results are shown and more than three charecters are entered into the search input field
+ * @param {Boolean} isFocused - form is focused. True if search input field is focused. Triggered by @focus event.
+ * @param {Boolean} selectedText - Text in dropdown after a result is selected.
+ * @param {Boolean} selectedObject - Full result of search object after a result is selected.
+ */
 
 export default class UcdlibEmployeeSearchBasic extends Mixin(LitElement)
-.with(LitCorkUtils) {
+.with(LitCorkUtils, MainDomElement) {
 
   static get properties() {
     return {
@@ -158,7 +180,6 @@ export default class UcdlibEmployeeSearchBasic extends Mixin(LitElement)
         ${unsafeHTML(name)}
         <div class='muted'>${result.title}</div>
       `;
-  
     }
   
     /**
@@ -166,7 +187,8 @@ export default class UcdlibEmployeeSearchBasic extends Mixin(LitElement)
      * @param {Object} result - an Employee object from the database
      */
     _onSelect(result){
-      this.selectedText = `${result.first_name} ${result.last_name}`;
+      console.log('selected', result);
+      this.selectedText = `${result.user_id}`;
       this.selectedObject = result;
       this.dispatchEvent(new CustomEvent('select', {
         detail: {employee: result}
