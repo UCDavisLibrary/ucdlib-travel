@@ -2,6 +2,8 @@ import {BaseModel} from '@ucd-lib/cork-app-utils';
 import EmployeeAllocationService from '../services/EmployeeAllocationService.js';
 import EmployeeAllocationStore from '../stores/EmployeeAllocationStore.js';
 
+import urlUtils from '../../utils/urlUtils.js';
+
 /**
  * @class EmployeeAllocationModel
  * @description Model for employee allocations
@@ -16,6 +18,32 @@ class EmployeeAllocationModel extends BaseModel {
     this.service = EmployeeAllocationService;
 
     this.register('EmployeeAllocationModel');
+  }
+
+  async query(query={}){
+
+    const queryString = this.queryString(query);
+
+    let state = this.store.data.fetched[queryString];
+    try {
+      if( state && state.state === 'loading' ) {
+        await state.request;
+      } else {
+        await this.service.query(queryString);
+      }
+    } catch(e) {}
+
+    this.store.emit(this.store.events.EMPLOYEE_ALLOCATIONS_REQUESTED, this.store.data.fetched[queryString]);
+
+    return this.store.data.fetched[queryString];
+  }
+
+  /**
+   * @description Convert query object to query string
+   */
+  queryString(query) {
+    query = urlUtils.queryToKebabCase(query);
+    return urlUtils.queryStringFromObject(query);
   }
 
   /**

@@ -258,6 +258,7 @@ class EmployeeAllocation {
     const query = `
     SELECT
      ea.*,
+     fs.label AS funding_source_label,
      json_build_object(
         'kerberos', e.kerberos,
         'firstName', e.first_name,
@@ -267,6 +268,8 @@ class EmployeeAllocation {
       employee_allocation ea
     JOIN
       employee e ON e.kerberos = ea.employee_kerberos
+    JOIN
+      funding_source fs ON fs.funding_source_id = ea.funding_source_id
     WHERE ${whereClause.sql}
     ORDER BY
       ea.start_date DESC,
@@ -276,10 +279,28 @@ class EmployeeAllocation {
     const res = await pg.query(query, whereClause.values);
     if( res.error ) return res;
 
-    const data = this.entityFields.toJsonArray(res.res.rows);
+    const data = this._prepareResults(res.res.rows);
     const totalPages = Math.ceil(total / pageSize);
     return {total, totalPages, page, data};
 
+  }
+
+  /**
+   * @description Prepare the results of an allocation query for return
+   */
+  _prepareResults(res){
+    const allocations = this.entityFields.toJsonArray(res);
+
+    for (const allocation of allocations) {
+
+      // ensure startDate and endDate are in format YYYY-MM-DD
+      for (const dateField of ['startDate', 'endDate']) {
+        allocation[dateField] = allocation[dateField].toISOString().split('T')[0];
+      }
+
+    }
+
+    return allocations;
   }
 
   /**

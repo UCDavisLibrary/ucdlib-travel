@@ -57,7 +57,24 @@ app-page-admin-allocations {
   .allocations-filters {
     --l-gap-override: 1rem;
     padding-bottom: 1rem;
-    border-bottom: 2px dotted #ffbf00
+    border-bottom: 2px dotted #ffbf00;
+    margin-bottom: 1rem;
+  }
+
+  .allocation-item {
+    display: flex;
+    border-bottom: 2px solid #DBEAF7;
+    padding: 1rem 0;
+
+    .allocation-details {
+      flex-grow: 1;
+    }
+
+    .allocation-amount {
+      align-self: center;
+      font-weight: 700;
+      color: #022851;
+    }
   }
 
   @media (max-width: 991px) {

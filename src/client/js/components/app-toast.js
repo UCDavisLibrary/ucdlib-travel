@@ -76,8 +76,13 @@ export default class AppToast extends Mixin(LitElement)
           this.type = this.item.type || 'information';
           this.hidden = false;
 
-          if(this.type == "success") this.icon = html`&#10003;`;
-          else if(this.type == "error") this.icon = html`&#10005;`;
+          if(this.type == "success") {
+            this.icon = html`&#10003;`;
+          } else if(this.type == "error") {
+            this.icon = html`&#10005;`;
+          } else {
+            this.icon = html`<span>i</span>`;
+          }
 
           this.queueAmount--;
           if(this.queueAmount == 0) {

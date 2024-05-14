@@ -8,6 +8,16 @@ class EmployeeAllocationService extends BaseService {
     this.store = EmployeeAllocationStore;
   }
 
+  query(query) {
+    return this.request({
+      url : `/api/admin/employee-allocation${query ? '?' + query : ''}`,
+      checkCached: () => this.store.data.fetched[query],
+      onLoading : request => this.store.employeeAllocationsFetchedLoading(request, query),
+      onLoad : result => this.store.employeeAllocationsFetchedLoaded(result.body, query),
+      onError : e => this.store.employeeAllocationsFetchedError(e, query)
+    });
+  }
+
   createEmployeeAllocations(payload, timestamp) {
     return this.request({
       url : '/api/admin/employee-allocation',
