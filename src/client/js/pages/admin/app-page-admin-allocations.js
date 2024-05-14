@@ -12,7 +12,10 @@ export default class AppPageAdminAllocations extends Mixin(LitElement)
       employeeFilters: {type: Array},
       selectedFundingSourceFilters: {type: Array},
       selectedEmployeeFilters: {type: Array},
-      selectedDateRangeFilters: {type: Array}
+      selectedDateRangeFilters: {type: Array},
+      page: {type: Number},
+      maxPage: {type: Number},
+      results: {type: Array}
     }
   }
 
@@ -23,11 +26,21 @@ export default class AppPageAdminAllocations extends Mixin(LitElement)
 
     this.fundingSourceFilters = [];
     this.employeeFilters = [];
+    this.page = 1;
+    this.resetFilters();
+    this.maxPage = 1;
+    this.results = [];
+
+    this._injectModel('AppStateModel', 'EmployeeAllocationModel');
+  }
+
+  /**
+   * @description Reset selected filters to default values
+   */
+  resetFilters() {
     this.selectedFundingSourceFilters = [];
     this.selectedEmployeeFilters = [];
     this.selectedDateRangeFilters = ['current'];
-
-    this._injectModel('AppStateModel', 'EmployeeAllocationModel');
   }
 
   /**
@@ -58,13 +71,33 @@ export default class AppPageAdminAllocations extends Mixin(LitElement)
   }
 
   /**
+   * @description Construct query object for EmployeeAllocationModel query from element properties
+   */
+  _queryObject(){
+    return {
+      page: this.page,
+      fundingSources: this.selectedFundingSourceFilters,
+      employees: this.selectedEmployeeFilters,
+      dateRanges: this.selectedDateRangeFilters
+    };
+  }
+
+  /**
    * @description Get data necessary to render this page
    */
   async getPageData(){
     const promises = [];
     promises.push(this.EmployeeAllocationModel.getFilters());
+    promises.push(this.EmployeeAllocationModel.query(this._queryObject()));
     const resolvedPromises = await Promise.allSettled(promises);
     return resolvedPromises;
+  }
+
+  _onEmployeeAllocationsRequested(e) {
+    if ( e.state !== 'loaded') return;
+    if ( e.query !== this.EmployeeAllocationModel.queryString(this._queryObject()) ) return;
+    this.results = e.payload.data;
+    this.maxPage = e.payload.totalPages;
   }
 
   /**
@@ -78,15 +111,46 @@ export default class AppPageAdminAllocations extends Mixin(LitElement)
   }
 
   /**
-   * @description bound to change event on date range filters select
+   * @description Event handler for filter changes. Triggers a query to update results
+   * @param {Array} options - selected options
+   * @param {String} prop - property to update
+   * @param {Boolean} toInt - convert values to integers before setting property
    */
-  _onDateRangeFiltersChange(e) {
-    let ranges = e.detail.map(option => option.value);
-    if ( ranges.length === 2 && ranges.includes('past') && ranges.includes('future') ) {
-      ranges = [];
-      this.AppStateModel.showToast({message: 'Sorry, you cannot display past and future allocations together.', type: 'information'})
+  _onFilterChange(options, prop, toInt){
+    let values = options.map(option => toInt ? parseInt(option.value) : option.value);
+    if ( prop === 'selectedDateRangeFilters') {
+      if ( values.length === 2 && values.includes('past') && values.includes('future') ) {
+        values = [];
+        this.AppStateModel.showToast({message: 'Sorry, you cannot display past and future allocations together.', type: 'info'})
+      }
     }
-    this.selectedDateRangeFilters = ranges;
+    this[prop] = values;
+
+    this.page = 1;
+    this.results = [];
+    this.maxPage = 1;
+
+    this.EmployeeAllocationModel.query(this._queryObject());
+
+  }
+
+  _onPageChange(e){
+    this.page = e.detail.page;
+    this.results = [];
+    this.EmployeeAllocationModel.query(this._queryObject());
+  }
+
+  /**
+   * @description Event handler for when employee allocations are created.
+   * Callback for employee-allocations-created event in EmployeeAllocationModel
+   * @param {Object} e - cork-app-utils event object
+   */
+  _onEmployeeAllocationsCreated(e){
+    if ( e.state !== 'loaded') return;
+    this.resetFilters();
+    this.page = 1;
+    this.results = [];
+    this.maxPage = 1;
   }
 
 }

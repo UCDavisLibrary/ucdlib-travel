@@ -11,7 +11,7 @@ return html`
         <div class='l-first'>
           <div class='field-container'>
             <label>Date Range</label>
-            <ucd-theme-slim-select @change=${this._onDateRangeFiltersChange}>
+            <ucd-theme-slim-select @change=${e => this._onFilterChange(e.detail, 'selectedDateRangeFilters')}>
               <select multiple>
                 <option value='current' ?selected=${this.selectedDateRangeFilters.includes('current')}>Current</option>
                 <option value='future' ?selected=${this.selectedDateRangeFilters.includes('future')}>Future</option>
@@ -23,7 +23,7 @@ return html`
         <div class='l-second'>
           <div class='field-container'>
             <label>Employee</label>
-            <ucd-theme-slim-select @change=${e => this.selectedEmployeeFilters = e.detail.map(option => option.value)}>
+            <ucd-theme-slim-select @change=${e => this._onFilterChange(e.detail, 'selectedEmployeeFilters')}>
               <select multiple>
                 ${this.employeeFilters.map(employee => html`
                   <option
@@ -39,7 +39,7 @@ return html`
         <div class='l-third'>
           <div class='field-container'>
             <label>Funding Source</label>
-            <ucd-theme-slim-select @change=${e => this.selectedFundingSourceFilters = e.detail.map(option => parseInt(option.value))}>
+            <ucd-theme-slim-select @change=${e => this._onFilterChange(e.detail, 'selectedFundingSourceFilters', true)}>
               <select multiple>
                 ${this.fundingSourceFilters.map(fs => html`
                   <option
@@ -52,6 +52,14 @@ return html`
             </ucd-theme-slim-select>
           </div>
         </div>
+      </div>
+      <div class='allocation-results'>
+        ${this.results.map(result => renderAllocationItem.call(this, result))}
+        <ucd-theme-pagination
+          .maxPage=${this.maxPage}
+          .page=${this.page}
+          @page-change=${this._onPageChange}>
+        </ucd-theme-pagination>
       </div>
     </div>
     <div class='l-sidebar-second'>
@@ -67,3 +75,19 @@ return html`
   </div>
 </div>
 `;}
+
+function renderAllocationItem(allocation) {
+  return html`
+    <div class='allocation-item'>
+      <div></div>
+      <div class='allocation-details'>
+        <h5>${allocation.employee.firstName} ${allocation.employee.lastName}</h5>
+        <div class='primary bold'>${allocation.fundingSourceLabel}</div>
+        <div>From: ${allocation.startDate}</div>
+        <div>To: ${allocation.endDate}</div>
+      </div>
+      <div class='allocation-amount'>$${allocation.amount}</div>
+
+    </div>
+  `;
+}
