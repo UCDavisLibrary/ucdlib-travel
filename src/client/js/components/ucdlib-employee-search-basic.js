@@ -1,5 +1,4 @@
 import { LitElement, html } from 'lit';
-import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import {render, styles} from "./ucdlib-employee-search-basic.tpl.js";
 import { LitCorkUtils, Mixin } from "../../../lib/appGlobals.js";
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
@@ -21,8 +20,10 @@ import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-el
  * @param {Boolean} isSearching - text is entered into the search input field and searching for results
  * @param {Boolean} showDropdown - component initialization status. True if search results are shown and more than three charecters are entered into the search input field
  * @param {Boolean} isFocused - form is focused. True if search input field is focused. Triggered by @focus event.
- * @param {Boolean} selectedText - Text in dropdown after a result is selected.
- * @param {Boolean} selectedObject - Full result of search object after a result is selected.
+ * @param {String} selectedText - Text in dropdown after a result is selected.
+ * @param {Object} selectedObject - Full result of search object after a result is selected.
+ * @param {Object} iamresult - Full result of search object after a result is selected.
+ * @param {String} department - sorted department name from the search result object
  */
 
 export default class UcdlibEmployeeSearchBasic extends Mixin(LitElement)
@@ -64,6 +65,8 @@ export default class UcdlibEmployeeSearchBasic extends Mixin(LitElement)
     this.noResults = false;
     this.selectedText = '';
     this.selectedObject = {};
+    this.iamresult = {};
+    this.department = '';
 
     this._injectModel('EmployeeModel');
   }
@@ -92,7 +95,7 @@ export default class UcdlibEmployeeSearchBasic extends Mixin(LitElement)
      * @description Disables the shadowdom
      * @returns
     */
-    createRenderRoot() {
+    MainDomElement() {
       return this;
     }
   
@@ -160,38 +163,15 @@ export default class UcdlibEmployeeSearchBasic extends Mixin(LitElement)
     }
   
     /**
-     * @description Renders a single result item in the results dropdown
-     * @param {Object} result - an Employee object from the database
-     * @returns {TemplateResult}
-     */
-    _renderResult(result){
-      if ( !this.query) return html``;
-      // highlight search term
-      let name = `${result.first_name} ${result.last_name}`.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      const queries = this.query.replace(/</g, '').replace(/>/g, '').split(' ').filter(q => q);
-      for (let query of queries) {
-        const regex = new RegExp(query, 'gi');
-        name = name.replace(regex, (match) => `<${match}>`);
-      }
-      name = name.replace(/</g, '<span class="highlight">').replace(/>/g, '</span>');
-      name=`<div>${name}</div>`;
-  
-      return html`
-        ${unsafeHTML(name)}
-        <div class='muted'>${result.title}</div>
-      `;
-    }
-  
-    /**
      * @description Fires when a result is clicked from the dropdown
      * @param {Object} result - an Employee object from the database
      */
-    _onSelect(result){
-      console.log('selected', result);
-      this.selectedText = `${result.user_id}`;
-      this.selectedObject = result;
+    async _onSelect(result){
+      this.selectedText = `${result.first_name} ${result.last_name}`;
+      const iamresult = await this.EmployeeModel.getIamRecordById(result.user_id)
+      this.selectedObject = iamresult.payload;
       this.dispatchEvent(new CustomEvent('select', {
-        detail: {employee: result}
+        detail: iamresult
       }));
     }
   
