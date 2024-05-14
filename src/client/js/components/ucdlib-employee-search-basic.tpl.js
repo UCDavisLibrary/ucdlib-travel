@@ -71,7 +71,6 @@ function renderResult(result){
     function getDepartment(result){
       if ( result.groups ) {
         let department = result.groups.find(group => group.type === 'Department');
-        console.log(department);
         if ( department ) return department.name;
       }
       return '';
