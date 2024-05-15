@@ -70,16 +70,28 @@ app-page-admin-allocations {
       flex-grow: 1;
     }
 
-    .allocation-amount {
+    .allocation-amount__desktop {
       align-self: center;
       font-weight: 700;
       color: #022851;
+      display: none;
     }
   }
 
   @media (max-width: 991px) {
     .allocations-filters > :where(* + *) {
       margin-top: 1rem;
+    }
+  }
+
+  @media (min-width: 480px) {
+    .allocation-item {
+      .allocation-amount__desktop {
+        display: block;
+      }
+      .allocation-amount__mobile {
+        display: none;
+      }
     }
   }
 }

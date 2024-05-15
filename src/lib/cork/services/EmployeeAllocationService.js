@@ -8,6 +8,20 @@ class EmployeeAllocationService extends BaseService {
     this.store = EmployeeAllocationStore;
   }
 
+  delete(payload, timestamp) {
+    return this.request({
+      url : '/api/admin/employee-allocation',
+      fetchOptions : {
+        method : 'DELETE',
+        body : payload
+      },
+      json: true,
+      onLoading : request => this.store.employeeAllocationsDeletedLoading(request, timestamp),
+      onLoad : result => this.store.employeeAllocationsDeletedLoaded(result.body, timestamp),
+      onError : e => this.store.employeeAllocationsDeletedError(e, timestamp)
+    });
+  }
+
   query(query) {
     return this.request({
       url : `/api/admin/employee-allocation${query ? '?' + query : ''}`,

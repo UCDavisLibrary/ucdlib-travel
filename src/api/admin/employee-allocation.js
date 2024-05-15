@@ -21,6 +21,20 @@ export default (api) => {
   });
 
   /**
+   * @description Delete employee allocations - does not actually delete records, just marks them as deleted
+   * @param {String} req.body.ids - comma-separated list of allocation ids to delete
+   */
+  api.delete('/employee-allocation', protect('hasAdminAccess'), async (req, res) => {
+    const ids = apiUtils.explode(req.body.ids, true);
+    const data = await employeeAllocation.archive(ids, req.auth.token.employeeObject);
+    if ( data.error ) {
+      console.error('Error in DELETE /employee-allocation', data.error);
+      return res.status(500).json({error: true, message: 'Error deleting employee allocations.'});
+    }
+    return res.json(data);
+  });
+
+  /**
    * @description Get a list of employee allocations
    * @param {String} req.query.employees - comma-separated list of kerberos ids or 'self' to get current user's records
    * @param {String} req.query.funding-sources - comma-separated list of funding source ids
@@ -59,9 +73,6 @@ export default (api) => {
       return res.status(500).json({error: true, message: 'Error getting employee allocations.'});
     }
     return res.json(data);
-
-
-
   });
 
   /**

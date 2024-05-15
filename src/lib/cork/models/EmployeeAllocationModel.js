@@ -20,6 +20,14 @@ class EmployeeAllocationModel extends BaseModel {
     this.register('EmployeeAllocationModel');
   }
 
+  /**
+   * @description Query employee allocations
+   * @param {Object} query - query object with the following properties:
+   * - fundingSources {Array} - array of funding source ids
+   * - employees {Array} - array of kerberos ids
+   * - dateRanges {Array} - array of date range keywords: current, future, past
+   * - page {Number} - page number for pagination
+   */
   async query(query={}){
 
     const queryString = this.queryString(query);
@@ -56,7 +64,23 @@ class EmployeeAllocationModel extends BaseModel {
     } catch(e) {}
     const state = this.store.data.employeeAllocationsCreated[timestamp];
     if ( state && state.state === 'loaded' ) {
-      // todo clear cache
+      this.store.data.fetched = {};
+    }
+    return state;
+  }
+
+  /**
+   * @description Delete employee allocations
+   * @param {Object} payload - object with ids property containing array of allocation ids to delete
+   */
+  async delete(payload) {
+    let timestamp = Date.now();
+    try {
+      await this.service.delete(payload, timestamp);
+    } catch(e) {}
+    const state = this.store.data.deleted[timestamp];
+    if ( state && state.state === 'loaded' ) {
+      this.store.data.fetched = {};
     }
     return state;
   }
