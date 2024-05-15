@@ -5,16 +5,58 @@
 class UrlUtils {
 
   /**
-   * @description Get the query string from an object
+   * @description Get the sorted query string from an object
    * @param {Object} q - query object
    * @param {String} empty - return value if query object is empty - default <empty string>
    * @returns {String}
    */
   queryStringFromObject(q, empty=''){
     if ( !q || !Object.keys(q).length) return empty;
+
+    // sort array values
+    for (const k in q) {
+      if ( Array.isArray(q[k]) ) q[k].sort();
+    }
+
+    // remove empty values
+    for (const k in q) {
+      if ( !q[k] ) delete q[k];
+      if ( Array.isArray(q[k]) && !q[k].length ) delete q[k];
+    }
+
+    // join arrays
+    for (const k in q) {
+      if ( Array.isArray(q[k]) ) q[k] = q[k].join(',');
+    }
+
     const searchParams = new URLSearchParams(q);
     searchParams.sort();
     return searchParams.toString();
+  }
+
+  /**
+   * @description Convert a query object to kebab-case
+   * @param {Object} q - query object
+   * @returns {Object}
+   */
+  queryToKebabCase(q){
+    const out = {};
+    for (const k in q) {
+
+      // covert snake_case to kebab-case
+      let newK = k.replace(/_/g, '-');
+
+      // convert camelCase to kebab-case
+      newK = newK.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
+
+      if ( newK !== k ) {
+        out[newK] = q[k];
+      } else {
+        out[k] = q[k];
+      }
+
+    }
+    return out;
   }
 
   /**

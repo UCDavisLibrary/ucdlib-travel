@@ -26,18 +26,18 @@ export function styles() {
         max-width: 60%;
       }
     }
-    
+
     .movein {
-      -webkit-animation: cssInAnimation 1s forwards; 
+      -webkit-animation: cssInAnimation 1s forwards;
       animation: cssInAnimation 1s forwards;
     }
-    
+
     @keyframes cssInAnimation {
       0%   {opacity: 0; display:block;}
       33%   {opacity: 0.25;}
       66%  {opacity: 0.75;}
       100% {opacity: 1;}
-    
+
     }
     @-webkit-keyframes cssInAnimation {
       0%   {opacity: 0; display:block;}
@@ -45,19 +45,19 @@ export function styles() {
       66%  {opacity: 0.75;}
       100% {opacity: 1;}
     }
-    
-    
+
+
     .moveout {
-      -webkit-animation: cssOutAnimation 1s forwards; 
+      -webkit-animation: cssOutAnimation 1s forwards;
       animation: cssOutAnimation 1s forwards;
     }
-    
+
     @keyframes cssOutAnimation {
       0%   {opacity: 1;}
       33%   {opacity: 0.75;}
       66%  {opacity: 0.25;}
       100% {opacity: 0; display:none;}
-    
+
     }
     @-webkit-keyframes cssOutAnimation {
       0%   {opacity: 1;}
@@ -65,23 +65,23 @@ export function styles() {
       66%  {opacity: 0.25;}
       100% {opacity: 0; display:none;}
     }
-    
+
     .toast-hidden {
       display:none;
     }
 
-    .icon { 
+    .icon {
       margin-right: 1rem;
-    } 
+    }
 
     .type--success {
       color:#3dae2b;
       border: 1px solid #3dae2b;
     }
     .type--info {
-      color:black;
-      border: 1px solid black;
-    }     
+      color: #13639e;
+      border: 1px solid #13639e;
+    }
     .type--error {
       color: #c10230;
       border: 1px solid #c10230;
@@ -92,7 +92,7 @@ export function styles() {
   return [elementStyles];
 }
 
-export function render() { 
+export function render() {
   const classes = {
     "toast": !this.hidden,
     "toast-hidden": this.hidden,
@@ -102,13 +102,13 @@ export function render() {
     "type--info": this.type == "info",
     "type--error": this.type == "error",
 
-  };  
+  };
 return html`
 
 ${!this.nopopup ? html`
     <div class=${classMap(classes)} >
-      <span class="icon"> <i>${this.icon}</i></span> 
-      <span class="text">${this.text}</span> 
+      <span class="icon"> <i>${this.icon}</i></span>
+      <span class="text">${this.text}</span>
     </div>
 
 `: html``}
