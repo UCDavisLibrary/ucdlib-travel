@@ -27,22 +27,24 @@ return html`
       </p>
     </div>
 
-  ${console.log(this.existingApprovers.length)}
     <section class="approvertype-info">
-    ${this.existingApprovers.map(approver => {html`
+    ${this.existingApprovers.map((approver) => html`
       <div class="approvertype-block">
           <span>
             <h3 class="section-header"><em>${approver.label}</em>
               <span class="user-icon"><i class="fa-solid fa-pen-to-square"></i></span>
-              ${!this.systemGenerated ? html`<span class="trash-icon"><i class="fa-solid fa-trash"></i></span>`:html``}
+              ${!approver.systemGenerated ? html`<span class="trash-icon"><i class="fa-solid fa-trash"></i></span>`:html``}
             </h3>
           </span> 
           <span>${approver.description}</span><br/>
-          <span>
-            <b><p style="color:#022851"><i class="fa-solid fa-user" style="color:#13639E;width:15px;height:15px;"></i>&nbsp;${!this.systemGenerated ? html`Sample Person`:html`System Generated`}</p></b>
-          </span>
+
+          ${approver.employees.map((employee) => html`
+            <span>
+              <b style="color:#022851"><i class="fa-solid fa-user" style="color:#13639E;width:15px;height:15px;"></i>&nbsp;${!approver.systemGenerated ? html`${employee.firstName} ${employee.lastName}`:html`System Generated`}</b><br />
+            </span>  
+          `)}
       </div>
-    `})}
+    `)}
     </section> 
 
     <section class="approvertype-form">
@@ -50,26 +52,26 @@ return html`
         <h3 class="section-header"><em>Edit Approver</em>
           <div class="field-container">
               <label class="textLabel" for="text">Label <abbr title="Required">*</abbr></label>
-              <input type="text" placeholder="Job Title">
+              <input class="inputLabel" @input=${(e) => this._setLabel(e.target.value)} type="text" placeholder="Position Title">
           </div>
 
           <div class="field-container">
-            <label class="textLabel" for="textarea">Description</label>
-            <textarea rows="8" cols="48" placeholder="Description of Approver Type"></textarea>
+            <label class="textDescriptionLabel" for="textarea">Description</label>
+            <textarea class="textDescription" @input=${(e) => this._setDescription(e.target.value)} rows="8" cols="48" placeholder="Approver Type Description"></textarea>
         </div>
 
         <ucdlib-employee-search-basic></ucdlib-employee-search-basic>
       </div>
 
-      <span>
+      <!-- <span>
         <p>
           <button class="btn btn--alt3">Save Button</button>
           <button class="btn btn--alt3">Cancel Button</button>
         </p>
-      </span>
+      </span> -->
     </section>
         
-    <p><button class="btn btn--primary" style="margin:20px 0px 0px 0px">Add New Approver</button></p>
+    <p><button @click=${e => this._onSubmit()} class="btn btn--primary" style="margin:20px 0px 0px 0px">Add New Approver</button></p>
 
       
   </div>
