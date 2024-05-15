@@ -19,7 +19,7 @@ class Pg {
    * @param {Array} values - Hydration values
    * @returns {Object} {res, err}
    */
-  async query(text, values){           
+  async query(text, values){
     const out = this.output;
     try {
       out.res = await pool.query(text, values);

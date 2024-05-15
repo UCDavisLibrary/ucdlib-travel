@@ -29,7 +29,7 @@ export default (api) => {
     const data = await approverType.create(approverTypeData);
     if ( data.error ) {
       console.error('Error in POST /approver-type', data.error);
-      return res.status(400).json({error: true, message: 'Error creating approver-type.'});
+      return res.status(500).json({error: true, message: 'Error creating approver-type.'});
     }
     res.json({data: data, error: false});
   });
@@ -44,7 +44,7 @@ export default (api) => {
       const data = await approverType.update(approverTypeData);
       if ( data.error ) {
         console.error('Error in PUT /approver-type', data.error);
-        return res.status(400).json({error: true, message: 'Error updating approver-type.'});
+        return res.status(500).json({error: true, message: 'Error updating approver-type.'});
       }
       res.json({data: data, error: false});
     });
