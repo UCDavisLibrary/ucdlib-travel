@@ -92,8 +92,7 @@ class AdminApproverType {
         let r = res.res.rows[0].approver_types;
 
         if( res.error ) return res;
-        const data = this.entityFields.toJsonArray(r);
-
+        const data = this.queryFormat(r);
 
         return data;
       }
@@ -103,14 +102,24 @@ class AdminApproverType {
        * @param {Number} id - ID Employee
 
        */
-        async approverEmployeeCheck(id){
-          const client = await pg.pool.connect();
-          let employeeExists = await client.query(`SELECT * FROM approver_type_employee WHERE approver_type_id = ($1)`, [id]);
+        async queryFormat(array){      
+          let output = [];
+          array.forEach(function(item) {
+            var existing = output.filter(function(v, i) {
+              return v.approverTypeID == item.approverTypeID;
+            });
+            if (existing.length) {
+              var existingIndex = output.indexOf(existing[0]);
+              output[existingIndex].employees = [output[existingIndex].employees].concat([item.employees]);
+            } else {
+              if (typeof item.employees == 'string')
+                item.employees = [item.employees];
+              output.push(item);
+            }
+          });
+          console.log(output);
 
-          if(employeeExists.rowCount){
-            await pg.query(`DELETE FROM approver_type_employee WHERE approver_type_id = ($1)`, [id]);
-          }
-          client.release();
+          return output;
         }
 
       /**
