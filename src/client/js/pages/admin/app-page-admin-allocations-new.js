@@ -5,7 +5,18 @@ import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-el
 import { WaitController } from "@ucd-lib/theme-elements/utils/controllers/wait.js";
 import { createRef } from 'lit/directives/ref.js';
 import IamEmployeeObjectAccessor from '../../../../lib/utils/iamEmployeeObjectAccessor.js';
+import ValidationHandler from "../../utils/ValidationHandler.js";
 
+/**
+ * @class AppPageAdminAllocationsNew
+ * @description Page component for adding new employee allocations
+ * @property {Array} employees - list of employees to allocate funding to
+ * @property {String} startDate - start date for the allocation
+ * @property {String} endDate - end date for the allocation
+ * @property {Number} fundingAmount - amount of funding to allocate
+ * @property {Array} fundingSources - list of active funding sources from FundingSourceModel
+ * @property {Object} selectedFundingSource - selected funding source object from fundingSources list
+ */
 export default class AppPageAdminAllocationsNew extends Mixin(LitElement)
 .with(LitCorkUtils, MainDomElement) {
 
@@ -41,6 +52,8 @@ export default class AppPageAdminAllocationsNew extends Mixin(LitElement)
     this.endDate = '';
     this.fundingAmount = 0;
     this.selectedFundingSource = {};
+    this.validationHandler = new ValidationHandler();
+    this.requestUpdate();
   }
 
   /**
@@ -104,10 +117,21 @@ export default class AppPageAdminAllocationsNew extends Mixin(LitElement)
   }
 
   /**
+   * @description Check if an employee already has allocation from the validationHandler
+   * @param {Object} employee - basic employee object from employees list
+   * @returns {Boolean}
+   */
+  employeeAlreadyHasAllocation(employee) {
+    const employeeErrors = this.validationHandler.getError('employees', 'already-exists');
+    if ( !employeeErrors ) return false;
+    return employeeErrors?.employees.find(e => e.kerberos === employee.kerberos) ? true : false;
+  }
+
+  /**
    * @description Event handler for form submission
    * @param {Event} e - Submit event
    */
-  async _onFormSubmit(e) {
+   _onFormSubmit(e) {
     e.preventDefault();
     const payload = {
       startDate: this.startDate,
@@ -116,9 +140,32 @@ export default class AppPageAdminAllocationsNew extends Mixin(LitElement)
       amount: this.fundingAmount,
       employees: this.employees
     };
-    console.log('submit', payload);
-    await this.EmployeeAllocationModel.createEmployeeAllocations(payload);
+    this.EmployeeAllocationModel.createEmployeeAllocations(payload);
+  }
 
+  /**
+   * @description Event handler for when employee allocations are created.
+   * Callback for employee-allocations-created event in EmployeeAllocationModel
+   * @param {Object} e - cork-app-utils event object
+   */
+  _onEmployeeAllocationsCreated(e){
+    if ( e.state === 'error' ) {
+      if ( e.error?.payload?.is400 ) {
+        this.validationHandler = new ValidationHandler(e);
+        this.requestUpdate();
+        this.AppStateModel.showToast({message: 'Error when creating the employee allocations. Form data needs fixing.', type: 'error'});
+      } else {
+        this.AppStateModel.showToast({message: 'An unknown error occurred when creating the employee allocations', type: 'error'});
+      }
+      this.AppStateModel.showLoaded(this.id);
+    } else if ( e.state === 'loading') {
+      this.AppStateModel.showLoading();
+    } else if ( e.state === 'loaded' ) {
+      this.AppStateModel.showLoaded(this.id);
+      this.AppStateModel.setLocation(this.AppStateModel.store.breadcrumbs['admin-allocations'].link);
+      this.AppStateModel.showToast({message: 'Employee allocations created successfully', type: 'success'});
+      this.resetForm();
+    }
   }
 
   /**
@@ -156,6 +203,14 @@ export default class AppPageAdminAllocationsNew extends Mixin(LitElement)
   _onActiveFundingSourcesFetched(e){
     if ( e.state !== 'loaded' ) return;
     this.fundingSources = e.payload;
+  }
+
+  /**
+   * @description Event handler for when the cancel button is clicked
+   */
+  _onCancel(){
+    this.resetForm();
+    this.AppStateModel.setLocation(this.AppStateModel.store.breadcrumbs['admin-allocations'].link);
   }
 
   /**

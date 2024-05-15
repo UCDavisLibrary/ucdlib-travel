@@ -7,10 +7,75 @@ class EmployeeAllocationStore extends BaseStore {
 
     this.data = {
       employeeAllocationsCreated: {},
+      filters: {},
+      fetched: {},
+      deleted: {}
     };
     this.events = {
       EMPLOYEE_ALLOCATIONS_CREATED: 'employee-allocations-created',
+      EMPLOYEE_ALLOCATIONS_FILTERS_FETCHED: 'employee-allocations-filters-fetched',
+      EMPLOYEE_ALLOCATIONS_FETCHED: 'employee-allocations-fetched',
+      EMPLOYEE_ALLOCATIONS_REQUESTED: 'employee-allocations-requested',
+      EMPLOYEE_ALLOCATIONS_DELETED: 'employee-allocations-deleted'
     };
+  }
+
+  employeeAllocationsDeletedLoading(request, timestamp) {
+    this._setEmployeeAllocationsDeletedState({
+      state : this.STATE.LOADING,
+      request,
+      timestamp
+    });
+  }
+
+  employeeAllocationsDeletedLoaded(payload, timestamp) {
+    this._setEmployeeAllocationsDeletedState({
+      state : this.STATE.LOADED,
+      payload,
+      timestamp
+    });
+  }
+
+  employeeAllocationsDeletedError(error, timestamp) {
+    this._setEmployeeAllocationsDeletedState({
+      state : this.STATE.ERROR,
+      error,
+      timestamp
+    });
+  }
+
+  _setEmployeeAllocationsDeletedState(state) {
+    this.data.deleted[state.timestamp] = state;
+    this.emit(this.events.EMPLOYEE_ALLOCATIONS_DELETED, state);
+  }
+
+  employeeAllocationsFetchedLoading(request, query) {
+    this._setEmployeeAllocationsFetchedState({
+      state : this.STATE.LOADING,
+      request,
+      query
+    });
+  }
+
+  employeeAllocationsFetchedLoaded(payload, query) {
+    this._setEmployeeAllocationsFetchedState({
+      state : this.STATE.LOADED,
+      payload,
+      query
+    });
+  }
+
+  employeeAllocationsFetchedError(error, query) {
+    this._setEmployeeAllocationsFetchedState({
+      state : this.STATE.ERROR,
+      error,
+      query
+    });
+  }
+
+  _setEmployeeAllocationsFetchedState(state) {
+    this.data.fetched[state.query] = state;
+    this.emit(this.events.EMPLOYEE_ALLOCATIONS_FETCHED, state);
   }
 
   employeeAllocationsCreatedLoading(request, timestamp) {
@@ -40,6 +105,32 @@ class EmployeeAllocationStore extends BaseStore {
   _setEmployeeAllocationsCreatedState(state) {
     this.data.employeeAllocationsCreated[state.timestamp] = state;
     this.emit(this.events.EMPLOYEE_ALLOCATIONS_CREATED, state);
+  }
+
+  employeeAllocationsFiltersFetchedLoading(request) {
+    this._setEmployeeAllocationsFiltersFetchedState({
+      state : this.STATE.LOADING,
+      request
+    });
+  }
+
+  employeeAllocationsFiltersFetchedLoaded(payload) {
+    this._setEmployeeAllocationsFiltersFetchedState({
+      state : this.STATE.LOADED,
+      payload
+    });
+  }
+
+  employeeAllocationsFiltersFetchedError(error) {
+    this._setEmployeeAllocationsFiltersFetchedState({
+      state : this.STATE.ERROR,
+      error
+    });
+  }
+
+  _setEmployeeAllocationsFiltersFetchedState(state) {
+    this.data.filters = state;
+    this.emit(this.events.EMPLOYEE_ALLOCATIONS_FILTERS_FETCHED, state);
   }
 
 }
