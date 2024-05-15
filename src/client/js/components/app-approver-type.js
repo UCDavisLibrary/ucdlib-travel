@@ -11,6 +11,7 @@ export default class AppApproverType extends Mixin(LitElement)
   static get properties() {
     return {
       existingApprovers:{type: Array, attribute: 'existingApprovers'},
+
     }
   }
 
@@ -34,23 +35,96 @@ export default class AppApproverType extends Mixin(LitElement)
     super.connectedCallback()
   }
 
-    /**
-   * @description bound to AppStateModel app-state-update event
-   * @param {Object} state - AppStateModel state
-   */
-    //  async _onAppStateUpdate(state) {
-    //    console.log(state);
-    //   this._getApproverType();
-    // }
-  
+  async _setLabel(value){
+    this.label = value;
+  }
 
+  async _setDescription(value){
+    this.description = value;
+  }
+
+  /**
+   * @description on submit button get the form data
+   * 
+   */
+    async _onSubmit(){
+      console.log(this.label);
+      console.log(this.description);
+
+      document.querySelector(".inputLabel").value = "";
+      document.querySelector(".textDescription").value = "";;
+
+      this.requestUpdate();
+
+    }
+
+  /**
+   * @description Get Approver type from query
+   * 
+  */
   async _getApproverType(){
-    let args = [{id:[1, 2, 3, 4, 10], status:"active"}];
-    let approvers = await this.AdminApproverTypeModel.query(args);
-    let approverArray = approvers.payload.filter(function (el) {
-      return el.archived == false &&
-             el.hideFromFundAssignment == false;
-    });
+    // let args = [{ status:"active"}];
+    // let approvers = await this.AdminApproverTypeModel.query(args);
+    // let approverArray = approvers.payload.filter(function (el) {
+    //   return el.archived == false &&
+    //          el.hideFromFundAssignment == false;
+    // });
+
+    let approverArray = 
+    [
+      {
+        "approverTypeID": 175,
+        "label": "updateNew44",
+        "description": "updateNew44",
+        "systemGenerated": false,
+        "hide_from_fund_assignment": false,
+        "archived": false,
+        "approvalOrder": 72,
+        "employees": [{
+          "kerberos": "updateNew44Emp",
+          "firstName": "anotherR",
+          "lastName": "anotherS",
+          "approvalOrder": 72
+        }, 
+        {
+          "kerberos": "updateNew44Emp22",
+          "firstName": "anotherS",
+          "lastName": "anotherT",
+          "approvalOrder": 72
+        }]
+      },
+
+      {
+        "approverTypeID": 1,
+        "label": "Supervisor",
+        "description": "The current direct supervisor of the requester from iam.staff.library.ucdavis.edu.",
+        "systemGenerated": true,
+        "hide_from_fund_assignment": false,
+        "archived": false,
+        "approvalOrder": null,
+        "employees": [{
+          "kerberos": null,
+          "firstName": null,
+          "lastName": null,
+          "approvalOrder": null
+        }]
+      },
+      {
+        "approverTypeID": 3,
+        "label": "Finance Head",
+        "description": "The head of the Library Finance department",
+        "systemGenerated": true,
+        "hide_from_fund_assignment": false,
+        "archived": false,
+        "approvalOrder": null,
+        "employees": [{
+          "kerberos": null,
+          "firstName": null,
+          "lastName": null,
+          "approvalOrder": null
+        }]
+      }
+    ];
 
     this.existingApprovers = approverArray;
     this.requestUpdate();
