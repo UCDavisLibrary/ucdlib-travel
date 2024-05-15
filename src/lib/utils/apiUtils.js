@@ -31,9 +31,11 @@ class ApiUtils {
     let out = [];
     if ( !value ) return out;
     if ( Array.isArray(value) ) {
-      out = value.map(item => item.trim());
-    } else {
+      out = value.map(item => typeof item === 'string' ? item.trim() : item);
+    } else if ( typeof value === 'string' ) {
       out = value.split(',').map(item => item.trim());
+    } else {
+      return out;
     }
     if ( !asInt ) return out;
     return out.map(item => parseInt(item)).filter(item => !isNaN(item));

@@ -16,8 +16,13 @@
 .bold {
   font-weight: 700;
 }
+
+
 .flex {
   display: flex;
+}
+.flex--justify-center {
+  justify-content: center;
 }
 
 
@@ -49,4 +54,7 @@ fieldset.field-error {
 .field-help {
   font-size: .875rem;
   color: #13639e;
+}
+.pad-icon-top {
+  padding-top: .3rem;
 }

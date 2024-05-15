@@ -206,6 +206,14 @@ export default class AppPageAdminAllocationsNew extends Mixin(LitElement)
   }
 
   /**
+   * @description Event handler for when the cancel button is clicked
+   */
+  _onCancel(){
+    this.resetForm();
+    this.AppStateModel.setLocation(this.AppStateModel.store.breadcrumbs['admin-allocations'].link);
+  }
+
+  /**
    * @description Get all data required for rendering this page
    */
   async getPageData(){

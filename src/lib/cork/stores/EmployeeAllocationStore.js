@@ -8,14 +8,45 @@ class EmployeeAllocationStore extends BaseStore {
     this.data = {
       employeeAllocationsCreated: {},
       filters: {},
-      fetched: {}
+      fetched: {},
+      deleted: {}
     };
     this.events = {
       EMPLOYEE_ALLOCATIONS_CREATED: 'employee-allocations-created',
       EMPLOYEE_ALLOCATIONS_FILTERS_FETCHED: 'employee-allocations-filters-fetched',
       EMPLOYEE_ALLOCATIONS_FETCHED: 'employee-allocations-fetched',
-      EMPLOYEE_ALLOCATIONS_REQUESTED: 'employee-allocations-requested'
+      EMPLOYEE_ALLOCATIONS_REQUESTED: 'employee-allocations-requested',
+      EMPLOYEE_ALLOCATIONS_DELETED: 'employee-allocations-deleted'
     };
+  }
+
+  employeeAllocationsDeletedLoading(request, timestamp) {
+    this._setEmployeeAllocationsDeletedState({
+      state : this.STATE.LOADING,
+      request,
+      timestamp
+    });
+  }
+
+  employeeAllocationsDeletedLoaded(payload, timestamp) {
+    this._setEmployeeAllocationsDeletedState({
+      state : this.STATE.LOADED,
+      payload,
+      timestamp
+    });
+  }
+
+  employeeAllocationsDeletedError(error, timestamp) {
+    this._setEmployeeAllocationsDeletedState({
+      state : this.STATE.ERROR,
+      error,
+      timestamp
+    });
+  }
+
+  _setEmployeeAllocationsDeletedState(state) {
+    this.data.deleted[state.timestamp] = state;
+    this.emit(this.events.EMPLOYEE_ALLOCATIONS_DELETED, state);
   }
 
   employeeAllocationsFetchedLoading(request, query) {

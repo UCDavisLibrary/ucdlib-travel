@@ -112,6 +112,7 @@ class EmployeeAllocation {
     }
 
     let out = {};
+    const ids = [];
     const client = await pg.pool.connect();
 
     try {
@@ -135,12 +136,9 @@ class EmployeeAllocation {
         delete d.employees;
         d = pg.prepareObjectForInsert(d);
         const sql = `INSERT INTO employee_allocation (${d.keysString}) VALUES (${d.placeholdersString}) RETURNING employee_allocation_id`;
-        await client.query(sql, d.values);
-
-        out = [];
-        // todo retrieve the full inserted record when method is built
+        const res = await client.query(sql, d.values);
+        ids.push(res.rows[0].employee_allocation_id);
       }
-
       await client.query('COMMIT')
 
     }catch (e) {
@@ -150,7 +148,10 @@ class EmployeeAllocation {
       client.release();
     }
 
-    return out;
+    if ( out.error ) return out;
+
+    // return inserted records
+    return await this.get({ids});
   }
 
   /**
@@ -217,6 +218,7 @@ class EmployeeAllocation {
   /**
    * @description Get list of employee allocations
    * @param {Object} kwargs - optional arguments including:
+   * - ids: array - array of allocation ids to include (optional)
    * - startDate: object - {value: string, operator: string} - start date in format YYYY-MM-DD (optional)
    * - endDate: object - {value: string, operator: string} - end date in format YYYY-MM-DD (optional)
    * - employees: array - array of employee kerberos ids to include (optional)
@@ -240,6 +242,9 @@ class EmployeeAllocation {
     }
     if ( kwargs.fundingSources && kwargs.fundingSources.length) {
       whereArgs['ea.funding_source_id'] = kwargs.fundingSources;
+    }
+    if ( kwargs.ids && kwargs.ids.length ) {
+      whereArgs['ea.employee_allocation_id'] = kwargs.ids;
     }
     const whereClause = pg.toWhereClause(whereArgs);
 
@@ -301,6 +306,55 @@ class EmployeeAllocation {
     }
 
     return allocations;
+  }
+
+  /**
+   * @description Archive employee allocations
+   */
+  async archive(ids=[], archivedBy={}) {
+    ids = (Array.isArray(ids) ? ids : [ids]).map(id => parseInt(id)).filter(id => !isNaN(id));
+    if ( ids.length === 0 ) return {error: true, message: 'No valid ids provided'};
+
+    const client = await pg.pool.connect();
+    let out = {};
+    const archivedByKerb = archivedBy?.kerberos ? archivedBy.kerberos : '';
+
+    try {
+      await client.query('BEGIN');
+
+      // add who archived the allocations
+      if ( archivedByKerb ) {
+        await employeeModel.upsertInTransaction(client, archivedBy);
+      }
+
+      // archive each allocation
+      for (const id of ids) {
+        const sql = `
+        UPDATE
+          employee_allocation
+        SET
+          deleted = true,
+          deleted_by = $1,
+          deleted_at = NOW()
+        WHERE
+          employee_allocation_id = $2
+        `;
+        await client.query(sql, [archivedByKerb, id]);
+      }
+
+      await client.query('COMMIT');
+
+    } catch (e) {
+      await client.query('ROLLBACK');
+      out = {error: e};
+    } finally {
+      client.release();
+    }
+    if ( out.error ) return out;
+
+    // return updated records
+    return await this.get({ids});
+
   }
 
   /**

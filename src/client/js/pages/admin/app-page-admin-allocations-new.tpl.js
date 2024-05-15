@@ -138,7 +138,8 @@ export function render() {
           `)}
         </div>
       </fieldset>
-      <button type="submit" class='btn btn--primary'>Add New Allocations</button>
+      <button type="submit" class='btn btn--primary u-space-mr u-space-mt'>Add New Allocations</button>
+      <button type="button" @click=${this._onCancel} class='btn btn--alt3 u-space-mt'>Cancel</button>
     </form>
     `;
   }
