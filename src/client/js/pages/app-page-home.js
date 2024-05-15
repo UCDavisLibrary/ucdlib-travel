@@ -14,7 +14,7 @@ export default class AppPageHome extends Mixin(LitElement)
   constructor() {
     super();
     this.render = render.bind(this);
-    this._injectModel('AppStateModel', 'AdminApproverTypeModel');
+    this._injectModel('AppStateModel');
 
   }
 
@@ -36,12 +36,6 @@ export default class AppPageHome extends Mixin(LitElement)
     // const d = await this.getPageData();
     // const hasError = d.some(e => e.state === 'error');
     // if ( !hasError ) this.AppStateModel.showLoaded(this.id);
-
-    let data = [{id:[1, 175, 3], status:"active"}];
-    // let data = [{id:175, status:"active"}];
-    // let data = [{status:"active"}, ];
-    let sample = await this.AdminApproverTypeModel.query(data);
-    console.log(sample);
   }
 
   /**

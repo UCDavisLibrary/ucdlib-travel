@@ -117,8 +117,6 @@ class AdminApproverType {
               output.push(item);
             }
           });
-          console.log(output);
-
           return output;
         }
 
@@ -250,7 +248,6 @@ class AdminApproverType {
             return {error: true, message: 'Validation Error', is400: true, fieldsWithErrors: validation.fieldsWithErrors};
           } 
 
-
           approverTypeId = data.approver_type_id;
 
           delete data.employees;
@@ -263,7 +260,7 @@ class AdminApproverType {
             RETURNING approver_type_id
           `;
 
-          await pg.query(`DELETE FROM approver_type_employee WHERE approver_type_id = ($1)`, [id]);
+          await pg.query(`DELETE FROM approver_type_employee WHERE approver_type_id = ($1)`, [approverTypeId]);
           const res = await pg.query(sql, [...updateClause.values, approverTypeId]);
 
           if ( Object.keys(approverEmployee).length ) {
@@ -285,7 +282,6 @@ class AdminApproverType {
               }
 
               let approverEmployeeData = pg.prepareObjectForInsert(toEmployeeUpdate);
-
               const employeeSql = `INSERT INTO approver_type_employee (${approverEmployeeData.keysString}) VALUES (${approverEmployeeData.placeholdersString}) RETURNING *`;
               await client.query(employeeSql, approverEmployeeData.values);
             }
