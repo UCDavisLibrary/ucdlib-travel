@@ -28,53 +28,90 @@ return html`
     </div>
 
     <section class="approvertype-info">
-    ${this.existingApprovers.map((approver) => html`
-      <div class="approvertype-block">
-          <span>
-            <h3 class="section-header"><em>${approver.label}</em>
-              <span class="user-icon"><i class="fa-solid fa-pen-to-square"></i></span>
-              ${!approver.systemGenerated ? html`<span class="trash-icon"><i class="fa-solid fa-trash"></i></span>`:html``}
-            </h3>
-          </span> 
-          <span>${approver.description}</span><br/>
-
-          ${approver.employees.map((employee) => html`
-            <span>
-              <b style="color:#022851"><i class="fa-solid fa-user" style="color:#13639E;width:15px;height:15px;"></i>&nbsp;${!approver.systemGenerated ? html`${employee.firstName} ${employee.lastName}`:html`System Generated`}</b><br />
-            </span>  
-          `)}
-      </div>
-    `)}
+    ${this.existingApprovers.map((approver) => {
+      if(approver.editing) return renderApproverForm.call(this, approver);
+      return renderApproverItem.call(this, approver);
+    })}
     </section> 
 
-    <section class="approvertype-form">
-      <div class="l-2col layout-columns">
-        <h3 class="section-header"><em>Edit Approver</em>
-          <div class="field-container">
-              <label class="textLabel" for="text">Label <abbr title="Required">*</abbr></label>
-              <input class="inputLabel" @input=${(e) => this._setLabel(e.target.value)} type="text" placeholder="Position Title">
-          </div>
-
-          <div class="field-container">
-            <label class="textDescriptionLabel" for="textarea">Description</label>
-            <textarea class="textDescription" @input=${(e) => this._setDescription(e.target.value)} rows="8" cols="48" placeholder="Approver Type Description"></textarea>
-        </div>
-
-        <ucdlib-employee-search-basic></ucdlib-employee-search-basic>
-      </div>
-
-      <!-- <span>
-        <p>
-          <button class="btn btn--alt3">Save Button</button>
-          <button class="btn btn--alt3">Cancel Button</button>
-        </p>
-      </span> -->
-    </section>
+    ${renderApproverForm.call(this, this.newApprover)}
         
-    <p><button @click=${e => this._onSubmit()} class="btn btn--primary" style="margin:20px 0px 0px 0px">Add New Approver</button></p>
+    <p><button @click=${e => this._onNewSubmit()} class="btn btn--primary" style="margin:20px 0px 0px 0px">Add New Approver</button></p>
 
       
   </div>
 
 
 `;}
+
+
+function renderApproverItem(approver) {
+  let ap = approver;
+  const approverId = approver.approverTypeID;
+  const itemIdLabel = `item-label-${approverId}`;
+  const itemIdDescription = `item-description-${approverId}`;
+  const itemIdEmployees = `item-employee-${approverId}`;
+
+  // if(this.editApprover) {
+  //   ap = this.editApprover;
+  //   console.log(ap);
+
+  // } else {
+  //   ap = approver;
+  // }
+
+  return html`
+        <div class="approvertype-block">
+          <span>
+            <h3 id=${itemIdLabel} class="section-header"><em>${ap.label}</em>
+              <span @click=${e => this._onEdit(e, ap)} class="user-icon"><i class="fa-solid fa-pen-to-square"></i></span>
+              ${!ap.systemGenerated ? html`<span @click=${e => this._onDelete(ap)} class="trash-icon"><i class="fa-solid fa-trash"></i></span>`:html``}
+            </h3>
+          </span> 
+          <span id=${itemIdDescription} >${ap.description}</span><br/>
+
+          <div id=${itemIdEmployees}>
+            ${ap.employees.map((employee) => html`
+              <span>
+                <b style="color:#022851"><i class="fa-solid fa-user" style="color:#13639E;width:15px;height:15px;"></i>&nbsp;${!ap.systemGenerated ? html`${employee.firstName} ${employee.lastName}`:html`System Generated`}</b><br />
+              </span>  
+            `)}
+          </div>
+      </div>
+  `
+}
+
+function renderApproverForm(approver) {
+  // if ( !approver || Object.keys(approver).length === 0 ) return html``;
+  const approverId = approver.approverTypeID || 'new';
+  const inputIdLabel = `approver-label-${approverId}`;
+  const inputIdDescription = `approver-description-${approverId}`;
+
+  return html`
+    <section class="approvertype-form">
+      <div class="l-2col layout-columns">
+        <h3 class="section-header"><em>Edit Approver</em>
+          <div class="field-container">
+              <label class="textLabel" for=${inputIdLabel}>Label <abbr title="Required">*</abbr></label>
+              <input class="inputLabel" .value=${approverId != 'new' ? approver.label : ""} id=${inputIdLabel} @input=${(e) => this._setLabel(e.target.value)} type="text" placeholder="Position Title">
+          </div>
+          <div class="field-container">
+            <label for=${inputIdDescription} class="textDescriptionLabel">Description</label>
+            <textarea id=${inputIdDescription} .value=${approverId != 'new' ? approver.description : ""} class="textDescription" @input=${(e) => this._setDescription(e.target.value)} rows="8" cols="48" placeholder="Approver Type Description"></textarea>
+        </div>
+
+        <ucdlib-employee-search-basic></ucdlib-employee-search-basic>
+      </div>
+
+      ${approver.editing ? html`
+        <span>
+          <p>
+            <button @click=${e => this._onEditSave(e,approver)} class="btn btn--alt3">Save Button</button>
+            <button @click=${e => this._onEditCancel(e,approver)} class="btn btn--alt3">Cancel Button</button>
+          </p>
+        </span> 
+      `:html``}
+      
+    </section>
+    `
+}
