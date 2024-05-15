@@ -14,7 +14,6 @@ export default class AppPageHome extends Mixin(LitElement)
   constructor() {
     super();
     this.render = render.bind(this);
-
     this._injectModel('AppStateModel');
 
   }
@@ -29,7 +28,6 @@ export default class AppPageHome extends Mixin(LitElement)
     // this.AppStateModel.showLoading();
     this.AppStateModel.setTitle('Home Page');
 
-
     const breadcrumbs = [
       this.AppStateModel.store.breadcrumbs.home
     ];
@@ -38,7 +36,6 @@ export default class AppPageHome extends Mixin(LitElement)
     // const d = await this.getPageData();
     // const hasError = d.some(e => e.state === 'error');
     // if ( !hasError ) this.AppStateModel.showLoaded(this.id);
-
   }
 
   /**
