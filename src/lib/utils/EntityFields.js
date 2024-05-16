@@ -8,6 +8,7 @@
  * - required {Boolean} OPTIONAL - if the field is required
  * - charLimit {Number} OPTIONAL - maximum number of characters allowed
  * - customValidation {Function} OPTIONAL - custom validation function
+ * - customValidationAsync {Function} OPTIONAL - custom async validation function
  */
 export default class EntityFields {
    constructor(fields = []){
@@ -78,7 +79,7 @@ export default class EntityFields {
     *  - errorType {String} - type of error
     *  - message {String} - human readable error message for printing on a form
     */
-   validate(record, skipFields=[], namingScheme='dbName') {
+   async validate(record, skipFields=[], namingScheme='dbName') {
     const out = {valid: true, fieldsWithErrors: []};
 
     for (const field of this.fields) {
@@ -95,6 +96,10 @@ export default class EntityFields {
       if ( field.customValidation ) {
         field.customValidation(field, value, out, record);
       }
+
+      if ( field.customValidationAsync ) {
+        await field.customValidationAsync(field, value, out, record);
+      }
     }
 
     return out;
@@ -110,7 +115,6 @@ export default class EntityFields {
     if ( !field.required ) return;
     const error = {errorType: 'required', message: 'This field is required'};
     if ( value === undefined || value === null || value === '') {
-      out.valid = false;
       this.pushError(out, field, error);
     }
    }
@@ -126,7 +130,6 @@ export default class EntityFields {
     value = value ? value.toString() : '';
     const error = {errorType: 'charLimit', message: `This field must be less than ${field.charLimit} characters`};
     if (value && value.length > field.charLimit) {
-      out.valid = false;
       this.pushError(out, field, error);
     }
    }
@@ -142,25 +145,30 @@ export default class EntityFields {
     if (field.validateType == 'integer'  ) {
       value = value || value === '0' || value === 0 ? value : NaN;
       if ( !Number.isInteger(Number(value)) ) {
-        out.valid = false;
         this.pushError(out, field, error);
       }
     } else if (field.validateType == 'date') {
       // must be valid date in format YYYY-MM-DD
       value = value.toString();
+      if ( !value ) return;
       if ( !value.match(/^\d{4}-\d{2}-\d{2}$/) ) {
-        out.valid = false;
         this.pushError(out, field, error);
         return;
       }
       const date = new Date(value);
       if ( isNaN(date.getTime()) ) {
-        out.valid = false;
         this.pushError(out, field, error);
       }
     } else if (field.validateType == 'number') {
       if ( isNaN(Number(value)) ) {
-        out.valid = false;
+        this.pushError(out, field, error);
+      }
+    } else if (field.validateType == 'boolean') {
+      if ( typeof value !== 'boolean' ) {
+        this.pushError(out, field, error);
+      }
+    } else if (field.validateType == 'array') {
+      if ( !Array.isArray(value) ) {
         this.pushError(out, field, error);
       }
     }
@@ -174,6 +182,7 @@ export default class EntityFields {
     * @param {Object} error - error object with errorType and message properties
     */
    pushError(out, field, error) {
+    out.valid = false;
     const fieldInOutput = out.fieldsWithErrors.find(f => f.jsonName === field.jsonName);
     if ( fieldInOutput ) {
       fieldInOutput.errors.push(error);
