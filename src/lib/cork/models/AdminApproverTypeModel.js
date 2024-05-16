@@ -48,14 +48,16 @@ class AdminApproverTypeModel extends BaseModel {
       let state = this.store.data.create[data];;
       await this.service.create(data);
 
-      if (state.state === 'loaded') this.store.data.create = {} 
+      if ( state && state.state === 'loaded' ) {
+        this.store.data.create = {} 
+      }
 
     } catch(e) {}
 
     const out = this.store.data.create;
 
     if ( !data ) {
-      this.store.data.update = {};
+      this.store.data.create = {};
     }
 
     return out;
@@ -71,7 +73,10 @@ class AdminApproverTypeModel extends BaseModel {
       let state = this.store.data.update[data];
       await this.service.update(data);
 
-      if (state.state === 'loaded') this.store.data.update = {} 
+      if ( state && state.state === 'loaded' ) {
+        this.store.data.update = {} 
+      } 
+         
     } catch(e) {}
 
     const out = this.store.data.update;
