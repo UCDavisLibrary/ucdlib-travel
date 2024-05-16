@@ -39,7 +39,6 @@ export default class AppApproverType extends Mixin(LitElement)
 
   connectedCallback() {
     this._getApproverType();
-
     super.connectedCallback()
   }
 
@@ -79,7 +78,6 @@ export default class AppApproverType extends Mixin(LitElement)
 
       // await this.AdminApproverTypeModel.create(this.newApprover);
       this._getApproverType();
-
       this.newApprover = {};
       this.requestUpdate();
 
@@ -94,7 +92,6 @@ export default class AppApproverType extends Mixin(LitElement)
        async _onEdit(e, approver){
         approver.editing = true;
         this.requestUpdate();
-  
     }
 
 
@@ -108,7 +105,6 @@ export default class AppApproverType extends Mixin(LitElement)
         editApprover.label = this.label;
         editApprover.description = this.description;
         // editApprover.employees = this.employees;
-        console.log(editApprover);
         
         // await this.AdminApproverTypeModel.update(approver);
         this._getApproverType();
@@ -116,41 +112,43 @@ export default class AppApproverType extends Mixin(LitElement)
   
     }
 
-      /**
+  /**
    * @description on edit Cancel button from a approver
    * 
    */
-       async _onEditCancel(e, approver){
+      async _onEditCancel(e, approver){
         approver.editing = false;
-
         this.requestUpdate();
-  
     }
 
   /**
    * @description on archive button from a approver
    * 
    */
-       async _onDelete(approver){
-        approver.archived = true;
+    async _onDelete(approver){
+      approver.archived = true;
 
-        this.AppStateModel.showDialogModal({
-          title : 'Delete Approver Type Option',
-          content : 'Are you sure you want to delete this Approver Type Option?',
-          actions : [
-            {text: 'Delete', value: 'delete-approver-item', color: 'double-decker'},
-            {text: 'Cancel', value: 'cancel', invert: true, color: 'primary'}
-          ],
-          data : {approver}
-        });         
-    }
+      this.AppStateModel.showDialogModal({
+        title : 'Delete Approver Type Option',
+        content : 'Are you sure you want to delete this Approver Type Option?',
+        actions : [
+          {text: 'Delete', value: 'delete-approver-item', color: 'double-decker'},
+          {text: 'Cancel', value: 'cancel', invert: true, color: 'primary'}
+        ],
+        data : {approver}
+      });         
+  }
 
-    _onDialogAction(e){
-      if ( e.action !== 'delete-approver-item' ) return;
-      const approverItem = e.data.approver;
-      approverItem.archived = true;
-      // await this.AdminApproverTypeModel.update(approverItem);
-    }
+  /**
+   * @description on dialog action for deleting an approver
+   * 
+  */
+  _onDialogAction(e){
+    if ( e.action !== 'delete-approver-item' ) return;
+    const approverItem = e.data.approver;
+    approverItem.archived = true;
+    // await this.AdminApproverTypeModel.update(approverItem);
+  }
 
   /**
    * @description Get Approver type from query

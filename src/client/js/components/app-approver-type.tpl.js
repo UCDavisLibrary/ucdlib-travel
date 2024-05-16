@@ -52,14 +52,6 @@ function renderApproverItem(approver) {
   const itemIdDescription = `item-description-${approverId}`;
   const itemIdEmployees = `item-employee-${approverId}`;
 
-  // if(this.editApprover) {
-  //   ap = this.editApprover;
-  //   console.log(ap);
-
-  // } else {
-  //   ap = approver;
-  // }
-
   return html`
         <div class="approvertype-block">
           <span>
