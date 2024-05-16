@@ -42,12 +42,12 @@ return html`
   </ol>
   <ucdlib-pages id='main-pages' selected=${this.page}>
     <app-page-alt-state id=${this._notLoadedPageId} .state=${this.pageState} .errorMessage=${this.errorMessage}></app-page-alt-state>
-    <app-page-foo id='foo'></app-page-foo>
     <app-page-home id='home'></app-page-home>
     <app-page-admin id='admin'></app-page-admin>
     <app-page-admin-approvers id='admin-approvers'></app-page-admin-approvers>
     <app-page-admin-settings id='admin-settings'></app-page-admin-settings>
     <app-page-admin-allocations id='admin-allocations'></app-page-admin-allocations>
+    <app-page-admin-allocations-new id='admin-allocations-new'></app-page-admin-allocations-new>
     <app-page-admin-line-items id='admin-line-items'></app-page-admin-line-items>
     <app-page-admin-reimbursement id='admin-reimbursement'></app-page-admin-reimbursement>
     <app-page-approver id='approver'></app-page-approver>

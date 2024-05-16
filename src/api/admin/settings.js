@@ -8,7 +8,6 @@ export default (api) => {
    * @description Get array of settings by category
    */
   api.get('/settings/category/:category', protect('hasBasicAccess'), async (req, res) => {
-
     const category = req.params.category;
 
     if ( !category ) return res.status(400).json({error: true, message: 'Category is required.'});

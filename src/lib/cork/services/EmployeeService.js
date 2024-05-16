@@ -6,7 +6,6 @@ class EmployeeService extends BaseService {
   constructor() {
     super();
     this.store = EmployeeStore;
-
   }
 
   getActiveTitles(){

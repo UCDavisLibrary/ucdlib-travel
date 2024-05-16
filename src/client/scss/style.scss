@@ -5,8 +5,10 @@
 // admin pages
 @use './pages/admin/settings.scss' as adminSettings;
 @use './pages//admin/line-items.scss' as adminLineItems;
+@use './pages/admin/allocations.scss' as adminAllocations;
 
 // components
 @use './components/dialog-modal.scss' as dialogModal;
 @use './components/approver-type.scss' as approverType;
 
+@use './components/employee-search-advanced.scss' as employeeSearchAdvanced;

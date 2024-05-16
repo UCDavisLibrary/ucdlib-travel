@@ -14,8 +14,8 @@ export default class AppPageHome extends Mixin(LitElement)
   constructor() {
     super();
     this.render = render.bind(this);
+    this._injectModel('AppStateModel',);
 
-    this._injectModel('AppStateModel');
   }
 
 
@@ -26,8 +26,7 @@ export default class AppPageHome extends Mixin(LitElement)
   async _onAppStateUpdate(state) {
     if ( this.id !== state.page ) return;
     // this.AppStateModel.showLoading();
-
-
+    this.AppStateModel.setTitle('Home Page');
 
     const breadcrumbs = [
       this.AppStateModel.store.breadcrumbs.home

@@ -1,6 +1,7 @@
 import {BaseModel} from '@ucd-lib/cork-app-utils';
 import AdminApproverTypeService from '../services/AdminApproverTypeService.js';
 import AdminApproverTypeStore from '../stores/AdminApproverTypeStore.js';
+import urlUtils from '../../utils/urlUtils.js';
 
 class AdminApproverTypeModel extends BaseModel {
 
@@ -22,7 +23,9 @@ class AdminApproverTypeModel extends BaseModel {
    * 
    */
   async query(args = {}) {
-    let state = this.store.data.query[args];;
+    let state = this.store.data.query[args];
+    args = urlUtils.queryStringFromObject(args);
+
     try {
       if( state && state.state === 'loading' ) {
         await state.request;
@@ -30,6 +33,7 @@ class AdminApproverTypeModel extends BaseModel {
         await this.service.query(args);
       }
     } catch(e) {}
+
     return this.store.data.query[args];
   }
 
@@ -39,29 +43,20 @@ class AdminApproverTypeModel extends BaseModel {
    */
 
    async create(data) {
-    // payload = Array.isArray(payload) ? payload : [payload];
-    // let state = this.store.data.create;
-
-    if(data.systemGenerated && data.archived) {
-      console.error("System Generated ApproverTypes can not be archived.  Set Archive to false.");
-      return;
-    }
-    if(data.systemGenerated && data["employees"].length != 0) {
-      console.error("System Generated ApproverTypes can not have employees.  Set employees to an empty array.");
-      return;
-    }
-
+    // data = this.service.sort(data);
     try {
       let state = this.store.data.create[data];;
+      await this.service.create(data);
 
-      if( state && state.state === 'loading' ) {
-        await state.request;
-      } else {
-        await this.service.create(data);
-      }
+      if (state.state === 'loaded') this.store.data.create = {} 
+
     } catch(e) {}
 
     const out = this.store.data.create;
+
+    if ( !data ) {
+      this.store.data.update = {};
+    }
 
     return out;
   }
@@ -71,22 +66,22 @@ class AdminApproverTypeModel extends BaseModel {
    * @param {String} data - data to update for approvers
    */
   async update(data) {
-    // payload = Array.isArray(payload) ? payload : [payload];
-    let state = this.store.data.update[data];
-    try {
-      if( state && state.state === 'loading' ) {
-        await state.request;
-      } else {
-        await this.service.update(data);
-      }
+    // data = this.service.sort(data);
+    try { 
+      let state = this.store.data.update[data];
+      await this.service.update(data);
+
+      if (state.state === 'loaded') this.store.data.update = {} 
     } catch(e) {}
 
     const out = this.store.data.update;
 
+    if ( !data ) {
+      this.store.data.update = {};
+    }
+
     return out;
   }
-
-
 }
 
 const model = new AdminApproverTypeModel();
