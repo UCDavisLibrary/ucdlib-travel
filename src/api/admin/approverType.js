@@ -8,7 +8,6 @@ export default (api) => {
    */
   api.get('/approver-type', protect('hasBasicAccess'), async (req, res) => {
     const query = req.query;
-
     if (!query || Object.keys(query).length === 0 ) return res.status(400).json({error: true, message: 'Query is required.'});
 
     const data = await approverType.query(query);

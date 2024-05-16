@@ -1,6 +1,7 @@
 import {BaseModel} from '@ucd-lib/cork-app-utils';
 import AdminApproverTypeService from '../services/AdminApproverTypeService.js';
 import AdminApproverTypeStore from '../stores/AdminApproverTypeStore.js';
+import urlUtils from '../../utils/urlUtils.js';
 
 class AdminApproverTypeModel extends BaseModel {
 
@@ -22,17 +23,17 @@ class AdminApproverTypeModel extends BaseModel {
    * 
    */
   async query(args = {}) {
-    args = this.service.sort(args);
-    let state = this.store.data.query[args];;
+    let state = this.store.data.query[args];
+    args = urlUtils.queryStringFromObject(args);
+
     try {
       if( state && state.state === 'loading' ) {
         await state.request;
       } else {
         await this.service.query(args);
       }
-
-      if (state.state === 'loaded') { this.store.data.query = {} }
     } catch(e) {}
+
     return this.store.data.query[args];
   }
 
@@ -42,7 +43,7 @@ class AdminApproverTypeModel extends BaseModel {
    */
 
    async create(data) {
-    data = this.service.sort(data);
+    // data = this.service.sort(data);
     try {
       let state = this.store.data.create[data];;
       await this.service.create(data);
@@ -65,7 +66,7 @@ class AdminApproverTypeModel extends BaseModel {
    * @param {String} data - data to update for approvers
    */
   async update(data) {
-    data = this.service.sort(data);
+    // data = this.service.sort(data);
     try { 
       let state = this.store.data.update[data];
       await this.service.update(data);

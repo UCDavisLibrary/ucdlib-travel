@@ -17,8 +17,7 @@ class AdminApproverType {
           {dbName: 'hide_from_fund_assignment', jsonName: 'hideFromFundAssignment'},
           {dbName: 'archived', jsonName: 'archived'},
           {dbName: 'approval_order', jsonName: 'approvalOrder'},
-          {dbName: 'employees', jsonName: 'employees'},
-
+          {dbName: 'employees', jsonName: 'employees', customValidation: this.kerberosValidation.bind(this)},
         ]);
         this.entityEmployeeFields = new EntityFields([
           {dbName: 'approver_type_id', jsonName: 'approverTypeId', required: true},
@@ -39,89 +38,77 @@ class AdminApproverType {
        * employees property should be an empty array or array of kerberos ids in order designated in approver_type_employee
        */
       async query(kwargs){
-        let id;
-        let idArray = kwargs.id ? JSON.parse(kwargs.id): '';
+        let idArray;
+
+        if(typeof(kwargs.id) === "number"){
+          idArray = [kwargs.id];
+        } else {
+          idArray = kwargs.id ? kwargs.id.split(',') : '';
+        }
+        const status = kwargs.status ? kwargs.status : '';
+
         const whereArgs = {};
 
+        if(idArray != '') whereArgs['ap.approver_type_id'] = idArray;
 
-        if(idArray != ''){
-          if(Array.isArray(idArray)) {
-              id = idArray;
-          } else {
-              id = [idArray];
-          }
-          whereArgs['ap.approver_type_id'] = Array.isArray(idArray) ? idArray : [idArray];
-        } 
-
-
-        if(kwargs["status"] == "archived") {
+        if(status == "archived") {
           whereArgs['ap.archived'] = true;
-        } else if (kwargs["status"] == "active"){
+        } else if (status == "active"){
           whereArgs['ap.archived'] = false;
         } 
 
         const whereClause = pg.toWhereClause(whereArgs);
 
         let query = `
-        SELECT 
-        json_agg(json_build_object(
-            'approverTypeID', ap.approver_type_id,
-            'label', ap.label,
-            'description', ap.description,
-            'systemGenerated', ap.system_generated,
-            'hide_from_fund_assignment', ap.hide_from_fund_assignment,
-            'archived', ap.archived,
-            'approvalOrder', ate.approval_order,
-            'employees', json_build_object(
-                'kerberos', emp.kerberos,
-                'firstName', emp.first_name,
-                'lastName', emp.last_name,
-                'approvalOrder', ate.approval_order
-            )
-        ) ORDER BY ate.approval_order) AS approver_types
+        SELECT
+            ap.*,
+            (
+                SELECT json_agg(json_build_object(
+                    'kerberos', emp.kerberos,
+                    'firstName', emp.first_name,
+                    'lastName', emp.last_name
+                ))
+                FROM employee emp
+                WHERE ate.employee_kerberos = emp.kerberos
+            ) AS employees
         FROM 
             approver_type ap
         LEFT JOIN 
             approver_type_employee ate ON ap.approver_type_id = ate.approver_type_id
-        LEFT JOIN 
-            employee emp ON ate.employee_kerberos = emp.kerberos
         ${whereClause.sql ? `WHERE ${whereClause.sql}` : ''}
         `
 
         const res = await pg.query(query, whereClause.values);
-        let r = res.res.rows[0].approver_types;
+        let r = this.entityFields.toJsonArray(res.res.rows);
 
         if( res.error ) return res;
-        const data = this.queryFormat(r);
 
+        const data = this.queryFormat(r);
         return data;
       }
 
       /**
-       * @description Check if Employee Exists in the approver_type table and delete to replace
-       * @param {Number} id - ID Employee
-
+       * @description Formats the query results to combine the data based on approverTypeID
+       * @param {Number} data - Query Results
+       * 
+       * @returns {Array} Array of Objects for the combined results
+       * 
        */
-        async queryFormat(array){      
-          let output = [];
-          array.forEach(function(item) {
-            var existing = output.filter(function(v, i) {
-              return v.approverTypeID == item.approverTypeID;
-            });
-            if (existing.length) {
-              var existingIndex = output.indexOf(existing[0]);
-              output[existingIndex].employees = [output[existingIndex].employees].concat([item.employees]);
+        async queryFormat(data){      
+          const mergedData = data.reduce((acc, item) => {
+            const existingItem = acc.find(element => element.approverTypeId === item.approverTypeId);
+            if (existingItem) {
+              existingItem.employees = existingItem.employees.concat(item.employees || []);
             } else {
-              if (typeof item.employees == 'string')
-                item.employees = [item.employees];
-              output.push(item);
+              acc.push(item);
             }
-          });
-          return output;
+            return acc;
+          }, []);
+          return mergedData;
         }
 
       /**
-       * @description Use data for system validation
+       * @description Use data for employees validation
        * @param {Object} data - Object of Entity fields with camelcase
        * 
        * @returns {Object} {status: false, message:""}
@@ -143,56 +130,64 @@ class AdminApproverType {
        }
 
       /**
+       * @description Use data for kerberos validation
+       * @param {Object} data - Object of Entity fields with camelcase
+       * 
+       * @returns {Object} {status: false, message:""}
+       */
+      async kerberosValidation(field, value, out){
+        let error = {errorType: 'invalid', message: 'Employee Kerberos Error.'};
+
+        const noKerberos = value.every(v => ( v.kerberos && v.kerberos != '' && v.kerberos != undefined))
+   
+        if ( !noKerberos ) {
+          this.entityFields.pushError(out, field, error);
+          return;
+        }
+      }
+
+      /**
        * @description Create the admin approver type table
        * @param {Object} data - Object of Entity fields with camelcase
        * 
        * @returns {Object} {error: false}
        */
        async create(data){
+
+        data = this.entityFields.toDbObj(data);
+        const validation = this.entityFields.validate(data, ['approver_type_id']);
+        if ( !validation.valid ) {
+          return {error: true, message: 'Validation Error', is400: true, fieldsWithErrors: validation.fieldsWithErrors};
+        }
         const client = await pg.pool.connect();
         let out = {};
         let approverTypeId;
-          try{
 
-            await client.query('BEGIN');
+        try{
+          let approverEmployee = data.employees;
 
-            let approverEmployee = data.employees;
+          await client.query('BEGIN');
 
-            const noKerberos = approverEmployee.every(a => ( a.employee.kerberos && a.employee.kerberos != '' && a.employee.kerberos != undefined))
-   
-            if ( !noKerberos ) {
-              return {error: true, message: 'Employee Kerberos Error', is400: true};
-            }
+          delete data.approver_type_id;
+          delete data.employees;
 
+          data = pg.prepareObjectForInsert(data);
 
-            data = this.entityFields.toDbObj(data);
-            const validation = this.entityFields.validate(data, ['approver_type_id']);
-            if ( !validation.valid ) {
-              return {error: true, message: 'Validation Error', is400: true, fieldsWithErrors: validation.fieldsWithErrors};
-            }
-    
+          const sql = `INSERT INTO approver_type (${data.keysString}) VALUES (${data.placeholdersString}) RETURNING approver_type_id`;
 
-            delete data.approver_type_id;
-            delete data.employees;
-
-            data = pg.prepareObjectForInsert(data);
-
-            const sql = `INSERT INTO approver_type (${data.keysString}) VALUES (${data.placeholdersString}) RETURNING approver_type_id`;
-            const res = await pg.query(sql, data.values);
-            approverTypeId  =  res.res.rows[0].approver_type_id;
+          const res = await client.query(sql, data.values);
+          approverTypeId  =  res.rows[0].approver_type_id;
 
             if ( Object.keys(approverEmployee).length ) {
 
               for (const [index, a] of approverEmployee.entries()) {
                 await employeeModel.upsertInTransaction(client, a.employee);
 
-                const toEmployeeCreate = {};
-                if ( approverTypeId ) {
-                  toEmployeeCreate['approver_type_id'] = approverTypeId;
-                }
-                if ( a.employee.kerberos ) {
-                  toEmployeeCreate['employee_kerberos'] = a.employee.kerberos;
-                }
+                const toEmployeeCreate = {
+                  'approver_type_id' : approverTypeId, 
+                  'employee_kerberos': a.employee.kerberos
+                };
+
                 if ( a.approvalOrder ){
                   toEmployeeCreate['approval_order'] = index;
                 }
@@ -227,28 +222,22 @@ class AdminApproverType {
        * @returns {Object} {error: false}
        */
        async update(data){
+
+        data = this.entityFields.toDbObj(data);
+        const validation = this.entityFields.validate(data);
+        if ( !validation.valid ) {
+          return {error: true, message: 'Validation Error', is400: true, fieldsWithErrors: validation.fieldsWithErrors};
+        } 
+
         const client = await pg.pool.connect();
         let out = {};
         let approverTypeId;
+
         try{
+          let approverEmployee = data.employees;
+          approverTypeId = data.approver_type_id;
 
           await client.query('BEGIN');
-          let approverEmployee = data.employees;
-
-          const noKerberos = approverEmployee.every(a => ( a.employee.kerberos && a.employee.kerberos != '' && a.employee.kerberos != undefined))
-
-          if ( !noKerberos ) {
-            return {error: true, message: 'Employee Kerberos Error', is400: true};
-          }
-
-
-          data = this.entityFields.toDbObj(data);
-          const validation = this.entityFields.validate(data);
-          if ( !validation.valid ) {
-            return {error: true, message: 'Validation Error', is400: true, fieldsWithErrors: validation.fieldsWithErrors};
-          } 
-
-          approverTypeId = data.approver_type_id;
 
           delete data.employees;
 
@@ -260,20 +249,18 @@ class AdminApproverType {
             RETURNING approver_type_id
           `;
 
-          await pg.query(`DELETE FROM approver_type_employee WHERE approver_type_id = ($1)`, [approverTypeId]);
-          const res = await pg.query(sql, [...updateClause.values, approverTypeId]);
+          await client.query(`DELETE FROM approver_type_employee WHERE approver_type_id = ($1)`, [approverTypeId]);
+          await client.query(sql, [...updateClause.values, approverTypeId]);
 
           if ( Object.keys(approverEmployee).length ) {
             for (const [index, a] of approverEmployee.entries()) {
               await employeeModel.upsertInTransaction(client, a.employee);
 
-              const toEmployeeUpdate = {};
-              if ( approverTypeId ) {
-                toEmployeeUpdate['approver_type_id'] = approverTypeId;
-              }
-              if ( a.employee.kerberos ) {
-                toEmployeeUpdate['employee_kerberos'] = a.employee.kerberos;
-              }
+              const toEmployeeUpdate = {
+                'approver_type_id' : approverTypeId, 
+                'employee_kerberos': a.employee.kerberos
+              };
+
               if ( a.approvalOrder ){
                 toEmployeeUpdate['approval_order'] = index;
               }
@@ -282,6 +269,7 @@ class AdminApproverType {
               }
 
               let approverEmployeeData = pg.prepareObjectForInsert(toEmployeeUpdate);
+
               const employeeSql = `INSERT INTO approver_type_employee (${approverEmployeeData.keysString}) VALUES (${approverEmployeeData.placeholdersString}) RETURNING *`;
               await client.query(employeeSql, approverEmployeeData.values);
             }

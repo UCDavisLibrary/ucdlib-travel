@@ -14,7 +14,7 @@ export default class AppPageHome extends Mixin(LitElement)
   constructor() {
     super();
     this.render = render.bind(this);
-    this._injectModel('AppStateModel');
+    this._injectModel('AppStateModel',);
 
   }
 
