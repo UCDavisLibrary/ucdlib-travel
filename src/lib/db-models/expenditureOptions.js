@@ -50,7 +50,7 @@ class ExpenditureOptions {
    */
   async create(data){
     data = this.entityFields.toDbObj(data);
-    const validation = this.entityFields.validate(data, ['expenditure_option_id']);
+    const validation = await this.entityFields.validate(data, ['expenditure_option_id']);
     if ( !validation.valid ) {
       return {error: true, message: 'Validation Error', is400: true, fieldsWithErrors: validation.fieldsWithErrors};
     }
@@ -69,7 +69,7 @@ class ExpenditureOptions {
    */
   async update(data){
     data = this.entityFields.toDbObj(data);
-    const validation = this.entityFields.validate(data);
+    const validation = await this.entityFields.validate(data);
     if ( !validation.valid ) {
       return {error: true, message: 'Validation Error', is400: true, fieldsWithErrors: validation.fieldsWithErrors};
     }

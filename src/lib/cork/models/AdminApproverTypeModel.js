@@ -20,11 +20,11 @@ class AdminApproverTypeModel extends BaseModel {
    * id(s) single or array of ids
    * archived - archive approvers
    * active - active approvers
-   * 
+   *
    */
   async query(args = {}) {
-    let state = this.store.data.query[args];
     args = urlUtils.queryStringFromObject(args);
+    let state = this.store.data.query[args];
 
     try {
       if( state && state.state === 'loading' ) {
@@ -43,22 +43,16 @@ class AdminApproverTypeModel extends BaseModel {
    */
 
    async create(data) {
-    // data = this.service.sort(data);
     try {
-      let state = this.store.data.create[data];;
       await this.service.create(data);
-
-      if (state.state === 'loaded') this.store.data.create = {} 
-
     } catch(e) {}
 
-    const out = this.store.data.create;
-
-    if ( !data ) {
-      this.store.data.update = {};
+    const state = this.store.data.create;
+    if ( state && state.state === 'loaded' ) {
+      this.store.data.query = {};
     }
 
-    return out;
+    return state;
   }
 
   /**
@@ -66,21 +60,17 @@ class AdminApproverTypeModel extends BaseModel {
    * @param {String} data - data to update for approvers
    */
   async update(data) {
-    // data = this.service.sort(data);
-    try { 
-      let state = this.store.data.update[data];
+    try {
       await this.service.update(data);
-
-      if (state.state === 'loaded') this.store.data.update = {} 
     } catch(e) {}
 
-    const out = this.store.data.update;
+    const state = this.store.data.update;
 
-    if ( !data ) {
-      this.store.data.update = {};
+    if ( state && state.state === 'loaded' ) {
+      this.store.data.query = {};
     }
 
-    return out;
+    return state;
   }
 }
 
