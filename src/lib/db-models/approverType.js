@@ -33,7 +33,7 @@ class AdminApproverType {
        * status = active: string - if status is "active", return only active (non-archived) approver Types
        * status = archived: string - if status is "archived", return only archived (non-active) approver Types
        * @returns {Object|Array}
-       * 
+       *
        * all props in approver_type camelcased
        * employees property should be an empty array or array of kerberos ids in order designated in approver_type_employee
        */
@@ -55,7 +55,7 @@ class AdminApproverType {
           whereArgs['ap.archived'] = true;
         } else if (status == "active"){
           whereArgs['ap.archived'] = false;
-        } 
+        }
 
         const whereClause = pg.toWhereClause(whereArgs);
 
@@ -71,9 +71,9 @@ class AdminApproverType {
                 FROM employee emp
                 WHERE ate.employee_kerberos = emp.kerberos
             ) AS employees
-        FROM 
+        FROM
             approver_type ap
-        LEFT JOIN 
+        LEFT JOIN
             approver_type_employee ate ON ap.approver_type_id = ate.approver_type_id
         ${whereClause.sql ? `WHERE ${whereClause.sql}` : ''}
         `
@@ -90,11 +90,11 @@ class AdminApproverType {
       /**
        * @description Formats the query results to combine the data based on approverTypeID
        * @param {Number} data - Query Results
-       * 
+       *
        * @returns {Array} Array of Objects for the combined results
-       * 
+       *
        */
-        async queryFormat(data){      
+        async queryFormat(data){
           const mergedData = data.reduce((acc, item) => {
             const existingItem = acc.find(element => element.approverTypeId === item.approverTypeId);
             if (existingItem) {
@@ -110,7 +110,7 @@ class AdminApproverType {
       /**
        * @description Use data for employees validation
        * @param {Object} data - Object of Entity fields with camelcase
-       * 
+       *
        * @returns {Object} {status: false, message:""}
        */
        async systemValidation(field, value, out, payload){
@@ -132,14 +132,14 @@ class AdminApproverType {
       /**
        * @description Use data for kerberos validation
        * @param {Object} data - Object of Entity fields with camelcase
-       * 
+       *
        * @returns {Object} {status: false, message:""}
        */
       async kerberosValidation(field, value, out){
         let error = {errorType: 'invalid', message: 'Employee Kerberos Error.'};
 
         const noKerberos = value.every(v => ( v.kerberos && v.kerberos != '' && v.kerberos != undefined))
-   
+
         if ( !noKerberos ) {
           this.entityFields.pushError(out, field, error);
           return;
@@ -149,13 +149,13 @@ class AdminApproverType {
       /**
        * @description Create the admin approver type table
        * @param {Object} data - Object of Entity fields with camelcase
-       * 
+       *
        * @returns {Object} {error: false}
        */
        async create(data){
 
         data = this.entityFields.toDbObj(data);
-        const validation = this.entityFields.validate(data, ['approver_type_id']);
+        const validation = await this.entityFields.validate(data, ['approver_type_id']);
         if ( !validation.valid ) {
           return {error: true, message: 'Validation Error', is400: true, fieldsWithErrors: validation.fieldsWithErrors};
         }
@@ -184,17 +184,14 @@ class AdminApproverType {
                 await employeeModel.upsertInTransaction(client, a.employee);
 
                 const toEmployeeCreate = {
-                  'approver_type_id' : approverTypeId, 
+                  'approver_type_id' : approverTypeId,
                   'employee_kerberos': a.employee.kerberos
                 };
 
                 if ( a.approvalOrder ){
                   toEmployeeCreate['approval_order'] = index;
                 }
-                if ( !Object.keys(toEmployeeCreate).length ){
-                  return pg.returnError('no valid fields to update');
-                }
-    
+
                 let approverEmployeeData = pg.prepareObjectForInsert(toEmployeeCreate);
 
                 const employeeSql = `INSERT INTO approver_type_employee (${approverEmployeeData.keysString}) VALUES (${approverEmployeeData.placeholders})`;
@@ -213,21 +210,21 @@ class AdminApproverType {
 
         return out;
       }
-    
+
       /**
        * @description Update the admin approver type table
        * @param {Object} data - Object of Entity fields with camelcase
        * use a transaction if changes are needed to the employee list
-       * 
+       *
        * @returns {Object} {error: false}
        */
        async update(data){
 
         data = this.entityFields.toDbObj(data);
-        const validation = this.entityFields.validate(data);
+        const validation = await this.entityFields.validate(data);
         if ( !validation.valid ) {
           return {error: true, message: 'Validation Error', is400: true, fieldsWithErrors: validation.fieldsWithErrors};
-        } 
+        }
 
         const client = await pg.pool.connect();
         let out = {};
@@ -257,15 +254,12 @@ class AdminApproverType {
               await employeeModel.upsertInTransaction(client, a.employee);
 
               const toEmployeeUpdate = {
-                'approver_type_id' : approverTypeId, 
+                'approver_type_id' : approverTypeId,
                 'employee_kerberos': a.employee.kerberos
               };
 
               if ( a.approvalOrder ){
                 toEmployeeUpdate['approval_order'] = index;
-              }
-              if ( !Object.keys(toEmployeeUpdate).length ){
-                return pg.returnError('no valid fields to update');
               }
 
               let approverEmployeeData = pg.prepareObjectForInsert(toEmployeeUpdate);
