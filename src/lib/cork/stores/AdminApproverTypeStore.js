@@ -65,7 +65,7 @@ class AdminApproverTypeStore extends BaseStore {
   }
 
   _setCreateState(state, data) {
-    this.data.create[data] = state;
+    this.data.create = state;
     this.emit(this.events.APPROVER_TYPE_CREATED, state);
   }
 

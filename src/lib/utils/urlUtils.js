@@ -60,6 +60,31 @@ class UrlUtils {
   }
 
   /**
+   * @description Convert a query object to camelCase
+   * @param {Object} q - query object
+   * @returns {Object}
+   */
+  queryToCamelCase(q){
+    const out = {};
+    for (const k in q) {
+
+      // convert snake_case to camelCase
+      let newK = k.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+
+      // convert kebab-case to camelCase
+      newK = newK.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
+
+      if ( newK !== k ) {
+        out[newK] = q[k];
+      } else {
+        out[k] = q[k];
+      }
+
+    }
+    return out;
+  }
+
+  /**
    * @description Sort and comma join an array or single value
    * @param {Array|String} v - value to sort and join
    * @returns {String} - comma separated string

@@ -87,7 +87,7 @@ class EmployeeAllocation {
   async create(data, submittedBy={}){
 
     data = this.entityFields.toDbObj(data);
-    const validation = this.entityFields.validate(data, ['employee_allocation_id']);
+    const validation = await this.entityFields.validate(data, ['employee_allocation_id']);
     if ( !validation.valid ) {
       return {error: true, message: 'Validation Error', is400: true, fieldsWithErrors: validation.fieldsWithErrors};
     }
@@ -184,14 +184,12 @@ class EmployeeAllocation {
   validateEmployeeList(field, value, out) {
     let error = {errorType: 'required', message: 'At least one employee is required'};
     if ( !Array.isArray(value) || value.length === 0 ) {
-      out.valid = false;
       this.entityFields.pushError(out, field, error);
       return;
     }
     error = {errorType: 'invalid', message: 'Invalid employee object'};
     for (const employee of value) {
       if ( !employee || !employee.kerberos ) {
-        out.valid = false;
         this.entityFields.pushError(out, field, error);
         return;
       }
@@ -207,7 +205,6 @@ class EmployeeAllocation {
     const startDate = new Date(payload.start_date);
     const endDate = new Date(payload.end_date);
     if ( startDate < endDate ) return;
-    out.valid = false;
     const error = {errorType: 'invalid', message: 'Start date must be before end date'};
     if ( field.jsonName === 'endDate' ) {
       error.message = 'End date must be after start date';
