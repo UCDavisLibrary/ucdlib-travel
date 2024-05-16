@@ -16,6 +16,7 @@ class AppStateStoreImpl extends AppStateStore {
       'reports': {text: 'Reports', link: '/reports'},
       'admin': {text: 'Admin', link: '/admin'},
       'admin-allocations': {text: 'Employee Allocations', link: '/admin/allocations'},
+      'admin-allocations-new': {text: 'New', link: '/admin/allocations/new'},
       'admin-approvers': {text: 'Approvers and Funding Sources', link: '/admin/approvers'},
       'admin-reimbursement': {text: 'Reimbursement Requests', link: '/admin/reimbursement'},
       'admin-settings': {text: 'General Settings', link: '/admin/settings'},

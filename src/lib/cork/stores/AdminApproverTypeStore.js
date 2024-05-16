@@ -11,9 +11,9 @@ class AdminApproverTypeStore extends BaseStore {
       update: {}
     };
     this.events = {
-      APPROVERTYPE_QUERIED: 'approverType-queried',
-      APPROVERTYPE_CREATED: 'approverType-created',
-      APPROVERTYPE_UPDATED: 'approverType-updated'
+      APPROVER_TYPE_QUERIED: 'approverType-queried',
+      APPROVER_TYPE_CREATED: 'approverType-created',
+      APPROVER_TYPE_UPDATED: 'approverType-updated'
     };
   }
 
@@ -40,11 +40,9 @@ class AdminApproverTypeStore extends BaseStore {
 
   _setQueryState(state, data) {
     this.data.query[data] = state;
-    this.emit(this.events.APPROVERTYPE_QUERIED, state);
+    this.emit(this.events.APPROVER_TYPE_QUERIED, state);
   }
 
-
-///YOU ARE HERE
   createLoading(request, data) {
     this._setCreateState({
       state : this.STATE.LOADING,
@@ -68,7 +66,7 @@ class AdminApproverTypeStore extends BaseStore {
 
   _setCreateState(state, data) {
     this.data.create[data] = state;
-    this.emit(this.events.APPROVERTYPE_CREATED, state);
+    this.emit(this.events.APPROVER_TYPE_CREATED, state);
   }
 
   updateLoading(request) {
@@ -89,12 +87,12 @@ class AdminApproverTypeStore extends BaseStore {
     this._setUpdateState({
       state : this.STATE.ERROR,
       error
-    });
+    }, data);
   }
 
   _setUpdateState(state) {
     this.data.update = state;
-    this.emit(this.events.APPROVERTYPE_UPDATED, state);
+    this.emit(this.events.APPROVER_TYPE_UPDATED, state);
   }
 }
 

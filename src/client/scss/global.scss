@@ -18,6 +18,14 @@
 }
 
 
+.flex {
+  display: flex;
+}
+.flex--justify-center {
+  justify-content: center;
+}
+
+
 .field-error {
   input {
     border: 1px solid #c10230;
@@ -33,10 +41,20 @@
     color: #c10230;
   }
 }
+fieldset.field-error {
+  border-top: 3px solid #c10230;
+
+  > legend {
+    color: #c10230;
+  }
+}
 .field-error-message {
   display: none;
 }
 .field-help {
   font-size: .875rem;
   color: #13639e;
+}
+.pad-icon-top {
+  padding-top: .3rem;
 }
