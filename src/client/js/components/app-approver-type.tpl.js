@@ -47,7 +47,7 @@ return html`
 
 function renderApproverItem(approver) {
   let ap = approver;
-  const approverId = approver.approverTypeID;
+  const approverId = approver.approverTypeId;
   const itemIdLabel = `item-label-${approverId}`;
   const itemIdDescription = `item-description-${approverId}`;
   const itemIdEmployees = `item-employee-${approverId}`;
@@ -62,20 +62,24 @@ function renderApproverItem(approver) {
           </span> 
           <span id=${itemIdDescription} >${ap.description}</span><br/>
 
-          <div id=${itemIdEmployees}>
-            ${ap.employees.map((employee) => html`
-              <span>
-                <b style="color:#022851"><i class="fa-solid fa-user" style="color:#13639E;width:15px;height:15px;"></i>&nbsp;${!ap.systemGenerated ? html`${employee.firstName} ${employee.lastName}`:html`System Generated`}</b><br />
-              </span>  
-            `)}
-          </div>
+          ${ap.systemGenerated || ap.employees[0] != null ? html`
+            <div id=${itemIdEmployees}>
+              ${ap.employees.map((employee) => html`
+                <span>
+                  <b style="color:#022851"><i class="fa-solid fa-user" style="color:#13639E;width:15px;height:15px;"></i>&nbsp;${!ap.systemGenerated ? html`${employee.firstName} ${employee.lastName}`:html`System Generated`}</b><br />
+                </span>  
+              `)}
+            </div>
+          
+          `:html``}
+          
       </div>
   `
 }
 
 function renderApproverForm(approver) {
   // if ( !approver || Object.keys(approver).length === 0 ) return html``;
-  const approverId = approver.approverTypeID || 'new';
+  const approverId = approver.approverTypeId || 'new';
   const inputIdLabel = `approver-label-${approverId}`;
   const inputIdDescription = `approver-description-${approverId}`;
 
