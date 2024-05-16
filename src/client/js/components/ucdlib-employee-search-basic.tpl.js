@@ -55,23 +55,22 @@ return html`
  * @returns {TemplateResult}
  */
 function renderResult(result){
-  let name = `${result.first_name} ${result.last_name}`.replace(/</g, '&lt;').replace(/>/g, '&gt;');
   let department = getDepartment(result);
   return html`
-    <div>${name}</div>
+    <div>${result.first_name} ${result.last_name}</div>
     <div class='muted'>${result.title}, ${department}</div>
   `;
 }
 
-     /**
-     * @description searches for employee department
-     * @param {Object} result - an Employee object from the database
-     */
-    // if item in results.group has key of type === 'Department', then return the name value of that object
-    function getDepartment(result){
-      if ( result.groups ) {
-        let department = result.groups.find(group => group.type === 'Department');
-        if ( department ) return department.name;
-      }
-      return '';
-    }
+/**
+ * @description searches for employee department
+ * @param {Object} result - an Employee object from the database
+ */
+// if item in results.group has key of type === 'Department', then return the name value of that object
+function getDepartment(result){
+  if ( result.groups ) {
+    let department = result.groups.find(group => group.type === 'Department');
+    if ( department ) return department.name;
+  }
+  return '';
+}
