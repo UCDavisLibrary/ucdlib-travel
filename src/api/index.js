@@ -2,7 +2,9 @@ import express from 'express';
 import config from '../lib/serverConfig.js';
 
 import auth from './auth.js';
+
 import admin from './admin/index.js';
+import approvalRequest from './approvalRequest.js';
 import department from './department.js';
 import employee from './employee.js';
 
@@ -14,6 +16,7 @@ if ( config.auth.requireAuth ) {
 
 // routes
 admin(router);
+approvalRequest(router);
 department(router);
 employee(router);
 
