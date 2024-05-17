@@ -89,6 +89,26 @@ export default class AppApproverType extends Mixin(LitElement)
   /**
    * @description on submit button get the form data
    * 
+   * let data = {
+      "approverTypeId": 0,
+      "label": "mkl",
+      "description": "wfe",
+      "systemGenerated": false,
+      "hideFromFundAssignment": false,
+      "archived": false,
+      "employees":[
+        {
+          "employee":{kerberos: "MaybeF2", firstName:"F", lastName:"G", department:null},
+          "approvalOrder": 5 
+        },
+        {
+          "employee":{kerberos: "MaybeF22", firstName:"G", lastName:"H", department:null},
+          "approvalOrder": 5 
+        }
+      ]
+     };   
+   * 
+   * 
    */
     async _onNewSubmit(){
       this.newApprover.label = this.label;
@@ -113,9 +133,9 @@ export default class AppApproverType extends Mixin(LitElement)
    * @description on edit button from a approver
    * 
    */
-       async _onEdit(e, approver){
-        approver.editing = true;
-        this.requestUpdate();
+    async _onEdit(e, approver){
+      approver.editing = true;
+      this.requestUpdate();
     }
 
   /**
@@ -126,6 +146,7 @@ export default class AppApproverType extends Mixin(LitElement)
    employeeFormat(approver){
     if(approver.employees[0] == null) approver.employees = [];
 
+    //Format employees like this to make it work
         // approver.employees = [{
         //                 employee: {
         //                   "kerberos": "EditGuiEmp",
@@ -152,7 +173,7 @@ export default class AppApproverType extends Mixin(LitElement)
         editApprover = this.employeeFormat(editApprover);
         
         await this.AdminApproverTypeModel.update(editApprover);
-
+        console.log("ES:",editApprover);
         this._refreshProperties();
     }
 
@@ -203,14 +224,15 @@ export default class AppApproverType extends Mixin(LitElement)
    * 
   */
   async _getApproverType(){
-    let args = { id: [2, 5, 10,151, 174, 175, 176, 248, 249, 252, 255, 256]};
+    // let args = {status:"active"}; //if want all active do this to see your new ones
+    let args = { id: [1,2,3,4,5]};
+
     let approvers = await this.AdminApproverTypeModel.query(args);
     let approverArray = approvers.payload.filter(function (el) {
       return el.archived == false &&
              el.hideFromFundAssignment == false;
     });
-
-  approverArray.map((emp) => {
+    approverArray.map((emp) => {
     if(!Array.isArray(emp.employees)) emp.employees = [emp.employees]
   });
 
