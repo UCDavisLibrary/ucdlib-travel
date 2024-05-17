@@ -35,6 +35,7 @@ class AdminApproverTypeService extends BaseService {
   }
 
   update(data) {
+
     return this.request({
       url : `/api/admin/approver-type`,
       fetchOptions : {
