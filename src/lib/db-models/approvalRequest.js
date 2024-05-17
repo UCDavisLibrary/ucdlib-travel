@@ -1,10 +1,13 @@
 import pg from "./pg.js";
 import EntityFields from "../utils/EntityFields.js";
 import validations from "./approvalRequestValidations.js";
+import employeeModel from "./employee.js";
 
-class ApprovalRequest(){
+class ApprovalRequest {
 
   constructor(){
+
+    this.validations = new validations(this);
 
     this.entityFields = new EntityFields([
       {
@@ -15,7 +18,8 @@ class ApprovalRequest(){
       {
         dbName: 'approval_request_id',
         jsonName: 'approvalRequestId',
-        validateType: 'integer'
+        validateType: 'integer',
+        customValidationAsync: this.validations.approvalRequestId.bind(this.validations)
       },
       {
         dbName: 'is_current',
@@ -25,14 +29,13 @@ class ApprovalRequest(){
       {
         dbName: 'approval_status',
         jsonName: 'approvalStatus',
-        required: true,
-        customValidation: validations.approvalStatus.bind(this)
+        customValidation: this.validations.approvalStatus.bind(this.validations),
       },
       {
         dbName: 'reimbursement_status',
         jsonName: 'reimbursementStatus',
         required: true,
-        customValidation: validations.reimbursementStatus.bind(this)
+        customValidation: this.validations.reimbursementStatus.bind(this.validations)
       },
       {
         dbName: 'employee_kerberos',
@@ -40,48 +43,49 @@ class ApprovalRequest(){
       },
       {
         dbName: 'employee',
-        jsonName: 'employee'
+        jsonName: 'employee',
+        customValidation: this.validations.employee.bind(this.validations)
       },
       {
         dbName: 'label',
         jsonName: 'label',
         charLimit: 100,
-        customValidation: validations.requireIfNotDraft.bind(this)
+        customValidation: this.validations.requireIfNotDraft.bind(this.validations)
       },
       {
         dbName: 'organization',
-        jsonName: 'organization'
+        jsonName: 'organization',
         charLimit: 100,
-        customValidation: validations.requireIfNotDraft.bind(this)
+        customValidation: this.validations.requireIfNotDraft.bind(this.validations)
       },
       {
         dbName: 'business_purpose',
         jsonName: 'businessPurpose',
         charLimit: 500,
-        customValidation: validations.requireIfNotDraft.bind(this)
+        customValidation: this.validations.requireIfNotDraft.bind(this.validations)
       },
       {
         dbName: 'location',
         jsonName: 'location',
-        customValidation: validations.location.bind(this)
+        customValidation: this.validations.location.bind(this.validations)
       },
       {
         dbName: 'location_details',
         jsonName: 'locationDetails',
         charLimit: 100,
-        customValidation: validations.locationDetails.bind(this)
-      }
+        customValidation: this.validations.locationDetails.bind(this.validations)
+      },
       {
         dbName: 'program_start_date',
         jsonName: 'programStartDate',
         validateType: 'date',
-        customValidation: validations.programDate.bind(this)
+        customValidation: this.validations.programDate.bind(this.validations)
       },
       {
         dbName: 'program_end_date',
         jsonName: 'programEndDate',
         validateType: 'date',
-        customValidation: validations.programDate.bind(this)
+        customValidation: this.validations.programDate.bind(this.validations)
       },
       {
         dbName: 'travel_required',
@@ -97,13 +101,13 @@ class ApprovalRequest(){
         dbName: 'travel_start_date',
         jsonName: 'travelStartDate',
         validateType: 'date',
-        customValidation: validations.travelDate.bind(this)
+        customValidation: this.validations.travelDate.bind(this.validations)
       },
       {
         dbName: 'travel_end_date',
         jsonName: 'travelEndDate',
         validateType: 'date',
-        customValidation: validations.travelDate.bind(this)
+        customValidation: this.validations.travelDate.bind(this.validations)
       },
       {
         dbName: 'comments',
@@ -123,15 +127,126 @@ class ApprovalRequest(){
         dbName: 'expenditures',
         jsonName: 'expenditures',
         validateType: 'array',
-        customValidationAsync: validations.expenditures.bind(this)
+        customValidationAsync: this.validations.expenditures.bind(this.validations)
       },
       {
         dbName: 'funding_sources',
         jsonName: 'fundingSources',
         validateType: 'array',
-        customValidationAsync: validations.fundingSources.bind(this)
+        customValidationAsync: this.validations.fundingSources.bind(this.validations)
       }
     ]);
+
+    this.fundingSourceFields = new EntityFields([
+      {
+        dbName: 'approval_request_funding_source_id',
+        jsonName: 'approvalRequestFundingSourceId'
+      },
+      {
+        dbName: 'approval_request_revision_id',
+        jsonName: 'approvalRequestRevisionId'
+      },
+      {
+        dbName: 'funding_source_id',
+        jsonName: 'fundingSourceId'
+      },
+      {
+        dbName: 'amount',
+        jsonName: 'amount'
+      },
+      {
+        dbName: 'accounting_code',
+        jsonName: 'accountingCode'
+      },
+      {
+        dbName: 'description',
+        jsonName: 'description'
+      }
+    ]);
+  }
+
+  async createRevision(data, submittedBy){
+
+    // if submittedBy is provided, assign approval request revision to that employee
+    if ( submittedBy ){
+      data.employee = submittedBy;
+      delete data.employeeKerberos;
+    }
+
+    data = this.entityFields.toDbObj(data);
+
+    // remove system generated fields
+    delete data.approval_request_revision_id;
+    delete data.is_current;
+    delete data.submitted_at
+
+    // do validation
+    const validation = await this.entityFields.validate(data, ['employee_allocation_id']);
+    if ( !validation.valid ) {
+      return {error: true, message: 'Validation Error', is400: true, fieldsWithErrors: validation.fieldsWithErrors};
+    }
+
+    // extract employee object from data
+    data.employee_kerberos = data.employee.kerberos || data.employee.kerberos;
+    const employee = data.employee.kerberos ? {kerberos: data.employee.kerberos} : data.employee;
+    delete data.employee;
+
+    // start transaction
+    let out = {};
+    let approvalRequestRevisionId;
+    const fundingSources = data.funding_sources || [];
+    delete data.funding_sources;
+    const client = await pg.pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      // upsert employee and department
+      await employeeModel.upsertInTransaction(client, employee);
+
+      // mark any previous revisions as not current
+      if ( data.approval_request_id ){
+        const sql = `UPDATE approval_request SET is_current = false WHERE approval_request_id = $1`;
+        await client.query(sql, [data.approval_request_id]);
+      }
+
+      // insert approval request revision
+      data = pg.prepareObjectForInsert(data);
+      const sql = `INSERT INTO approval_request (${data.keysString}) VALUES (${data.placeholdersString}) RETURNING approval_request_revision_id`;
+      const res = await client.query(sql, data.values);
+      approvalRequestRevisionId = res.rows[0].approval_request_revision_id;
+
+      // insert funding sources
+      if ( !data.no_expenditures ){
+        for (let fs of fundingSources){
+          fs.approvalRequestRevisionId = approvalRequestRevisionId;
+          fs = this.fundingSourceFields.toDbObj(fs);
+          fs = pg.prepareObjectForInsert(fs);
+          const sql = `INSERT INTO approval_request_funding_source (${fs.keysString}) VALUES (${fs.placeholdersString})`;
+          await client.query(sql, fs.values);
+        }
+      }
+
+      // insert expenditures
+      if ( !data.no_expenditures ){
+        // todo
+      }
+
+
+      await client.query('COMMIT');
+
+    } catch (e) {
+        await client.query('ROLLBACK');
+        out = {error: e};
+    } finally {
+      client.release();
+    }
+
+    if ( out.error ) return out;
+
+    out = approvalRequestRevisionId;
+
+    return out;
+
   }
 
 }
