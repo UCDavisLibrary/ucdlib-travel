@@ -24,6 +24,7 @@ import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-el
  * @param {Object} selectedObject - Full result of search object after a result is selected.
  * @param {Object} iamresult - Full result of search object after a result is selected.
  * @param {String} department - sorted department name from the search result object
+ * @param {String} selectedValue - kerberos id from the search result object
  */
 
 export default class UcdlibEmployeeSearchBasic extends Mixin(LitElement)
@@ -45,6 +46,22 @@ export default class UcdlibEmployeeSearchBasic extends Mixin(LitElement)
       isFocused: {state: true},
       selectedText: {state: true},
       selectedObject: {state: true},
+      selectedValue: {type: String
+        // , 
+        // async hasChanged(newVal, oldVal) {
+        //   if (newVal !== oldVal) {
+        //     if (newVal !== selectedObject.user_id) {
+        //       try {
+        //         const userObject = await this.EmployeeModel.getIamRecordById(newVal);
+        //         this.selectedObject = userObject;
+        //       }
+        //       catch (e) {
+        //         this.error = true;
+        //       }
+        //     }
+        //   }
+        // }
+      }
     }
   }
 
@@ -67,6 +84,7 @@ export default class UcdlibEmployeeSearchBasic extends Mixin(LitElement)
     this.selectedObject = {};
     this.iamresult = {};
     this.department = '';
+    this.selectedValue = '';
 
     this._injectModel('EmployeeModel');
   }
@@ -95,7 +113,7 @@ export default class UcdlibEmployeeSearchBasic extends Mixin(LitElement)
      * @description Disables the shadowdom
      * @returns
     */
-    MainDomElement() {
+    createRenderRoot() {
       return this;
     }
   
@@ -167,12 +185,9 @@ export default class UcdlibEmployeeSearchBasic extends Mixin(LitElement)
      * @param {Object} result - an Employee object from the database
      */
     async _onSelect(result){
+      console.log(result);
       this.selectedText = `${result.first_name} ${result.last_name}`;
-      const iamresult = await this.EmployeeModel.getIamRecordById(result.user_id)
-      this.selectedObject = iamresult.payload;
-      this.dispatchEvent(new CustomEvent('select', {
-        detail: iamresult
-      }));
+      this.selectedValue = result.user_id;
     }
   
     /**
