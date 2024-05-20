@@ -31,6 +31,7 @@ export default class ValidationHandler {
    * @description Get the error class (if any) for a field
    */
   errorClass(field){
+    console.log(field);
     return this.errorsByField[field] ? this._errorClass : '';
   }
 
