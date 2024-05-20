@@ -27,8 +27,8 @@ export default class AppApproverType extends Mixin(LitElement)
     this.existingApprovers = [];
     this.newApproverType = {};
     this.render = render.bind(this);
-    this._injectModel('AppStateModel', 'AdminApproverTypeModel');
-   
+    this._injectModel('AppStateModel', 'AdminApproverTypeModel', 'SettingsModel');
+    this.SettingsModel.getByCategory('admin-approver-form');
     this._resetProperties();
 
   }
@@ -116,10 +116,12 @@ export default class AppApproverType extends Mixin(LitElement)
 
   async _setLabel(value, approver){
     approver.label = value;
+    this.requestUpdate();
   }
 
   async _setDescription(value, approver){
     approver.description = value;
+    this.requestUpdate();
   }
 
   /**
@@ -151,8 +153,10 @@ export default class AppApproverType extends Mixin(LitElement)
       this.AppStateModel.showLoading();
 
     } else if ( e.state === 'loaded' ) {
-      this.AppStateModel.refresh();
-      if ( e.payload?.archived ) {
+      this._refreshProperties();
+      let archived = e.payload.data.res[0].archived;
+
+      if ( archived ) {
         this.AppStateModel.showToast({message: 'Approver Type deleted successfully', type: 'success'});
       } else {
         this.AppStateModel.showToast({message: 'Approver Type updated successfully', type: 'success'});
@@ -219,26 +223,15 @@ export default class AppApproverType extends Mixin(LitElement)
         let approverType =  this.existingApprovers.find(a => a.approverTypeId == approverTypeId);
         delete approverType.editing;
         approverType = this.employeeFormat(approverType);
-        console.log("S:",approverType);
+        console.log(`Done Updating ${approverTypeId} ...`);
 
         await this.AdminApproverTypeModel.update(approverType);
       } else {
         this.newApproverType = this.employeeFormat(this.newApproverType);
         await this.AdminApproverTypeModel.create(this.newApproverType);
-
-
         console.log("Done Creating...");
 
       }
-
-      //this will be deleted
-      // document.querySelector(".inputLabel").value = "";
-      // document.querySelector(".textDescription").value = "";
-
-      // this._refreshProperties();
-      // this.requestUpdate();
-
-      
 
     }
 
@@ -346,7 +339,7 @@ export default class AppApproverType extends Mixin(LitElement)
   */
   async _getApproverType(){
     // let args = {status:"active"}; //if want all active do this to see your new ones
-    let args = { id: [1,2,3,4,5,117,118]};
+    let args = { id: [1,2,3,4,5,112,113,114,115,116,117,118]};
 
     let approvers = await this.AdminApproverTypeModel.query(args);
     let approverArray = approvers.payload.filter(function (el) {

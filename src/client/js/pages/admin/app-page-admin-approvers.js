@@ -16,7 +16,7 @@ export default class AppPageAdminApprovers extends Mixin(LitElement)
     super();
     this.render = render.bind(this);
 
-    this._injectModel('AppStateModel');
+    this._injectModel('AppStateModel', 'SettingsModel');
   }
 
   /**
@@ -27,7 +27,6 @@ export default class AppPageAdminApprovers extends Mixin(LitElement)
     if ( this.id !== state.page ) return;
 
     this.AppStateModel.setTitle('Approvers and Funding Sources');
-
     const breadcrumbs = [
       this.AppStateModel.store.breadcrumbs.home,
       this.AppStateModel.store.breadcrumbs.admin,
