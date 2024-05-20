@@ -3,6 +3,7 @@ import {render, styles} from "./app-approver-type.tpl.js";
 import { LitCorkUtils, Mixin } from "../../../lib/appGlobals.js";
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 import "./ucdlib-employee-search-basic.js"
+import ValidationHandler from "../utils/ValidationHandler.js";
 
 
 export default class AppApproverType extends Mixin(LitElement)
@@ -22,6 +23,7 @@ export default class AppApproverType extends Mixin(LitElement)
 
   constructor() {
     super();
+    this.id = 'admin-approvers';
     this.existingApprovers = [];
     this.newApproverType = {};
     this.render = render.bind(this);
@@ -46,14 +48,29 @@ export default class AppApproverType extends Mixin(LitElement)
    * @param {Object} state - AppStateModel state
    */
   async _onAppStateUpdate(state) {
-    if ( state.page != 'admin-approvers' ) return;
+    if ( state.page != this.id ) return;
     this.AppStateModel.showLoading();
 
-    this.AppStateModel.showLoaded('admin-approvers');
+    this.AppStateModel.showLoaded(this.id);
     this._getApproverType();
 
     this.requestUpdate();
   }
+  
+
+    /**
+   * @description bound to AdminApproverTypeModel APPROVER_TYPE_QUERIED event
+   * fires when active approver type are fetched from the server
+   */
+     _onApproverTypeFetched(e){
+      if ( e.state !== 'loaded' ) return;
+      this.existingApprovers = e.payload.map(approver => {
+        approver = {...approver};
+        approver.editing = false;
+        approver.validationHandler = new ValidationHandler();
+        return approver;
+      });
+    }
   
 
  /**
@@ -71,9 +88,6 @@ export default class AppApproverType extends Mixin(LitElement)
    * 
   */
   async _resetProperties(){
-    this.label = "";
-    this.description = "";
-    this.employees = [];
     this.newApproverType = {
       approverTypeId: 0,
       label: "",
@@ -81,7 +95,8 @@ export default class AppApproverType extends Mixin(LitElement)
       systemGenerated:false,
       hideFromFundAssignment:false,
       archived: false,
-      employees: []
+      employees: [],
+      validationHandler : new ValidationHandler()
     }; 
   }
 
@@ -106,6 +121,69 @@ export default class AppApproverType extends Mixin(LitElement)
   async _setDescription(value, approver){
     approver.description = value;
   }
+
+  /**
+   * @description Returns a approver type from the element's approverType array by approverTypeId
+   */
+   getApproverTypeId(id){
+    return this.existingApprovers.find(item => item.approverTypeId == id);
+  }
+  /**
+   * @description bound to AdminApproverTypeModel APPROVER_TYPE_UPDATED event
+   */
+   async _onApproverTypeUpdated(e){
+    if ( e.state === 'error' ) {
+      if ( e.error?.payload?.is400 ) {
+        const getApproverTypeId = e?.payload?.getApproverTypeId;
+        const approverType = this.getApproverTypeId(getApproverTypeId);
+        approverType.validationHandler = new ValidationHandler(e);
+        this.AppStateModel.showLoaded(this.id)
+        this.requestUpdate();
+        this.AppStateModel.showToast({message: 'Error when updating the approver type. Form data needs fixing.', type: 'error'})
+
+      } else {
+        this.AppStateModel.showToast({message: 'An unknown error ocurred when updating the approver type', type: 'error'})
+        this.AppStateModel.showLoaded(this.id)
+      }
+      await this.waitController.waitForFrames(3);
+      window.scrollTo(0, this.lastScrollPosition);
+    } else if ( e.state === 'loading' ) {
+      this.AppStateModel.showLoading();
+
+    } else if ( e.state === 'loaded' ) {
+      this.AppStateModel.refresh();
+      if ( e.payload?.archived ) {
+        this.AppStateModel.showToast({message: 'Approver Type deleted successfully', type: 'success'});
+      } else {
+        this.AppStateModel.showToast({message: 'Approver Type updated successfully', type: 'success'});
+      }
+    }
+  }
+
+  /**
+   * @description bound to AdminApproverTypeModel APPROVER_TYPE_CREATED event
+   */
+  async _onApproverTypeCreated(e){
+    if ( e.state === 'error' ) {
+      if ( e.error?.payload?.is400 ) {
+        this.newApproverType.validationHandler = new ValidationHandler(e);
+        this.AppStateModel.showLoaded(this.id)
+        this.requestUpdate();
+        this.AppStateModel.showToast({message: 'Error when creating the approver type. Form data needs fixing.', type: 'error'})
+      } else {
+        this.AppStateModel.showToast({message: 'An unknown error ocurred when creating the approver type', type: 'error'})
+        this.AppStateModel.showLoaded(this.id)
+      }
+      await this.waitController.waitForFrames(3);
+      window.scrollTo(0, this.lastScrollPosition);
+    } else if ( e.state === 'loading' ) {
+      this.AppStateModel.showLoading();
+    } else if ( e.state === 'loaded' ) {
+      this._refreshProperties();
+      this.AppStateModel.showToast({message: 'Approver Type created successfully', type: 'success'});
+    }
+  }
+
 
   /**
    * @description on submit button get the form data
@@ -141,7 +219,7 @@ export default class AppApproverType extends Mixin(LitElement)
         let approverType =  this.existingApprovers.find(a => a.approverTypeId == approverTypeId);
         delete approverType.editing;
         approverType = this.employeeFormat(approverType);
-        console.log(approverType);
+        console.log("S:",approverType);
 
         await this.AdminApproverTypeModel.update(approverType);
       } else {
@@ -157,8 +235,8 @@ export default class AppApproverType extends Mixin(LitElement)
       // document.querySelector(".inputLabel").value = "";
       // document.querySelector(".textDescription").value = "";
 
-      this._refreshProperties();
-      this.requestUpdate();
+      // this._refreshProperties();
+      // this.requestUpdate();
 
       
 
@@ -224,6 +302,8 @@ export default class AppApproverType extends Mixin(LitElement)
       }
     
       approver.editing = false;
+      approver.validationHandler = new ValidationHandler();
+
       this.requestUpdate();
     }
 
