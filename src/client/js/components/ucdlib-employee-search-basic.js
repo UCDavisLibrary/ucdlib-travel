@@ -46,24 +46,9 @@ export default class UcdlibEmployeeSearchBasic extends Mixin(LitElement)
       isFocused: {state: true},
       selectedText: {state: true},
       selectedObject: {state: true},
-      selectedValue: {type: String
-        // , 
-        // async hasChanged(newVal, oldVal) {
-        //   if (newVal !== oldVal) {
-        //     if (newVal !== selectedObject.user_id) {
-        //       try {
-        //         const userObject = await this.EmployeeModel.getIamRecordById(newVal);
-        //         this.selectedObject = userObject;
-        //       }
-        //       catch (e) {
-        //         this.error = true;
-        //       }
-        //     }
-        //   }
-        // }
+      selectedValue: {type: String}
       }
     }
-  }
 
   constructor() {
     super();
@@ -115,6 +100,21 @@ export default class UcdlibEmployeeSearchBasic extends Mixin(LitElement)
     */
     createRenderRoot() {
       return this;
+    }
+
+    /**
+     * @description Listens for changes in the selectedValue property. If the property changes, the selectedObject is updated.
+    */
+    async shouldUpdate(changedProperties) {
+      if (changedProperties.has('selectedValue')) {
+        try {
+          let iamobject = await this.EmployeeModel.getIamRecordById(this.selectedValue);
+          this.selectedObject = iamobject.payload;
+        }
+        catch (e) {
+          this.error = true;
+        }
+      }
     }
   
     /**
@@ -185,7 +185,6 @@ export default class UcdlibEmployeeSearchBasic extends Mixin(LitElement)
      * @param {Object} result - an Employee object from the database
      */
     async _onSelect(result){
-      console.log(result);
       this.selectedText = `${result.first_name} ${result.last_name}`;
       this.selectedValue = result.user_id;
     }
