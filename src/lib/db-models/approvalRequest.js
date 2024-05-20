@@ -163,6 +163,169 @@ class ApprovalRequest {
         jsonName: 'description'
       }
     ]);
+
+    this.expenditureFields = new EntityFields([
+      {
+        dbName: 'approval_request_expenditure_id',
+        jsonName: 'approvalRequestExpenditureId'
+      },
+      {
+        dbName: 'approval_request_revision_id',
+        jsonName: 'approvalRequestRevisionId'
+      },
+      {
+        dbName: 'expenditure_option_id',
+        jsonName: 'expenditureOptionId'
+      },
+      {
+        dbName: 'amount',
+        jsonName: 'amount'
+      }
+    ]);
+  }
+
+  /**
+   * @description Get an array of approval request revisions
+   * @param {Object} kwargs - query parameters including:
+   * - revisionIds {Array} OPTIONAL - array of approval request revision ids
+   * - requestIds {Array} OPTIONAL - array of approval request ids
+   * - isCurrent {Boolean} OPTIONAL - whether to get only the current revision
+   * - isNotCurrent {Boolean} OPTIONAL - whether to get only revisions that are not current
+   * - employees {Array} OPTIONAL - array of employee kerberos
+   * - page {Integer} OPTIONAL - page number
+   * - pageSize {Integer} OPTIONAL - number of records per page
+   */
+  async get(kwargs={}){
+
+    // pagination
+    const page = Number(kwargs.page) || 1;
+    const pageSize = Number(kwargs.pageSize) || 10;
+    const noPaging = pageSize === -1;
+
+    // construct where clause conditions for query
+    const whereArgs = {};
+
+    if ( Array.isArray(kwargs.revisionIds) && kwargs.revisionIds.length ){
+      whereArgs['ar.approval_request_revision_id'] = kwargs.revisionIds;
+    }
+
+    if ( Array.isArray(kwargs.requestIds) && kwargs.requestIds.length ){
+      whereArgs['ar.approval_request_id'] = kwargs.requestIds;
+    }
+
+    if ( kwargs.isCurrent ){
+      whereArgs['ar.is_current'] = true;
+    } else if ( kwargs.isNotCurrent ){
+      whereArgs['ar.is_current'] = false;
+    }
+
+    if ( Array.isArray(kwargs.employees) && kwargs.employees.length ){
+      whereArgs['ar.employee_kerberos'] = kwargs.employees;
+    }
+    const whereClause = pg.toWhereClause(whereArgs);
+
+    const countQuery = `
+      SELECT
+        COUNT(*) as total
+      FROM
+        approval_request ar
+      ${whereClause.sql ? `WHERE ${whereClause.sql}` : ''}
+    `;
+    const countRes = await pg.query(countQuery, whereClause.values);
+    if( countRes.error ) return countRes;
+    const total = Number(countRes.res.rows[0].total);
+
+    const query = `
+    WITH funding_sources AS (
+      SELECT
+        arfs.approval_request_revision_id,
+        json_agg(
+          json_build_object(
+            'approvalRequestFundingSourceId', arfs.approval_request_funding_source_id,
+            'fundingSourceId', arfs.funding_source_id,
+            'fundingSourceLabel', fs.label,
+            'amount', arfs.amount,
+            'accountingCode', arfs.accounting_code,
+            'description', arfs.description
+          )
+        ) AS funding_sources
+      FROM
+        approval_request_funding_source arfs
+      LEFT JOIN
+        funding_source fs ON arfs.funding_source_id = fs.funding_source_id
+      GROUP BY
+        arfs.approval_request_revision_id
+    ),
+    expenditures AS (
+      SELECT
+        are.approval_request_revision_id,
+        json_agg(
+          json_build_object(
+            'approvalRequestExpenditureId', are.approval_request_expenditure_id,
+            'expenditureOptionId', are.expenditure_option_id,
+            'expenditureOptionLabel', eo.label,
+            'amount', are.amount
+          )
+        ) AS expenditures
+      FROM
+        approval_request_expenditure are
+      LEFT JOIN
+        expenditure_option eo ON are.expenditure_option_id = eo.expenditure_option_id
+      GROUP BY
+        are.approval_request_revision_id
+    )
+    SELECT
+      ar.*,
+      json_build_object(
+        'kerberos', e.kerberos,
+        'firstName', e.first_name,
+        'lastName', e.last_name
+      ) AS employee,
+      COALESCE(fs.funding_sources, '[]'::json) AS funding_sources,
+      COALESCE(ex.expenditures, '[]'::json) AS expenditures
+    FROM
+      approval_request ar
+    LEFT JOIN
+      employee e ON ar.employee_kerberos = e.kerberos
+    LEFT JOIN
+      funding_sources fs ON ar.approval_request_revision_id = fs.approval_request_revision_id
+    LEFT JOIN
+      expenditures ex ON ar.approval_request_revision_id = ex.approval_request_revision_id
+    ${whereClause.sql ? `WHERE ${whereClause.sql}` : ''}
+    ORDER BY
+      ar.submitted_at DESC
+    ${noPaging ? '' : `LIMIT ${pageSize} OFFSET ${(page-1)*pageSize}`}
+    `;
+
+    const res = await pg.query(query, whereClause.values);
+    if( res.error ) return res;
+    const data = this._prepareResults(res.res.rows);
+    const totalPages = noPaging ? 1 : Math.ceil(total / pageSize);
+    return {data, total, page, pageSize, totalPages};
+
+  }
+
+  _prepareResults(results){
+    results = this.entityFields.toJsonArray(results);
+    for (const result of results){
+
+      // ensure array fields are arrays
+      const arrayFields = ['fundingSources', 'expenditures'];
+      for (const field of arrayFields){
+        if ( !result[field] ){
+          result[field] = [];
+        }
+      }
+
+      // ensure date fields are YYYY-MM-DD
+      const dateFields = ['programStartDate', 'programEndDate', 'travelStartDate', 'travelEndDate'];
+      for (const field of dateFields){
+        if ( result[field] ){
+          result[field] = result[field].toISOString().split('T')[0];
+        }
+      }
+    }
+    return results;
   }
 
   async createRevision(data, submittedBy){
@@ -187,15 +350,19 @@ class ApprovalRequest {
     }
 
     // extract employee object from data
-    data.employee_kerberos = data.employee.kerberos || data.employee.kerberos;
-    const employee = data.employee.kerberos ? {kerberos: data.employee.kerberos} : data.employee;
+    const employee = data.employee_kerberos ? {kerberos: data.employee.kerberos} : data.employee;
+    data.employee_kerberos = data.employee_kerberos || data.employee.kerberos;
     delete data.employee;
 
-    // start transaction
+    // prep data for transaction
     let out = {};
     let approvalRequestRevisionId;
     const fundingSources = data.funding_sources || [];
     delete data.funding_sources;
+    const expenditures = data.expenditures || [];
+    delete data.expenditures;
+
+    // start transaction
     const client = await pg.pool.connect();
     try {
       await client.query('BEGIN');
@@ -219,6 +386,7 @@ class ApprovalRequest {
       if ( !data.no_expenditures ){
         for (let fs of fundingSources){
           fs.approvalRequestRevisionId = approvalRequestRevisionId;
+          delete fs.approvalRequestFundingSourceId;
           fs = this.fundingSourceFields.toDbObj(fs);
           fs = pg.prepareObjectForInsert(fs);
           const sql = `INSERT INTO approval_request_funding_source (${fs.keysString}) VALUES (${fs.placeholdersString})`;
@@ -228,9 +396,15 @@ class ApprovalRequest {
 
       // insert expenditures
       if ( !data.no_expenditures ){
-        // todo
+        for (let expenditure of expenditures) {
+          expenditure.approvalRequestRevisionId = approvalRequestRevisionId;
+          delete expenditure.approvalRequestExpenditureId;
+          expenditure = this.expenditureFields.toDbObj(expenditure);
+          expenditure = pg.prepareObjectForInsert(expenditure);
+          const sql = `INSERT INTO approval_request_expenditure (${expenditure.keysString}) VALUES (${expenditure.placeholdersString})`;
+          await client.query(sql, expenditure.values);
+        }
       }
-
 
       await client.query('COMMIT');
 
@@ -243,7 +417,7 @@ class ApprovalRequest {
 
     if ( out.error ) return out;
 
-    out = approvalRequestRevisionId;
+    out = await this.get({revisionIds: [approvalRequestRevisionId]});
 
     return out;
 
