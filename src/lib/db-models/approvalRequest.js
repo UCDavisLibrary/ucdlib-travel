@@ -305,6 +305,11 @@ class ApprovalRequest {
 
   }
 
+  /**
+   * @description Prepare array of approval request revision objects for return
+   * @param {Array} results - array of approval request revision objects
+   * @returns {Array}
+   */
   _prepareResults(results){
     results = this.entityFields.toJsonArray(results);
     for (const result of results){
@@ -328,6 +333,13 @@ class ApprovalRequest {
     return results;
   }
 
+  /**
+   * @description Create a new approval request revision
+   * @param {Object} data - the approval request revision data - see entityFields for expected fields (json names)
+   * @param {Object} submittedBy - the employee object of the employee submitting the request
+   *  - if data.employeeKerberos is not set, this object will be used to set the employeeKerberos field
+   * @returns {Object}
+   */
   async createRevision(data, submittedBy){
 
     // if submittedBy is provided, assign approval request revision to that employee
