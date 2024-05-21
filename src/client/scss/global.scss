@@ -18,12 +18,12 @@
 }
 
 .skinny-form {
-  padding: .5rem;
-  border: 2px solid#ffbf00;
+  padding: 1rem .5rem;
+  border: 1px solid #ffbf00;
 }
 @media (min-width: 768px) {
   .skinny-form {
-    padding: 1rem;
+    padding: 2rem 1rem;
     width: 70%;
     margin: 0 auto;
   }
@@ -76,6 +76,14 @@ fieldset.field-error {
   font-size: .875rem;
   color: #13639e;
 }
+.radio .option-description {
+  padding-left: 2.5rem;
+  font-weight: 400;
+  font-size: .875rem;
+  margin-bottom: .5rem;
+}
+
+
 .pad-icon-top {
   padding-top: .3rem;
 }
