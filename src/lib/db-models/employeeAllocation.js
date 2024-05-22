@@ -223,7 +223,7 @@ class EmployeeAllocation {
    * - page: number - page number for pagination (optional) - default 1
    */
   async get(kwargs={}){
-    const page = Number(kwargs.page) ? Number(kwargs.page) : 1;
+    const page = Number(kwargs.page) || 1;
 
     const pageSize = 10;
     const whereArgs = {};

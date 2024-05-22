@@ -9,8 +9,9 @@ class ApiUtils {
    * @returns {Number}
    */
   getPageNumber(req){
-    const page = parseInt(req.query.page);
-    return isNaN(page) ? 1 : page;
+    let page = parseInt(req.query.page);
+    if ( isNaN(page) || page < 1 ) return 1;
+    return page;
   }
 
   /**

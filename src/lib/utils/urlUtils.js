@@ -5,6 +5,14 @@
 class UrlUtils {
 
   /**
+   * @description Convert a query object to a kebab-case query string
+   */
+  queryObjectToKebabString(q){
+    if ( !q || ! typeof q === 'object' ) return '';
+    return this.queryStringFromObject(this.queryToKebabCase(q));
+  }
+
+  /**
    * @description Get the sorted query string from an object
    * @param {Object} q - query object
    * @param {String} empty - return value if query object is empty - default <empty string>

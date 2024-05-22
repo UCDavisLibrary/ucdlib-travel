@@ -4,8 +4,31 @@ import pg from "./pg.js";
  * @class ApprovalRequestValidations
  * @classdesc Methods for validating the fields of the ApprovalRequest model
  * should be passed to the customValidation property of the EntityFields field definition
+ * @property {Object} model - the ApprovalRequest model object
  */
-class ApprovalRequestValidations(){
+export default class ApprovalRequestValidations {
+
+  constructor(model){
+    this.model = model;
+
+    this.validApprovalStatuses = [
+      {value: 'draft', label: 'Draft'},
+      {value: 'submitted', label: 'Submitted'},
+      {value: 'in-progress', label: 'In Progress'},
+      {value: 'approved', label: 'Approved'},
+      {value: 'canceled', label: 'Canceled'},
+      {value: 'denied', label: 'Denied'},
+      {value: 'revision-requested', label: 'Revision Requested'}
+    ];
+
+    this.validReimbursementStatuses = [
+      {value: 'not-required', label: 'Not Required'},
+      {value: 'not-submitted', label: 'Not Submitted'},
+      {value: 'reimbursment-pending', label: 'Reimbursement Pending'},
+      {value: 'partially-reimbursed', label: 'Partially Reimbursed'},
+      {value: 'fully-reimbursed', label: 'Fully Reimbursed'}
+    ];
+  }
 
   /**
    * @method approvalStatus
@@ -13,10 +36,18 @@ class ApprovalRequestValidations(){
    * See EntityFields.validate method for property definitions.
    */
   approvalStatus(field, value, out, payload){
-    const validStatuses = ['draft', 'submitted', 'in-progress', 'approved', 'canceled', 'denied', 'revision-requested'];
-    let error = {errorType: 'invalid-value', message: `Invalid approval status: ${value}`};
+    let error;
+
+    if ( value === undefined || value === null || value === '') {
+      error = {errorType: 'required', message: 'This field is required.'};
+      this.model.entityFields.pushError(out, field, error);
+      return;
+    }
+
+    const validStatuses = this.validApprovalStatuses.map(status => status.value);
+    error = {errorType: 'invalid-value', message: `Invalid approval status: ${value}`};
     if ( !validStatuses.includes(value) ) {
-      this.entityFields.pushError(out, field, error);
+      this.model.entityFields.pushError(out, field, error);
     }
   }
 
@@ -26,10 +57,18 @@ class ApprovalRequestValidations(){
    * See EntityFields.validate method for property definitions.
    */
   reimbursementStatus(field, value, out, payload){
-    const validStatuses = ['not-required', 'reimbursment-pending', 'partially-reimbursed', 'fully-reimbursed'];
-    let error = {errorType: 'invalid-value', message: `Invalid reimbursement status: ${value}`};
+    let error;
+
+    if ( value === undefined || value === null || value === '') {
+      error = {errorType: 'required', message: 'This field is required.'};
+      this.model.entityFields.pushError(out, field, error);
+      return;
+    }
+
+    const validStatuses = this.validReimbursementStatuses.map(status => status.value);
+    error = {errorType: 'invalid-value', message: `Invalid reimbursement status: ${value}`};
     if ( !validStatuses.includes(value) ) {
-      this.entityFields.pushError(out, field, error);
+      this.model.entityFields.pushError(out, field, error);
     }
   }
 
@@ -38,10 +77,12 @@ class ApprovalRequestValidations(){
    * @description Returns error if value is empty and approvalStatus is not draft
    */
   requireIfNotDraft(field, value, out, payload){
+    let error;
+
     if ( payload.approval_status === 'draft' ) return;
-    const error = {errorType: 'required', message: 'This field is required.'};
+    error = {errorType: 'required', message: 'This field is required.'};
     if ( value === undefined || value === null || value === '') {
-      this.entityFields.pushError(out, field, error);
+      this.model.entityFields.pushError(out, field, error);
     }
   }
 
@@ -51,17 +92,20 @@ class ApprovalRequestValidations(){
    * See EntityFields.validate method for property definitions.
    */
   location(field, value, out, payload){
+    let error;
+
     if ( payload.approval_status === 'draft' ) return;
-    let error = {errorType: 'required', message: 'This field is required.'};
+
+    error = {errorType: 'required', message: 'This field is required.'};
     if ( value === undefined || value === null || value === '') {
-      this.entityFields.pushError(out, field, error);
+      this.model.entityFields.pushError(out, field, error);
       return;
     }
 
     const validLocations = ['in-state', 'out-of-state', 'foreign', 'virtual'];
     error = {errorType: 'invalid-value', message: `Invalid location: ${value}`};
     if ( !validLocations.includes(value) ) {
-      this.entityFields.pushError(out, field, error);
+      this.model.entityFields.pushError(out, field, error);
     }
   }
 
@@ -71,11 +115,13 @@ class ApprovalRequestValidations(){
    * See EntityFields.validate method for property definitions.
    */
   locationDetails(field, value, out, payload){
+    let error;
     if ( payload.approval_status === 'draft' ) return;
     if ( payload.location === 'virtual' ) return;
-    const error = {errorType: 'required', message: 'This field is required.'};
+
+    error = {errorType: 'required', message: 'This field is required.'};
     if ( value === undefined || value === null || value === '') {
-      this.entityFields.pushError(out, field, error);
+      this.model.entityFields.pushError(out, field, error);
     }
   }
 
@@ -85,17 +131,19 @@ class ApprovalRequestValidations(){
    * See EntityFields.validate method for property definitions.
    */
   programDate(field, value, out, payload){
+    let error;
+
     if ( payload.approval_status === 'draft' ) return;
 
     // verify field is not empty
-    let error = {errorType: 'required', message: 'This field is required.'};
+    error = {errorType: 'required', message: 'This field is required.'};
     if ( value === undefined || value === null || value === '') {
-      this.entityFields.pushError(out, field, error);
+      this.model.entityFields.pushError(out, field, error);
       return;
     }
 
     // verify field doesnt already have an error
-    if ( this.entityFields.fieldHasError(out, 'programStartDate') || this.entityFields.fieldHasError(out, 'programEndDate') ) return;
+    if ( this.model.entityFields.fieldHasError(out, 'programStartDate') || this.model.entityFields.fieldHasError(out, 'programEndDate') ) return;
 
     // verify program start date is before or equal to program end date
     try {
@@ -106,11 +154,10 @@ class ApprovalRequestValidations(){
       if ( field.jsonName === 'programEndDate' ) {
         error.message = 'Program end date must be after start date';
       }
-      this.entityFields.pushError(out, field, error);
-    } catch () {
+      this.model.entityFields.pushError(out, field, error);
+    } catch (e) {
       // one of the dates is invalid and will be caught by the date validation
     }
-
   }
 
   /**
@@ -119,18 +166,20 @@ class ApprovalRequestValidations(){
    * See EntityFields.validate method for property definitions.
    */
   travelDate(field, value, out, payload){
+    let error;
+
     if ( payload.approval_status === 'draft' ) return;
     if ( !payload.travel_required ) return;
 
     // verify field is not empty
-    let error = {errorType: 'required', message: 'This field is required.'};
+    error = {errorType: 'required', message: 'This field is required.'};
     if ( value === undefined || value === null || value === '') {
-      this.entityFields.pushError(out, field, error);
+      this.model.entityFields.pushError(out, field, error);
       return;
     }
 
     // verify field doesnt already have an error
-    if ( this.entityFields.fieldHasError(out, 'travelStartDate') || this.entityFields.fieldHasError(out, 'travelEndDate') ) return;
+    if ( this.model.entityFields.fieldHasError(out, 'travelStartDate') || this.model.entityFields.fieldHasError(out, 'travelEndDate') ) return;
 
     // verify travel start date is before or equal to travel end date
     try {
@@ -141,8 +190,8 @@ class ApprovalRequestValidations(){
       if ( field.jsonName === 'travelEndDate' ) {
         error.message = 'Travel end date must be after start date';
       }
-      this.entityFields.pushError(out, field, error);
-    } catch () {
+      this.model.entityFields.pushError(out, field, error);
+    } catch (e) {
       // one of the dates is invalid and will be caught by the date validation
     }
   }
@@ -153,13 +202,15 @@ class ApprovalRequestValidations(){
    * See EntityFields.validate method for property definitions.
    */
   async expenditures(field, value, out, payload){
+    let error;
+
     if ( payload.approval_status === 'draft' ) return;
     if ( payload.no_expenditures ) return;
 
     // verify is array and not empty
     error = {errorType: 'required', message: 'This field is required.'};
     if ( !Array.isArray(value) || value.length === 0 ) {
-      this.entityFields.pushError(out, field, error);
+      this.model.entityFields.pushError(out, field, error);
       return;
     }
 
@@ -167,7 +218,7 @@ class ApprovalRequestValidations(){
     error = {errorType: 'invalid', message: 'All expenditure option ids must be integers'};
     for (const expenditure of value) {
       if ( !Number.isInteger(expenditure.expenditureOptionId) ) {
-        this.entityFields.pushError(out, field, error);
+        this.model.entityFields.pushError(out, field, error);
         return;
       }
     }
@@ -177,12 +228,12 @@ class ApprovalRequestValidations(){
     let query = `SELECT expenditure_option_id FROM expenditure_option WHERE expenditure_option_id = ANY($1)`;
     let res = await pg.query(query, [expenditureOptionIds]);
     if ( res.error ) {
-      this.entityFields.pushError(out, field, {errorType: 'database', message: 'Error querying the database for expenditure options'});
+      this.model.entityFields.pushError(out, field, {errorType: 'database', message: 'Error querying the database for expenditure options'});
       console.error(res.error);
       return;
     }
     if ( res.res.rowCount !== expenditureOptionIds.length ) {
-      this.entityFields.pushError(out, field, {errorType: 'invalid', message: 'An expenditure option does not exist in the database'});
+      this.model.entityFields.pushError(out, field, {errorType: 'invalid', message: 'An expenditure option does not exist in the database'});
       return;
     }
 
@@ -190,7 +241,7 @@ class ApprovalRequestValidations(){
     error = {errorType: 'invalid', message: 'All expenditure amounts must be numbers'};
     for (const expenditure of value) {
       if ( isNaN(Number(expenditure.amount)) ) {
-        this.entityFields.pushError(out, field, error);
+        this.model.entityFields.pushError(out, field, error);
         return;
       }
     }
@@ -198,7 +249,7 @@ class ApprovalRequestValidations(){
     // verify that total amount is greater than 0
     const totalAmount = value.reduce((acc, expenditure) => acc + Number(expenditure.amount), 0);
     if ( totalAmount <= 0 ) {
-      this.entityFields.pushError(out, field, {errorType: 'invalid', message: 'The total expenditure amount must be greater than 0'});
+      this.model.entityFields.pushError(out, field, {errorType: 'invalid', message: 'The total expenditure amount must be greater than 0'});
     }
   }
 
@@ -210,11 +261,12 @@ class ApprovalRequestValidations(){
   async fundingSources(field, value, out, payload){
     if ( payload.approval_status === 'draft' ) return;
     if ( payload.no_expenditures ) return;
+    let error;
 
     // verify is array and not empty
     error = {errorType: 'required', message: 'This field is required.'};
     if ( !Array.isArray(value) || value.length === 0 ) {
-      this.entityFields.pushError(out, field, error);
+      this.model.entityFields.pushError(out, field, error);
       return;
     }
 
@@ -222,7 +274,7 @@ class ApprovalRequestValidations(){
     error = {errorType: 'invalid', message: 'All funding source ids must be integers'};
     for (const fundingSource of value) {
       if ( !Number.isInteger(fundingSource.fundingSourceId) ) {
-        this.entityFields.pushError(out, field, error);
+        this.model.entityFields.pushError(out, field, error);
         return;
       }
     }
@@ -232,12 +284,12 @@ class ApprovalRequestValidations(){
     let query = `SELECT funding_source_id, require_description FROM funding_sources WHERE funding_source_id = ANY($1)`;
     let res = await pg.query(query, [fundingSourceIds]);
     if ( res.error ) {
-      this.entityFields.pushError(out, field, {errorType: 'database', message: 'Error querying the database for funding sources'});
+      this.model.entityFields.pushError(out, field, {errorType: 'database', message: 'Error querying the database for funding sources'});
       console.error(res.error);
       return;
     }
     if ( res.res.rowCount !== fundingSourceIds.length ) {
-      this.entityFields.pushError(out, field, {errorType: 'invalid', message: 'A funding source does not exist in the database'});
+      this.model.entityFields.pushError(out, field, {errorType: 'invalid', message: 'A funding source does not exist in the database'});
       return;
     }
 
@@ -246,12 +298,12 @@ class ApprovalRequestValidations(){
     const fsNeedsDesc = res.res.rows.filter(fundingSource => fundingSource.require_description).map(fundingSource => fundingSource.funding_source_id);
     for (const fundingSource of value) {
       if ( fsNeedsDesc.includes(fundingSource.fundingSourceId) && !fundingSource.description ) {
-        this.entityFields.pushError(out, field, {errorType: 'required', message: 'A funding source requires a description'});
+        this.model.entityFields.pushError(out, field, {errorType: 'required', message: 'A funding source requires a description'});
         return;
       }
 
       if ( fundingSource.description && fundingSource.description.length > 500 ) {
-        this.entityFields.pushError(out, field, {errorType: 'charLimit', message: 'Description must be less than 500 characters'});
+        this.model.entityFields.pushError(out, field, {errorType: 'charLimit', message: 'Description must be less than 500 characters'});
         return;
       }
     }
@@ -260,7 +312,7 @@ class ApprovalRequestValidations(){
     error = {errorType: 'invalid', message: 'All funding source amounts must be numbers'};
     for (const fundingSource of value) {
       if ( isNaN(Number(fundingSource.amount)) ) {
-        this.entityFields.pushError(out, field, error);
+        this.model.entityFields.pushError(out, field, error);
         return;
       }
     }
@@ -269,12 +321,58 @@ class ApprovalRequestValidations(){
     const fundingTotal = value.reduce((acc, fundingSource) => acc + Number(fundingSource.amount), 0);
     const expenditureTotal = (Array.isArray(payload.expenditures) ? payload.expenditures : []).reduce((acc, expenditure) => acc + Number(expenditure.amount), 0);
     if ( fundingTotal !== expenditureTotal ) {
-      this.entityFields.pushError(out, field, {errorType: 'invalid', message: 'The total funding amount must match the total expenditure amount'});
+      this.model.entityFields.pushError(out, field, {errorType: 'invalid', message: 'The total funding amount must match the total expenditure amount'});
+    }
+  }
+
+  /**
+   * @method approvalRequestId
+   * @description Custom validation for the approvalRequestId field
+   * See EntityFields.validate method for property definitions.
+   */
+  async approvalRequestId(field, value, out, payload){
+    let error;
+
+    if ( !value ) return;
+
+    // this is a revision, check that the approvalRequestId is an integer and exists in the database
+    error = {errorType: 'invalid', message: 'Invalid approval request id'};
+    if ( !Number.isInteger(value) ) {
+      this.model.entityFields.pushError(out, field, error);
+      return;
     }
 
+    let query = `SELECT approval_request_id, approval_status FROM approval_request WHERE approval_request_id = $1`;
+    let res = await pg.query(query, [value]);
+    if ( res.error ) {
+      this.model.entityFields.pushError(out, field, {errorType: 'database', message: 'Error querying the database for approval request'});
+      console.error(res.error);
+      return;
+    }
+    if ( !res.res.rowCount ) {
+      this.model.entityFields.pushError(out, field, error);
+    }
 
+    error = {errorType: 'invalid', message: "Approval request must be in 'draft' or 'revision-requested' status to be revised"};
+    if ( !['draft', 'revision-requested'].includes(res.res.rows[0].approval_status) ) {
+      this.model.entityFields.pushError(out, field, error);
+    }
+  }
+
+  /**
+   * @method employee
+   * @description Custom validation for the employee field
+   * See EntityFields.validate method for property definitions.
+   */
+  employee(field, value, out, payload){
+    let error;
+    if ( typeof employee_kerberos === 'string' && employee_kerberos.length > 0 ) return;
+
+    if ( !value?.kerberos ) {
+      error = {errorType: 'required', message: 'This field is required.'};
+      this.model.entityFields.pushError(out, field, error);
+      return;
+    }
   }
 
 }
-
-export default new ApprovalRequestValidations();
