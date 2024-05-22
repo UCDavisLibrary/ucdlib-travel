@@ -39,6 +39,7 @@ export default class UcdlibEmployeeSearchBasic extends Mixin(LitElement)
       totalResults: {state: true},
       resultCtNotShown: {state: true},
       noResults: {state: true},
+      noIam: {state: true},
       error: {state: true},
       status: {state: true},
       isSearching: {state: true},
@@ -65,6 +66,7 @@ export default class UcdlibEmployeeSearchBasic extends Mixin(LitElement)
     this.showDropdown = false;
     this.isFocused = false;
     this.noResults = false;
+    this.noIam = false;
     this.selectedText = '';
     this.selectedObject = {};
     this.iamresult = {};
@@ -78,7 +80,7 @@ export default class UcdlibEmployeeSearchBasic extends Mixin(LitElement)
    * @description LitElement lifecycle called when element is updated
    * @param {*} p - Changed properties
    */
-    willUpdate(p) {
+    async willUpdate(p) {
       if ( p.has('query') && this.query.length > 2 ){
         if ( this.searchTimeout ) clearTimeout(this.searchTimeout);
         this.searchTimeout = setTimeout(() => {
@@ -88,6 +90,22 @@ export default class UcdlibEmployeeSearchBasic extends Mixin(LitElement)
   
       if ( p.has('results') || p.has('totalResults') ) {
         this.resultCtNotShown = this.totalResults - this.results.length;
+      }
+
+      if (p.has('selectedValue') && this.selectedValue !== this.selectedObject.user_id && this.selectedValue.length > 0) {
+        try {
+          let iamobject = await this.EmployeeModel.getIamRecordById(this.selectedValue);
+          if (iamobject.payload.total) { // if multiple results are returned
+            this.noIam = true;
+          }
+          else {
+            this.selectedObject = iamobject.payload;
+            this.selectedText = `${iamobject.payload.first_name} ${iamobject.payload.last_name}`;
+          }          
+        }
+        catch (e) {
+          this.noIam = true;
+        }
       }
   
       this._setStatus(p);
@@ -101,21 +119,6 @@ export default class UcdlibEmployeeSearchBasic extends Mixin(LitElement)
     createRenderRoot() {
       return this;
     }
-
-    /**
-     * @description Listens for changes in the selectedValue property. If the property changes, the selectedObject is updated.
-    */
-    async shouldUpdate(changedProperties) {
-      if (changedProperties.has('selectedValue')) {
-        try {
-          let iamobject = await this.EmployeeModel.getIamRecordById(this.selectedValue);
-          this.selectedObject = iamobject.payload;
-        }
-        catch (e) {
-          this.error = true;
-        }
-      }
-    }
   
     /**
      * @description Searches for employees by name. Fires when query property changes.
@@ -125,6 +128,7 @@ export default class UcdlibEmployeeSearchBasic extends Mixin(LitElement)
       this.noResults = false;
       this.selectedText = '';
       this.selectedObject = {};
+      this.selectedValue = '';
       if ( !this.query ) {
         this.results = [];
         this.totalResults = 0;
@@ -167,6 +171,12 @@ export default class UcdlibEmployeeSearchBasic extends Mixin(LitElement)
           detail: detail
         }));
       }
+      if (this.noIam) {
+        this.status = 'no-iam';
+        this.dispatchEvent(new CustomEvent('status-change', {
+          detail: detail
+        }));
+      }
   
     }
   
@@ -185,7 +195,6 @@ export default class UcdlibEmployeeSearchBasic extends Mixin(LitElement)
      * @param {Object} result - an Employee object from the database
      */
     async _onSelect(result){
-      this.selectedText = `${result.first_name} ${result.last_name}`;
       this.selectedValue = result.user_id;
     }
   

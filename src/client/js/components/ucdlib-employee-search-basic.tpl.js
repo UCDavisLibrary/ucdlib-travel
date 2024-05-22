@@ -25,7 +25,7 @@ return html`
             <i class="fas fa-exclamation double-decker"></i>
           </div>
           <div ?hidden=${this.status != 'selected'}>
-            <i class="fas fa-solid fa-user"></i>
+            <i class="emp-search-icon"></i>
           </div>
         </div>
     </div>
@@ -46,6 +46,7 @@ return html`
   </div>
 </div>
 <div class='brand-textbox u-space-mt--small' ?hidden=${this.status != 'no-results' || !this.isFocused }>No results matched your search!</div>
+<div class='brand-textbox u-space-mt--small' ?hidden=${this.status != 'no-iam' || !this.isFocused }>Employee is not in Library directory system!</div>
 </div>
 `;}
 
