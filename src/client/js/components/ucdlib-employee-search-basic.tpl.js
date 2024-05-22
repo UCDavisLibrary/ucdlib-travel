@@ -46,7 +46,7 @@ return html`
   </div>
 </div>
 <div class='brand-textbox u-space-mt--small' ?hidden=${this.status != 'no-results' || !this.isFocused }>No results matched your search!</div>
-<div class='brand-textbox u-space-mt--small' ?hidden=${this.status != 'no-iam' || !this.isFocused }>Employee is not in Library directory system!</div>
+<div class='brand-textbox u-space-mt--small' ?hidden=${this.status != 'no-iam'}>Employee is not in Library directory system!</div>
 </div>
 `;}
 

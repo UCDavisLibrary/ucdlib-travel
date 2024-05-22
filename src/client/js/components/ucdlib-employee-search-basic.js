@@ -16,6 +16,7 @@ import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-el
  * @param {Number} resultCtNotShown - difference of payload.total and payload.data.length. Checks that all results are shown.
  * @param {Boolean} noResults - total number of pages of search results. true is payload.data.length is 0
  * @param {Boolean} error - true if component state is 'error'
+ * @param {Boolean} userFetchError - true if user fetch error on request to getIamRecordById
  * @param {String} status - status of input component. 'idle', 'searching', 'no-results', 'selected' bound to setStatus method
  * @param {Boolean} isSearching - text is entered into the search input field and searching for results
  * @param {Boolean} showDropdown - component initialization status. True if search results are shown and more than three charecters are entered into the search input field
@@ -39,8 +40,8 @@ export default class UcdlibEmployeeSearchBasic extends Mixin(LitElement)
       totalResults: {state: true},
       resultCtNotShown: {state: true},
       noResults: {state: true},
-      noIam: {state: true},
       error: {state: true},
+      userFetchError: {state: true},
       status: {state: true},
       isSearching: {state: true},
       showDropdown: {state: true},
@@ -59,6 +60,7 @@ export default class UcdlibEmployeeSearchBasic extends Mixin(LitElement)
     this.totalResults = 0;
     this.resultCtNotShown = 0;
     this.error = false;
+    this.userFetchError = false;
     this.labelText = 'Search for a UC Davis Library Employee';
     this.hideLabel = false;
     this.status = 'idle';
@@ -66,7 +68,6 @@ export default class UcdlibEmployeeSearchBasic extends Mixin(LitElement)
     this.showDropdown = false;
     this.isFocused = false;
     this.noResults = false;
-    this.noIam = false;
     this.selectedText = '';
     this.selectedObject = {};
     this.iamresult = {};
@@ -95,8 +96,9 @@ export default class UcdlibEmployeeSearchBasic extends Mixin(LitElement)
       if (p.has('selectedValue') && this.selectedValue !== this.selectedObject.user_id && this.selectedValue.length > 0) {
         try {
           let iamobject = await this.EmployeeModel.getIamRecordById(this.selectedValue);
-          if (iamobject.payload.total) { // if multiple results are returned
-            this.noIam = true;
+          if (iamobject.error) {
+            this.userFetchError = true;
+            this.status = 'no-iam';
           }
           else {
             this.selectedObject = iamobject.payload;
@@ -104,7 +106,8 @@ export default class UcdlibEmployeeSearchBasic extends Mixin(LitElement)
           }          
         }
         catch (e) {
-          this.noIam = true;
+          this.userFetchError = true;
+          this.status = 'no-iam';
         }
       }
   
@@ -167,12 +170,6 @@ export default class UcdlibEmployeeSearchBasic extends Mixin(LitElement)
         }
         this.status = status;
 
-        this.dispatchEvent(new CustomEvent('status-change', {
-          detail: detail
-        }));
-      }
-      if (this.noIam) {
-        this.status = 'no-iam';
         this.dispatchEvent(new CustomEvent('status-change', {
           detail: detail
         }));
