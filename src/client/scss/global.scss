@@ -17,6 +17,27 @@
   font-weight: 700;
 }
 
+.skinny-form {
+  padding: 1rem .5rem;
+  border: 1px solid #ffbf00;
+}
+@media (min-width: 768px) {
+  .skinny-form {
+    padding: 2rem 1rem;
+    width: 70%;
+    margin: 0 auto;
+  }
+}
+@media (min-width: 992px) {
+  .l-basic--flipped .skinny-form {
+    width: 90%;
+  }
+}
+@media (min-width: 1200px) {
+  .skinny-form {
+    width: 70%;
+  }
+}
 
 .flex {
   display: flex;
@@ -55,6 +76,17 @@ fieldset.field-error {
   font-size: .875rem;
   color: #13639e;
 }
+.radio .option-description, .checkbox .option-description {
+  padding-left: 2.5rem;
+  font-weight: 400;
+  font-size: .875rem;
+  margin-bottom: .5rem;
+}
+.field-container {
+  margin-bottom: 1rem !important;
+}
+
+
 .pad-icon-top {
   padding-top: .3rem;
 }

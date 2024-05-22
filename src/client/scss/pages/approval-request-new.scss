@@ -1,0 +1,11 @@
+app-page-approval-request-new {
+  .approval-request-form {
+    --l-gap-override: 1rem;
+
+    @media (max-width: 991px) {
+      .l-2col > :where(* + *) {
+        margin-top: 1rem;
+      }
+    }
+  }
+}
