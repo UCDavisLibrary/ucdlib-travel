@@ -7,6 +7,9 @@
 @use './pages//admin/line-items.scss' as adminLineItems;
 @use './pages/admin/allocations.scss' as adminAllocations;
 
+// pages
+@use './pages/approval-request-new.scss' as approvalRequestNew;
+
 // components
 @use './components/dialog-modal.scss' as dialogModal;
 @use './components/employee-search-advanced.scss' as employeeSearchAdvanced;
