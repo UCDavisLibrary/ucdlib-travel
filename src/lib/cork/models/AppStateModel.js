@@ -175,7 +175,7 @@ class AppStateModelImpl extends AppStateModel {
    * @description Show dismissable toast banner in popup. Will disappear on next app-state-update event
    * @param {Object} options Toast object with the following properties:
    * - message {String} - The message to display
-   * - type {String} - The type of toast. Options: 'information', 'error', 'success'
+   * - type {String} - The type of toast. Options: 'info', 'error', 'success'
    */
   showToast(option){
     if ( Array.isArray(option) ) return;

@@ -93,9 +93,29 @@ class Pg {
     let sql = '';
     const values = [];
     if ( queryObject && typeof queryObject === 'object' ){
-      for (const [i, k] of (Object.keys(queryObject)).entries()) {
-        values.push(queryObject[k]);
-        sql += `${i > 0 ? sep : ''}${k}=$${i+1}`;
+      let i = 0;
+      for (const k of Object.keys(queryObject)) {
+        // make an IN clause if the value is an array
+        if ( Array.isArray(queryObject[k]) ){
+          const inClause = queryObject[k].map((v, j) => `$${i + j + 1}`).join(', ');
+          values.push(...queryObject[k]);
+          sql += `${i > 0 ? sep : ''}${k} IN (${inClause})`;
+          i += queryObject[k].length;
+
+        // if the value is an object with an operator key, use that operator
+        } else if ( typeof queryObject[k] === 'object' && queryObject[k].operator ){
+          const operator = queryObject[k].operator;
+          const value = queryObject[k].value;
+          values.push(value);
+          sql += `${i > 0 ? sep : ''}${k} ${operator} $${i+1}`;
+          i++;
+
+        // else make an equals clause
+        } else {
+          values.push(queryObject[k]);
+          sql += `${i > 0 ? sep : ''}${k}=$${i+1}`;
+          i++;
+        }
       }
     }
     return {sql, values};
