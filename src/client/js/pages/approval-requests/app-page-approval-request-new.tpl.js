@@ -28,7 +28,7 @@ export function renderForm(){
   const page = 'app-page-approval-request-new';
 
   return html`
-    <form class='skinny-form'>
+    <form class='skinny-form approval-request-form'>
       <div class="field-container ${this.validationHandler.errorClass('label')}">
         <label for="${page}--label">Title of Trip, Training, or Professional Development Opportunity <abbr title="Required">*</abbr></label>
         <input
@@ -39,6 +39,7 @@ export function renderForm(){
           >
           <div>${this.validationHandler.renderErrorMessages('label')}</div>
       </div>
+
       <div class="field-container ${this.validationHandler.errorClass('organization')}">
         <label for="${page}--organization">Organization <abbr title="Required">*</abbr></label>
         <input
@@ -49,15 +50,18 @@ export function renderForm(){
           >
           <div>${this.validationHandler.renderErrorMessages('organization')}</div>
       </div>
+
       <div class="field-container ${this.validationHandler.errorClass('businessPurpose')}">
         <label for="${page}--businessPurpose">Business Purpose <abbr title="Required">*</abbr></label>
         <textarea
           id="${page}--businessPurpose"
           rows="5"
+          .value=${this.approvalRequest.businessPurpose || ''}
           @input=${e => this._onFormInput('businessPurpose', e.target.value)}
-          >${this.approvalRequest.businessPurpose || ''}</textarea>
+          ></textarea>
           <div>${this.validationHandler.renderErrorMessages('businessPurpose')}</div>
       </div>
+
       <div class="field-container ${this.validationHandler.errorClass('location')}">
         <label>Location <abbr title="Required">*</abbr></label>
         <div class='radio'>
@@ -115,6 +119,101 @@ export function renderForm(){
           </div>
         </div>
         <div>${this.validationHandler.renderErrorMessages('location')}</div>
+      </div>
+
+      <fieldset>
+        <legend>Dates *</legend>
+        <div class='l-2col'>
+          <div class='l-first'>
+            <div class="field-container ${this.validationHandler.errorClass('programStartDate')}">
+              <label for="${page}--programStartDate">Program Start *</label>
+              <input
+                id="${page}--programStartDate"
+                type="date"
+                .value=${this.approvalRequest.programStartDate || ''}
+                @input=${e => this._onFormInput('programStartDate', e.target.value)}
+                >
+                <div>${this.validationHandler.renderErrorMessages('programStartDate')}</div>
+            </div>
+          </div>
+          <div class='l-second'>
+            <div class="field-container ${this.validationHandler.errorClass('programEndDate')}">
+              <label for="${page}--programEndDate">Program End</label>
+              <input
+                id="${page}--programEndDate"
+                type="date"
+                .value=${this.approvalRequest.programEndDate || ''}
+                @input=${e => this._onFormInput('programEndDate', e.target.value)}
+                >
+                <div>${this.validationHandler.renderErrorMessages('programEndDate')}</div>
+            </div>
+          </div>
+        </div>
+        <div class='field-container ${this.validationHandler.errorClass('travelRequired')}'>
+          <div class='checkbox'>
+            <div>
+              <input
+                id="${page}--travelRequired"
+                type="checkbox"
+                .checked=${this.approvalRequest.travelRequired}
+                @change=${e => this._onFormInput('travelRequired', e.target.checked)}
+                >
+              <label for="${page}--travelRequired">Travel Required</label>
+            </div>
+            <div class='option-description'>${unsafeHTML(this.SettingsModel.getByKey('approval_request_form_travel-required'))}</div>
+            <div>${this.validationHandler.renderErrorMessages('travelRequired')}</div>
+          </div>
+        </div>
+        <div class='field-container ${this.validationHandler.errorClass('hasCustomTravelDates')}' ?hidden=${!this.approvalRequest.travelRequired}>
+          <div class='checkbox'>
+            <div>
+              <input
+                id="${page}--hasCustomTravelDates"
+                type="checkbox"
+                .checked=${this.approvalRequest.hasCustomTravelDates}
+                @change=${e => this._onFormInput('hasCustomTravelDates', e.target.checked)}
+                >
+              <label for="${page}--hasCustomTravelDates">Custom Travel Dates</label>
+            </div>
+            <div class='option-description'>${unsafeHTML(this.SettingsModel.getByKey('approval_request_form_custom_travel'))}</div>
+            <div>${this.validationHandler.renderErrorMessages('hasCustomTravelDates')}</div>
+          </div>
+        </div>
+        <div class='l-2col' ?hidden=${!this.approvalRequest.travelRequired || !this.approvalRequest.hasCustomTravelDates}>
+          <div class='l-first'>
+            <div class='field-container ${this.validationHandler.errorClass('travelStartDate')}'>
+              <label for='${page}--travelStartDate'>Travel Start *</label>
+              <input
+                id="${page}--travelStartDate"
+                type='date'
+                .value=${this.approvalRequest.travelStartDate || ''}
+                @change=${e => this._onFormInput('travelStartDate', e.target.value)}
+              >
+              ${this.validationHandler.renderErrorMessages('travelStartDate')}
+            </div>
+          </div>
+          <div class='l-second'>
+            <div class='field-container ${this.validationHandler.errorClass('travelEndDate')}'>
+              <label for='${page}--travelEndDate'>Travel End</label>
+              <input
+                id="${page}--travelEndDate"
+                type='date'
+                .value=${this.approvalRequest.travelEndDate || ''}
+                @change=${e => this._onFormInput('travelEndDate', e.target.value)}
+              >
+              ${this.validationHandler.renderErrorMessages('travelEndDate')}
+            </div>
+          </div>
+        </div>
+      </fieldset>
+
+      <div class='form-buttons'>
+        <button
+          type="submit"
+          class='btn btn--primary'
+          @click=${this._onSubmit}
+          ?disabled=${this.userCantSubmit}
+          >Review and Submit</button>
       </div>
     </form>
   `;

@@ -91,7 +91,28 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
 
   async _onSubmit(e){
     e.preventDefault();
-    console.log('submit');
+    const ar = this.approvalRequest
+
+
+    // set conditional request dates
+    if ( ar.programStartDate && !ar.programEndDate ) {
+      ar.programEndDate = ar.programStartDate;
+    }
+    if ( ar.travelRequired){
+      if ( ar.hasCustomTravelDates ){
+        if ( ar.travelStartDate && !ar.travelEndDate ) {
+          ar.travelEndDate = ar.travelStartDate;
+        }
+      } else {
+        ar.travelStartDate = ar.programStartDate;
+        ar.travelEndDate = ar.programEndDate
+      }
+    } else {
+      delete ar.travelStartDate;
+      delete ar.travelEndDate
+    }
+
+    console.log('submit', this.approvalRequest);
   }
 
   /**
