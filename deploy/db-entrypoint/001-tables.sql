@@ -104,20 +104,21 @@ CREATE TABLE approval_request (
     is_current BOOLEAN NOT NULL DEFAULT TRUE,
     approval_status VARCHAR(100) NOT NULL,
     reimbursement_status VARCHAR(100) NOT NULL,
-    employee VARCHAR(100) REFERENCES employee(kerberos),
-    name VARCHAR(100) NOT NULL,
-    organization VARCHAR(100) NOT NULL,
-    business_purpose VARCHAR(500) NOT NULL,
-    location VARCHAR(100) NOT NULL,
+    employee_kerberos VARCHAR(100) REFERENCES employee(kerberos),
+    label VARCHAR(100),
+    organization VARCHAR(100),
+    business_purpose VARCHAR(500),
+    location VARCHAR(100),
     location_details VARCHAR(100),
-    program_start_date DATE NOT NULL,
-    program_end_date DATE NOT NULL,
+    program_start_date DATE,
+    program_end_date DATE,
     travel_required BOOLEAN NOT NULL DEFAULT FALSE,
     has_custom_travel_dates BOOLEAN NOT NULL DEFAULT FALSE,
     travel_start_date DATE,
     travel_end_date DATE,
     comments VARCHAR(500),
-    submitted timestamp DEFAULT NOW()
+    no_expenditures BOOLEAN NOT NULL DEFAULT FALSE,
+    submitted_at timestamp DEFAULT NOW()
 );
 COMMENT ON TABLE approval_request IS 'Table for storing travel approval requests.';
 COMMENT ON COLUMN approval_request.is_current IS 'Whether or not this is the current revision of the request.';
@@ -127,6 +128,7 @@ CREATE TABLE approval_request_funding_source (
     approval_request_revision_id INTEGER REFERENCES approval_request(approval_request_revision_id),
     funding_source_id INTEGER REFERENCES funding_source(funding_source_id),
     amount NUMERIC NOT NULL,
+    description VARCHAR(500),
     accounting_code VARCHAR(100)
 );
 COMMENT ON TABLE approval_request_funding_source IS 'Mapping table for travel approval requests and funding source amounts.';
