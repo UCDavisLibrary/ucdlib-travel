@@ -34,6 +34,22 @@ class ApprovalRequestModel extends BaseModel {
 
   }
 
+  /**
+   * @description Delete an approval request by id - must have always been in a draft state
+   * @param {String} approvalRequestId - id of approval request to delete
+   */
+  async delete(approvalRequestId) {
+    let timestamp = Date.now();
+    try {
+      await this.service.delete(approvalRequestId, timestamp);
+    } catch(e) {}
+    const state = this.store.data.deleted[timestamp];
+    if ( state && state.state === 'loaded' ) {
+      this.store.data.fetched = {};
+    }
+    return state;
+  }
+
 }
 
 const model = new ApprovalRequestModel();

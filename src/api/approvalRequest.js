@@ -85,4 +85,25 @@ export default (api) => {
     res.json(result);
   });
 
+  api.delete('/approval-request/:id', protect('hasBasicAccess'), async (req, res) => {
+
+    // try to delete draft
+    const result = await approvalRequest.deleteDraft(req.params.id, req.auth.token.id);
+
+    // handle errors
+    if ( result.error && result.is400 ) {
+      return res.status(400).json(result);
+    }
+    if ( result.error && result.is403 ) {
+      return apiUtils.do403(res);
+    }
+    if ( result.error ) {
+      console.error('Error in DELETE /approval-request/:id', result.error);
+      return res.status(500).json({error: true, message: 'Error deleting approval request.'});
+    }
+
+    res.json(result);
+
+  });
+
 };

@@ -18,6 +18,18 @@ class ApprovalRequestService extends BaseService {
     });
   }
 
+  delete(id, timestamp ){
+    return this.request({
+      url : `/api/approval-request/${id}`,
+      fetchOptions : {
+        method : 'DELETE'
+      },
+      onLoading : request => this.store.approvalRequestDeletedLoading(request, timestamp),
+      onLoad : result => this.store.approvalRequestDeletedLoaded(result.body, timestamp),
+      onError : e => this.store.approvalRequestDeletedError(e, timestamp)
+    });
+  }
+
 }
 
 const service = new ApprovalRequestService();
