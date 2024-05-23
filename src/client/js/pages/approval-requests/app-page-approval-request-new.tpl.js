@@ -207,13 +207,20 @@ export function renderForm(){
         </div>
       </fieldset>
 
-      <div class='form-buttons'>
+      <div class='form-buttons alignable-promo__buttons'>
         <button
           type="submit"
           class='btn btn--primary'
           @click=${this._onSubmit}
           ?disabled=${this.userCantSubmit}
           >Review and Submit</button>
+        <button
+          type="button"
+          ?hidden=${!this.canBeDeleted}
+          ?disabled=${this.userCantSubmit}
+          class='btn btn--primary category-brand--double-decker'
+          @click=${this._onDeleteButtonClick}
+          >Delete Draft</button>
       </div>
     </form>
   `;

@@ -14,6 +14,7 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
       approvalFormId: {type: Number},
       approvalRequest: {type: Object},
       userCantSubmit: {type: Boolean},
+      canBeDeleted: {type: Boolean},
     }
   }
 
@@ -33,9 +34,15 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
    */
   willUpdate(props){
     if ( props.has('approvalRequest') ){
+      this._setUserCantSubmit();
+    }
+  }
 
-      // set userCantSubmit property, which is used to determine if the form can be submitted
-      // server side validation will also check this
+  /**
+   * @description Sets the userCantSubmit property based on the current approval request
+   * Used to determine if the form can be submitted, but server side validation will also check this
+   */
+  _setUserCantSubmit(){
       let userCantSubmit = false;
       if ( this.approvalRequest.employeeKerberos && this.approvalRequest.employeeKerberos !== this.AuthModel.getToken().id ){
         userCantSubmit = true;
@@ -43,7 +50,6 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
         userCantSubmit = true;
       }
       this.userCantSubmit = userCantSubmit;
-    }
   }
 
   /**
@@ -155,6 +161,7 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
       return;
     }
 
+    this.canBeDeleted = e.payload.data.find(r => r.approvalStatus !== 'draft') ? false : true;
     this.validationHandler = new ValidationHandler();
     this.approvalRequest = { ...currentInstance };
 
@@ -169,7 +176,47 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
       approvalStatus: 'draft'
     };
     this.validationHandler = new ValidationHandler();
+    this.canBeDeleted = false;
     this.requestUpdate();
+  }
+
+  _onDeleteButtonClick(){
+    if ( !this.canBeDeleted || this.userCantSubmit ) return;
+    this.AppStateModel.showDialogModal({
+      title : 'Delete Approval Request',
+      content : 'Are you sure you want to delete this approval request? This action cannot be undone.',
+      actions : [
+        {text: 'Delete', value: 'delete-approval-request', color: 'double-decker'},
+        {text: 'Cancel', value: 'cancel', invert: true, color: 'primary'}
+      ],
+      data : {approvalRequestId: this.approvalRequest.approvalRequestId}
+    });
+  }
+
+  /**
+   * @description Callback for dialog-action AppStateModel event
+   * @param {Object} e - AppStateModel dialog-action event
+   * @returns
+  */
+  _onDialogAction(e){
+    if ( e.action !== 'delete-approval-request' ) return;
+    this.ApprovalRequestModel.delete(e.data.approvalRequestId);
+  }
+
+  _onApprovalRequestDeleted(e){
+    if ( e.state === 'loading' ){
+      this.AppStateModel.showLoading();
+      return;
+    }
+
+    if ( e.state === 'loaded' ){
+      this.AppStateModel.setLocation(this.AppStateModel.store.breadcrumbs['approval-requests'].link);
+      this.AppStateModel.showToast({message: 'Approval request deleted.', type: 'success'});
+      return;
+    }
+
+    this.AppStateModel.showLoaded(this.id);
+    this.AppStateModel.showToast({message: 'Error deleting approval request.', type: 'error'});
   }
 
   /**
