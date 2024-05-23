@@ -15,6 +15,7 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
       approvalRequest: {type: Object},
       userCantSubmit: {type: Boolean},
       canBeDeleted: {type: Boolean},
+      canBeSaved: {type: Boolean}
     }
   }
 
@@ -35,6 +36,7 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
   willUpdate(props){
     if ( props.has('approvalRequest') ){
       this._setUserCantSubmit();
+      this.canBeSaved = ['draft', 'revision-requested'].includes(this.approvalRequest.approvalStatus);
     }
   }
 
@@ -180,6 +182,15 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
     this.requestUpdate();
   }
 
+  _onSaveButtonClick(){
+    if ( this.userCantSubmit || !this.canBeSaved ) return;
+    //this._onSubmit({preventDefault: () => {}});
+  }
+
+  /**
+   * @description Bound to delete button click event
+   * Calls confirmation dialog to delete the approval request
+   */
   _onDeleteButtonClick(){
     if ( !this.canBeDeleted || this.userCantSubmit ) return;
     this.AppStateModel.showDialogModal({
@@ -203,6 +214,11 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
     this.ApprovalRequestModel.delete(e.data.approvalRequestId);
   }
 
+  /**
+   * @description Bound to ApprovalRequestModel approval-request-deleted event
+   * @param {Object} e - ApprovalRequestModel approval-request-deleted event
+   * @returns
+   */
   _onApprovalRequestDeleted(e){
     if ( e.state === 'loading' ){
       this.AppStateModel.showLoading();

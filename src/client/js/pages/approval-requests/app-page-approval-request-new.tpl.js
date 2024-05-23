@@ -216,6 +216,13 @@ export function renderForm(){
           >Review and Submit</button>
         <button
           type="button"
+          ?hidden=${!this.canBeSaved}
+          ?disabled=${this.userCantSubmit}
+          class='btn btn--invert category-brand--secondary'
+          @click=${this._onSaveButtonClick}
+          >Save</button>
+        <button
+          type="button"
           ?hidden=${!this.canBeDeleted}
           ?disabled=${this.userCantSubmit}
           class='btn btn--primary category-brand--double-decker'
