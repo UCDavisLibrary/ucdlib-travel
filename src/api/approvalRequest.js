@@ -5,6 +5,7 @@ import protect from "../lib/protect.js";
 import IamEmployeeObjectAccessor from "../lib/utils/iamEmployeeObjectAccessor.js";
 import urlUtils from "../lib/utils/urlUtils.js";
 import apiUtils from "../lib/utils/apiUtils.js";
+import typeTransform from "../lib/utils/typeTransform.js";
 
 export default (api) => {
 
@@ -51,16 +52,26 @@ export default (api) => {
 
   api.post('/approval-request', protect('hasBasicAccess'), async (req, res) => {
     const data = req.body || {};
+    const kerberos = req.auth.token.id;
 
-    /**
-     * TODO: authorize user and ensure they have permission
-     * 1.Check if is revision of existing request
-     *   a. if they are not the employee_kerberos, return 403 error
-     *   b. if existing request does not have a status of 'draft', return 400 error
-     */
+    // check if this is a revision of an existing request and if so, ensure user is authorized
+    if ( data.approvalRequestId ) {
+      const approvalRequestId = typeTransform.toPositiveInt(data.approvalRequestId);
+      if ( !approvalRequestId ) {
+        return res.status(400).json({error: true, message: 'Invalid approvalRequestId.'});
+      }
+      const existingRequest = await approvalRequest.get({requestIds: [approvalRequestId]});
+      if ( existingRequest.error ) {
+        console.error('Error in POST /approval-request', existingRequest.error);
+        return res.status(500).json({error: true, message: 'Error creating approval request.'});
+      }
+      const existingKerberos = (existingRequest.data.find(r => r.isCurrent) || {}).employeeKerberos;
+      if ( existingKerberos !== kerberos ) {
+        return apiUtils.do403(res);
+      }
+    }
 
     // get full employee object (with department) for logged in user
-    const kerberos = req.auth.token.id;
     let employeeObj = await employee.getIamRecordById(kerberos);
     if ( employeeObj.error ) {
       console.error('Error getting employee object in POST /approval-request', employeeObj.error);
