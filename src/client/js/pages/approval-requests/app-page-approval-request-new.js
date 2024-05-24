@@ -17,6 +17,7 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
       canBeDeleted: {type: Boolean},
       canBeSaved: {type: Boolean},
       isSave: {type: Boolean},
+      expenditureOptions: {type: Array}
     }
   }
 
@@ -26,8 +27,13 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
 
     this.approvalFormId = 0;
     this.settingsCategory = 'approval-requests';
+    this.expenditureOptions = [];
 
-    this._injectModel('AppStateModel', 'SettingsModel', 'ApprovalRequestModel', 'AuthModel');
+    this._injectModel(
+      'AppStateModel', 'SettingsModel', 'ApprovalRequestModel',
+      'AuthModel', 'LineItemsModel'
+    );
+
     this.resetForm();
   }
 
@@ -89,13 +95,20 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
    * @description Get all data required for rendering this page
    */
   async getPageData(){
-    const promises = [];
-    promises.push(this.SettingsModel.getByCategory(this.settingsCategory));
+    const promises = [
+      this.SettingsModel.getByCategory(this.settingsCategory),
+      this.LineItemsModel.getActiveLineItems()
+    ];
     if ( this.approvalFormId ) {
       promises.push(this.ApprovalRequestModel.query({requestIds: this.approvalFormId}));
     }
     const resolvedPromises = await Promise.allSettled(promises);
     return resolvedPromises;
+  }
+
+  _onActiveLineItemsFetched(e){
+    if ( e.state !== 'loaded' ) return;
+    this.expenditureOptions = e.payload;
   }
 
   async _onSubmit(e){
@@ -180,7 +193,8 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
    */
   resetForm(){
     this.approvalRequest = {
-      approvalStatus: 'draft'
+      approvalStatus: 'draft',
+      expenditures: []
     };
     this.validationHandler = new ValidationHandler();
     this.canBeDeleted = false;
@@ -280,6 +294,7 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
     }
 
     if ( e.state === 'loaded' ){
+      this.resetForm();
       this.AppStateModel.setLocation(this.AppStateModel.store.breadcrumbs['approval-requests'].link);
       this.AppStateModel.showToast({message: 'Approval request deleted.', type: 'success'});
       return;

@@ -207,6 +207,33 @@ export function renderForm(){
         </div>
       </fieldset>
 
+      <fieldset>
+        <legend>Estimated Expenses</legend>
+        <div class='field-container ${this.validationHandler.errorClass('noExpenditures')}'>
+          <div class='checkbox'>
+            <div>
+              <input
+                id="${page}--noExpenditures"
+                type="checkbox"
+                .checked=${this.approvalRequest.noExpenditures}
+                @change=${e => this._onFormInput('noExpenditures', e.target.checked)}
+                >
+              <label for="${page}--noExpenditures">There are no expenses associated with this request</label>
+            </div>
+            <div>${this.validationHandler.renderErrorMessages('noExpenditures')}</div>
+          </div>
+        </div>
+
+        <div ?hidden=${this.approvalRequest.noExpenditures}>
+          <div class='field-container ${this.validationHandler.errorClass('expenditures')}'>
+            <label>Itemized Estimated Expenses</label>
+            <div class='expenditures'>
+              ${this.expenditureOptions.map(expenditure => renderExpenditureItem.call(this, expenditure))}
+            </div>
+          </div>
+        </div>
+      </fieldset>
+
       <div class='form-buttons alignable-promo__buttons'>
         <button
           type="submit"
@@ -230,5 +257,22 @@ export function renderForm(){
           >Delete Draft</button>
       </div>
     </form>
+  `;
+}
+
+/**
+ * @description Render a single expenditure item
+ * @param {*} expenditure
+ * @returns
+ */
+function renderExpenditureItem(expenditure){
+  return html`
+    <div class='expenditure-item'>
+      <div class='text'>
+        <div class='primary'>${expenditure.label}</div>
+        <div class='small'>${unsafeHTML(expenditure.description)}</div>
+      </div>
+      <div class='amount'></div>
+    </div>
   `;
 }
