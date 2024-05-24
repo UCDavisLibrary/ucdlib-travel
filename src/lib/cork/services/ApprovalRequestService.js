@@ -30,6 +30,20 @@ class ApprovalRequestService extends BaseService {
     });
   }
 
+  create(payload, timestamp) {
+    return this.request({
+      url : '/api/approval-request',
+      fetchOptions : {
+        method : 'POST',
+        body : payload
+      },
+      json: true,
+      onLoading : request => this.store.approvalRequestCreatedLoading(request, timestamp),
+      onLoad : result => this.store.approvalRequestCreatedLoaded(result.body, timestamp),
+      onError : e => this.store.approvalRequestCreatedError(e, timestamp)
+    });
+  }
+
 }
 
 const service = new ApprovalRequestService();

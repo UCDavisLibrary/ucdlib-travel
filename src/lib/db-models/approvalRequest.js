@@ -339,9 +339,10 @@ class ApprovalRequest {
    * @param {Object} data - the approval request revision data - see entityFields for expected fields (json names)
    * @param {Object} submittedBy - the employee object of the employee submitting the request
    *  - if data.employeeKerberos is not set, this object will be used to set the employeeKerberos field
+   * @param {Boolean} forceValidation - whether to force validation even if not required (aka for a draft revision)
    * @returns {Object}
    */
-  async createRevision(data, submittedBy){
+  async createRevision(data, submittedBy, forceValidation){
 
     // if submittedBy is provided, assign approval request revision to that employee
     if ( submittedBy ){
@@ -357,10 +358,12 @@ class ApprovalRequest {
     delete data.submitted_at
 
     // do validation
+    if ( forceValidation ) data.forceValidation = true;
     const validation = await this.entityFields.validate(data, ['employee_allocation_id']);
     if ( !validation.valid ) {
       return {error: true, message: 'Validation Error', is400: true, fieldsWithErrors: validation.fieldsWithErrors};
     }
+    delete data.forceValidation;
 
     // extract employee object from data
     const employee = data.employee_kerberos ? {kerberos: data.employee.kerberos} : data.employee;
@@ -430,7 +433,12 @@ class ApprovalRequest {
 
     if ( out.error ) return out;
 
+    // get and return full record that was just created
     out = await this.get({revisionIds: [approvalRequestRevisionId]});
+    if ( out.error ) {
+      return out;
+    }
+    out = out.data[0];
 
     return out;
 
