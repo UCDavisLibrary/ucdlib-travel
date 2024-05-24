@@ -78,6 +78,7 @@ export default (api) => {
       return res.status(500).json({error: true, message: 'Error creating approval request.'});
     }
     employeeObj = (new IamEmployeeObjectAccessor(employeeObj.res)).travelAppObject;
+    delete data.employeeKerberos;
 
     // set status fields
     data.approvalStatus = data.approvalStatus === 'draft' ? 'draft' : 'submitted';

@@ -161,7 +161,6 @@ export default class AppPageAdminAllocationsNew extends Mixin(LitElement)
     } else if ( e.state === 'loading') {
       this.AppStateModel.showLoading();
     } else if ( e.state === 'loaded' ) {
-      this.AppStateModel.showLoaded(this.id);
       this.AppStateModel.setLocation(this.AppStateModel.store.breadcrumbs['admin-allocations'].link);
       this.AppStateModel.showToast({message: 'Employee allocations created successfully', type: 'success'});
       this.resetForm();

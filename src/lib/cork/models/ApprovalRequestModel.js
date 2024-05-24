@@ -50,6 +50,24 @@ class ApprovalRequestModel extends BaseModel {
     return state;
   }
 
+  /**
+   * @description Create a new approval request for the submitting user.
+   * Can be a revision of a previously submitted request or a new request.
+   * @param {Object} payload - See db model EntityFields property for expected payload
+   * @returns
+   */
+  async create(payload) {
+    let timestamp = Date.now();
+    try {
+      await this.service.create(payload, timestamp);
+    } catch(e) {}
+    const state = this.store.data.created[timestamp];
+    if ( state && state.state === 'loaded' ) {
+      this.store.data.fetched = {};
+    }
+    return state;
+  }
+
 }
 
 const model = new ApprovalRequestModel();

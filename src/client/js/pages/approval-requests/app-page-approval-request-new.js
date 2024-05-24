@@ -15,7 +15,8 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
       approvalRequest: {type: Object},
       userCantSubmit: {type: Boolean},
       canBeDeleted: {type: Boolean},
-      canBeSaved: {type: Boolean}
+      canBeSaved: {type: Boolean},
+      isSave: {type: Boolean},
     }
   }
 
@@ -99,7 +100,11 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
 
   async _onSubmit(e){
     e.preventDefault();
+    this.isSave = false;
     const ar = this.approvalRequest
+
+    ar.approvalStatus = 'draft';
+    // todo: ensure to set forceValidation flag on request
 
 
     // set conditional request dates
@@ -182,9 +187,58 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
     this.requestUpdate();
   }
 
+  /**
+   * @description Bound to save button click event
+   * No validations or payload transformation done when saving a draft.
+   */
   _onSaveButtonClick(){
     if ( this.userCantSubmit || !this.canBeSaved ) return;
-    //this._onSubmit({preventDefault: () => {}});
+    this.isSave = true;
+    this.approvalRequest.approvalStatus = 'draft';
+    this.ApprovalRequestModel.create(this.approvalRequest);
+  }
+
+  /**
+   * @description Callback for ApprovalRequestModel approval-request-created event
+   * Fires after a draft is saved or a new approval request is submitted
+   * @param {*} e
+   */
+  _onApprovalRequestCreated(e){
+    if ( e.state === 'error' ) {
+      this.isSave = false;
+      if ( e.error?.payload?.is400 ) {
+        this.validationHandler = new ValidationHandler(e);
+        this.requestUpdate();
+        this.AppStateModel.showToast({message: 'Error when submitting your approval request. Form data needs fixing.', type: 'error'});
+      } else {
+        this.AppStateModel.showToast({message: 'An unknown error occurred when submitting your approval request', type: 'error'});
+      }
+      this.AppStateModel.showLoaded(this.id);
+    } else if ( e.state === 'loading') {
+      this.AppStateModel.showLoading();
+    } else if ( e.state === 'loaded' ) {
+      const oldApprovalRequestId = this.approvalRequest.approvalRequestId;
+      const newApprovalRequestId = e.payload.approvalRequestId;
+      this.resetForm();
+
+      if ( this.isSave ) {
+
+        if ( oldApprovalRequestId ) {
+          this.AppStateModel.refresh();
+        } else {
+          const loc = `${this.AppStateModel.store.breadcrumbs[this.id].link}/${newApprovalRequestId}`
+          this.AppStateModel.setLocation(loc);
+        }
+        this.AppStateModel.showToast({message: 'Draft saved.', type: 'success'});
+
+        // submitted - send to confirmation page
+      } else {
+        const loc = `${this.AppStateModel.store.breadcrumbs['approval-request-confirm'].link}/${newApprovalRequestId}`;
+        this.AppStateModel.setLocation(loc);
+      }
+
+      this.isSave = false;
+    }
   }
 
   /**

@@ -7,7 +7,7 @@
 
 const defs = {
   "approval-requests": [
-    'approval-request', 'approval-request-new', 'approver', 'approval-requests'
+    'approval-request', 'approval-request-new', 'approver', 'approval-requests', 'approval-request-confirm'
   ],
   "admin": [
     'admin', 'admin-approvers', 'admin-settings',

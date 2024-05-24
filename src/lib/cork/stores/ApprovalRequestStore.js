@@ -7,13 +7,45 @@ class ApprovalRequestStore extends BaseStore {
 
     this.data = {
       fetched: {},
-      deleted: {}
+      deleted: {},
+      created: {}
+
     };
     this.events = {
       APPROVAL_REQUESTS_FETCHED: 'approval-requests-fetched',
       APPROVAL_REQUESTS_REQUESTED: 'approval-requests-requested',
-      APPROVAL_REQUEST_DELETED: 'approval-request-deleted'
+      APPROVAL_REQUEST_DELETED: 'approval-request-deleted',
+      APPROVAL_REQUEST_CREATED: 'approval-request-created'
     };
+  }
+
+  approvalRequestCreatedLoading(request, timestamp) {
+    this._setApprovalRequestCreatedState({
+      state : this.STATE.LOADING,
+      request,
+      timestamp
+    });
+  }
+
+  approvalRequestCreatedLoaded(payload, timestamp) {
+    this._setApprovalRequestCreatedState({
+      state : this.STATE.LOADED,
+      payload,
+      timestamp
+    });
+  }
+
+  approvalRequestCreatedError(error, timestamp) {
+    this._setApprovalRequestCreatedState({
+      state : this.STATE.ERROR,
+      error,
+      timestamp
+    });
+  }
+
+  _setApprovalRequestCreatedState(state) {
+    this.data.created[state.timestamp] = state;
+    this.emit(this.events.APPROVAL_REQUEST_CREATED, state);
   }
 
   approvalRequestDeletedLoading(request, timestamp) {

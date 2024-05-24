@@ -28,7 +28,7 @@ return html`
       <a href="/admin/line-items">Line Items</a>
     </ucd-theme-quick-links>
   </ucd-theme-header>
-  
+
   <section ?hidden=${!this.pageIsLoaded || !this.showPageTitle}>
     <h1 class="page-title">${this.pageTitle}</h1>
   </section>
@@ -57,6 +57,7 @@ return html`
     <app-page-approval-requests id='approval-requests'></app-page-approval-requests>
     <app-page-approval-request id='approval-request'></app-page-approval-request>
     <app-page-approval-request-new id='approval-request-new'></app-page-approval-request-new>
+    <app-page-approval-request-confirm id='approval-request-confirm'></app-page-approval-request-confirm>
   </ucdlib-pages>
   <app-toast></app-toast>
   <app-dialog-modal></app-dialog-modal>
