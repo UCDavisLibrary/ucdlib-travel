@@ -225,10 +225,27 @@ export function renderForm(){
         </div>
 
         <div ?hidden=${this.approvalRequest.noExpenditures}>
+
+          <div class='field-container'>
+            <label>Personal Car Mileage</label>
+            <input
+              type='number'
+              .value=${this.approvalRequest.mileage || ''}
+              @input=${e => this._onFormInput('mileage', e.target.value)}
+            >
+            <div class='small'>${unsafeHTML(this.SettingsModel.getByKey('mileage_rate_description'))}</div>
+          </div>
+
+
           <div class='field-container ${this.validationHandler.errorClass('expenditures')}'>
             <label>Itemized Estimated Expenses</label>
+            <div>${this.validationHandler.renderErrorMessages('expenditures')}</div>
             <div class='expenditures'>
               ${this.expenditureOptions.map(expenditure => renderExpenditureItem.call(this, expenditure))}
+            </div>
+            <div class='expenditures-total'>
+              <div class='text'>Total Estimated Expenses</div>
+              <div class='amount'>$${this.totalExpenditures.toFixed(2)}</div>
             </div>
           </div>
         </div>
@@ -262,17 +279,42 @@ export function renderForm(){
 
 /**
  * @description Render a single expenditure item
- * @param {*} expenditure
+ * @param {Object} expenditure - expenditure option object
  * @returns
  */
 function renderExpenditureItem(expenditure){
+
+  let value = this.approvalRequest.expenditures.find(e => e.expenditureOptionId === expenditure.expenditureOptionId)?.amount || '';
+
+  // personal car mileage - needs special handling because it's a calculated field
+  if ( expenditure.expenditureOptionId == 6 ){
+    value = value ? value.toFixed(2) : '0.00'
+    return html`
+      <div class='expenditure-item expenditure-item--calculated'>
+        <div class='text'>
+          <div class='primary'>${expenditure.label}</div>
+          <div class='small'>Amount is computed using mileage field above</div>
+        </div>
+        <div class='amount'>$${value}</div>
+      </div>
+    `;
+  }
+
+
   return html`
     <div class='expenditure-item'>
       <div class='text'>
         <div class='primary'>${expenditure.label}</div>
         <div class='small'>${unsafeHTML(expenditure.description)}</div>
       </div>
-      <div class='amount'></div>
+      <div class='amount input--dollar'>
+        <input
+          type='number'
+          class=''
+          .value=${value}
+          @input=${e => this._onExpenditureInput(expenditure.expenditureOptionId, e.target.value)}
+        >
+      </div>
     </div>
   `;
 }
