@@ -17,7 +17,8 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
       canBeDeleted: {type: Boolean},
       canBeSaved: {type: Boolean},
       isSave: {type: Boolean},
-      expenditureOptions: {type: Array}
+      expenditureOptions: {type: Array},
+      totalExpenditures: {type: Number}
     }
   }
 
@@ -43,8 +44,23 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
   willUpdate(props){
     if ( props.has('approvalRequest') ){
       this._setUserCantSubmit();
+      this._setTotalExpenditures();
       this.canBeSaved = ['draft', 'revision-requested'].includes(this.approvalRequest.approvalStatus);
     }
+  }
+
+  /**
+   * @description Set the totalExpenditures property based on the expenditures array from the current approval request
+   */
+  _setTotalExpenditures(){
+    let total = 0;
+    if ( this.approvalRequest.expenditures ){
+      this.approvalRequest.expenditures.forEach(e => {
+        if ( !e.amount ) return;
+        total += Number(e.amount);
+      });
+    }
+    this.totalExpenditures = total;
   }
 
   /**
@@ -148,6 +164,46 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
    */
   _onFormInput(property, value){
     this.approvalRequest[property] = value;
+
+    // special handling for mileage
+    // compute mileage amount based on mileage rate and set expenditure
+    if ( property === 'mileage' ){
+      const rate = this.SettingsModel.getByKey('mileage_rate');
+      if ( rate ){
+        const amount = Number((Number(value) * Number(rate)).toFixed(2));
+        this._updateExpenditure(6, amount);
+      }
+    }
+
+    this.requestUpdate();
+  }
+
+  /**
+   * @description bound to expenditure input events
+   * @param {Number} expenditureOptionId - the id of the expenditure option
+   * @param {Number} value - the new value for the expenditure
+   */
+  _onExpenditureInput(expenditureOptionId, value){
+    value = value || 0;
+    this._updateExpenditure(expenditureOptionId, value);
+  }
+
+  /**
+   * @description update the expenditure amount for a given expenditure option
+   * @param {Number} expenditureOptionId - the id of the expenditure option
+   * @param {Number} amount - the amount to set
+   */
+  _updateExpenditure(expenditureOptionId, amount){
+    amount = Number(amount);
+    let expenditures = this.approvalRequest.expenditures || [];
+    let expenditure = expenditures.find(e => e.expenditureOptionId === expenditureOptionId);
+    if ( !expenditure ) {
+      expenditure = {expenditureOptionId};
+      expenditures.push(expenditure);
+    }
+    expenditure.amount = amount;
+    this.approvalRequest.expenditures = expenditures;
+    this._setTotalExpenditures();
     this.requestUpdate();
   }
 

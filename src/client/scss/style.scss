@@ -1,6 +1,10 @@
+// global styles
 @use '@ucd-lib/theme-sass/style-ucdlib.scss' as style;
 @use './fonts.scss' as fonts;
 @use './global.scss' as global;
+@use './global-form.scss' as globalForm;
+
+// scoped styles
 
 // admin pages
 @use './pages/admin/settings.scss' as adminSettings;
