@@ -14,6 +14,11 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
       approvalFormId: {type: Number},
       approvalRequest: {type: Object},
       userCantSubmit: {type: Boolean},
+      canBeDeleted: {type: Boolean},
+      canBeSaved: {type: Boolean},
+      isSave: {type: Boolean},
+      expenditureOptions: {type: Array},
+      totalExpenditures: {type: Number}
     }
   }
 
@@ -23,8 +28,13 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
 
     this.approvalFormId = 0;
     this.settingsCategory = 'approval-requests';
+    this.expenditureOptions = [];
 
-    this._injectModel('AppStateModel', 'SettingsModel', 'ApprovalRequestModel', 'AuthModel');
+    this._injectModel(
+      'AppStateModel', 'SettingsModel', 'ApprovalRequestModel',
+      'AuthModel', 'LineItemsModel'
+    );
+
     this.resetForm();
   }
 
@@ -33,9 +43,31 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
    */
   willUpdate(props){
     if ( props.has('approvalRequest') ){
+      this._setUserCantSubmit();
+      this._setTotalExpenditures();
+      this.canBeSaved = ['draft', 'revision-requested'].includes(this.approvalRequest.approvalStatus);
+    }
+  }
 
-      // set userCantSubmit property, which is used to determine if the form can be submitted
-      // server side validation will also check this
+  /**
+   * @description Set the totalExpenditures property based on the expenditures array from the current approval request
+   */
+  _setTotalExpenditures(){
+    let total = 0;
+    if ( this.approvalRequest.expenditures ){
+      this.approvalRequest.expenditures.forEach(e => {
+        if ( !e.amount ) return;
+        total += Number(e.amount);
+      });
+    }
+    this.totalExpenditures = total;
+  }
+
+  /**
+   * @description Sets the userCantSubmit property based on the current approval request
+   * Used to determine if the form can be submitted, but server side validation will also check this
+   */
+  _setUserCantSubmit(){
       let userCantSubmit = false;
       if ( this.approvalRequest.employeeKerberos && this.approvalRequest.employeeKerberos !== this.AuthModel.getToken().id ){
         userCantSubmit = true;
@@ -43,7 +75,6 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
         userCantSubmit = true;
       }
       this.userCantSubmit = userCantSubmit;
-    }
   }
 
   /**
@@ -80,8 +111,10 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
    * @description Get all data required for rendering this page
    */
   async getPageData(){
-    const promises = [];
-    promises.push(this.SettingsModel.getByCategory(this.settingsCategory));
+    const promises = [
+      this.SettingsModel.getByCategory(this.settingsCategory),
+      this.LineItemsModel.getActiveLineItems()
+    ];
     if ( this.approvalFormId ) {
       promises.push(this.ApprovalRequestModel.query({requestIds: this.approvalFormId}));
     }
@@ -89,9 +122,18 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
     return resolvedPromises;
   }
 
+  _onActiveLineItemsFetched(e){
+    if ( e.state !== 'loaded' ) return;
+    this.expenditureOptions = e.payload;
+  }
+
   async _onSubmit(e){
     e.preventDefault();
+    this.isSave = false;
     const ar = this.approvalRequest
+
+    ar.approvalStatus = 'draft';
+    // todo: ensure to set forceValidation flag on request
 
 
     // set conditional request dates
@@ -122,6 +164,46 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
    */
   _onFormInput(property, value){
     this.approvalRequest[property] = value;
+
+    // special handling for mileage
+    // compute mileage amount based on mileage rate and set expenditure
+    if ( property === 'mileage' ){
+      const rate = this.SettingsModel.getByKey('mileage_rate');
+      if ( rate ){
+        const amount = Number((Number(value) * Number(rate)).toFixed(2));
+        this._updateExpenditure(6, amount);
+      }
+    }
+
+    this.requestUpdate();
+  }
+
+  /**
+   * @description bound to expenditure input events
+   * @param {Number} expenditureOptionId - the id of the expenditure option
+   * @param {Number} value - the new value for the expenditure
+   */
+  _onExpenditureInput(expenditureOptionId, value){
+    value = value || 0;
+    this._updateExpenditure(expenditureOptionId, value);
+  }
+
+  /**
+   * @description update the expenditure amount for a given expenditure option
+   * @param {Number} expenditureOptionId - the id of the expenditure option
+   * @param {Number} amount - the amount to set
+   */
+  _updateExpenditure(expenditureOptionId, amount){
+    amount = Number(amount);
+    let expenditures = this.approvalRequest.expenditures || [];
+    let expenditure = expenditures.find(e => e.expenditureOptionId === expenditureOptionId);
+    if ( !expenditure ) {
+      expenditure = {expenditureOptionId};
+      expenditures.push(expenditure);
+    }
+    expenditure.amount = amount;
+    this.approvalRequest.expenditures = expenditures;
+    this._setTotalExpenditures();
     this.requestUpdate();
   }
 
@@ -155,6 +237,7 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
       return;
     }
 
+    this.canBeDeleted = e.payload.data.find(r => r.approvalStatus !== 'draft') ? false : true;
     this.validationHandler = new ValidationHandler();
     this.approvalRequest = { ...currentInstance };
 
@@ -166,10 +249,115 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
    */
   resetForm(){
     this.approvalRequest = {
-      approvalStatus: 'draft'
+      approvalStatus: 'draft',
+      expenditures: []
     };
     this.validationHandler = new ValidationHandler();
+    this.canBeDeleted = false;
     this.requestUpdate();
+  }
+
+  /**
+   * @description Bound to save button click event
+   * No validations or payload transformation done when saving a draft.
+   */
+  _onSaveButtonClick(){
+    if ( this.userCantSubmit || !this.canBeSaved ) return;
+    this.isSave = true;
+    this.approvalRequest.approvalStatus = 'draft';
+    this.ApprovalRequestModel.create(this.approvalRequest);
+  }
+
+  /**
+   * @description Callback for ApprovalRequestModel approval-request-created event
+   * Fires after a draft is saved or a new approval request is submitted
+   * @param {*} e
+   */
+  _onApprovalRequestCreated(e){
+    if ( e.state === 'error' ) {
+      this.isSave = false;
+      if ( e.error?.payload?.is400 ) {
+        this.validationHandler = new ValidationHandler(e);
+        this.requestUpdate();
+        this.AppStateModel.showToast({message: 'Error when submitting your approval request. Form data needs fixing.', type: 'error'});
+      } else {
+        this.AppStateModel.showToast({message: 'An unknown error occurred when submitting your approval request', type: 'error'});
+      }
+      this.AppStateModel.showLoaded(this.id);
+    } else if ( e.state === 'loading') {
+      this.AppStateModel.showLoading();
+    } else if ( e.state === 'loaded' ) {
+      const oldApprovalRequestId = this.approvalRequest.approvalRequestId;
+      const newApprovalRequestId = e.payload.approvalRequestId;
+      this.resetForm();
+
+      if ( this.isSave ) {
+
+        if ( oldApprovalRequestId ) {
+          this.AppStateModel.refresh();
+        } else {
+          const loc = `${this.AppStateModel.store.breadcrumbs[this.id].link}/${newApprovalRequestId}`
+          this.AppStateModel.setLocation(loc);
+        }
+        this.AppStateModel.showToast({message: 'Draft saved.', type: 'success'});
+
+        // submitted - send to confirmation page
+      } else {
+        const loc = `${this.AppStateModel.store.breadcrumbs['approval-request-confirm'].link}/${newApprovalRequestId}`;
+        this.AppStateModel.setLocation(loc);
+      }
+
+      this.isSave = false;
+    }
+  }
+
+  /**
+   * @description Bound to delete button click event
+   * Calls confirmation dialog to delete the approval request
+   */
+  _onDeleteButtonClick(){
+    if ( !this.canBeDeleted || this.userCantSubmit ) return;
+    this.AppStateModel.showDialogModal({
+      title : 'Delete Approval Request',
+      content : 'Are you sure you want to delete this approval request? This action cannot be undone.',
+      actions : [
+        {text: 'Delete', value: 'delete-approval-request', color: 'double-decker'},
+        {text: 'Cancel', value: 'cancel', invert: true, color: 'primary'}
+      ],
+      data : {approvalRequestId: this.approvalRequest.approvalRequestId}
+    });
+  }
+
+  /**
+   * @description Callback for dialog-action AppStateModel event
+   * @param {Object} e - AppStateModel dialog-action event
+   * @returns
+  */
+  _onDialogAction(e){
+    if ( e.action !== 'delete-approval-request' ) return;
+    this.ApprovalRequestModel.delete(e.data.approvalRequestId);
+  }
+
+  /**
+   * @description Bound to ApprovalRequestModel approval-request-deleted event
+   * @param {Object} e - ApprovalRequestModel approval-request-deleted event
+   * @returns
+   */
+  _onApprovalRequestDeleted(e){
+    if ( e.state === 'loading' ){
+      this.AppStateModel.showLoading();
+      return;
+    }
+
+    if ( e.state === 'loaded' ){
+      this.resetForm();
+      this.AppStateModel.setLocation(this.AppStateModel.store.breadcrumbs['approval-requests'].link);
+      this.AppStateModel.showToast({message: 'Approval request deleted.', type: 'success'});
+      return;
+    }
+
+    this.AppStateModel.showLoaded(this.id);
+    this.AppStateModel.showToast({message: 'Error deleting approval request.', type: 'error'});
   }
 
   /**

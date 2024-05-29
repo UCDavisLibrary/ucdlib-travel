@@ -7,5 +7,35 @@ app-page-approval-request-new {
         margin-top: 1rem;
       }
     }
+
+    .expenditure-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 2rem;
+
+      .text {
+        flex: 1;
+        margin-right: 1rem;
+      }
+    }
+
+    .expenditures-total {
+      display: flex;
+      justify-content: space-between;
+      font-weight: 700;
+      color: #022851;
+      border-top: 1px solid #DBEAF7;
+      padding: 1rem 0;
+    }
+
+    @media (max-width: 480px){
+      .expenditure-item {
+        display: block;
+
+        .text {
+          margin-bottom: 1rem;
+        }
+      }
+    }
   }
 }

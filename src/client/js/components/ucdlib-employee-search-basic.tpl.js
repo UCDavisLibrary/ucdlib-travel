@@ -1,5 +1,9 @@
-import { html, css } from 'lit';
+import { html } from 'lit';
 
+/**
+ * @description Main render function for this element
+ * @returns {TemplateResult}
+ */
 export function render() {
 return html`
 <div>
@@ -8,25 +12,14 @@ return html`
     <label ?hidden=${this.hideLabel}>Employee(s)*</label>
     <div class='emp-search-bar'>
       <input
-        @input=${(e) => this.query = e.target.value}
+        @input=${this._onInput}
         @focus=${() => this.isFocused = true}
         @blur=${() => this._onBlur()}
-        .value=${this.selectedText ? this.selectedText : this.query}
+        .value=${this.selectedText || this.query || this.selectedValue}
         placeholder=${this.labelText}
         type="text">
         <div class='emp-search-icon'>
-          <div ?hidden=${this.status != 'idle'} >
-            <i class='fas fa-regular fa-user'></i>
-          </div>
-          <div ?hidden=${this.status != 'searching'}>
-            <i class="fas fa-circle-notch fa-spin"></i>
-          </div>
-          <div ?hidden=${this.status != 'no-results'}>
-            <i class="fas fa-exclamation double-decker"></i>
-          </div>
-          <div ?hidden=${this.status != 'selected'}>
-            <i class="emp-search-icon"></i>
-          </div>
+          ${renderInputIcon.call(this)}
         </div>
     </div>
   </div>
@@ -35,8 +28,9 @@ return html`
   <div class='emp-search-results' ?hidden=${!this.showDropdown}>
     <div>
     ${this.results.map(result => html`
-      <div class='emp-search-result pointer' @click=${() => this._onSelect(result)}>
-        ${renderResult(result)}
+      <div class='emp-search-result pointer' @click=${() => this._onSelect(result, true)}>
+        <div>${result.first_name} ${result.last_name}</div>
+        <div class='muted'>${result.title}, ${this.getDepartment(result)}</div>
       </div>
     `)}
     </div>
@@ -46,32 +40,17 @@ return html`
   </div>
 </div>
 <div class='brand-textbox u-space-mt--small' ?hidden=${this.status != 'no-results' || !this.isFocused }>No results matched your search!</div>
-<div class='brand-textbox u-space-mt--small' ?hidden=${this.status != 'no-iam'}>Employee is not in Library directory system!</div>
+<div class='brand-textbox u-space-mt--small category-brand--redbud' ?hidden=${!this.iamRecordMissing}>Employee is not in Library directory system!</div>
 </div>
 `;}
 
 /**
- * @description Renders a single result item in the results dropdown
- * @param {Object} result - an Employee object from the database
+ * @description Render the icon in the input field
  * @returns {TemplateResult}
  */
-function renderResult(result){
-  let department = getDepartment(result);
-  return html`
-    <div>${result.first_name} ${result.last_name}</div>
-    <div class='muted'>${result.title}, ${department}</div>
-  `;
-}
-
-/**
- * @description searches for employee department
- * @param {Object} result - an Employee object from the database
- */
-// if item in results.group has key of type === 'Department', then return the name value of that object
-function getDepartment(result){
-  if ( result.groups ) {
-    let department = result.groups.find(group => group.type === 'Department');
-    if ( department ) return department.name;
-  }
-  return '';
+function renderInputIcon(){
+  if ( this.error || this.status === 'no-results' ) return html`<i class="fas fa-exclamation double-decker"></i>`;
+  if ( this.status === 'searching' ) return html`<i class="fas fa-circle-notch fa-spin"></i>`;
+  if ( this.status === 'selected' ) return html`<i class="fas fa-solid fa-user"></i>`;
+  return html`<i class='fas fa-regular fa-user'></i>`;
 }

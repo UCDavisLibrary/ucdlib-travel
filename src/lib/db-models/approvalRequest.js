@@ -2,6 +2,7 @@ import pg from "./pg.js";
 import EntityFields from "../utils/EntityFields.js";
 import validations from "./approvalRequestValidations.js";
 import employeeModel from "./employee.js";
+import typeTransform from "../utils/typeTransform.js";
 
 class ApprovalRequest {
 
@@ -338,9 +339,10 @@ class ApprovalRequest {
    * @param {Object} data - the approval request revision data - see entityFields for expected fields (json names)
    * @param {Object} submittedBy - the employee object of the employee submitting the request
    *  - if data.employeeKerberos is not set, this object will be used to set the employeeKerberos field
+   * @param {Boolean} forceValidation - whether to force validation even if not required (aka for a draft revision)
    * @returns {Object}
    */
-  async createRevision(data, submittedBy){
+  async createRevision(data, submittedBy, forceValidation){
 
     // if submittedBy is provided, assign approval request revision to that employee
     if ( submittedBy ){
@@ -356,10 +358,12 @@ class ApprovalRequest {
     delete data.submitted_at
 
     // do validation
+    if ( forceValidation ) data.forceValidation = true;
     const validation = await this.entityFields.validate(data, ['employee_allocation_id']);
     if ( !validation.valid ) {
       return {error: true, message: 'Validation Error', is400: true, fieldsWithErrors: validation.fieldsWithErrors};
     }
+    delete data.forceValidation;
 
     // extract employee object from data
     const employee = data.employee_kerberos ? {kerberos: data.employee.kerberos} : data.employee;
@@ -429,10 +433,72 @@ class ApprovalRequest {
 
     if ( out.error ) return out;
 
+    // get and return full record that was just created
     out = await this.get({revisionIds: [approvalRequestRevisionId]});
+    if ( out.error ) {
+      return out;
+    }
+    out = out.data[0];
 
     return out;
 
+  }
+
+  /**
+   * @description Deletes an approval request (and all its revisions)
+   * Approval request must has only ever been in draft status
+   * @param {Number} approvalRequestId
+   * @param {String} authorizeAgainstKerberos - kerberos of user authorizing deletion
+   * if included, will be used to check if user is approval request owner
+   * @returns {Object} - {success: true} or {error: true||errorobject, message: 'error message'}
+   */
+  async deleteDraft(approvalRequestId, authorizeAgainstKerberos){
+
+    // cast to positive integer, return 400 if invalid
+    approvalRequestId = typeTransform.toPositiveInt(approvalRequestId);
+    if ( !approvalRequestId ) return {error: true, message: 'Invalid approval request id', is400: true};
+
+    // check if approval request exists
+    const existingRecords = await this.get({requestIds: [approvalRequestId]});
+    if ( existingRecords.error ) return existingRecords;
+    if ( !existingRecords.total ) return {error: true, message: 'Approval request not found', is400: true};
+
+    // check if user is authorized to delete
+    if ( authorizeAgainstKerberos ){
+      const currentRecord = existingRecords.data.find(r => r.isCurrent);
+      if ( !currentRecord ) return {error: true, message: 'Approval request not found', is400: true};
+      if ( currentRecord.employeeKerberos !== authorizeAgainstKerberos ) return {error: true, message: 'Forbidden', is403: true};
+    }
+
+    // check if any records are not in draft status
+    const hasNonDraft = existingRecords.data.some(r => r.approvalStatus !== 'draft');
+    if ( hasNonDraft ) return {error: true, message: 'Cannot delete approval request with non-draft status', is400: true};
+
+    const revisionIds = existingRecords.data.map(r => r.approvalRequestRevisionId);
+
+    // do transaction
+    const client = await pg.pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      let sql = `DELETE FROM approval_request_expenditure WHERE approval_request_revision_id = ANY($1)`;
+      await client.query(sql, [revisionIds]);
+
+      sql = `DELETE FROM approval_request_funding_source WHERE approval_request_revision_id = ANY($1)`;
+      await client.query(sql, [revisionIds]);
+
+      sql = `DELETE FROM approval_request WHERE approval_request_id = $1`;
+      await client.query(sql, [approvalRequestId]);
+
+      await client.query('COMMIT');
+    } catch (e) {
+      await client.query('ROLLBACK');
+      return {error: e};
+    } finally {
+      client.release();
+    }
+
+    return {success: true, approvalRequestId};
   }
 
 }

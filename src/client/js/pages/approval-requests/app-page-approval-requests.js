@@ -33,6 +33,9 @@ export default class AppPageApprovalRequests extends Mixin(LitElement)
       this.AppStateModel.store.breadcrumbs[this.id]
     ];
     this.AppStateModel.setBreadcrumbs(breadcrumbs);
+
+
+    this.AppStateModel.showLoaded(this.id);
   }
 
 }
