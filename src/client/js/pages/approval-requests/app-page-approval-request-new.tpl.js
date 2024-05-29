@@ -207,14 +207,114 @@ export function renderForm(){
         </div>
       </fieldset>
 
-      <div class='form-buttons'>
+      <fieldset>
+        <legend>Estimated Expenses</legend>
+        <div class='field-container ${this.validationHandler.errorClass('noExpenditures')}'>
+          <div class='checkbox'>
+            <div>
+              <input
+                id="${page}--noExpenditures"
+                type="checkbox"
+                .checked=${this.approvalRequest.noExpenditures}
+                @change=${e => this._onFormInput('noExpenditures', e.target.checked)}
+                >
+              <label for="${page}--noExpenditures">There are no expenses associated with this request</label>
+            </div>
+            <div>${this.validationHandler.renderErrorMessages('noExpenditures')}</div>
+          </div>
+        </div>
+
+        <div ?hidden=${this.approvalRequest.noExpenditures}>
+
+          <div class='field-container'>
+            <label>Personal Car Mileage</label>
+            <input
+              type='number'
+              .value=${this.approvalRequest.mileage || ''}
+              @input=${e => this._onFormInput('mileage', e.target.value)}
+            >
+            <div class='small'>${unsafeHTML(this.SettingsModel.getByKey('mileage_rate_description'))}</div>
+          </div>
+
+
+          <div class='field-container ${this.validationHandler.errorClass('expenditures')}'>
+            <label>Itemized Estimated Expenses</label>
+            <div>${this.validationHandler.renderErrorMessages('expenditures')}</div>
+            <div class='expenditures'>
+              ${this.expenditureOptions.map(expenditure => renderExpenditureItem.call(this, expenditure))}
+            </div>
+            <div class='expenditures-total'>
+              <div class='text'>Total Estimated Expenses</div>
+              <div class='amount'>$${this.totalExpenditures.toFixed(2)}</div>
+            </div>
+          </div>
+        </div>
+      </fieldset>
+
+      <div class='form-buttons alignable-promo__buttons'>
         <button
           type="submit"
           class='btn btn--primary'
           @click=${this._onSubmit}
           ?disabled=${this.userCantSubmit}
           >Review and Submit</button>
+        <button
+          type="button"
+          ?hidden=${!this.canBeSaved}
+          ?disabled=${this.userCantSubmit}
+          class='btn btn--invert category-brand--secondary'
+          @click=${this._onSaveButtonClick}
+          >Save</button>
+        <button
+          type="button"
+          ?hidden=${!this.canBeDeleted}
+          ?disabled=${this.userCantSubmit}
+          class='btn btn--primary category-brand--double-decker'
+          @click=${this._onDeleteButtonClick}
+          >Delete Draft</button>
       </div>
     </form>
+  `;
+}
+
+/**
+ * @description Render a single expenditure item
+ * @param {Object} expenditure - expenditure option object
+ * @returns
+ */
+function renderExpenditureItem(expenditure){
+
+  let value = this.approvalRequest.expenditures.find(e => e.expenditureOptionId === expenditure.expenditureOptionId)?.amount || '';
+
+  // personal car mileage - needs special handling because it's a calculated field
+  if ( expenditure.expenditureOptionId == 6 ){
+    value = value ? value.toFixed(2) : '0.00'
+    return html`
+      <div class='expenditure-item expenditure-item--calculated'>
+        <div class='text'>
+          <div class='primary'>${expenditure.label}</div>
+          <div class='small'>Amount is computed using mileage field above</div>
+        </div>
+        <div class='amount'>$${value}</div>
+      </div>
+    `;
+  }
+
+
+  return html`
+    <div class='expenditure-item'>
+      <div class='text'>
+        <div class='primary'>${expenditure.label}</div>
+        <div class='small'>${unsafeHTML(expenditure.description)}</div>
+      </div>
+      <div class='amount input--dollar'>
+        <input
+          type='number'
+          class=''
+          .value=${value}
+          @input=${e => this._onExpenditureInput(expenditure.expenditureOptionId, e.target.value)}
+        >
+      </div>
+    </div>
   `;
 }

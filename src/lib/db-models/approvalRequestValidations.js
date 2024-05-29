@@ -79,7 +79,7 @@ export default class ApprovalRequestValidations {
   requireIfNotDraft(field, value, out, payload){
     let error;
 
-    if ( payload.approval_status === 'draft' ) return;
+    if ( payload.approval_status === 'draft' && !payload.forceValidation ) return;
     error = {errorType: 'required', message: 'This field is required.'};
     if ( value === undefined || value === null || value === '') {
       this.model.entityFields.pushError(out, field, error);
@@ -94,7 +94,7 @@ export default class ApprovalRequestValidations {
   location(field, value, out, payload){
     let error;
 
-    if ( payload.approval_status === 'draft' ) return;
+    if ( payload.approval_status === 'draft' && !payload.forceValidation ) return;
 
     error = {errorType: 'required', message: 'This field is required.'};
     if ( value === undefined || value === null || value === '') {
@@ -116,7 +116,7 @@ export default class ApprovalRequestValidations {
    */
   locationDetails(field, value, out, payload){
     let error;
-    if ( payload.approval_status === 'draft' ) return;
+    if ( payload.approval_status === 'draft' && !payload.forceValidation ) return;
     if ( payload.location === 'virtual' ) return;
 
     error = {errorType: 'required', message: 'This field is required.'};
@@ -133,7 +133,7 @@ export default class ApprovalRequestValidations {
   programDate(field, value, out, payload){
     let error;
 
-    if ( payload.approval_status === 'draft' ) return;
+    if ( payload.approval_status === 'draft' && !payload.forceValidation ) return;
 
     // verify field is not empty
     error = {errorType: 'required', message: 'This field is required.'};
@@ -168,7 +168,7 @@ export default class ApprovalRequestValidations {
   travelDate(field, value, out, payload){
     let error;
 
-    if ( payload.approval_status === 'draft' ) return;
+    if ( payload.approval_status === 'draft' && !payload.forceValidation ) return;
     if ( !payload.travel_required ) return;
 
     // verify field is not empty
@@ -204,7 +204,7 @@ export default class ApprovalRequestValidations {
   async expenditures(field, value, out, payload){
     let error;
 
-    if ( payload.approval_status === 'draft' ) return;
+    if ( payload.approval_status === 'draft' && !payload.forceValidation ) return;
     if ( payload.no_expenditures ) return;
 
     // verify is array and not empty
@@ -259,7 +259,7 @@ export default class ApprovalRequestValidations {
    * See EntityFields.validate method for property definitions.
    */
   async fundingSources(field, value, out, payload){
-    if ( payload.approval_status === 'draft' ) return;
+    if ( payload.approval_status === 'draft' && !payload.forceValidation ) return;
     if ( payload.no_expenditures ) return;
     let error;
 

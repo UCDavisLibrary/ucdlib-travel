@@ -1,16 +1,16 @@
 ucdlib-employee-search-basic {
 
  .emp-search-top.field-container {
-    margin-bottom: 0
+    margin-bottom: 0 !important;
 }
 
  .emp-search-bar {
-    position: relative
+    position: relative;
 }
 
  .emp-search-bar input {
     flex-grow: 1;
-    padding-right: 2rem
+    padding-right: 2rem;
 }
 
  .emp-search-bar .emp-search-icon {
@@ -24,11 +24,11 @@ ucdlib-employee-search-basic {
     justify-content: center;
     right: 0;
     top: 0;
-    color: #022851
+    color: #022851;
 }
 
  .emp-search-results-parent {
-    position: relative
+    position: relative;
 }
 
  .emp-search-results {
@@ -43,28 +43,28 @@ ucdlib-employee-search-basic {
     border-bottom: 1px solid #ffbf00;
     color: #13639e;
     max-height: 250px;
-    overflow-y: scroll
+    overflow-y: scroll;
 }
 
  .emp-search-results .emp-search-result {
-    padding: .5rem .75rem
+    padding: .5rem .75rem;
 }
 
  .emp-search-results .emp-search-result:hover {
-    background-color: #fde9ac
+    background-color: #fde9ac;
 }
 
  .emp-search-results .highlight {
-    font-weight: 700
+    font-weight: 700;
 }
 
  .emp-search-results .muted {
     font-weight: 400;
-    color: #545454
+    color: #545454;
 }
 
  .emp-search-results .emp-search-more {
-    padding: .5rem .75rem
+    padding: .5rem .75rem;
 }
 
 max-width: 500px;

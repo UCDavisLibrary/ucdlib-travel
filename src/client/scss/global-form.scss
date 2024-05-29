@@ -1,0 +1,68 @@
+.field-error {
+  input {
+    border: 1px solid #c10230;
+  }
+  textarea {
+    border: 1px solid #c10230;
+  }
+  .field-error-message {
+    color: #c10230;
+    display: block;
+  }
+  label {
+    color: #c10230;
+  }
+}
+fieldset.field-error {
+  border-top: 3px solid #c10230;
+
+  > legend {
+    color: #c10230;
+  }
+}
+.field-error-message {
+  display: none;
+}
+.field-help {
+  font-size: .875rem;
+  color: #13639e;
+}
+.radio .option-description, .checkbox .option-description {
+  padding-left: 2.5rem;
+  font-weight: 400;
+  font-size: .875rem;
+  margin-bottom: .5rem;
+}
+.field-container {
+  margin-bottom: 1rem !important;
+}
+
+.input--dollar {
+
+  position: relative;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset;
+  border: 1px solid #999;
+  max-width: 150px;
+
+  &::before {
+    content: '$';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    min-width: 2rem;
+    color: #022851;
+    background-color: #DBEAF7
+  }
+
+  input {
+    padding-left: 2.5rem;
+    border: none;
+    box-shadow: none;
+  }
+}
+
