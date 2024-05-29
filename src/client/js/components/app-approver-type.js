@@ -1,9 +1,10 @@
-import { LitElement } from 'lit';
+import { html, LitElement } from 'lit';
 import {render, styles} from "./app-approver-type.tpl.js";
 import { LitCorkUtils, Mixin } from "../../../lib/appGlobals.js";
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 import "./ucdlib-employee-search-basic.js"
 import ValidationHandler from "../utils/ValidationHandler.js";
+import IamEmployeeObjectAccessor from '../../../lib/utils/iamEmployeeObjectAccessor.js';
 
 
 export default class AppApproverType extends Mixin(LitElement)
@@ -13,6 +14,7 @@ export default class AppApproverType extends Mixin(LitElement)
     return {
       existingApprovers:{type: Array, attribute: 'existingApprovers'},
       newApproverType:{type: Object, attribute: 'newApproverType'},
+      approver: {type: Object, attribute: 'approver'},
 
     }
   }
@@ -26,22 +28,30 @@ export default class AppApproverType extends Mixin(LitElement)
     this.id = 'admin-approvers';
     this.existingApprovers = [];
     this.newApproverType = {};
+
+
+    this.approver = {};
+    this.new = false
+
+
+    //may delete
+    this.employeeIndex = [];
+    this.newEmployees = [];
+    this.index = 0;
+
+
+
+
     this.render = render.bind(this);
     this._injectModel('AppStateModel', 'AdminApproverTypeModel', 'SettingsModel');
-    this.SettingsModel.getByCategory('admin-approver-form');
     this._resetProperties();
 
   }
 
-
-  /**
-   * @description lit lifecycle method
-   */
-     willUpdate(changedProps) {
-      if ( changedProps.has('newApproverType') ) {
-        this.requestUpdate();
-      }
-    }
+  _newForm(e) {
+    this.new = true;
+    this._refreshProperties();
+  }
 
     /**
    * @description bound to AppStateModel app-state-update event
@@ -51,11 +61,36 @@ export default class AppApproverType extends Mixin(LitElement)
     if ( state.page != this.id ) return;
     this.AppStateModel.showLoading();
 
+    const d = await this.getPageData();
+    const hasError = d.some(e => e.status === 'rejected' || e.value.state === 'error');
+    if ( hasError ) {
+      this.AppStateModel.showError(d);
+      return;
+    }
+
+    let category = await this.SettingsModel.getByCategory('admin-approver-form');
+    this.description = category.payload[0].value;
+
+    let args = {status:"active"}; //if want all active do this to see your new ones
+
+    await this.AdminApproverTypeModel.query(args);
+
+
     this.AppStateModel.showLoaded(this.id);
-    this._getApproverType();
 
     this.requestUpdate();
   }
+
+
+      /**
+   * @description Get all data required for rendering this page
+   */
+       async getPageData(){
+        const promises = [];
+        promises.push(this.SettingsModel.getByCategory(this.settingsCategory));
+        const resolvedPromises = await Promise.allSettled(promises);
+        return resolvedPromises;
+      }
   
 
     /**
@@ -78,7 +113,6 @@ export default class AppApproverType extends Mixin(LitElement)
    * 
   */
     async _refreshProperties(){
-      // this._getApproverType();
       this._resetProperties();
       this.AppStateModel.refresh();
     }
@@ -114,6 +148,72 @@ export default class AppApproverType extends Mixin(LitElement)
   //   });
   // }
 
+
+    /**
+   * @description Event handler for when employees are selected from the employee search component
+   * @param {CustomEvent} e - status-change event from ucdlib-employee-search-basic
+   */
+    _onEmployeeSelect(e, index) {
+      let emp = e.detail.employee;
+      console.log("E:", emp);
+      if(emp){
+        const newEmployees = [];
+        emp = (new IamEmployeeObjectAccessor(emp)).travelAppObject;
+
+        if( this.employeeIsSelected(emp) ) return; //not yet wait for submit
+        let empForm = { "employee" : emp, "approvalOrder": index}
+        this.newEmployees.push(empForm);
+      }
+      //Plan for if it is taken out of employee form
+      // this.newEmployees = [...this.newEmployees, ...newEmployees];
+    }
+
+
+  /**
+   * @description Check if an employee is already in the selected list
+   * @param {Object} employee - employee object
+   * @returns
+   */
+   employeeIsSelected(employee) {
+    if(this.newEmployees == null) return;
+    return this.newEmployees.find(e => e.employee.kerberos === employee.kerberos);
+  }
+
+  _onAddBar(e, approver){
+    approver.employees.push({});
+    this.index = this.index + 1;
+    // if(!this.index){
+    //   this.employeeIndex.push('employee-bar-0');
+    // }else {
+    //   this.employeeIndex.push(`employee-bar-${this.index}`);
+    // }
+
+    // this.index = this.index + 1;
+    // this.employeeIndex = this.employeeIndex.filter((item, index) => this.employeeIndex.indexOf(item) === index)
+    this.requestUpdate();
+  }
+  _onDeleteBar(e, index){
+
+    if(this.index != 0) this.index = this.index - 1;
+
+
+    
+
+    // let parentID = e.currentTarget.id;
+    // const r = /\d+/;
+    // let deleteID = parentID.match(r)[0];
+    // let id = `employee-bar-${deleteID}`;
+    // let hashId = '#' + id;
+
+    // this.renderRoot.querySelector(hashId).remove();
+
+    // this.employeeIndex = this.employeeIndex.filter(item => item !== hashId);
+    // let index = this.employeeIndex.indexOf(id);
+    delete this.approver.employees[index];
+    this.requestUpdate();
+
+  }
+
   async _setLabel(value, approver){
     approver.label = value;
     this.requestUpdate();
@@ -124,18 +224,74 @@ export default class AppApproverType extends Mixin(LitElement)
     this.requestUpdate();
   }
 
+  isEqual(obj1, obj2) {
+    var props1 = Object.getOwnPropertyNames(obj1);
+    var props2 = Object.getOwnPropertyNames(obj2);
+    if (props1.length != props2.length) {
+        return false;
+    }
+    for (var i = 0; i < props1.length; i++) {
+        let val1 = obj1[props1[i]];
+        let val2 = obj2[props1[i]];
+        let isObjects = this.isObject(val1) && this.isObject(val2);
+        if (isObjects && !this.isEqual(val1, val2) || !isObjects && val1 !== val2) {
+            return false;
+        }
+    }
+    return true;
+  }
+  isObject(object) {
+    return object != null && typeof object === 'object';
+  }
+
   /**
    * @description Returns a approver type from the element's approverType array by approverTypeId
    */
    getApproverTypeId(id){
     return this.existingApprovers.find(item => item.approverTypeId == id);
   }
+
+  async _onApproverTypeQueryRequest(e){
+    let query = e[1];
+    e = e[0];
+
+    if ( e.state === 'error' ) {
+      if ( e.error?.payload?.is400 ) {
+        this.AppStateModel.showToast({message: 'Error when querying the approver types. Query needs to be fixed.', type: 'error'})
+
+      } else {
+        this.AppStateModel.showToast({message: 'An unknown error ocurred when updating the approver type', type: 'error'})
+        this.AppStateModel.showLoaded(this.id)
+      }
+      await this.waitController.waitForFrames(3);
+      window.scrollTo(0, this.lastScrollPosition);
+    } else if ( e.state === 'loading' ) {
+      this.AppStateModel.showLoading();
+
+    } else if ( e.state === 'loaded' && this.isEqual(query, {'status':'active'})) {
+      let approverArray = e.payload.filter(function (el) {
+        return el.archived == false &&
+              el.hideFromFundAssignment == false;
+      });
+
+      approverArray.map((emp) => {
+        if(!Array.isArray(emp.employees)) emp.employees = [emp.employees]
+      });
+  
+      this.existingApprovers = approverArray;
+  
+      this.requestUpdate();
+    }
+
+  }
+
+
   /**
    * @description bound to AdminApproverTypeModel APPROVER_TYPE_UPDATED event
    */
    async _onApproverTypeUpdated(e){
     if ( e.state === 'error' ) {
-      if ( e.error?.payload?.is400 ) {
+      if ( e.error?.payload?.is500 ) {
         const getApproverTypeId = e?.payload?.getApproverTypeId;
         const approverType = this.getApproverTypeId(getApproverTypeId);
         approverType.validationHandler = new ValidationHandler(e);
@@ -155,7 +311,7 @@ export default class AppApproverType extends Mixin(LitElement)
     } else if ( e.state === 'loaded' ) {
       this._refreshProperties();
       let archived = e.payload.data.res[0].archived;
-
+      console.log('E:', e.payload.data)
       if ( archived ) {
         this.AppStateModel.showToast({message: 'Approver Type deleted successfully', type: 'success'});
       } else {
@@ -169,7 +325,7 @@ export default class AppApproverType extends Mixin(LitElement)
    */
   async _onApproverTypeCreated(e){
     if ( e.state === 'error' ) {
-      if ( e.error?.payload?.is400 ) {
+      if ( e.error?.payload?.is500 ) {
         this.newApproverType.validationHandler = new ValidationHandler(e);
         this.AppStateModel.showLoaded(this.id)
         this.requestUpdate();
@@ -214,20 +370,28 @@ export default class AppApproverType extends Mixin(LitElement)
    * 
    * 
    */
-    async _onNewSubmit(e){
+    async _onFormSubmit(e){
       e.preventDefault();
       this.lastScrollPosition = window.scrollY;
 
       const approverTypeId = e.target.getAttribute('approver-type-id');
       if ( approverTypeId != 0 && approverTypeId) {
         let approverType =  this.existingApprovers.find(a => a.approverTypeId == approverTypeId);
+        
+        approverType.employees = [];
+        console.log("Update:", approverType);
+        approverType.employees = this.newEmployees;
         delete approverType.editing;
-        approverType = this.employeeFormat(approverType);
+        // approverType = this.employeeFormat(approverType);
+        console.log("Update 2:", approverType);
         console.log(`Done Updating ${approverTypeId} ...`);
 
         await this.AdminApproverTypeModel.update(approverType);
       } else {
+        this.newApproverType.employees = this.newEmployees;
+        console.log("Create:", this.newApproverType);
         this.newApproverType = this.employeeFormat(this.newApproverType);
+        console.log("Create 2:", this.newApproverType);
         await this.AdminApproverTypeModel.create(this.newApproverType);
         console.log("Done Creating...");
 
@@ -240,16 +404,11 @@ export default class AppApproverType extends Mixin(LitElement)
    * 
    */
     async _onEdit(e, approver){
+      this.initial = approver;
       approver.editing = true;
+
       this.requestUpdate();
     }
-
-
-
-
-
-
-
 
   /**
    * @description on edit button from a approver
@@ -290,13 +449,21 @@ export default class AppApproverType extends Mixin(LitElement)
    */
     async _onEditCancel(e, approver){
       if (!approver.approverTypeId) {
-        newApproverType = {};
+        this.newApproverType = {};
         return;
       }
-    
+      approver = this.initial;
+      
       approver.editing = false;
       approver.validationHandler = new ValidationHandler();
+      this.new = false;
 
+      for(let i = this.index; i > 0;  i--){
+        approver.employees.pop()
+      }
+      this.index = 0;
+
+    
       this.requestUpdate();
     }
 
@@ -338,17 +505,14 @@ export default class AppApproverType extends Mixin(LitElement)
    * 
   */
   async _getApproverType(){
-    // let args = {status:"active"}; //if want all active do this to see your new ones
-    let args = { id: [1,2,3,4,5,112,113,114,115,116,117,118]};
-
-    let approvers = await this.AdminApproverTypeModel.query(args);
+  
     let approverArray = approvers.payload.filter(function (el) {
       return el.archived == false &&
              el.hideFromFundAssignment == false;
     });
     approverArray.map((emp) => {
-    if(!Array.isArray(emp.employees)) emp.employees = [emp.employees]
-  });
+      if(!Array.isArray(emp.employees)) emp.employees = [emp.employees]
+    });
 
   this.existingApprovers = approverArray;
 

@@ -23,6 +23,7 @@ class AdminApproverTypeModel extends BaseModel {
    *
    */
   async query(args = {}) {
+    let query = args;
     args = urlUtils.queryStringFromObject(args);
     let state = this.store.data.query[args];
 
@@ -33,6 +34,8 @@ class AdminApproverTypeModel extends BaseModel {
         await this.service.query(args);
       }
     } catch(e) {}
+
+    this.store.emit(this.store.events.APPROVER_TYPE_QUERY_REQUEST, [this.store.data.query[args],query]);
 
     return this.store.data.query[args];
   }
