@@ -1,10 +1,13 @@
 import { LitElement } from 'lit';
-import {render} from "./app-page-admin-allocations-new.tpl.js";
-import { LitCorkUtils, Mixin } from "../../../../lib/appGlobals.js";
+import { render } from "./app-page-admin-allocations-new.tpl.js";
+import { createRef } from 'lit/directives/ref.js';
+
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 import { WaitController } from "@ucd-lib/theme-elements/utils/controllers/wait.js";
-import { createRef } from 'lit/directives/ref.js';
+
+import { LitCorkUtils, Mixin } from "../../../../lib/appGlobals.js";
 import IamEmployeeObjectAccessor from '../../../../lib/utils/iamEmployeeObjectAccessor.js';
+import promiseUtils from '../../../../lib/utils/promiseUtils.js';
 import ValidationHandler from "../../utils/ValidationHandler.js";
 
 /**
@@ -76,7 +79,7 @@ export default class AppPageAdminAllocationsNew extends Mixin(LitElement)
     this.AppStateModel.setBreadcrumbs(breadcrumbs);
 
     const d = await this.getPageData();
-    const hasError = d.some(e => e.status === 'rejected' || e.value.state === 'error');
+    const hasError = promiseUtils.hasError(d);
     if( hasError ) {
       this.AppStateModel.showError(d);
       return;
@@ -225,16 +228,7 @@ export default class AppPageAdminAllocationsNew extends Mixin(LitElement)
     promises.push(this.FundingSourceModel.getActiveFundingSources());
     const resolvedPromises = await Promise.allSettled(promises);
 
-    // flatten resolved promises - employee search returns an array of promises
-    const out = [];
-    resolvedPromises.forEach(p => {
-      if ( Array.isArray(p.value) ) {
-        out.push(...p.value);
-      } else {
-        out.push(p);
-      }
-    });
-    return out;
+    return promiseUtils.flattenAllSettledResults(resolvedPromises);
 
   }
 

@@ -1,10 +1,14 @@
 import { LitElement } from 'lit';
-import {render} from "./app-page-approval-request-new.tpl.js";
-import { LitCorkUtils, Mixin } from "../../../../lib/appGlobals.js";
-import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
+import { render } from "./app-page-approval-request-new.tpl.js";
+import { createRef } from 'lit/directives/ref.js';
 
+import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
+import { WaitController } from "@ucd-lib/theme-elements/utils/controllers/wait.js";
+
+import { LitCorkUtils, Mixin } from "../../../../lib/appGlobals.js";
 import ValidationHandler from "../../utils/ValidationHandler.js";
 import urlUtils from "../../../../lib/utils/urlUtils.js";
+import promiseUtils from '../../../../lib/utils/promiseUtils.js';
 
 export default class AppPageApprovalRequestNew extends Mixin(LitElement)
 .with(LitCorkUtils, MainDomElement) {
@@ -29,6 +33,9 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
     this.approvalFormId = 0;
     this.settingsCategory = 'approval-requests';
     this.expenditureOptions = [];
+
+    this.fundingSourceSelectRef = createRef();
+    this.waitController = new WaitController(this);
 
     this._injectModel(
       'AppStateModel', 'SettingsModel', 'ApprovalRequestModel',
@@ -111,15 +118,20 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
    * @description Get all data required for rendering this page
    */
   async getPageData(){
+
+    // need to ensure that funding-source-select element has been rendered before we can initialize it
+    await this.waitController.waitForUpdate();
+
     const promises = [
       this.SettingsModel.getByCategory(this.settingsCategory),
-      this.LineItemsModel.getActiveLineItems()
+      this.LineItemsModel.getActiveLineItems(),
+      this.fundingSourceSelectRef.value.init()
     ];
     if ( this.approvalFormId ) {
       promises.push(this.ApprovalRequestModel.query({requestIds: this.approvalFormId}));
     }
     const resolvedPromises = await Promise.allSettled(promises);
-    return resolvedPromises;
+    return promiseUtils.flattenAllSettledResults(resolvedPromises);
   }
 
   _onActiveLineItemsFetched(e){
@@ -208,6 +220,15 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
   }
 
   /**
+   * @description bound to funding-source-select input event
+   * @param {Object} e - funding-source-select input event
+   */
+  _onFundingSourceInput(e){
+    this.approvalRequest.fundingSources = e?.detail?.fundingSources || [];
+    this.requestUpdate();
+  }
+
+  /**
    * @description bound to ApprovalRequestModel approval-requests-fetched event
    * Handles setting the form state based on a previously saved (or submitted and rejected) approval request
    */
@@ -250,7 +271,8 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
   resetForm(){
     this.approvalRequest = {
       approvalStatus: 'draft',
-      expenditures: []
+      expenditures: [],
+      fundingSources: []
     };
     this.validationHandler = new ValidationHandler();
     this.canBeDeleted = false;
