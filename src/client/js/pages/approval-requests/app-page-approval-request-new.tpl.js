@@ -1,5 +1,8 @@
 import { html } from 'lit';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
+import { ref } from 'lit/directives/ref.js';
+
+import "../../components/funding-source-select.js";
 
 export function render() {
 return html`
@@ -249,6 +252,20 @@ export function renderForm(){
             </div>
           </div>
         </div>
+      </fieldset>
+
+      <fieldset ?hidden=${this.approvalRequest.noExpenditures}>
+        <legend>Funding Sources</legend>
+        <funding-source-select
+          form-view
+          custom-error=${this.validationHandler.getFirstErrorMessage('fundingSources')}
+          label=''
+          expenditure-total=${this.totalExpenditures}
+          always-show-one
+          .data=${this.approvalRequest.fundingSources}
+          @funding-source-input=${this._onFundingSourceInput}
+          ${ref(this.fundingSourceSelectRef)}>
+        </funding-source-select>
       </fieldset>
 
       <div class='form-buttons alignable-promo__buttons'>
