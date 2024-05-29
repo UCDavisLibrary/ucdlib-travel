@@ -59,15 +59,15 @@ export default class AppPageAdminLineItems extends Mixin(LitElement)
     ];
     this.AppStateModel.setBreadcrumbs(breadcrumbs);
 
-    const d = await this.getPageData();
-    const hasError = d.some(e => e.status === 'rejected' || e.value.state === 'error');
-    if ( hasError ) {
-      this.AppStateModel.showError(d);
-      return;
+    try {
+      const d = await this.getPageData();
+      const hasError = d.some(e => e.state === 'error');
+      if ( !hasError ) this.AppStateModel.showLoaded(this.id);
+      this.requestUpdate();
+    } catch(e) {
+      this.AppStateModel.showError(this.id);
     }
 
-    this.AppStateModel.showLoaded(this.id);
-    this.requestUpdate();
   }
 
   /**
@@ -182,7 +182,7 @@ export default class AppPageAdminLineItems extends Mixin(LitElement)
   /**
    * @description bound to LineItemsModel LINE_ITEM_CREATED event
    */
-  async _onLineItemCreated(e){
+  async _onLineItemCreated(e){ 
     if ( e.state === 'error' ) {
       if ( e.error?.payload?.is400 ) {
         this.newLineItem.validationHandler = new ValidationHandler(e);
@@ -225,10 +225,6 @@ export default class AppPageAdminLineItems extends Mixin(LitElement)
     }
   }
 
-  /**
-   * @description Bound to delete button for each line item
-   * @param {Object} lineItem - line item object to delete
-   */
   _onDeleteClick(lineItem){
     this.AppStateModel.showDialogModal({
       title : 'Delete Line Item',
@@ -241,11 +237,6 @@ export default class AppPageAdminLineItems extends Mixin(LitElement)
     });
   }
 
-  /**
-   * @description Callback for dialog-action AppStateModel event
-   * @param {Object} e - AppStateModel dialog-action event
-   * @returns
-   */
   _onDialogAction(e){
     if ( e.action !== 'delete-line-item' ) return;
     const lineItem = e.data.lineItem;
@@ -260,7 +251,7 @@ export default class AppPageAdminLineItems extends Mixin(LitElement)
       const promises = [];
       promises.push(this.SettingsModel.getByCategory(this.settingsCategory));
       promises.push(this.LineItemsModel.getActiveLineItems());
-      const resolvedPromises = await Promise.allSettled(promises);
+      const resolvedPromises = await Promise.all(promises);
       return resolvedPromises;
     }
 

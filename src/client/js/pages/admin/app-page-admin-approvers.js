@@ -15,6 +15,7 @@ export default class AppPageAdminApprovers extends Mixin(LitElement)
   constructor() {
     super();
     this.render = render.bind(this);
+    this.settingsCategory = 'admin-approver-type';
 
     this._injectModel('AppStateModel', 'SettingsModel');
   }
@@ -33,6 +34,9 @@ export default class AppPageAdminApprovers extends Mixin(LitElement)
       this.AppStateModel.store.breadcrumbs[this.id]
     ];
     this.AppStateModel.setBreadcrumbs(breadcrumbs);
+
+   
+
 
   }
 
