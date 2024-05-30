@@ -45,7 +45,7 @@ class AdminApproverTypeService extends BaseService {
       json: true,
       onLoading : request => this.store.updateLoading(request),
       onLoad : result => this.store.updateLoaded(result.body),
-      onError : e => this.store.updateError(e)
+      onError : e => this.store.updateError(e, data)
     });
 
   }

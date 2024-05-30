@@ -32,8 +32,7 @@ export default class AppApproverType extends Mixin(LitElement)
 
     this.approver = {};
     this.new = false
-
-
+    
     //may delete
     this.employeeIndex = [];
     this.newEmployees = [];
@@ -48,9 +47,15 @@ export default class AppApproverType extends Mixin(LitElement)
 
   }
 
+  _onNewApproverType(e){
+    if (e.state === 'error' && e.error?.payload?.is400 ) {
+      this.newApproverType.validationHandler = new ValidationHandler(e)
+    }
+  }
+
   _newForm(e) {
     this.new = true;
-    this._refreshProperties();
+    this.requestUpdate();
   }
 
     /**
@@ -69,7 +74,7 @@ export default class AppApproverType extends Mixin(LitElement)
     }
 
     let category = await this.SettingsModel.getByCategory('admin-approver-form');
-    this.description = category.payload[0].value;
+    this.description = category.payload[0].defaultValue;
 
     let args = {status:"active"}; //if want all active do this to see your new ones
 
@@ -132,6 +137,19 @@ export default class AppApproverType extends Mixin(LitElement)
       employees: [],
       validationHandler : new ValidationHandler()
     }; 
+    this.existingApprovers = [];
+    //this.newApproverType = {};
+    this.initial = {};
+
+    this.approver = {};
+    this.new = false
+
+
+    //may delete
+    this.employeeIndex = [];
+    this.newEmployees = [];
+    this.index = 0;
+
   }
 
  /**
@@ -155,11 +173,10 @@ export default class AppApproverType extends Mixin(LitElement)
    */
     _onEmployeeSelect(e, index) {
       let emp = e.detail.employee;
-      console.log("E:", emp);
       if(emp){
         const newEmployees = [];
         emp = (new IamEmployeeObjectAccessor(emp)).travelAppObject;
-
+        emp.validationHandler = new ValidationHandler();
         if( this.employeeIsSelected(emp) ) return; //not yet wait for submit
         let empForm = { "employee" : emp, "approvalOrder": index}
         this.newEmployees.push(empForm);
@@ -209,7 +226,20 @@ export default class AppApproverType extends Mixin(LitElement)
 
     // this.employeeIndex = this.employeeIndex.filter(item => item !== hashId);
     // let index = this.employeeIndex.indexOf(id);
-    delete this.approver.employees[index];
+
+    //this.newEmployees = [];
+    // this.newEmployees = this.approver.employees.filter((item, ind) => ind !== index);
+    // this.approver.employees = this.newEmployees;
+
+    let filterEmployee = this.approver.employees.filter((item, ind) => ind !== index);
+    let empForm = [];
+    filterEmployee.map((emp, ind) => {
+      empForm.push({ "employee" : emp, "approvalOrder": ind});
+      
+    });
+
+    this.newEmployees = empForm;
+    this.approver.employees = filterEmployee;
     this.requestUpdate();
 
   }
@@ -311,7 +341,6 @@ export default class AppApproverType extends Mixin(LitElement)
     } else if ( e.state === 'loaded' ) {
       this._refreshProperties();
       let archived = e.payload.data.res[0].archived;
-      console.log('E:', e.payload.data)
       if ( archived ) {
         this.AppStateModel.showToast({message: 'Approver Type deleted successfully', type: 'success'});
       } else {
@@ -377,21 +406,16 @@ export default class AppApproverType extends Mixin(LitElement)
       const approverTypeId = e.target.getAttribute('approver-type-id');
       if ( approverTypeId != 0 && approverTypeId) {
         let approverType =  this.existingApprovers.find(a => a.approverTypeId == approverTypeId);
-        
+        approverType.validationHandler = new ValidationHandler(e)
         approverType.employees = [];
-        console.log("Update:", approverType);
         approverType.employees = this.newEmployees;
         delete approverType.editing;
-        // approverType = this.employeeFormat(approverType);
-        console.log("Update 2:", approverType);
         console.log(`Done Updating ${approverTypeId} ...`);
 
         await this.AdminApproverTypeModel.update(approverType);
       } else {
+        this.newApproverType.employees = [];
         this.newApproverType.employees = this.newEmployees;
-        console.log("Create:", this.newApproverType);
-        this.newApproverType = this.employeeFormat(this.newApproverType);
-        console.log("Create 2:", this.newApproverType);
         await this.AdminApproverTypeModel.create(this.newApproverType);
         console.log("Done Creating...");
 
@@ -448,15 +472,17 @@ export default class AppApproverType extends Mixin(LitElement)
    * 
    */
     async _onEditCancel(e, approver){
+      
+
       if (!approver.approverTypeId) {
+        this.new = false;
         this.newApproverType = {};
         return;
       }
       approver = this.initial;
-      
+      this.new = false;
       approver.editing = false;
       approver.validationHandler = new ValidationHandler();
-      this.new = false;
 
       for(let i = this.index; i > 0;  i--){
         approver.employees.pop()

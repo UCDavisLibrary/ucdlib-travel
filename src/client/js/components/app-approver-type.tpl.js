@@ -19,8 +19,7 @@ return html`
       <h2 class='heading--underline'>Approvers</h2>
       <div class="approvertype_description">
       <p>${unsafeHTML(this.description)}</p>
-      </div>
-
+    </div>
       <section class="approvertype-info">
       ${this.existingApprovers.map((approver) => {
         if(approver.editing) return renderApproverForm.call(this, approver);
@@ -84,9 +83,10 @@ function renderApproverForm(approver) {
     <section class="approvertype-form">
       <div class="l-2col layout-columns">
         <h3 class="section-header"><em>${this.approver.editing ? html`Edit Approver`:html`Add Approver`}</em>
-          <div class="field-container">
+          <div class="field-container ${approver.validationHandler.errorClass('label')}">
               <label class="textLabel" for=${inputIdLabel}>Label <abbr title="Required">*</abbr></label>
               <input class="inputLabel" .value=${this.approver.label || ''} id=${inputIdLabel} @input=${(e) => this._setLabel(e.target.value, this.approver)} type="text" placeholder="Position Title">
+              ${approver.validationHandler.renderErrorMessages('label')}
           </div>
           <div class="field-container">
             <label for=${inputIdDescription} class="textDescriptionLabel">Description</label>
@@ -102,14 +102,18 @@ function renderApproverForm(approver) {
 
           ${this.approver.editing ? html`
             ${this.approver.employees.map((emp, index) => html`
-                <div ?hidden=${this.approver.systemGenerated} id="employee-edit-bar-${index}" class="field-container">
+                <div ?hidden=${this.approver.systemGenerated || !emp} id="employee-edit-bar-${index}" class="field-container">
                   <div class="employee-search-bar">
-                    <ucdlib-employee-search-basic
-                      class="employee-search"
-                      selectedValue=${emp.kerberos}
-                      @status-change=${e => this._onEmployeeSelect(e, index)} 
-                      hide-label>
-                    </ucdlib-employee-search-basic> 
+                    ${emp ? html`
+                      <ucdlib-employee-search-basic
+                        class="employee-search"
+                        selected-value=${emp.kerberos}
+                        @status-change=${e => this._onEmployeeSelect(e, index)} 
+                        hide-label>
+                      </ucdlib-employee-search-basic> 
+                    `:html``}
+                      
+                    
                   </div>
                   <a id="employee-link-${index}" @click=${e => this._onDeleteBar(e, index)} class='icon-link double-decker'>
                       <i class="fa-solid fa-circle-minus"></i>
