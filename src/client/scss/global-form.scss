@@ -42,7 +42,7 @@ fieldset.field-error {
   position: relative;
   box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset;
   border: 1px solid #999;
-  max-width: 150px;
+  width: 150px;
 
   &::before {
     content: '$';
@@ -63,6 +63,7 @@ fieldset.field-error {
     padding-left: 2.5rem;
     border: none;
     box-shadow: none;
+    height: calc(2.5rem - 2px);
   }
 }
 

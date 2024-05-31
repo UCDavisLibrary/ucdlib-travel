@@ -271,7 +271,7 @@ export default class ApprovalRequestValidations {
     }
 
     // verify fundingSourceId is an integer
-    error = {errorType: 'invalid', message: 'All funding source ids must be integers'};
+    error = {errorType: 'invalid', message: 'A funding source is missing a funding source id'};
     for (const fundingSource of value) {
       if ( !Number.isInteger(fundingSource.fundingSourceId) ) {
         this.model.entityFields.pushError(out, field, error);
