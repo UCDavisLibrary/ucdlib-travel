@@ -1,40 +1,61 @@
 import { html } from 'lit';
+import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 
 export function render() { 
 return html`
 <div class="l-gutter--narrow panel">
 <section class="article-list">
-<div class="vm-listing ">
+<div class="vm-listing">
   <div class="vm-listing__figure">
-    <a href=""><img src="../../images/placeholders/135x135.png" alt="Thumbnail" class="" width="135" height="135" loading="lazy">
+    <a href="/admin/approvers"><i class="fas fa-solid fa-money-bill"></i>
 </a>
   </div>
   <div class="vm-listing__body">
-    <h3 class="vm-listing__title"><a href="">Lorem ipsum dolor sit amet, consectetur adipiscing elit. (72 characters)</a></h3>
-      <div class="vm-listing__submitted">February 10,  2021</div>
+    <h3 class="vm-listing__title"><a href="/admin/approvers">Approvers and Funding Sources</a></h3>
+      <div class="vm-listing__submitted" ?hidden=${this.userCantSubmit}>${unsafeHTML(this.SettingsModel.getByKey('admin_approvers_funding_page_description'))}</div>
   </div>
 </div>
-<div class="vm-listing ">
+<div class="vm-listing">
   <div class="vm-listing__figure">
-    <a href=""><img src="../../images/placeholders/135x135.png" alt="Thumbnail" class="" width="135" height="135" loading="lazy">
+    <a href="/admin/reimbursement"><i class="fas fa-solid fa-money-check"></i>
 </a>
   </div>
   <div class="vm-listing__body">
-    <h3 class="vm-listing__title"><a href="">Lorem ipsum dolor sit amet, consectetur adipiscing elit. (72 characters)</a></h3>
-      <div class="vm-listing__submitted">February 10,  2021</div>
-  </div>
+    <h3 class="vm-listing__title"><a href="/admin/reimbursement">Reimbursement Requests</a></h3>
+    <div class="vm-listing__submitted" ?hidden=${this.userCantSubmit}>${unsafeHTML(this.SettingsModel.getByKey('admin_reimbursement_requests_page_description'))}</div>
+    </div>
 </div>
-<div class="vm-listing ">
+<div class="vm-listing">
   <div class="vm-listing__figure">
-    <a href=""><img src="../../images/placeholders/135x135.png" alt="Thumbnail" class="" width="135" height="135" loading="lazy">
+    <a href="/admin/allocations"><i class="fas fa-solid fa-credit-card"></i>
 </a>
   </div>
   <div class="vm-listing__body">
-    <h3 class="vm-listing__title"><a href="">Lorem ipsum dolor sit amet, consectetur adipiscing elit. (72 characters)</a></h3>
-      <div class="vm-listing__submitted">February 10,  2021</div>
-  </div>
+    <h3 class="vm-listing__title"><a href="/admin/allocations">Employee Allocations</a></h3>
+    <div class="vm-listing__submitted" ?hidden=${this.userCantSubmit}>${unsafeHTML(this.SettingsModel.getByKey('admin_employee_allocations_page_description'))}</div>
+    </div>
 </div>
-<a href="#" class="icon icon--circle-arrow-right">View All</a>
+<div class="vm-listing">
+  <div class="vm-listing__figure">
+    <a href="/admin/settings"><i class="fas fa-solid fa-gear"></i>
+</a>
+  </div>
+  <div class="vm-listing__body">
+    <h3 class="vm-listing__title"><a href="/admin/settings">General Settings</a></h3>
+    <div class="vm-listing__submitted" ?hidden=${this.userCantSubmit}>${unsafeHTML(this.SettingsModel.getByKey('admin_allocations_general_settings_page_description'))}</div>
+    </div>
+</div>
+<div class="vm-listing">
+  <div class="vm-listing__figure">
+    <a href="/admin/line-items"><i class="fas fa-solid fa-list"></i>
+</a>
+  </div>
+  <div class="vm-listing__body">
+    <h3 class="vm-listing__title"><a href="/admin/line-items">Line Items</a></h3>
+    <div class="vm-listing__submitted" ?hidden=${this.userCantSubmit}>${unsafeHTML(this.SettingsModel.getByKey('admin_allocations_line_items_page_description'))}</div>
+    </div>
+</div>
+
 </section>
   </div>
 
