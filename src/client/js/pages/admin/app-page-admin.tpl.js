@@ -12,7 +12,7 @@ return html`
   </div>
   <div class="vm-listing__body">
     <h3 class="vm-listing__title"><a href="/admin/approvers">Approvers and Funding Sources</a></h3>
-      <div class="vm-listing__submitted" ?hidden=${this.userCantSubmit}>${unsafeHTML(this.SettingsModel.getByKey('admin_approvers_funding_page_description'))}</div>
+      <div class="vm-listing__submitted">${unsafeHTML(this.SettingsModel.getByKey('admin_approvers_funding_page_description'))}</div>
   </div>
 </div>
 <div class="vm-listing">
@@ -22,7 +22,7 @@ return html`
   </div>
   <div class="vm-listing__body">
     <h3 class="vm-listing__title"><a href="/admin/reimbursement">Reimbursement Requests</a></h3>
-    <div class="vm-listing__submitted" ?hidden=${this.userCantSubmit}>${unsafeHTML(this.SettingsModel.getByKey('admin_reimbursement_requests_page_description'))}</div>
+    <div class="vm-listing__submitted">${unsafeHTML(this.SettingsModel.getByKey('admin_reimbursement_requests_page_description'))}</div>
     </div>
 </div>
 <div class="vm-listing">
@@ -32,7 +32,7 @@ return html`
   </div>
   <div class="vm-listing__body">
     <h3 class="vm-listing__title"><a href="/admin/allocations">Employee Allocations</a></h3>
-    <div class="vm-listing__submitted" ?hidden=${this.userCantSubmit}>${unsafeHTML(this.SettingsModel.getByKey('admin_employee_allocations_page_description'))}</div>
+    <div class="vm-listing__submitted">${unsafeHTML(this.SettingsModel.getByKey('admin_employee_allocations_page_description'))}</div>
     </div>
 </div>
 <div class="vm-listing">
@@ -42,7 +42,7 @@ return html`
   </div>
   <div class="vm-listing__body">
     <h3 class="vm-listing__title"><a href="/admin/settings">General Settings</a></h3>
-    <div class="vm-listing__submitted" ?hidden=${this.userCantSubmit}>${unsafeHTML(this.SettingsModel.getByKey('admin_allocations_general_settings_page_description'))}</div>
+    <div class="vm-listing__submitted">${unsafeHTML(this.SettingsModel.getByKey('admin_allocations_general_settings_page_description'))}</div>
     </div>
 </div>
 <div class="vm-listing">
@@ -52,7 +52,7 @@ return html`
   </div>
   <div class="vm-listing__body">
     <h3 class="vm-listing__title"><a href="/admin/line-items">Line Items</a></h3>
-    <div class="vm-listing__submitted" ?hidden=${this.userCantSubmit}>${unsafeHTML(this.SettingsModel.getByKey('admin_allocations_line_items_page_description'))}</div>
+    <div class="vm-listing__submitted" >${unsafeHTML(this.SettingsModel.getByKey('admin_allocations_line_items_page_description'))}</div>
     </div>
 </div>
 

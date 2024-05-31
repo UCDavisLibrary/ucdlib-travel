@@ -11,7 +11,6 @@ export default class AppPageAdmin extends Mixin(LitElement)
 .with(LitCorkUtils, MainDomElement) {
   static get properties() {
     return {
-      adminPages: {type: Array},
     }
   }
 
@@ -20,7 +19,6 @@ export default class AppPageAdmin extends Mixin(LitElement)
     super();
     this.render = render.bind(this);
     this.settingsCategory = 'admin-page';
-    this.adminPages = [];
 
     this._injectModel('AppStateModel','SettingsModel');
   }
@@ -48,7 +46,7 @@ export default class AppPageAdmin extends Mixin(LitElement)
       }
   
       this.AppStateModel.showLoaded(this.id);
-      this.requestUpdate();
+      this.requestUpdate(); 
     }
 
   /**
