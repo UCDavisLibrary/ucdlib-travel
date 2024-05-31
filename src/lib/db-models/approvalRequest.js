@@ -135,6 +135,10 @@ class ApprovalRequest {
         jsonName: 'fundingSources',
         validateType: 'array',
         customValidationAsync: this.validations.fundingSources.bind(this.validations)
+      },
+      {
+        dbName: 'validated_successfully',
+        jsonName: 'validatedSuccessfully'
       }
     ]);
 
@@ -358,10 +362,14 @@ class ApprovalRequest {
     delete data.submitted_at
 
     // do validation
+    data.validatedSuccessfully = false;
     if ( forceValidation ) data.forceValidation = true;
     const validation = await this.entityFields.validate(data, ['employee_allocation_id']);
     if ( !validation.valid ) {
       return {error: true, message: 'Validation Error', is400: true, fieldsWithErrors: validation.fieldsWithErrors};
+    }
+    if ( data.forceValidation || payload.approval_status !== 'draft' ){
+      data.validatedSuccessfully = true;
     }
     delete data.forceValidation;
 

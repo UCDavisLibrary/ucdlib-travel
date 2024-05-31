@@ -149,7 +149,7 @@ export default class ApprovalRequestValidations {
     try {
       const startDate = new Date(payload.program_start_date);
       const endDate = new Date(payload.program_end_date);
-      if ( startDate < endDate ) return;
+      if ( startDate <= endDate ) return;
       const error = {errorType: 'invalid', message: 'Program start date must be before the end date'};
       if ( field.jsonName === 'programEndDate' ) {
         error.message = 'Program end date must be after start date';
@@ -185,7 +185,7 @@ export default class ApprovalRequestValidations {
     try {
       const startDate = new Date(payload.travel_start_date);
       const endDate = new Date(payload.travel_end_date);
-      if ( startDate < endDate ) return;
+      if ( startDate <= endDate ) return;
       const error = {errorType: 'invalid', message: 'Travel start date must be before the end date'};
       if ( field.jsonName === 'travelEndDate' ) {
         error.message = 'Travel end date must be after start date';
@@ -281,7 +281,7 @@ export default class ApprovalRequestValidations {
 
     // verify fundingSourceId exists in the database
     const fundingSourceIds = value.map(fundingSource => fundingSource.fundingSourceId);
-    let query = `SELECT funding_source_id, require_description FROM funding_sources WHERE funding_source_id = ANY($1)`;
+    let query = `SELECT funding_source_id, require_description FROM funding_source WHERE funding_source_id = ANY($1)`;
     let res = await pg.query(query, [fundingSourceIds]);
     if ( res.error ) {
       this.model.entityFields.pushError(out, field, {errorType: 'database', message: 'Error querying the database for funding sources'});

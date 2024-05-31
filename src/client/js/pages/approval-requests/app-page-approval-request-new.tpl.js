@@ -30,6 +30,16 @@ return html`
 export function renderForm(){
   const page = 'app-page-approval-request-new';
 
+  const hideLocationDetails = !this.approvalRequest.location || this.approvalRequest.location === 'virtual';
+  let locationDetailsLabel = '';
+  if ( this.approvalRequest.location === 'in-state' ) {
+    locationDetailsLabel = 'City *';
+  } else if ( this.approvalRequest.location === 'out-of-state' ) {
+    locationDetailsLabel = 'City, State *';
+  } else if ( this.approvalRequest.location === 'foreign' ) {
+    locationDetailsLabel = 'Country *';
+  }
+
   return html`
     <form class='skinny-form approval-request-form'>
       <div class="field-container ${this.validationHandler.errorClass('label')}">
@@ -122,6 +132,17 @@ export function renderForm(){
           </div>
         </div>
         <div>${this.validationHandler.renderErrorMessages('location')}</div>
+      </div>
+
+      <div class="field-container ${this.validationHandler.errorClass('locationDetails')}" ?hidden=${hideLocationDetails}>
+        <label for="${page}--locationDetails">${locationDetailsLabel}</label>
+        <input
+          type="text"
+          .value=${this.approvalRequest.locationDetails || ''}
+          id="${page}--locationDetails"
+          @input=${e => this._onFormInput('locationDetails', e.target.value)}
+          >
+        <div>${this.validationHandler.renderErrorMessages('locationDetails')}</div>
       </div>
 
       <fieldset>
@@ -267,6 +288,17 @@ export function renderForm(){
           ${ref(this.fundingSourceSelectRef)}>
         </funding-source-select>
       </fieldset>
+
+      <div class="field-container ${this.validationHandler.errorClass('comments')}">
+        <label for="${page}--comments">Comments</label>
+        <textarea
+          id="${page}--comments"
+          rows="5"
+          .value=${this.approvalRequest.comments || ''}
+          @input=${e => this._onFormInput('comments', e.target.value)}
+        ></textarea>
+        <div>${this.validationHandler.renderErrorMessages('comments')}</div>
+      </div>
 
       <div class='form-buttons alignable-promo__buttons'>
         <button

@@ -118,6 +118,7 @@ CREATE TABLE approval_request (
     travel_end_date DATE,
     comments VARCHAR(500),
     no_expenditures BOOLEAN NOT NULL DEFAULT FALSE,
+    validated_successfully BOOLEAN NOT NULL DEFAULT FALSE,
     submitted_at timestamp DEFAULT NOW()
 );
 COMMENT ON TABLE approval_request IS 'Table for storing travel approval requests.';
