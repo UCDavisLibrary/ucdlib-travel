@@ -4,8 +4,6 @@
 @use './global.scss' as global;
 @use './global-form.scss' as globalForm;
 
-// scoped styles
-
 // admin pages
 @use './pages/admin/settings.scss' as adminSettings;
 @use './pages//admin/line-items.scss' as adminLineItems;
@@ -20,3 +18,4 @@
 
 @use './components/employee-search-advanced.scss' as employeeSearchAdvanced;
 @use './components/employee-search-basic.scss' as employeeSearchBasic;
+@use './components/funding-source-select.scss' as fundingSourceSelect;

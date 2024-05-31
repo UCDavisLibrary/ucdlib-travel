@@ -370,10 +370,17 @@ class ApprovalRequest {
     data.employee_kerberos = data.employee_kerberos || data.employee.kerberos;
     delete data.employee;
 
+    // set funding source to "No funding/program time only" if no expenditures
+    // required to determine approval chain (still need supervisor approval)
+    if ( data.no_expenditures ){
+      data.funding_sources = [{fundingSourceId: 8, amount: 0}];
+      data.expenditures = [];
+    }
+
     // prep data for transaction
     let out = {};
     let approvalRequestRevisionId;
-    const fundingSources = data.funding_sources || [];
+    const fundingSources = (data.funding_sources || []).filter(fs => fs.amount || fs.fundingSourceId);
     delete data.funding_sources;
     const expenditures = data.expenditures || [];
     delete data.expenditures;
