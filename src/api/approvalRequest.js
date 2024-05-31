@@ -53,6 +53,7 @@ export default (api) => {
   api.post('/approval-request', protect('hasBasicAccess'), async (req, res) => {
     const data = req.body || {};
     const kerberos = req.auth.token.id;
+    const forceValidation = req.query.hasOwnProperty('force-validation');
 
     // check if this is a revision of an existing request and if so, ensure user is authorized
     if ( data.approvalRequestId ) {
@@ -85,7 +86,7 @@ export default (api) => {
     data.reimbursementStatus = data.noExpenditures ? 'not-required' : 'not-submitted';
 
     // create approval request revision
-    const result = await approvalRequest.createRevision(data, employeeObj);
+    const result = await approvalRequest.createRevision(data, employeeObj, forceValidation);
     if ( result.error && result.is400 ) {
       return res.status(400).json(result);
     }

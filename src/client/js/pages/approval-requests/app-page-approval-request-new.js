@@ -10,6 +10,21 @@ import ValidationHandler from "../../utils/ValidationHandler.js";
 import urlUtils from "../../../../lib/utils/urlUtils.js";
 import promiseUtils from '../../../../lib/utils/promiseUtils.js';
 
+/**
+ * @description Page for
+ * - creating a new approval request
+ * - editing a draft approval request
+ * - resubmitting a rejected approval request
+ *
+ * @property {Number} approvalFormId - The id of the approval request to edit. Extracted from the url
+ * @property {Object} approvalRequest - The current approval request object. Updated as form inputs change
+ * @property {Boolean} userCantSubmit - Whether the current user is authorized to submit the form
+ * @property {Boolean} canBeDeleted - Whether the current approval request can be deleted
+ * @property {Boolean} canBeSaved - Whether the current approval request can be saved as a draft
+ * @property {Boolean} isSave - Whether the form is being saved as a draft or submitted
+ * @property {Array} expenditureOptions - Line item options for expenditures
+ * @property {Number} totalExpenditures - The total amount of all expenditures
+ */
 export default class AppPageApprovalRequestNew extends Mixin(LitElement)
 .with(LitCorkUtils, MainDomElement) {
 
@@ -134,6 +149,11 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
     return promiseUtils.flattenAllSettledResults(resolvedPromises);
   }
 
+  /**
+   * @description bound to LineItemsModel active-line-items-fetched event
+   * @param {Object} e - cork-app-utils event object
+   * @returns
+   */
   _onActiveLineItemsFetched(e){
     if ( e.state !== 'loaded' ) return;
     this.expenditureOptions = e.payload;
@@ -145,8 +165,6 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
     const ar = this.approvalRequest
 
     ar.approvalStatus = 'draft';
-    // todo: ensure to set forceValidation flag on request
-
 
     // set conditional request dates
     if ( ar.programStartDate && !ar.programEndDate ) {
@@ -167,6 +185,7 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
     }
 
     console.log('submit', this.approvalRequest);
+    this.ApprovalRequestModel.create(this.approvalRequest, true);
   }
 
   /**

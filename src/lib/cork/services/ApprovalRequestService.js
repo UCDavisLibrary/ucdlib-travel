@@ -30,9 +30,9 @@ class ApprovalRequestService extends BaseService {
     });
   }
 
-  create(payload, timestamp) {
+  create(payload, timestamp, forceValidation) {
     return this.request({
-      url : '/api/approval-request',
+      url : '/api/approval-request' + (forceValidation ? '?force-validation' : ''),
       fetchOptions : {
         method : 'POST',
         body : payload
