@@ -35,7 +35,9 @@ class AdminApproverTypeModel extends BaseModel {
       }
     } catch(e) {}
 
-    this.store.emit(this.store.events.APPROVER_TYPE_QUERY_REQUEST, [this.store.data.query[args],query]);
+    this.store.data.query[args].query = query;
+
+    this.store.emit(this.store.events.APPROVER_TYPE_QUERY_REQUEST, this.store.data.query[args]);
 
     return this.store.data.query[args];
   }
