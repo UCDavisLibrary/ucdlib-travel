@@ -23,41 +23,43 @@ export default class AppPageAdmin extends Mixin(LitElement)
     this._injectModel('AppStateModel','SettingsModel');
   }
 
-    /**
+  /**
    * @description bound to AppStateModel app-state-update event
    * @param {Object} state - AppStateModel state
    */
-    async _onAppStateUpdate(state) {
-      if ( this.id !== state.page ) return;
+  async _onAppStateUpdate(state) {
+    if ( this.id !== state.page ) return;
 
-      this.AppStateModel.setTitle('Application Administration');
+    this.AppStateModel.showLoading();
 
-      const breadcrumbs = [
-        this.AppStateModel.store.breadcrumbs.home,
-        this.AppStateModel.store.breadcrumbs.admin
-      ];
-      this.AppStateModel.setBreadcrumbs(breadcrumbs);
+    this.AppStateModel.setTitle('Application Administration');
 
-      const d = await this.getPageData();
-      const hasError = d.some(e => e.status === 'rejected' || e.value.state === 'error');
-      if ( hasError ) {
-        this.AppStateModel.showError(d);
-        return;
-      }
-  
-      this.AppStateModel.showLoaded(this.id);
-      this.requestUpdate(); 
+    const breadcrumbs = [
+      this.AppStateModel.store.breadcrumbs.home,
+      this.AppStateModel.store.breadcrumbs.admin
+    ];
+    this.AppStateModel.setBreadcrumbs(breadcrumbs);
+
+    const d = await this.getPageData();
+    const hasError = d.some(e => e.status === 'rejected' || e.value.state === 'error');
+    if ( hasError ) {
+      this.AppStateModel.showError(d);
+      return;
     }
+
+    this.AppStateModel.showLoaded(this.id);
+    this.requestUpdate();
+  }
 
   /**
    * @description Get all data required for rendering this page
    */
-      async getPageData(){
-        const promises = [];
-        promises.push(this.SettingsModel.getByCategory(this.settingsCategory));
-        const resolvedPromises = await Promise.allSettled(promises);
-        return resolvedPromises;
-      }
+  async getPageData(){
+    const promises = [];
+    promises.push(this.SettingsModel.getByCategory(this.settingsCategory));
+    const resolvedPromises = await Promise.allSettled(promises);
+    return resolvedPromises;
+  }
 
 }
 
