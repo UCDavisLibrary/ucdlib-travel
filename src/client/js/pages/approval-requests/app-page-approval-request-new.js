@@ -184,7 +184,6 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
       delete ar.travelEndDate
     }
 
-    console.log('submit', this.approvalRequest);
     this.ApprovalRequestModel.create(this.approvalRequest, true);
   }
 
@@ -280,8 +279,6 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
     this.canBeDeleted = e.payload.data.find(r => r.approvalStatus !== 'draft') ? false : true;
     this.validationHandler = new ValidationHandler();
     this.approvalRequest = { ...currentInstance };
-
-    console.log(e);
   }
 
   /**
