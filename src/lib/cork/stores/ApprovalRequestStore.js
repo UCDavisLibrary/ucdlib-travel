@@ -8,15 +8,45 @@ class ApprovalRequestStore extends BaseStore {
     this.data = {
       fetched: {},
       deleted: {},
-      created: {}
+      created: {},
+      approvalChainByRequestId: {}
 
     };
     this.events = {
       APPROVAL_REQUESTS_FETCHED: 'approval-requests-fetched',
       APPROVAL_REQUESTS_REQUESTED: 'approval-requests-requested',
       APPROVAL_REQUEST_DELETED: 'approval-request-deleted',
-      APPROVAL_REQUEST_CREATED: 'approval-request-created'
+      APPROVAL_REQUEST_CREATED: 'approval-request-created',
+      APPROVAL_REQUEST_CHAIN_FETCHED: 'approval-request-chain-fetched'
     };
+  }
+
+  approvalChainLoading(approvalRequestId) {
+    this._setApprovalChainState({
+      state : this.STATE.LOADING,
+      approvalRequestId
+    });
+  }
+
+  approvalChainLoaded(payload, approvalRequestId) {
+    this._setApprovalChainState({
+      state : this.STATE.LOADED,
+      payload,
+      approvalRequestId
+    });
+  }
+
+  approvalChainError(error, approvalRequestId) {
+    this._setApprovalChainState({
+      state : this.STATE.ERROR,
+      error,
+      approvalRequestId
+    });
+  }
+
+  _setApprovalChainState(state) {
+    this.data.approvalChainByRequestId[state.approvalRequestId] = state;
+    this.emit(this.events.APPROVAL_REQUEST_CHAIN_FETCHED, state);
   }
 
   approvalRequestCreatedLoading(request, timestamp) {
