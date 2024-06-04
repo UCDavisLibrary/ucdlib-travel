@@ -71,3 +71,13 @@
 .pad-icon-top {
   padding-top: .3rem;
 }
+
+.size-h4 {
+  font-size: 1.092rem !important;
+  line-height: 1.2 !important;
+}
+@media (min-width: 768px) {
+  .size-h4 {
+    font-size: 1.428rem !important;
+  }
+}

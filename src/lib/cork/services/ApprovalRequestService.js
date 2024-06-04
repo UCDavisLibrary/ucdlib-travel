@@ -44,6 +44,16 @@ class ApprovalRequestService extends BaseService {
     });
   }
 
+  getApprovalChain(approvalRequestId) {
+    return this.request({
+      url : `/api/approval-request/${approvalRequestId}/approval-chain`,
+      checkCached: () => this.store.data.approvalChainByRequestId[approvalRequestId],
+      onLoading : request => this.store.approvalChainLoading(request, approvalRequestId),
+      onLoad : result => this.store.approvalChainLoaded(result.body, approvalRequestId),
+      onError : e => this.store.approvalChainError(e, approvalRequestId)
+    });
+  }
+
 }
 
 const service = new ApprovalRequestService();

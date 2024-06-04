@@ -116,7 +116,7 @@ CREATE TABLE approval_request (
     has_custom_travel_dates BOOLEAN NOT NULL DEFAULT FALSE,
     travel_start_date DATE,
     travel_end_date DATE,
-    comments VARCHAR(500),
+    comments VARCHAR(2000),
     no_expenditures BOOLEAN NOT NULL DEFAULT FALSE,
     validated_successfully BOOLEAN NOT NULL DEFAULT FALSE,
     submitted_at timestamp DEFAULT NOW()
@@ -159,7 +159,7 @@ CREATE TABLE approval_request_approval_chain_link (
     approver_order INTEGER NOT NULL DEFAULT 0,
     action VARCHAR(100) NOT NULL DEFAULT 'approval-needed',
     employee_kerberos VARCHAR(100) REFERENCES employee(kerberos),
-    comments VARCHAR(500),
+    comments VARCHAR(2000),
     fund_changes JSONB NOT NULL DEFAULT '{}'::JSONB,
     occurred timestamp DEFAULT NOW()
 );

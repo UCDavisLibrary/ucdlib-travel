@@ -119,4 +119,27 @@ export default (api) => {
 
   });
 
+  api.get('/approval-request/:id/approval-chain', protect('hasBasicAccess'), async (req, res) => {
+    const kerberos = req.auth.token.id;
+    const approvalRequestId = typeTransform.toPositiveInt(req.params.id);
+    if ( !approvalRequestId ) {
+      return res.status(400).json({error: true, message: 'Invalid approvalRequestId.'});
+    }
+    const approvalRequestObj = await approvalRequest.get({requestIds: [approvalRequestId], isCurrent: true});
+    if ( approvalRequestObj.error ) {
+      console.error('Error in GET /approval-request/:id/approval-chain', approvalRequest.error);
+      return res.status(500).json({error: true, message: 'Error getting approval request.'});
+    }
+    if ( !approvalRequestObj.data.length ) {
+      return res.status(404).json({error: true, message: 'Approval request not found.'});
+    }
+    const isOwnRequest = approvalRequestObj.data[0].employeeKerberos === kerberos;
+    if ( !isOwnRequest && !req.auth.token.hasAdminAccess ) {
+      return apiUtils.do403(res);
+    }
+
+    const approvalChain = await approvalRequest.makeApprovalChain(approvalRequestObj.data[0]);
+    return res.json(approvalChain);
+  });
+
 };
