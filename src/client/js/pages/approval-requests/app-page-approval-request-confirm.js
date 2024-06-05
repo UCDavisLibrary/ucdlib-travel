@@ -14,6 +14,7 @@ export default class AppPageApprovalRequestConfirm extends Mixin(LitElement)
       approvalRequestId : {type: Number},
       approvalRequest : {type: Object},
       approvalChain : {type: Array},
+      formLink : {type: String},
 
     }
   }
@@ -25,6 +26,7 @@ export default class AppPageApprovalRequestConfirm extends Mixin(LitElement)
     this.approvalRequest = {};
     this.approvalChain = [];
     this.settingsCategory = 'approval-requests';
+    this.formLink = '';
 
     this._injectModel('AppStateModel', 'ApprovalRequestModel', 'SettingsModel');
   }
@@ -52,10 +54,12 @@ export default class AppPageApprovalRequestConfirm extends Mixin(LitElement)
       return;
     }
 
+    this.formLink = `${this.AppStateModel.store.breadcrumbs['approval-request-new'].link}/${this.approvalRequestId}`;
+
     const breadcrumbs = [
       this.AppStateModel.store.breadcrumbs.home,
       this.AppStateModel.store.breadcrumbs['approval-requests'],
-      {text: 'New', 'link': `${this.AppStateModel.store.breadcrumbs['approval-request-new'].link}/${this.approvalRequestId}`},
+      {text: this.approvalRequest?.label || 'New', 'link': this.formLink},
       this.AppStateModel.store.breadcrumbs[this.id]
     ];
     this.AppStateModel.setBreadcrumbs(breadcrumbs);
@@ -84,8 +88,9 @@ export default class AppPageApprovalRequestConfirm extends Mixin(LitElement)
     if ( e.state !== 'loaded' ) return;
     if ( e.approvalRequestId !== this.approvalRequestId ) return;
     this.approvalChain = e.payload;
-    console.log(e);
   }
+
+  _onSubmitButtonClick(){}
 
   _onApprovalRequestsRequested(e){
     if ( e.state !== 'loaded' ) return;

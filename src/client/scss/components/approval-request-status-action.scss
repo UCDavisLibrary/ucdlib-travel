@@ -1,0 +1,32 @@
+approval-request-status-action {
+
+  display: block;
+  margin-bottom: 1rem;
+
+  .container {
+    display: flex;
+  }
+  .icon-circle {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 4rem;
+    height: 4rem;
+    min-width: 4rem;
+    min-height: 4rem;
+    font-size: 2rem;
+    border-radius: 50%;
+    color: var(--category-brand-contrast-color, #fff);
+    margin-right: 1rem;
+  }
+  .comments {
+    display: flex;
+    font-size: .875rem;
+    align-items: center;
+    color: #73ABDD;
+
+    .fa-comment {
+      margin-right: .5rem;
+    }
+  }
+}
