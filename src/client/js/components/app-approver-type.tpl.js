@@ -73,10 +73,9 @@ function renderApproverForm(approver) {
     <section class="approvertype-form">
       <div class="l-2col layout-columns">
         <h3 class="section-header"><em>${approver.editing ? html`Edit Approver`:html`Add Approver`}</em>
-          <div class="field-container ${approver.validationHandler.errorClass('label')}">
+          <div class="field-container ">
               <label class="textLabel" for=${inputIdLabel}>Label <abbr title="Required">*</abbr></label>
               <input class="inputLabel" .value=${approver.label || ''} id=${inputIdLabel} @input=${(e) => this._setLabel(e.target.value, approver)} type="text" placeholder="Position Title">
-              ${approver.validationHandler.renderErrorMessages('label')}
           </div>
           <div class="field-container">
             <label for=${inputIdDescription} class="textDescriptionLabel">Description</label>
@@ -89,23 +88,19 @@ function renderApproverForm(approver) {
                 <i class="fa-solid fa-circle-plus"></i>
             </a> 
           </div>
-
             ${approver.employees && approver.employees.map((emp, index) => html`
-                <div ?hidden=${approver.systemGenerated || !emp} id="employee-edit-bar-${index}" class="field-container">
+                <div class="field-container">
                   <div class="employee-search-bar">
                     ${emp ? html`
                       <ucdlib-employee-search-basic
                         class="employee-search"
-                        ${approver.editing ? html`selected-value=${emp.kerberos}`: html``}
-                        selected-value=${emp.kerberos}
-                        @status-change=${e => this._onEmployeeSelect(e, index)} 
+                        selected-value=${emp.kerberos ?? ''}
+                        @status-change=${e => this._onEmployeeSelect(e,approver,index)} 
                         hide-label>
                       </ucdlib-employee-search-basic> 
                     `:html``}
-                      
-                    
                   </div>
-                  <a id="employee-link-${index}" @click=${e => this._onDeleteBar(e, index, approver)} class='icon-link double-decker'>
+                  <a  @click=${e => this._onDeleteBar(e, index, approver)} class='icon-link double-decker'>
                       <i class="fa-solid fa-circle-minus"></i>
                   </a> 
                 </div>    
