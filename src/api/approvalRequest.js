@@ -119,6 +119,10 @@ export default (api) => {
 
   });
 
+  /**
+   * @description Returns the employees that need to approve the given approval request based on the submitter and funding sources selected
+   * Called before an approval request is actually submitted.
+   */
   api.get('/approval-request/:id/approval-chain', protect('hasBasicAccess'), async (req, res) => {
     const kerberos = req.auth.token.id;
     const approvalRequestId = typeTransform.toPositiveInt(req.params.id);
@@ -139,7 +143,16 @@ export default (api) => {
     }
 
     const approvalChain = await approvalRequest.makeApprovalChain(approvalRequestObj.data[0]);
-    return res.json(approvalChain);
+
+    // transform chain object to match format in approvalRequest object
+    const out = approvalChain.map((chainObj) => {
+      return {
+        action: 'approval-needed',
+        employee: (new IamEmployeeObjectAccessor(chainObj.employee)).travelAppObject,
+        approverTypes: chainObj.approverTypes,
+      };
+    });
+    return res.json(out);
   });
 
 };
