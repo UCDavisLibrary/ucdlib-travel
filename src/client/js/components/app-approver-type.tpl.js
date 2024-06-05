@@ -19,8 +19,6 @@ return html`
       ${this.new ? renderApproverForm.call(this, this.newApproverType) : html`
         <p><button @click=${e => this._newForm(e)} class="btn btn--primary" style="margin:20px 0px 0px 0px" >Add New Approver</button></p>
       `}
-      
-          
     </div>
 
 `;}
@@ -105,25 +103,15 @@ function renderApproverForm(approver) {
                   </a> 
                 </div>    
             `)}
-          
-
 
           <span class="field-container">
               <p>
                 <button type='submit' class="btn btn--alt3">Save Button</button>
                 <button @click=${e => this._onEditCancel(e,approver)} class="btn btn--alt3">Cancel Button</button>
               </p>
-            </span> 
-
-
+          </span> 
             
       </div>
-
-
-      <!-- ${approverId == 'new' ? 
-        html`<p><button type='submit' class="btn btn--primary" style="margin:20px 0px 0px 0px" >Add New Approver</button></p> `
-        :html``
-      } -->
       
     </section>
   </form>

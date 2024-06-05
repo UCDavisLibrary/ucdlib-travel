@@ -1,13 +1,21 @@
-import { html, LitElement } from 'lit';
-import {render, styles} from "./app-approver-type.tpl.js";
+import {LitElement } from 'lit';
+import {render} from "./app-approver-type.tpl.js";
 import { LitCorkUtils, Mixin } from "../../../lib/appGlobals.js";
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 import "./ucdlib-employee-search-basic.js"
 import ValidationHandler from "../utils/ValidationHandler.js";
 import IamEmployeeObjectAccessor from '../../../lib/utils/iamEmployeeObjectAccessor.js';
 import urlUtils from "../../../lib/utils/urlUtils.js";
+import AppPageAdminApprovers from '../pages/admin/app-page-admin-approvers.js';
 
+/**
+ * @description Admin approvertype component for managing approver type options
+ * where user can create, edit, and archive an approver type for approver requests
+ * @param {Array} existingApprovers - local copy of active approvertype objects from AdminApproverTypeModel
+ * @param {Object} newApproverType - new approver type object being created
+ * @param {Boolean} new - Tells if it is new approver to activate form or not
 
+ */
 export default class AppApproverType extends Mixin(LitElement)
 .with(LitCorkUtils, MainDomElement) {
 
@@ -15,7 +23,6 @@ export default class AppApproverType extends Mixin(LitElement)
     return {
       existingApprovers:{type: Array, attribute: 'existingApprovers'},
       newApproverType:{type: Object, attribute: 'newApproverType'},
-      approver: {type: Object, attribute: 'approver'},
       new: {type:Boolean, attribute: 'new'}
     }
   }
@@ -36,6 +43,10 @@ export default class AppApproverType extends Mixin(LitElement)
 
   }
 
+  /**
+   * @description Change new property from to true
+   * @param {CustomEvent} e 
+   */
   _newForm(e) {
     this.new = true;
   }
@@ -61,8 +72,9 @@ export default class AppApproverType extends Mixin(LitElement)
   }
 
 
-      /**
+  /**
    * @description Get all data required for rendering this page
+   * @return {Promise}
    */
        async getPageData(){
         let args = {status:"active"}; //if want all active do this to see your new ones
@@ -85,7 +97,7 @@ export default class AppApproverType extends Mixin(LitElement)
     }
 
   /**
-   * @description reset properties for the approver
+   * @description reset properties
    * 
   */
   async _resetProperties(){
@@ -116,6 +128,10 @@ export default class AppApproverType extends Mixin(LitElement)
       }
     }
 
+ /**
+   * @description Adds a employee bar to the employees section
+   * 
+  */
   _onAddBar(e, approverType){
     if(!approverType.employees) approverType.employees = [];
     approverType.employees.push({});
@@ -123,6 +139,10 @@ export default class AppApproverType extends Mixin(LitElement)
     this.requestUpdate();
   }
 
+  /**
+   * @description Deletes a employee bar from the employees section
+   * 
+  */
   _onDeleteBar(e, employeeIndex, approverType) {
     if (!employeeIndex) {
       approverType.employees[0] = {};
@@ -132,24 +152,38 @@ export default class AppApproverType extends Mixin(LitElement)
     this.requestUpdate()
   }
 
+  /**
+   * @description Set the label for the approver object
+   * 
+  */
   async _setLabel(value, approver){
     approver.label = value;
     this.requestUpdate();
   }
 
+ /**
+   * @description Set the description for the approver object
+   * 
+  */
   async _setDescription(value, approver){
     approver.description = value;
     this.requestUpdate();
   }
 
 
+ /**
+   * @description checks if something is an object
+   * @param {Object} object
+   * @returns {Boolean} whether it is true or false
+  */
   isObject(object) {
     return object != null && typeof object === 'object';
   }
 
   /**
-   * @description Returns a approver type from the element's approverType array by approverTypeId
-   */
+  * @description Returns a approver type from the element's approverType array by approverTypeId
+  * @param {Number} 
+  */
    getApproverTypeId(id){
     return this.existingApprovers.find(item => item.approverTypeId == id);
   }
@@ -157,6 +191,7 @@ export default class AppApproverType extends Mixin(LitElement)
 
   /**
    * @description bound to AdminApproverTypeModel APPROVER_TYPE_QUERY_REQUEST event
+   * @param {CustomEvent} e
    */
 
   async _onApproverTypeQueryRequest(e){
@@ -185,6 +220,7 @@ export default class AppApproverType extends Mixin(LitElement)
 
   /**
    * @description bound to AdminApproverTypeModel APPROVER_TYPE_UPDATED event
+   * @param {CustomEvent} e
    */
    async _onApproverTypeUpdated(e){
     if ( e.state === 'error' ) {
@@ -217,6 +253,7 @@ export default class AppApproverType extends Mixin(LitElement)
 
   /**
    * @description bound to AdminApproverTypeModel APPROVER_TYPE_CREATED event
+   * @param {CustomEvent} e
    */
   async _onApproverTypeCreated(e){
     if ( e.state === 'error' ) {
@@ -240,28 +277,8 @@ export default class AppApproverType extends Mixin(LitElement)
 
 
   /**
-   * @description on submit button get the form data
-   * 
-   * let data = {
-      "approverTypeId": 0,
-      "label": "mkl",
-      "description": "wfe",
-      "systemGenerated": false,
-      "hideFromFundAssignment": false,
-      "archived": false,
-      "employees":[
-        {
-          "employee":{kerberos: "MaybeF2", firstName:"F", lastName:"G", department:null},
-          "approvalOrder": 5 
-        },
-        {
-          "employee":{kerberos: "MaybeF22", firstName:"G", lastName:"H", department:null},
-          "approvalOrder": 5 
-        }
-      ]
-     };   
-
-   * 
+   * @description on submit button get the form data 
+   * @param {CustomEvent} e
    * 
    */
     async _onFormSubmit(e){
@@ -290,8 +307,10 @@ export default class AppApproverType extends Mixin(LitElement)
       this.requestUpdate();
     }
 
+
   /**
    * @description on edit button from a approver
+   * @param {Object} approver
    * @returns {Array} array of objects with updated employees
    * 
    */
@@ -328,10 +347,10 @@ export default class AppApproverType extends Mixin(LitElement)
       let query = "status=active";
 
       let storeApproverType = this.AdminApproverTypeModel.store.data.query[query].payload.find(at => at.approverTypeId === approver.approverTypeId);
+
       for( let prop in storeApproverType ) {
         approver[prop] = storeApproverType[prop];
       }
-      console.log(approver)
 
       approver.validationHandler = new ValidationHandler();
     
@@ -340,7 +359,7 @@ export default class AppApproverType extends Mixin(LitElement)
 
   /**
    * @description on archive button from a approver
-   * 
+   * @param {Object} approver 
    */
     async _onDelete(approver){
       this.AppStateModel.showDialogModal({
@@ -356,7 +375,7 @@ export default class AppApproverType extends Mixin(LitElement)
 
   /**
    * @description on dialog action for deleting an approver
-   * 
+   * @param {CustomEvent} 
   */
   async _onDialogAction(e){
     if ( e.action !== 'delete-approver-item' ) return;
