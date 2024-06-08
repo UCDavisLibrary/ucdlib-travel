@@ -3,6 +3,8 @@ import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { ref } from 'lit/directives/ref.js';
 
 import "../../components/funding-source-select.js";
+import "../../components/app-draft-list.js";
+
 
 export function render() {
 return html`
@@ -22,6 +24,9 @@ return html`
         ${renderForm.call(this)}
       </div>
       <div class='l-sidebar-second'>
+        <app-draft-list
+          ${ref(this.draftListSelectRef)}
+        ></app-draft-list>
       </div>
     </div>
   </div>

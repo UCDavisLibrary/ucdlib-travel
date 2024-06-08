@@ -1,0 +1,38 @@
+app-draft-list {
+    .component {
+        width: 390px;
+        background-color: #FFF9E6;
+        margin: 10px;
+        padding: 40px;
+    }
+    .inner-component{
+        width:315px;
+    }
+    .icon {
+        color:#FFBF00;
+        font-weight:900;
+        font-size: 50px;
+        margin-left:0;
+        margin-right:10px;
+    }
+    .draftHeading {
+        color:#022851;
+        text-align:center;
+        vertical-align:center;
+        font-size: 28px;
+        font-weight:800;
+    }
+    .componentHeader{
+        display: inline-flex;
+	    align-items: center;
+    }
+    .listTitle{
+       font-size: 19px; 
+    }
+    .listDescription{
+       font-size: 16px; 
+    }
+    a {
+        cursor:pointer;
+    }
+  }
