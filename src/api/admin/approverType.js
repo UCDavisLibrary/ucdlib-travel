@@ -22,7 +22,6 @@ export default (api) => {
    * @description Create an approver-type
    */
   api.post('/approver-type', protect('hasAdminAccess'), async (req, res) => {
-    
     const approverTypeData = req.body;
 
     const data = await approverType.create(approverTypeData);
