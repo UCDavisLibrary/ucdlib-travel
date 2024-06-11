@@ -77,14 +77,14 @@ class AdminApproverTypeStore extends BaseStore {
     });
   }
 
-  updateLoaded(payload, id, data) {
+  updateLoaded(payload) {
     this._setUpdateState({
       state : this.STATE.LOADED,
       payload
     });
   }
 
-  updateError(error, id, data) {
+  updateError(error, data) {
     this._setUpdateState({
       state : this.STATE.ERROR,
       error,

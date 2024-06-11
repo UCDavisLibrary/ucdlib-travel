@@ -6,7 +6,6 @@ import "./ucdlib-employee-search-basic.js"
 import ValidationHandler from "../utils/ValidationHandler.js";
 import IamEmployeeObjectAccessor from '../../../lib/utils/iamEmployeeObjectAccessor.js';
 import urlUtils from "../../../lib/utils/urlUtils.js";
-import AppPageAdminApprovers from '../pages/admin/app-page-admin-approvers.js';
 
 /**
  * @description Admin approvertype component for managing approver type options
@@ -14,7 +13,6 @@ import AppPageAdminApprovers from '../pages/admin/app-page-admin-approvers.js';
  * @param {Array} existingApprovers - local copy of active approvertype objects from AdminApproverTypeModel
  * @param {Object} newApproverType - new approver type object being created
  * @param {Boolean} new - Tells if it is new approver to activate form or not
-
  */
 export default class AppApproverType extends Mixin(LitElement)
 .with(LitCorkUtils, MainDomElement) {
@@ -32,23 +30,17 @@ export default class AppApproverType extends Mixin(LitElement)
     super();
     this.existingApprovers = [];
     this.newApproverType = {};
+    this.settingsCategory = 'admin-approver-form';
+    this.query = {status:"active"};
 
 
     this.new = false;
     this.element = 'admin-approvers';
-    
+
     this.render = render.bind(this);
     this._injectModel('AppStateModel', 'AdminApproverTypeModel', 'SettingsModel');
     this._resetProperties();
 
-  }
-
-  /**
-   * @description Change new property from to true
-   * @param {CustomEvent} e 
-   */
-  _newForm(e) {
-    this.new = true;
   }
 
     /**
@@ -76,31 +68,40 @@ export default class AppApproverType extends Mixin(LitElement)
    * @description Get all data required for rendering this page
    * @return {Promise}
    */
-       async getPageData(){
-        let args = {status:"active"}; //if want all active do this to see your new ones
+  async getPageData(){
+    const promises = [
+      this.SettingsModel.getByCategory(this.settingsCategory),
+      this.AdminApproverTypeModel.query(this.query)
+    ];
+    const resolvedPromises = await Promise.allSettled(promises);
+    return resolvedPromises;
+  }
 
-        const promises = [];
-        promises.push(this.SettingsModel.getByCategory(this.settingsCategory));
-        promises.push(this.AdminApproverTypeModel.query(args));
-        const resolvedPromises = await Promise.allSettled(promises);
-        return resolvedPromises;
-      }
-  
 
  /**
    * @description runs the refresh properties after edit/create/delete function runs
-   * 
+   *
   */
-    async _refreshProperties(){
-      this._resetProperties();
-      this.AppStateModel.refresh();
-    }
+  async _refreshProperties(){
+    this._resetProperties();
+    this.AppStateModel.refresh();
+  }
 
   /**
    * @description reset properties
-   * 
+   *
   */
   async _resetProperties(){
+    this._resetNewApproverType();
+    this.existingApprovers = [];
+    this.new = false;
+
+  }
+
+  /**
+   * @description reset new approver type object
+   */
+  _resetNewApproverType(){
     this.newApproverType = {
       approverTypeId: 0,
       label: "",
@@ -110,29 +111,27 @@ export default class AppApproverType extends Mixin(LitElement)
       archived: false,
       employees: [],
       validationHandler : new ValidationHandler()
-    }; 
-    this.existingApprovers = [];
-    this.new = false;
-
+    };
   }
 
-    /**
+  /**
    * @description Event handler for when employees are selected from the employee search component
    * @param {CustomEvent} e - status-change event from ucdlib-employee-search-basic
-   */
-    _onEmployeeSelect(e, approverType, employeeIndex) {
-      let emp = e.detail.employee;
-      if(emp){
-        emp = (new IamEmployeeObjectAccessor(emp)).travelAppObject;
-        approverType.employees[employeeIndex] = emp
-      }
+  */
+  _onEmployeeSelect(e, approverType, employeeIndex) {
+    let emp = e.detail.employee;
+    if(emp){
+      emp = (new IamEmployeeObjectAccessor(emp)).travelAppObject;
+      approverType.employees[employeeIndex] = emp
+      this.requestUpdate();
     }
+  }
 
  /**
-   * @description Adds a employee bar to the employees section
-   * 
+   * @description Adds a employee search bar to the employees section
+   *
   */
-  _onAddBar(e, approverType){
+  _onAddBar(approverType){
     if(!approverType.employees) approverType.employees = [];
     approverType.employees.push({});
 
@@ -140,11 +139,11 @@ export default class AppApproverType extends Mixin(LitElement)
   }
 
   /**
-   * @description Deletes a employee bar from the employees section
-   * 
+   * @description Deletes a employee search bar from the employees section
+   *
   */
-  _onDeleteBar(e, employeeIndex, approverType) {
-    if (!employeeIndex) {
+  _onDeleteBar(employeeIndex, approverType) {
+    if (!employeeIndex && approverType.employees.length == 1) {
       approverType.employees[0] = {};
     } else {
       approverType.employees.splice(employeeIndex, 1);
@@ -154,7 +153,7 @@ export default class AppApproverType extends Mixin(LitElement)
 
   /**
    * @description Set the label for the approver object
-   * 
+   *
   */
   async _setLabel(value, approver){
     approver.label = value;
@@ -163,28 +162,18 @@ export default class AppApproverType extends Mixin(LitElement)
 
  /**
    * @description Set the description for the approver object
-   * 
+   *
   */
   async _setDescription(value, approver){
     approver.description = value;
     this.requestUpdate();
   }
 
-
- /**
-   * @description checks if something is an object
-   * @param {Object} object
-   * @returns {Boolean} whether it is true or false
-  */
-  isObject(object) {
-    return object != null && typeof object === 'object';
-  }
-
   /**
   * @description Returns a approver type from the element's approverType array by approverTypeId
-  * @param {Number} 
+  * @param {Number}
   */
-   getApproverTypeId(id){
+   getApproverTypeById(id){
     return this.existingApprovers.find(item => item.approverTypeId == id);
   }
 
@@ -192,41 +181,45 @@ export default class AppApproverType extends Mixin(LitElement)
   /**
    * @description bound to AdminApproverTypeModel APPROVER_TYPE_QUERY_REQUEST event
    * @param {CustomEvent} e
-   */
-
+  */
   async _onApproverTypeQueryRequest(e){
     let query = e.query;
-    if ( e.state === 'loaded' && urlUtils.queryStringFromObject(query) == urlUtils.queryStringFromObject({'status':'active'})) {
+    if ( e.state === 'loaded' && urlUtils.queryStringFromObject(query) == urlUtils.queryStringFromObject(this.query)) {
       let approverArray = e.payload.filter(function (el) {
         return el.archived == false &&
               el.hideFromFundAssignment == false;
       });
 
-      approverArray.map((emp) => {
-        emp = {...emp};
-        if(!Array.isArray(emp.employees)) emp.employees = [emp.employees];
-        emp.editing = false;
-        emp.validationHandler = new ValidationHandler();
-        return emp;
-      });
-  
-      this.existingApprovers = approverArray;
-  
+      this.existingApprovers = approverArray.map(emp => this._copyApproverType(emp));
+
       this.requestUpdate();
     }
+  }
 
+  /**
+   * @description Copy an approver type object and reset its state properties
+   * @param {Object} approverType - approver type object from the AdminApproverTypeModel
+   * @returns {Object}
+   */
+  _copyApproverType(approverType){
+    approverType = JSON.parse(JSON.stringify(approverType));
+    if ( !Array.isArray(approverType.employees) ) approverType.employees = [approverType.employees];
+    approverType.editing = false;
+    approverType.validationHandler = new ValidationHandler();
+    return approverType;
   }
 
 
   /**
    * @description bound to AdminApproverTypeModel APPROVER_TYPE_UPDATED event
+   * Fires after an approver type is updated - successfully or not
    * @param {CustomEvent} e
    */
    async _onApproverTypeUpdated(e){
     if ( e.state === 'error' ) {
       if ( e.error?.payload?.is400 ) {
         const getApproverTypeId = e.data.approverTypeId;
-        const approverType = this.getApproverTypeId(getApproverTypeId);
+        const approverType = this.getApproverTypeById(getApproverTypeId);
         approverType.validationHandler = new ValidationHandler(e);
         this.AppStateModel.showLoaded(this.element)
         this.requestUpdate();
@@ -253,6 +246,7 @@ export default class AppApproverType extends Mixin(LitElement)
 
   /**
    * @description bound to AdminApproverTypeModel APPROVER_TYPE_CREATED event
+   * Fires after an approver type is created - successfully or not
    * @param {CustomEvent} e
    */
   async _onApproverTypeCreated(e){
@@ -275,117 +269,82 @@ export default class AppApproverType extends Mixin(LitElement)
     }
   }
 
-
   /**
-   * @description on submit button get the form data 
+   * @description on submit button get the form data
    * @param {CustomEvent} e
-   * 
+   *
    */
-    async _onFormSubmit(e){
-      e.preventDefault();
-      this.lastScrollPosition = window.scrollY;
+  async _onFormSubmit(e){
+    e.preventDefault();
+    this.lastScrollPosition = window.scrollY;
 
-      const approverTypeId = e.target.getAttribute('approver-type-id');
-      if ( approverTypeId != 0 && approverTypeId) {
-        let approverType =  this.existingApprovers.find(a => a.approverTypeId == approverTypeId);
-        console.log(`Updating Approver Type No. ${approverTypeId} ...`);
-        await this.AdminApproverTypeModel.update(this.employeeFormat(approverType));
-      } else {
-        await this.AdminApproverTypeModel.create(this.employeeFormat(this.newApproverType));
-        console.log("Creating...");
-
-      }
-
+    const approverTypeId = e.target.getAttribute('approver-type-id');
+    if ( approverTypeId != 0 && approverTypeId) {
+      let approverType =  this.getApproverTypeById(approverTypeId);
+      await this.AdminApproverTypeModel.update(approverType);
+    } else {
+      await this.AdminApproverTypeModel.create(this.newApproverType);
     }
+  }
 
   /**
    * @description on edit button from a approver
-   * 
+   *
    */
-    async _onEdit(e, approver){
-      approver.editing = true;
-      this.requestUpdate();
-    }
-
-
-  /**
-   * @description on edit button from a approver
-   * @param {Object} approver
-   * @returns {Array} array of objects with updated employees
-   * 
-   */
-   employeeFormat(approver){
-    let employeeFormat = [];
-
-    if(approver.employees == null) { 
-      approver.employees = [];
-      return approver;
-    }
-    
-    for (let [index, a] of approver.employees.entries()){
-      let samp = {employee:a, approvalOrder: index}
-      employeeFormat.push(samp);
-    }
-    approver.employees = employeeFormat;
-    return approver;
-}
+  async _onEdit(e, approver){
+    approver.editing = true;
+    this.requestUpdate();
+  }
 
   /**
    * @description on edit Cancel button from a approver
-   * 
+   *
    */
-    async _onEditCancel(e, approver){
-      
-      if (!approver.approverTypeId) {
-        this.new = false;
-        this.newApproverType = {};
-        return;
-      }
+  async _onEditCancel(approver){
+
+    if (!approver.approverTypeId) {
       this.new = false;
-      approver.editing = false;
-
-      let query = "status=active";
-
-      let storeApproverType = this.AdminApproverTypeModel.store.data.query[query].payload.find(at => at.approverTypeId === approver.approverTypeId);
-
-      for( let prop in storeApproverType ) {
-        approver[prop] = storeApproverType[prop];
-      }
-
-      approver.validationHandler = new ValidationHandler();
-    
-      this.requestUpdate();
+      this._resetNewApproverType();
+      return;
     }
+
+    let query = urlUtils.queryStringFromObject(this.query);
+
+    let storeApproverType = this.AdminApproverTypeModel.store.data.query[query].payload.find(at => at.approverTypeId === approver.approverTypeId);
+
+    // get index of approver in existing approvers and update approver
+    let index = this.existingApprovers.findIndex(at => at.approverTypeId === approver.approverTypeId);
+    this.existingApprovers[index] = this._copyApproverType(storeApproverType);
+
+    this.requestUpdate();
+  }
 
   /**
    * @description on archive button from a approver
-   * @param {Object} approver 
+   * @param {Object} approver
    */
-    async _onDelete(approver){
-      this.AppStateModel.showDialogModal({
-        title : 'Delete Approver Type Option',
-        content : 'Are you sure you want to delete this Approver Type Option?',
-        actions : [
-          {text: 'Delete', value: 'delete-approver-item', color: 'double-decker'},
-          {text: 'Cancel', value: 'cancel', invert: true, color: 'primary'}
-        ],
-        data : {approver}
-      });         
+  async _onDelete(approver){
+    this.AppStateModel.showDialogModal({
+      title : 'Delete Approver Type',
+      content : 'Are you sure you want to delete this approver type?',
+      actions : [
+        {text: 'Delete', value: 'delete-approver-item', color: 'double-decker'},
+        {text: 'Cancel', value: 'cancel', invert: true, color: 'primary'}
+      ],
+      data : {approver}
+    });
   }
 
   /**
    * @description on dialog action for deleting an approver
-   * @param {CustomEvent} 
+   * @param {CustomEvent}
   */
   async _onDialogAction(e){
     if ( e.action !== 'delete-approver-item' ) return;
     let approverItem = e.data.approver;
     approverItem.archived = true;
-    approverItem = this.employeeFormat(approverItem);
 
     await this.AdminApproverTypeModel.update(approverItem);
-
-    this._refreshProperties();
 
   }
 
