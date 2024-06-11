@@ -53,6 +53,7 @@ export default (api) => {
   api.post('/approval-request', protect('hasBasicAccess'), async (req, res) => {
     const data = req.body || {};
     const kerberos = req.auth.token.id;
+    const forceValidation = req.query.hasOwnProperty('force-validation');
 
     // check if this is a revision of an existing request and if so, ensure user is authorized
     if ( data.approvalRequestId ) {
@@ -85,7 +86,7 @@ export default (api) => {
     data.reimbursementStatus = data.noExpenditures ? 'not-required' : 'not-submitted';
 
     // create approval request revision
-    const result = await approvalRequest.createRevision(data, employeeObj);
+    const result = await approvalRequest.createRevision(data, employeeObj, forceValidation);
     if ( result.error && result.is400 ) {
       return res.status(400).json(result);
     }
@@ -116,6 +117,42 @@ export default (api) => {
 
     res.json(result);
 
+  });
+
+  /**
+   * @description Returns the employees that need to approve the given approval request based on the submitter and funding sources selected
+   * Called before an approval request is actually submitted.
+   */
+  api.get('/approval-request/:id/approval-chain', protect('hasBasicAccess'), async (req, res) => {
+    const kerberos = req.auth.token.id;
+    const approvalRequestId = typeTransform.toPositiveInt(req.params.id);
+    if ( !approvalRequestId ) {
+      return res.status(400).json({error: true, message: 'Invalid approvalRequestId.'});
+    }
+    const approvalRequestObj = await approvalRequest.get({requestIds: [approvalRequestId], isCurrent: true});
+    if ( approvalRequestObj.error ) {
+      console.error('Error in GET /approval-request/:id/approval-chain', approvalRequest.error);
+      return res.status(500).json({error: true, message: 'Error getting approval request.'});
+    }
+    if ( !approvalRequestObj.data.length ) {
+      return res.status(404).json({error: true, message: 'Approval request not found.'});
+    }
+    const isOwnRequest = approvalRequestObj.data[0].employeeKerberos === kerberos;
+    if ( !isOwnRequest && !req.auth.token.hasAdminAccess ) {
+      return apiUtils.do403(res);
+    }
+
+    const approvalChain = await approvalRequest.makeApprovalChain(approvalRequestObj.data[0]);
+
+    // transform chain object to match format in approvalRequest object
+    const out = approvalChain.map((chainObj) => {
+      return {
+        action: 'approval-needed',
+        employee: (new IamEmployeeObjectAccessor(chainObj.employee)).travelAppObject,
+        approverTypes: chainObj.approverTypes,
+      };
+    });
+    return res.json(out);
   });
 
 };

@@ -19,6 +19,12 @@
 .small {
   font-size: .875rem;
 }
+.smaller {
+  font-size: .75rem;
+}
+.grey {
+  color: #4C4C4C;
+}
 
 .skinny-form {
   padding: 1rem .5rem;
@@ -52,8 +58,32 @@
   align-items: center;
 }
 
+.vm-listing__figure {
 
+  &.has-icon {
+    width: 100px;
+  }
+
+  .icon-img {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+  }
+
+}
 
 .pad-icon-top {
   padding-top: .3rem;
+}
+
+.size-h4 {
+  font-size: 1.092rem !important;
+  line-height: 1.2 !important;
+}
+@media (min-width: 768px) {
+  .size-h4 {
+    font-size: 1.428rem !important;
+  }
 }
