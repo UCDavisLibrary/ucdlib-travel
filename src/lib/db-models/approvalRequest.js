@@ -2,6 +2,7 @@ import pg from "./pg.js";
 import EntityFields from "../utils/EntityFields.js";
 import validations from "./approvalRequestValidations.js";
 import employeeModel from "./employee.js";
+import fundingSourceModel from "./fundingSource.js"
 import typeTransform from "../utils/typeTransform.js";
 
 class ApprovalRequest {
@@ -113,7 +114,7 @@ class ApprovalRequest {
       {
         dbName: 'comments',
         jsonName: 'comments',
-        charLimit: 500
+        charLimit: 2000
       },
       {
         dbName: 'submitted_at',
@@ -135,6 +136,10 @@ class ApprovalRequest {
         jsonName: 'fundingSources',
         validateType: 'array',
         customValidationAsync: this.validations.fundingSources.bind(this.validations)
+      },
+      {
+        dbName: 'validated_successfully',
+        jsonName: 'validatedSuccessfully'
       }
     ]);
 
@@ -358,10 +363,14 @@ class ApprovalRequest {
     delete data.submitted_at
 
     // do validation
+    data.validated_successfully = false;
     if ( forceValidation ) data.forceValidation = true;
     const validation = await this.entityFields.validate(data, ['employee_allocation_id']);
     if ( !validation.valid ) {
       return {error: true, message: 'Validation Error', is400: true, fieldsWithErrors: validation.fieldsWithErrors};
+    }
+    if ( data.forceValidation || payload.approval_status !== 'draft' ){
+      data.validated_successfully = true;
     }
     delete data.forceValidation;
 
@@ -506,6 +515,162 @@ class ApprovalRequest {
     }
 
     return {success: true, approvalRequestId};
+  }
+
+  /**
+   * @description Construct an approval chain for an approval request based on funding sources selected
+   * @param {Object|Number} approvalRequest - approval request object or approval request ID
+   * @returns {Object|Array} - If error returns error object, otherwise returns array of approvers with properties:
+   *  - approvalTypeOrder {Integer} - order of approval type
+   *  - employeeOrder {Integer} - order of employee within approval type
+   *  - approverTypes {Array} - array of approver types with properties:
+   *   - approverTypeId {Integer} - approver type ID
+   *   - approverTypeLabel {String} - approver type label
+   * - employeeKerberos {String} - kerberos of approver
+   * - employee {Object} - employee record of approver
+   */
+  async makeApprovalChain(approvalRequest){
+
+    // check if approval request ID was given instead of object
+    // retrieve approval request object if so
+    let approvalRequestId = typeTransform.toPositiveInt(approvalRequest);
+    if ( approvalRequestId ){
+      approvalRequest = await this.get({requestIds: [approvalRequestId], isCurrent: true});
+      if ( approvalRequest.error ) return approvalRequest;
+      if ( !approvalRequest.total ) return {error: true, message: 'Approval request not found', is400: true};
+      approvalRequest = approvalRequest.data[0];
+    }
+
+    // get full funding source objects
+    const fundingSourceIds = (approvalRequest.fundingSources || []).map(fs => fs.fundingSourceId);
+    if ( !fundingSourceIds.length ) return [];
+    const fundingSources = await fundingSourceModel.get({ids: fundingSourceIds});
+    if ( fundingSources.error ) return fundingSources;
+
+    // get employee record of employee who submitted the request
+    if ( !approvalRequest.employeeKerberos ) return {error: true, message: 'Employee kerberos not found', is400: true};
+    let submitter = await employeeModel.getIamRecordById(approvalRequest.employeeKerberos);
+    if ( submitter.error ) return submitter;
+    submitter = submitter.res;
+
+    // extract approvers from funding source and flatten
+    // approver will have properties:
+    // approvalTypeOrder, employeeOrder, approverTypeLabel, approverTypeId,employeeId, employeeIdType
+    const approvers = [];
+    for (const fs of fundingSources){
+      for (const ap of (fs.approverTypes || [])){
+
+        // if system generated, we determine the approver employee
+        if ( ap.systemGenerated ){
+
+          // submitter supervisor
+          if ( ap.approverTypeId == 1 ){
+
+            if ( !submitter?.supervisor?.iamId ) {
+              return {error: true, message: 'Submitter supervisor not found'};
+            }
+            approvers.push({
+              approvalTypeOrder: ap.approvalOrder,
+              employeeOrder: 0,
+              approverTypeLabel: ap.label,
+              approverTypeId: ap.approverTypeId,
+              employeeId: submitter.supervisor.iamId,
+              employeeIdType: 'iam-id'
+            });
+
+          // submitter department head
+          } else if ( ap.approverTypeId == 2 ){
+
+            // bail if submitter has no department head and is not department head
+            if ( !submitter?.departmentHead?.iamId && !(submitter?.groups || []).find(g => g.partOfOrg && g.isHead) ) {
+              return {error: true, message: 'Submitter department head not found'};
+            }
+
+            approvers.push({
+              approvalTypeOrder: ap.approvalOrder,
+              employeeOrder: 0,
+              approverTypeLabel: ap.label,
+              approverTypeId: ap.approverTypeId,
+              employeeId: submitter.departmentHead.iamId,
+              employeeIdType: 'iam-id'
+            });
+
+          // a system generated approver we don't know how to handle
+          } else {
+            return {error: true, message: 'Invalid system generated approver type'};
+          }
+
+        // not system generated, we use the employee id provided
+        } else {
+          if ( !ap.employees || !ap.employees.length ) return {error: true, message: 'No employees found for approver type'};
+          for (const employee of ap.employees ){
+            if ( !employee.kerberos ) return {error: true, message: 'Employee kerberos not found'};
+            approvers.push({
+              approvalTypeOrder: ap.approvalOrder,
+              employeeOrder: employee.approvalOrder,
+              approverTypeLabel: ap.label,
+              approverTypeId: ap.approverTypeId,
+              employeeId: employee.kerberos,
+              employeeIdType: 'user-id'
+            });
+          }
+        }
+      }
+    }
+
+    // retrieve employee records for each approver
+    const approverEmployeeRecords = [];
+    const promises = [];
+    let promiseIndex = 0;
+    for (const approver of approvers) {
+      const id = `${approver.employeeIdType}--${approver.employeeId}`;
+      if ( !approverEmployeeRecords.find(a => a.id === id)) {
+        promises.push(employeeModel.getIamRecordById(approver.employeeId, approver.employeeIdType));
+        approverEmployeeRecords.push({id, promiseIndex});
+        promiseIndex += 1;
+      }
+    }
+    const resolvedPromises = await Promise.allSettled(promises);
+    for ( const i in resolvedPromises ){
+      const resolvedPromise = resolvedPromises[i];
+      if ( resolvedPromise.status === 'rejected' ){
+        return {error: true, message: 'Error getting approver employee record'};
+      }
+      if ( resolvedPromise.value.error ){
+        return resolvedPromise.value;
+      }
+
+      const approver = approverEmployeeRecords.find(a => a.promiseIndex == i);
+      approver.employee = resolvedPromise.value.res;
+    }
+
+    // merge the employee records with the approver records into a unique array of employee approvers
+    const uniqueApprovers = [];
+    for ( const approver of approvers ){
+      const employeeRecord = approverEmployeeRecords.find(a => a.id === `${approver.employeeIdType}--${approver.employeeId}`);
+      const employeeKerberos = employeeRecord.employee.user_id;
+      if ( !employeeKerberos ) return {error: true, message: 'Approver kerberos is missing from employee record'};
+      let uniqueRecord = uniqueApprovers.find(a => a.employeeKerberos === employeeKerberos);
+      if ( !uniqueRecord ){
+        uniqueRecord = {approvalTypeOrder: approver.approvalTypeOrder, employeeOrder: approver.employeeOrder, approverTypes: []};
+        uniqueApprovers.push(uniqueRecord);
+      };
+      uniqueRecord.employeeKerberos = employeeKerberos;
+      uniqueRecord.employee = employeeRecord.employee;
+      if ( approver.approvalTypeOrder < uniqueRecord.approvalTypeOrder ) uniqueRecord.approvalTypeOrder = approver.approvalTypeOrder;
+      if ( approver.employeeOrder < uniqueRecord.employeeOrder ) uniqueRecord.employeeOrder = approver.employeeOrder;
+      if ( !uniqueRecord.approverTypes.find(at => at.approverTypeId === approver.approverTypeId)){
+        uniqueRecord.approverTypes.push({approverTypeId: approver.approverTypeId, approverTypeLabel: approver.approverTypeLabel});
+      }
+    }
+
+    // sort by approval type order, then by employee order
+    uniqueApprovers.sort((a, b) => {
+      if ( a.approvalTypeOrder !== b.approvalTypeOrder ) return a.approvalTypeOrder - b.approvalTypeOrder;
+      return a.employeeOrder - b.employeeOrder
+    });
+
+    return uniqueApprovers;
   }
 
 }

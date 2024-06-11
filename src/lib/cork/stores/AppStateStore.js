@@ -11,7 +11,7 @@ class AppStateStoreImpl extends AppStateStore {
     this.breadcrumbs = {
       home: {text: 'Home', link: '/'},
       'approval-request-new': {text: 'New', link: '/approval-request/new'},
-      'approval-request-confirm': {text: 'Confirm', link: '/approval-request/confirm'},
+      'approval-request-confirm': {text: 'Review and Submit', link: '/approval-request/confirm'},
       'approval-requests': {text: 'Your Approval Requests', link: '/approval-request'},
       'approver': {text: 'Approve a Request', link: '/approver'},
       'reports': {text: 'Reports', link: '/reports'},
