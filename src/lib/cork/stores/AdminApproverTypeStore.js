@@ -11,6 +11,7 @@ class AdminApproverTypeStore extends BaseStore {
       update: {}
     };
     this.events = {
+      APPROVER_TYPE_QUERY_REQUEST: 'approverType-query-request',
       APPROVER_TYPE_QUERIED: 'approverType-queried',
       APPROVER_TYPE_CREATED: 'approverType-created',
       APPROVER_TYPE_UPDATED: 'approverType-updated'
@@ -86,8 +87,9 @@ class AdminApproverTypeStore extends BaseStore {
   updateError(error, id, data) {
     this._setUpdateState({
       state : this.STATE.ERROR,
-      error
-    }, data);
+      error,
+      data
+    });
   }
 
   _setUpdateState(state) {
