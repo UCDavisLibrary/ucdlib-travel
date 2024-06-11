@@ -25,6 +25,9 @@ export default (api) => {
     const approverTypeData = req.body;
 
     const data = await approverType.create(approverTypeData);
+    if ( data.error && data.is400 ) {
+      return res.status(400).json(data);
+    }
     if ( data.error ) {
       console.error('Error in POST /approver-type', data.error);
       return res.status(500).json({error: true, message: 'Error creating approver-type.'});
@@ -36,14 +39,17 @@ export default (api) => {
   /**
    * @description Update an approver-type
    */
-     api.put('/approver-type', protect('hasAdminAccess'), async (req, res) => {
-      const approverTypeData = req.body;
+  api.put('/approver-type', protect('hasAdminAccess'), async (req, res) => {
+    const approverTypeData = req.body;
 
-      const data = await approverType.update(approverTypeData);
-      if ( data.error ) {
-        console.error('Error in PUT /approver-type', data.error);
-        return res.status(500).json({error: true, message: 'Error updating approver-type.'});
-      }
-      res.json({data: data, error: false});
-    });
+    const data = await approverType.update(approverTypeData);
+    if ( data.error && data.is400 ) {
+      return res.status(400).json(data);
+    }
+    if ( data.error ) {
+      console.error('Error in PUT /approver-type', data.error);
+      return res.status(500).json({error: true, message: 'Error updating approver-type.'});
+    }
+    res.json({data: data, error: false});
+  });
 };

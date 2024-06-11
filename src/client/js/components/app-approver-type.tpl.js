@@ -2,7 +2,7 @@ import { html } from 'lit';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import '@ucd-lib/theme-elements/brand/ucd-theme-brand-textbox/ucd-theme-brand-textbox.js'
 
-export function render() { 
+export function render() {
 return html`
     <div class="l-container">
       <h2 class='heading--underline'>Approvers</h2>
@@ -14,10 +14,10 @@ return html`
         if(approver.editing) return renderApproverForm.call(this, approver);
         return renderApproverItem.call(this, approver);
       })}
-      </section> 
+      </section>
 
       ${this.new ? renderApproverForm.call(this, this.newApproverType) : html`
-        <p><button @click=${e => this._newForm(e)} class="btn btn--primary" style="margin:20px 0px 0px 0px" >Add New Approver</button></p>
+        <p><button @click=${e => this.new = true} class="btn btn--primary" style="margin:20px 0px 0px 0px" >Add New Approver</button></p>
       `}
     </div>
 
@@ -37,13 +37,13 @@ function renderApproverItem(ap) {
               <a @click=${e => this._onEdit(e, ap)} class='icon-link admin-blue'>
                       <i class="fa-solid fa-pen-to-square"></i>
               </a>
-              
+
               ${!ap.systemGenerated ? html`
                 <a @click=${e => this._onDelete(ap)} class='icon-link double-decker'>
                         <i class="fa-solid fa-trash"></i>
                 </a>
               `:html``}
-          </span> 
+          </span>
           <div id=${itemIdDescription}>${ap.description}</div>
 
             ${!ap.systemGenerated ? html`
@@ -51,7 +51,7 @@ function renderApproverItem(ap) {
                 ${ap.employees && ap.employees.map((employee) => html`
                   <div >
                     <b class="approverList"><i class="fa-solid fa-user"></i>&nbsp;${employee ? html`${employee.firstName} ${employee.lastName}`:html``}</b><br />
-                  </div>  
+                  </div>
                 `)}
               </div>
             `:html`<b class="approverList"><i class="fa-solid fa-user"></i>&nbsp;System Generated</b><br />`}
@@ -69,50 +69,51 @@ function renderApproverForm(approver) {
   return html`
   <form approver-type-id=${approver.approverTypeId || 0 } @submit=${this._onFormSubmit}>
     <section class="approvertype-form">
-      <div class="l-2col layout-columns">
-        <h3 class="section-header"><em>${approver.editing ? html`Edit Approver`:html`Add Approver`}</em>
-          <div class="field-container ">
-              <label class="textLabel" for=${inputIdLabel}>Label <abbr title="Required">*</abbr></label>
-              <input class="inputLabel" .value=${approver.label || ''} id=${inputIdLabel} @input=${(e) => this._setLabel(e.target.value, approver)} type="text" placeholder="Position Title">
-          </div>
-          <div class="field-container">
-            <label for=${inputIdDescription} class="textDescriptionLabel">Description</label>
-            <textarea id=${inputIdDescription} .value=${approver.description || ''} class="textDescription" @input=${(e) => this._setDescription(e.target.value, approver)} rows="8" cols="48" placeholder="Approver Type Description"></textarea>
-          </div>
-
-          <div class="field-container">
-            <label class="employeeLabel">Employee(s)*</label>
-            <a @click=${e => this._onAddBar(e, approver)} class='icon-link quad'>
-                <i class="fa-solid fa-circle-plus"></i>
-            </a> 
-          </div>
-            ${approver.employees && approver.employees.map((emp, index) => html`
-                <div class="field-container">
-                  <div class="employee-search-bar">
-                    ${emp ? html`
-                      <ucdlib-employee-search-basic
-                        class="employee-search"
-                        selected-value=${emp.kerberos ?? ''}
-                        @status-change=${e => this._onEmployeeSelect(e,approver,index)} 
-                        hide-label>
-                      </ucdlib-employee-search-basic> 
-                    `:html``}
-                  </div>
-                  <a  @click=${e => this._onDeleteBar(e, index, approver)} class='icon-link double-decker'>
-                      <i class="fa-solid fa-circle-minus"></i>
-                  </a> 
-                </div>    
-            `)}
-
-          <span class="field-container">
-              <p>
-                <button type='submit' class="btn btn--alt3">Save Button</button>
-                <button @click=${e => this._onEditCancel(e,approver)} class="btn btn--alt3">Cancel Button</button>
-              </p>
-          </span> 
-            
+      <h3 class="section-header"><em>${approver.editing ? html`Edit Approver`:html`Add Approver`}</em></h3>
+      <div class="field-container ${approver.validationHandler.errorClass('label')}">
+        <label class="textLabel" for=${inputIdLabel}>Label <abbr title="Required">*</abbr></label>
+        <input class="inputLabel" .value=${approver.label || ''} id=${inputIdLabel} @input=${(e) => this._setLabel(e.target.value, approver)} type="text" placeholder="Approver Type Title">
+        <div>${approver.validationHandler.renderErrorMessages('label')}</div>
       </div>
-      
+      <div class="field-container">
+        <label for=${inputIdDescription} class="textDescriptionLabel">Description</label>
+        <textarea id=${inputIdDescription} .value=${approver.description || ''} class="textDescription" @input=${(e) => this._setDescription(e.target.value, approver)} rows="8" cols="48" placeholder="Approver Type Description"></textarea>
+      </div>
+
+      <div class="field-container ${approver.validationHandler.errorClass('employees')}" ?hidden=${approver.systemGenerated}>
+        <label class="employeeLabel">Employee(s)*</label>
+        <a @click=${() => this._onAddBar(approver)} class='icon-link quad'>
+            <i class="fa-solid fa-circle-plus"></i>
+        </a>
+        <div>${approver.validationHandler.renderErrorMessages('employees')}</div>
+      </div>
+      <div ?hidden=${approver.systemGenerated}>
+        ${approver.employees && approver.employees.map((emp, index) => html`
+          <div class="field-container">
+            <div class="employee-search-bar">
+              ${emp ? html`
+                <ucdlib-employee-search-basic
+                  class="employee-search"
+                  selected-value=${emp.kerberos ?? ''}
+                  @status-change=${e => this._onEmployeeSelect(e,approver,index)}
+                  hide-label>
+                </ucdlib-employee-search-basic>
+              `:html``}
+            </div>
+            <a  @click=${() => this._onDeleteBar(index, approver)} class='icon-link double-decker'>
+                <i class="fa-solid fa-circle-minus"></i>
+            </a>
+          </div>
+        `)}
+      </div>
+
+      <span class="field-container">
+          <p>
+            <button type='submit' class="btn btn--alt3">Save</button>
+            <button @click=${() => this._onEditCancel(approver)} class="btn btn--alt3">Cancel</button>
+          </p>
+      </span>
+
     </section>
   </form>
 
