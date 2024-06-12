@@ -15,7 +15,7 @@ export default class AppPageApprovalRequestConfirm extends Mixin(LitElement)
       approvalRequest : {type: Object},
       approvalChain : {type: Array},
       formLink : {type: String},
-
+      totalExpenditures: {type: Number}
     }
   }
 
@@ -84,6 +84,12 @@ export default class AppPageApprovalRequestConfirm extends Mixin(LitElement)
     return promiseUtils.flattenAllSettledResults(resolvedPromises);
   }
 
+  willUpdate(props){
+    if ( props.has('approvalRequest') ){
+      this._setTotalExpenditures();
+    }
+  }
+
   _onApprovalRequestChainFetched(e) {
     if ( e.state !== 'loaded' ) return;
     if ( e.approvalRequestId !== this.approvalRequestId ) return;
@@ -131,6 +137,20 @@ export default class AppPageApprovalRequestConfirm extends Mixin(LitElement)
   _setApprovalRequestId(state) {
     let approvalRequestId = Number(state?.location?.path?.[2]);
     this.approvalRequestId = Number.isInteger(approvalRequestId) && approvalRequestId > 0 ? approvalRequestId : 0;
+  }
+
+  /**
+   * @description Set the totalExpenditures property based on the expenditures array from the current approval request
+   */
+  _setTotalExpenditures(){
+    let total = 0;
+    if ( this.approvalRequest.expenditures ){
+      this.approvalRequest.expenditures.forEach(e => {
+        if ( !e.amount ) return;
+        total += Number(e.amount);
+      });
+    }
+    this.totalExpenditures = total;
   }
 
 }
