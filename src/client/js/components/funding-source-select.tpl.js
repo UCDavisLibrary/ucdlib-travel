@@ -96,5 +96,8 @@ function renderForm(){
  * @description Render the read-only list view
  */
 function renderList(){
-  return html``;
+  return html`
+  <div class='list-view'>
+
+  </div>`;
 }
