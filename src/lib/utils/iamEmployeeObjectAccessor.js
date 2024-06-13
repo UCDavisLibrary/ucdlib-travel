@@ -38,4 +38,11 @@ export default class IamEmployeeObjectAccessor {
       if ( group.partOfOrg ) return group;
     }
   }
+
+  /**
+   * @description Get the kerberos (user_id) of the employee
+   */
+  get kerberos() {
+    return this.data.user_id || '';
+  }
 }
