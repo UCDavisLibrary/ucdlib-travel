@@ -2,29 +2,33 @@ import { html } from 'lit';
 
 export function render() {
   return html`
-    <div class='component-header'>
-      <div class='primary bold'>${this.label}</div>
-      <div class='action-buttons'>
-        <a
-          title='Add funding source'
-          ?hidden=${!this.formView || this.reallocateOnly}
-          @click=${this._onAddClick}
-          class='icon-link quad add-funding-source'>
-          <i class="fa-solid fa-circle-plus"></i>
-        </a>
-        <a
-          title='Toggle form view'
-          ?hidden=${!this.canToggleView}
-          @click=${this._onToggleViewClick}
-          class='icon-link'>
-          <i class="fa-solid fa-pen"></i>
-        </a>
+    <div class='${this.formView ? 'form-view' : 'list-view'} ${this.indentBody ? 'indent-body' : ''}'>
+      <div class='component-header'>
+        <div class='primary bold'>${this.label}</div>
+        <div class='action-buttons'>
+          <a
+            title='Add funding source'
+            ?hidden=${!this.formView || this.reallocateOnly}
+            @click=${this._onAddClick}
+            class='icon-link quad add-funding-source'>
+            <i class="fa-solid fa-circle-plus"></i>
+          </a>
+          <a
+            title='Toggle form view'
+            ?hidden=${!this.canToggleView}
+            @click=${this._onToggleViewClick}
+            class='icon-link'>
+            <i class="fa-solid fa-pen"></i>
+          </a>
+        </div>
       </div>
-    </div>
-    ${this.formView ? renderForm.call(this) : renderList.call(this)}
-    <div class='total-row'>
-      <div>Total</div>
-      <div class='total-amount'>$${this.fundingSourceTotal.toFixed(2)}</div>
+      <div class='funding-sources'>
+        ${this.formView ? renderForm.call(this) : renderList.call(this)}
+      </div>
+      <div class='total-row'>
+        <div>Total</div>
+        <div class='total-amount'>$${this.fundingSourceTotal.toFixed(2)}</div>
+      </div>
     </div>
   `;
 }
@@ -34,7 +38,7 @@ export function render() {
  */
 function renderForm(){
   return html`
-    <div class='form-view'>
+    <div>
       <div ?hidden=${!this.hasError} class='flex flex--align-center double-decker u-space-mb'>
         <i class="fa-solid fa-exclamation-circle u-space-mr--small"></i>
         <span>${this.errorMessage}</span>
@@ -97,7 +101,16 @@ function renderForm(){
  */
 function renderList(){
   return html`
-  <div class='list-view'>
+  <div>
+    ${this.data.map(fundingSource => html`
+      <div class='funding-source'>
+        <div>
+          <div>${fundingSource.fundingSourceLabel}</div>
+          <div ?hidden=${!fundingSource.description} class='small grey'>${fundingSource.description}</div>
+        </div>
+        <div class='amount'>$${fundingSource.amount.toFixed(2)}</div>
+      </div>
+    `)}
 
   </div>`;
 }

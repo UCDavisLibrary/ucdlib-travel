@@ -67,3 +67,25 @@ fieldset.field-error {
   }
 }
 
+.skinny-form {
+  padding: 1rem .5rem;
+  border: 1px solid #ffbf00;
+}
+@media (min-width: 768px) {
+  .skinny-form {
+    padding: 2rem 1rem;
+    width: 70%;
+    margin: 0 auto;
+  }
+}
+@media (min-width: 992px) {
+  .l-basic--flipped .skinny-form {
+    width: 90%;
+  }
+}
+@media (min-width: 1200px) {
+  .skinny-form {
+    width: 70%;
+  }
+}
+
