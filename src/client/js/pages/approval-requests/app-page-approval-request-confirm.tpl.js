@@ -12,8 +12,24 @@ return html`
         <h2 class="heading--underline">Trip, Training, or Professional Development Opportunity</h2>
         <approval-request-details .approvalRequest=${this.approvalRequest}></approval-request-details>
         <h2 class="heading--underline">Estimated Expenses</h2>
+        <div ?hidden=${!this.totalExpenditures} class='u-space-mb'>
+          <div class='primary bold u-space-mb'>Itemized Expenses</div>
+          <div class='u-space-ml--small'>
+            ${(this.approvalRequest.expenditures || []).map((expenditure) => html`
+              <div class='u-space-mb--small flex flex--space-between'>
+                <div>${expenditure.expenditureOptionLabel}</div>
+                <div>$${expenditure.amount.toFixed(2)}</div>
+              </div>
+            `)}
+            <div class='flex flex--space-between bold u-space-py'>
+              <div>Total</div>
+              <div>$${this.totalExpenditures.toFixed(2)}</div>
+            </div>
+          </div>
+        </div>
         <funding-source-select
           label='Funding Sources'
+          indent-body
           expenditure-total=${this.totalExpenditures}
           .data=${this.approvalRequest.fundingSources || []}>
         </funding-source-select>

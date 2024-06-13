@@ -1,0 +1,13 @@
+@use './form.scss' as form;
+@use './icon.scss' as icon;
+@use './layout.scss' as layout;
+@use './text.scss' as text;
+@use './theme-shims.scss' as themeShims;
+
+[hidden] {
+  display: none !important;
+}
+
+.pointer {
+  cursor: pointer;
+}
