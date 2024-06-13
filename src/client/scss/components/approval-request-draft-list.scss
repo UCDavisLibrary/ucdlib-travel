@@ -1,13 +1,10 @@
-app-draft-list {
+approval-request-draft-list {
     .component {
-        width: 390px;
         background-color: #FFF9E6;
         margin: 10px;
         padding: 40px;
     }
-    .inner-component{
-        width:315px;
-    }
+
     .icon {
         color:#FFBF00;
         font-weight:900;
@@ -15,21 +12,21 @@ app-draft-list {
         margin-left:0;
         margin-right:10px;
     }
-    .draftHeading {
+    .draft-heading {
         color:#022851;
         text-align:center;
         vertical-align:center;
         font-size: 28px;
         font-weight:800;
     }
-    .componentHeader{
+    .component-header{
         display: inline-flex;
 	    align-items: center;
     }
-    .listTitle{
+    .list-title{
        font-size: 19px; 
     }
-    .listDescription{
+    .list-description{
        font-size: 16px; 
     }
     a {
