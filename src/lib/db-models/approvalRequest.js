@@ -141,6 +141,10 @@ class ApprovalRequest {
       {
         dbName: 'validated_successfully',
         jsonName: 'validatedSuccessfully'
+      },
+      {
+        dbName: 'approval_status_activity',
+        jsonName: 'approvalStatusActivity'
       }
     ]);
 
@@ -280,6 +284,45 @@ class ApprovalRequest {
         expenditure_option eo ON are.expenditure_option_id = eo.expenditure_option_id
       GROUP BY
         are.approval_request_revision_id
+    ),
+    approval_status_activity AS (
+      SELECT
+        aracl.approval_request_revision_id,
+        json_agg(
+          json_build_object(
+            'approvalRequestApprovalChainLinkId', aracl.approval_request_approval_chain_link_id,
+            'approverOrder', aracl.approver_order,
+            'action', aracl.action,
+            'employeeKerberos', aracl.employee_kerberos,
+            'employee', json_build_object(
+              'kerberos', e.kerberos,
+              'firstName', e.first_name,
+              'lastName', e.last_name
+            ),
+            'comments', aracl.comments,
+            'fundChanges', aracl.fund_changes,
+            'occurred', aracl.occurred,
+            'approverTypes', COALESCE(
+              (SELECT json_agg(json_build_object(
+                  'approverTypeId', at.approver_type_id,
+                  'approverTypeLabel', at.label
+                ))
+               FROM
+                link_approver_type lat
+               JOIN
+                approver_type at ON lat.approver_type_id = at.approver_type_id
+               WHERE
+                lat.approval_request_approval_chain_link_id = aracl.approval_request_approval_chain_link_id),
+              '[]'::json)
+          )
+          ORDER BY aracl.approver_order
+        ) AS approval_status_activity
+      FROM
+        approval_request_approval_chain_link aracl
+      LEFT JOIN
+        employee e ON aracl.employee_kerberos = e.kerberos
+      GROUP BY
+        aracl.approval_request_revision_id
     )
     SELECT
       ar.*,
@@ -289,7 +332,8 @@ class ApprovalRequest {
         'lastName', e.last_name
       ) AS employee,
       COALESCE(fs.funding_sources, '[]'::json) AS funding_sources,
-      COALESCE(ex.expenditures, '[]'::json) AS expenditures
+      COALESCE(ex.expenditures, '[]'::json) AS expenditures,
+      COALESCE(asa.approval_status_activity, '[]'::json) AS approval_status_activity
     FROM
       approval_request ar
     LEFT JOIN
@@ -298,6 +342,8 @@ class ApprovalRequest {
       funding_sources fs ON ar.approval_request_revision_id = fs.approval_request_revision_id
     LEFT JOIN
       expenditures ex ON ar.approval_request_revision_id = ex.approval_request_revision_id
+    LEFT JOIN
+      approval_status_activity asa ON ar.approval_request_revision_id = asa.approval_request_revision_id
     ${whereClause.sql ? `WHERE ${whereClause.sql}` : ''}
     ORDER BY
       ar.submitted_at DESC
@@ -362,6 +408,7 @@ class ApprovalRequest {
     delete data.approval_request_revision_id;
     delete data.is_current;
     delete data.submitted_at
+    delete data.approval_status_activity;
 
     // do validation
     data.validated_successfully = false;
@@ -370,7 +417,7 @@ class ApprovalRequest {
     if ( !validation.valid ) {
       return {error: true, message: 'Validation Error', is400: true, fieldsWithErrors: validation.fieldsWithErrors};
     }
-    if ( data.forceValidation || payload.approval_status !== 'draft' ){
+    if ( data.forceValidation || data.approval_status !== 'draft' ){
       data.validated_successfully = true;
     }
     delete data.forceValidation;
