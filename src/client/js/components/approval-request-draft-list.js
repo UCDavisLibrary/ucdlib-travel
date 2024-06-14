@@ -7,7 +7,7 @@ import { LitCorkUtils, Mixin } from "../../../lib/appGlobals.js";
  * @class ApprovalRequestDraftList
  * @description Component that displays draft list for active kerberos id
  *
- * @property {Object} drafts - Object of initial array (only this is needed) and existing array
+ * @property {Array} drafts - Object of initial array 
  * @property {String} kerb - Kerberos from the active page
  * @property {Number} excludeId - ID to exclude from draft list in the existing Object
  */
@@ -15,7 +15,7 @@ export default class ApprovalRequestDraftList extends Mixin(LitElement)
   .with(LitCorkUtils, MainDomElement) {
   static get properties() {
     return {
-      drafts: {type: Object},
+      drafts: {type: Array},
       kerb: {type: String},
       excludeId: {type: Number, attribute: 'exclude-id'}
     }
@@ -25,7 +25,7 @@ export default class ApprovalRequestDraftList extends Mixin(LitElement)
     super();
     this.render = render.bind(this);
 
-    this.drafts = {edit:[], initial:[]};    
+    this.drafts = [];    
 
     this._injectModel('AppStateModel', 'ApprovalRequestModel', 'AuthModel');
     this.kerb = this.AuthModel.getToken().token.preferred_username;
@@ -37,7 +37,7 @@ export default class ApprovalRequestDraftList extends Mixin(LitElement)
    */
      async init(){
       const promises = [
-        this.ApprovalRequestModel.query({employees:this.kerb, status:'draft', isCurrent:true})
+        this.ApprovalRequestModel.query({employees:this.kerb, approvalStatus:'draft', isCurrent:true})
       ];
   
       return await Promise.allSettled(promises);
@@ -52,13 +52,21 @@ export default class ApprovalRequestDraftList extends Mixin(LitElement)
     _onApprovalRequestsFetched(e) {
       if ( e.state !== 'loaded' ) return;
 
-      if(this.excludeId) {
-        this.drafts.edit = [];
-        this.drafts.edit = this.drafts.initial.filter((draft) => draft.approvalRequestId !== this.excludeId);
+      if(!e.payload.data) return;
 
-      } else {
-        this.drafts.initial = e.payload.data
-      }
+      console.log("G", e.payload.data);      
+
+      console.log("E", this.excludeId);      
+      this.drafts = e.payload.data.filter(draft => draft.approvalRequestId !== this.excludeId);
+      console.log("F", this.drafts);      
+
+      // if(this.excludeId) {
+      //   this.drafts.edit = [];
+      //   this.drafts.edit = this.drafts.initial.filter((draft) => draft.approvalRequestId !== this.excludeId);
+
+      // } else {
+      //   this.drafts.initial = e.payload.data
+      // }
 
       this.requestUpdate();
     }

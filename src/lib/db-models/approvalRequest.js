@@ -219,8 +219,8 @@ class ApprovalRequest {
       whereArgs['ar.approval_request_id'] = kwargs.requestIds;
     }
 
-    if ( Array.isArray(kwargs.status) && kwargs.status.length ){
-      whereArgs['ar.approval_status'] = kwargs.status;
+    if ( Array.isArray(kwargs.approvalStatus) && kwargs.approvalStatus.length ){
+      whereArgs['ar.approval_status'] = kwargs.approvalStatus;
     }
 
     if ( kwargs.isCurrent ){

@@ -27,7 +27,7 @@ export default (api) => {
     // query args that need to be arrays
     query.revisionIds = apiUtils.explode(query.revisionIds, true);
     query.requestIds = apiUtils.explode(query.requestIds, true);
-    query.status = apiUtils.explode(query.status);
+    query.approvalStatus = apiUtils.explode(query.approvalStatus);
     query.employees = apiUtils.explode(query.employees);
 
     // do query

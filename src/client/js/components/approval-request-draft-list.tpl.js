@@ -2,7 +2,7 @@ import { html } from 'lit';
 
 export function render() { 
 return html`
-  <div ?hidden=${!this.drafts.initial.length} class='component'>
+  <div ?hidden=${!this.drafts.length} class='panel panel--icon panel--icon-custom panel--icon-secondary'>
     <div>
       <div class='component-header'>
         <span class="icon"> <i class='fa-solid fa-file-import'></i></span>
@@ -10,10 +10,7 @@ return html`
       </div>
       <p>You have unsubmitted drafts. Click one to resume where you left off:</p>
       <ul class="list--bordered">
-      ${this.drafts.edit && this.drafts.edit.length !=0 ?
-        draftList.call(this, this.drafts.edit):
-        draftList.call(this, this.drafts.initial)   
-      }
+        ${draftList.call(this, this.drafts)}
       </ul>
     </div>
   </div>
@@ -21,6 +18,7 @@ return html`
 `;}
 
 function draftList(draftsList) {
+  console.log("D:", draftsList)
   return html`        
     ${draftsList && draftsList.map(d => html`
       <li><a href='/approval-request/new/${d.approvalRequestId}'><span class="list-title">${d.label ? d.label: html`Unititled Request`}</span></a>

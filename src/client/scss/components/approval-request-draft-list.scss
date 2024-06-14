@@ -8,15 +8,15 @@ approval-request-draft-list {
     .icon {
         color:#FFBF00;
         font-weight:900;
-        font-size: 50px;
+        font-size: 3.125rem;
         margin-left:0;
-        margin-right:10px;
+        margin-right:0.625rem;
     }
     .draft-heading {
         color:#022851;
         text-align:center;
         vertical-align:center;
-        font-size: 28px;
+        font-size: 1.75rem;
         font-weight:800;
     }
     .component-header{
@@ -24,10 +24,10 @@ approval-request-draft-list {
 	    align-items: center;
     }
     .list-title{
-       font-size: 19px; 
+       font-size: 1.188rem; 
     }
     .list-description{
-       font-size: 16px; 
+       font-size: 1rem; 
     }
     a {
         cursor:pointer;
