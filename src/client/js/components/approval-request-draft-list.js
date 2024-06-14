@@ -2,7 +2,7 @@ import { LitElement } from 'lit';
 import {render} from "./approval-request-draft-list.tpl.js";
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 import { LitCorkUtils, Mixin } from "../../../lib/appGlobals.js";
-
+import urlUtils from '../../../lib/utils/urlUtils.js';
 /**
  * @class ApprovalRequestDraftList
  * @description Component that displays draft list for active kerberos id
@@ -26,9 +26,10 @@ export default class ApprovalRequestDraftList extends Mixin(LitElement)
     this.render = render.bind(this);
 
     this.drafts = [];    
-
     this._injectModel('AppStateModel', 'ApprovalRequestModel', 'AuthModel');
     this.kerb = this.AuthModel.getToken().token.preferred_username;
+    this.query = {employees:this.kerb, approvalStatus:'draft', isCurrent:true}
+
   }
 
   /**
@@ -37,7 +38,7 @@ export default class ApprovalRequestDraftList extends Mixin(LitElement)
    */
      async init(){
       const promises = [
-        this.ApprovalRequestModel.query({employees:this.kerb, approvalStatus:'draft', isCurrent:true})
+        this.ApprovalRequestModel.query(this.query)
       ];
   
       return await Promise.allSettled(promises);
@@ -52,23 +53,12 @@ export default class ApprovalRequestDraftList extends Mixin(LitElement)
     _onApprovalRequestsFetched(e) {
       if ( e.state !== 'loaded' ) return;
 
-      if(!e.payload.data) return;
-
-      console.log("G", e.payload.data);      
-
-      console.log("E", this.excludeId);      
-      this.drafts = e.payload.data.filter(draft => draft.approvalRequestId !== this.excludeId);
-      console.log("F", this.drafts);      
-
-      // if(this.excludeId) {
-      //   this.drafts.edit = [];
-      //   this.drafts.edit = this.drafts.initial.filter((draft) => draft.approvalRequestId !== this.excludeId);
-
-      // } else {
-      //   this.drafts.initial = e.payload.data
-      // }
-
-      this.requestUpdate();
+      if(urlUtils.queryObjectToKebabString(this.query) !== e.query){
+        this.drafts = this.drafts.filter(draft => draft.approvalRequestId !== this.excludeId);
+      } else {
+        this.drafts = e.payload.data.filter(draft => draft.approvalRequestId !== this.excludeId);
+      }
+        
     }
 
 
