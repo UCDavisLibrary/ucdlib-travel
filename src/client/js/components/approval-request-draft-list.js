@@ -50,15 +50,13 @@ export default class ApprovalRequestDraftList extends Mixin(LitElement)
    * @param {Object} e - cork-app-utils event object
    * @returns
    */
-    _onApprovalRequestsFetched(e) {
+    _onApprovalRequestsRequested(e) {
       if ( e.state !== 'loaded' ) return;
 
-      if(urlUtils.queryObjectToKebabString(this.query) !== e.query){
-        this.drafts = this.drafts.filter(draft => draft.approvalRequestId !== this.excludeId);
-      } else {
-        this.drafts = e.payload.data.filter(draft => draft.approvalRequestId !== this.excludeId);
-      }
-        
+      if(urlUtils.queryObjectToKebabString(this.query) !== e.query) return
+
+      this.drafts = e.payload.data.filter(draft => draft.approvalRequestId !== this.excludeId);
+
     }
 
 
