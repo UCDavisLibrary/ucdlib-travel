@@ -18,7 +18,6 @@ return html`
 `;}
 
 function draftList(draftsList) {
-  console.log("D:", draftsList)
   return html`        
     ${draftsList && draftsList.map(d => html`
       <li><a href='/approval-request/new/${d.approvalRequestId}'><span class="list-title">${d.label ? d.label: html`Unititled Request`}</span></a>
