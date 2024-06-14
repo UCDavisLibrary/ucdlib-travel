@@ -8,6 +8,20 @@ class ApprovalRequestService extends BaseService {
     this.store = ApprovalRequestStore;
   }
 
+  statusUpdate(approvalRequestId, action) {
+    return this.request({
+      url : `/api/approval-request/${approvalRequestId}/status-update`,
+      fetchOptions : {
+        method : 'POST',
+        body : action,
+      },
+      json: true,
+      onLoading : request => this.store.statusUpdateLoading(approvalRequestId, action),
+      onLoad : result => this.store.statusUpdateLoaded(result.body, approvalRequestId, action),
+      onError : e => this.store.statusUpdateError(e, approvalRequestId, action)
+    });
+  }
+
   query(query) {
     return this.request({
       url : `/api/approval-request${query ? '?' + query : ''}`,

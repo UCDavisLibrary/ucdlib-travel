@@ -4,6 +4,7 @@ import validations from "./approvalRequestValidations.js";
 import employeeModel from "./employee.js";
 import fundingSourceModel from "./fundingSource.js"
 import typeTransform from "../utils/typeTransform.js";
+import IamEmployeeObjectAccessor from "../utils/iamEmployeeObjectAccessor.js";
 
 class ApprovalRequest {
 
@@ -675,6 +676,93 @@ class ApprovalRequest {
     });
 
     return uniqueApprovers;
+  }
+
+  /**
+   * @description Submit an existing approval request draft for approval
+   * @param {Object|Number} approvalRequest - approval request object or approval request ID
+   * @returns {Object} - {success: true} or {error: true}
+   */
+  async submitDraft(approvalRequest){
+    // check if approval request ID was given instead of object
+    // retrieve approval request object if so
+    let approvalRequestId = typeTransform.toPositiveInt(approvalRequest);
+    if ( approvalRequestId ){
+      approvalRequest = await this.get({requestIds: [approvalRequestId], isCurrent: true});
+      if ( approvalRequest.error ) return approvalRequest;
+      if ( !approvalRequest.total ) return {error: true, message: 'Approval request not found', is400: true};
+      approvalRequest = approvalRequest.data[0];
+    } else {
+      approvalRequestId = approvalRequest.approvalRequestId;
+    }
+
+    // ensure approval request is in draft status
+    if ( approvalRequest.approvalStatus !== 'draft' ) return {error: true, message: 'Approval request must be in draft status', is400: true};
+
+    // get approval chain
+    const approvalChain = await this.makeApprovalChain(approvalRequest);
+    if ( approvalChain.error ) return approvalChain;
+
+    // do transaction
+    const approvalRequestRevisionId = approvalRequest.approvalRequestRevisionId;
+    const client = await pg.pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      let data, sql;
+
+      for (const [index, approver] of approvalChain.entries()){
+
+        // upsert employee and department
+        const employee = new IamEmployeeObjectAccessor(approver.employee)
+        await employeeModel.upsertInTransaction(client, employee.travelAppObject);
+
+        // insert into approval chain table
+        data = {
+          approval_request_revision_id: approvalRequestRevisionId,
+          approver_order: index,
+          action: 'approval-needed',
+          employee_kerberos: employee.kerberos
+        };
+        data = pg.prepareObjectForInsert(data);
+        sql = `INSERT INTO approval_request_approval_chain_link (${data.keysString}) VALUES (${data.placeholdersString}) RETURNING approval_request_approval_chain_link_id`;
+        const res = await client.query(sql, data.values);
+        const approvalRequestApprovalChainLinkId = res.rows[0].approval_request_approval_chain_link_id;
+
+        // insert approver type mappings
+        for ( const approverType of approver.approverTypes ){
+          data = {
+            approval_request_approval_chain_link_id: approvalRequestApprovalChainLinkId,
+            approver_type_id: approverType.approverTypeId
+          };
+          data = pg.prepareObjectForInsert(data);
+          sql = `INSERT INTO link_approver_type (${data.keysString}) VALUES (${data.placeholdersString})`;
+          await client.query(sql, data.values);
+        }
+      }
+
+      // update approval request status to 'submitted'
+      data = {
+        approval_status: 'submitted',
+        submitted_at: new Date()
+      };
+      const updateClause = pg.toUpdateClause(data);
+      sql = `
+        UPDATE approval_request
+        SET ${updateClause.sql}
+        WHERE approval_request_revision_id = $${updateClause.values.length + 1}
+      `;
+      await client.query(sql, [...updateClause.values, approvalRequestRevisionId]);
+
+      await client.query('COMMIT');
+    } catch (e) {
+      await client.query('ROLLBACK');
+      return {error: e};
+    } finally {
+      client.release();
+    }
+
+    return {success: true, approvalRequestId, approvalRequestRevisionId};
   }
 
 }

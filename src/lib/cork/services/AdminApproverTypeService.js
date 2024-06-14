@@ -13,7 +13,7 @@ class AdminApproverTypeService extends BaseService {
   query(data){
     return this.request({
       url : `/api/admin/approver-type?${data}`,
-      checkCached: () => this.store.data.query[JSON.stringify(data)],
+      checkCached: () => this.store.data.query[data],
       onLoading : request => this.store.queryLoading(request, data),
       onLoad : result => this.store.queryLoaded(result.body, data),
       onError : e => this.store.queryError(e, data)
@@ -35,6 +35,7 @@ class AdminApproverTypeService extends BaseService {
   }
 
   update(data) {
+
     return this.request({
       url : `/api/admin/approver-type`,
       fetchOptions : {
@@ -44,7 +45,7 @@ class AdminApproverTypeService extends BaseService {
       json: true,
       onLoading : request => this.store.updateLoading(request),
       onLoad : result => this.store.updateLoaded(result.body),
-      onError : e => this.store.updateError(e)
+      onError : e => this.store.updateError(e, data)
     });
 
   }
