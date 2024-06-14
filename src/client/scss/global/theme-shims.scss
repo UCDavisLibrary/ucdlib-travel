@@ -1,0 +1,15 @@
+.vm-listing__figure {
+
+  &.has-icon {
+    width: 100px;
+  }
+
+  .icon-img {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+  }
+
+}

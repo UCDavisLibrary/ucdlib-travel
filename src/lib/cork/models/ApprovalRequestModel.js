@@ -88,6 +88,26 @@ class ApprovalRequestModel extends BaseModel {
     return state;
   }
 
+  /**
+   * @description Update the status of an approval request
+   * @param {Number} approvalRequestId - id of approval request to update
+   * @param {Object} action - action to take on approval request
+   *  at the very least should have an 'action' property
+   * @returns
+   */
+  async statusUpdate(approvalRequestId, action) {
+    try {
+      await this.service.statusUpdate(approvalRequestId, action);
+    } catch(e) {}
+    const state = this.store.data.statusUpdate[`${approvalRequestId}--${action}`];
+    if ( state && state.state === 'loaded' ) {
+      this.store.data.fetched = {};
+      this.store.data.approvalChainByRequestId = {};
+    }
+    return state;
+  }
+
+
 }
 
 const model = new ApprovalRequestModel();

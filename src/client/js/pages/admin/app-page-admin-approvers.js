@@ -2,7 +2,11 @@ import { LitElement } from 'lit';
 import {render} from "./app-page-admin-approvers.tpl.js";
 import { LitCorkUtils, Mixin } from "../../../../lib/appGlobals.js";
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
+import "../../components/app-approver-type.js"
 
+/**
+ * @description Admin page for managing approver type and funding options
+ */
 export default class AppPageAdminApprovers extends Mixin(LitElement)
 .with(LitCorkUtils, MainDomElement) {
 
@@ -15,8 +19,9 @@ export default class AppPageAdminApprovers extends Mixin(LitElement)
   constructor() {
     super();
     this.render = render.bind(this);
+    this.settingsCategory = 'admin-approver-type';
 
-    this._injectModel('AppStateModel');
+    this._injectModel('AppStateModel', 'SettingsModel');
   }
 
   /**
@@ -27,14 +32,18 @@ export default class AppPageAdminApprovers extends Mixin(LitElement)
     if ( this.id !== state.page ) return;
 
     this.AppStateModel.setTitle('Approvers and Funding Sources');
-
     const breadcrumbs = [
       this.AppStateModel.store.breadcrumbs.home,
       this.AppStateModel.store.breadcrumbs.admin,
       this.AppStateModel.store.breadcrumbs[this.id]
     ];
     this.AppStateModel.setBreadcrumbs(breadcrumbs);
+
+   
+
+
   }
+
 
 }
 

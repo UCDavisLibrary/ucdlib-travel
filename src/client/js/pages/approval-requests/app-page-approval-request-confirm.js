@@ -2,6 +2,7 @@ import { LitElement } from 'lit';
 import {render } from "./app-page-approval-request-confirm.tpl.js";
 import { LitCorkUtils, Mixin } from "../../../../lib/appGlobals.js";
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
+import { WaitController } from "@ucd-lib/theme-elements/utils/controllers/wait.js";
 
 import promiseUtils from '../../../../lib/utils/promiseUtils.js';
 import urlUtils from "../../../../lib/utils/urlUtils.js";
@@ -15,7 +16,7 @@ export default class AppPageApprovalRequestConfirm extends Mixin(LitElement)
       approvalRequest : {type: Object},
       approvalChain : {type: Array},
       formLink : {type: String},
-
+      totalExpenditures: {type: Number}
     }
   }
 
@@ -29,6 +30,7 @@ export default class AppPageApprovalRequestConfirm extends Mixin(LitElement)
     this.formLink = '';
 
     this._injectModel('AppStateModel', 'ApprovalRequestModel', 'SettingsModel');
+    this.waitController = new WaitController(this);
   }
 
   /**
@@ -53,6 +55,11 @@ export default class AppPageApprovalRequestConfirm extends Mixin(LitElement)
       this.AppStateModel.showError(d);
       return;
     }
+
+    // bail if a callback redirected us
+    await this.waitController.wait(50);
+    state = await this.AppStateModel.get();
+    if ( this.id !== state.page ) return;
 
     this.formLink = `${this.AppStateModel.store.breadcrumbs['approval-request-new'].link}/${this.approvalRequestId}`;
 
@@ -84,13 +91,39 @@ export default class AppPageApprovalRequestConfirm extends Mixin(LitElement)
     return promiseUtils.flattenAllSettledResults(resolvedPromises);
   }
 
+  willUpdate(props){
+    if ( props.has('approvalRequest') ){
+      this._setTotalExpenditures();
+    }
+  }
+
   _onApprovalRequestChainFetched(e) {
     if ( e.state !== 'loaded' ) return;
     if ( e.approvalRequestId !== this.approvalRequestId ) return;
     this.approvalChain = e.payload;
   }
 
-  _onSubmitButtonClick(){}
+  _onSubmitButtonClick(){
+    this.ApprovalRequestModel.statusUpdate(this.approvalRequestId, {action: 'submit'});
+  }
+
+  _onApprovalRequestStatusUpdate(e){
+    if ( e.approvalRequestId !== this.approvalRequestId ) return;
+    if ( e.action?.action !== 'submit' ) return;
+
+    if ( e.state === 'error' ) {
+      this.AppStateModel.showError('Error submitting approval request.');
+      return;
+    }
+
+    if ( e.state === 'loading' ){
+      this.AppStateModel.showLoading();
+      return;
+    }
+
+    this.AppStateModel.showToast({message: 'Approval request submitted succesfully', type: 'success'});
+    this.AppStateModel.setLocation(`/approval-request/${this.approvalRequestId}`);
+  }
 
   _onApprovalRequestsRequested(e){
     if ( e.state !== 'loaded' ) return;
@@ -101,9 +134,7 @@ export default class AppPageApprovalRequestConfirm extends Mixin(LitElement)
 
     if ( !e.payload.total ){
       this.resetForm();
-      setTimeout(() => {
-        this.AppStateModel.showError('This approval request does not exist.');
-      }, 100);
+      this.AppStateModel.showError('This approval request does not exist.');
       return;
     }
 
@@ -120,7 +151,6 @@ export default class AppPageApprovalRequestConfirm extends Mixin(LitElement)
     }
 
     this.approvalRequest = approvalRequest;
-    console.log(approvalRequest);
   }
 
 
@@ -131,6 +161,20 @@ export default class AppPageApprovalRequestConfirm extends Mixin(LitElement)
   _setApprovalRequestId(state) {
     let approvalRequestId = Number(state?.location?.path?.[2]);
     this.approvalRequestId = Number.isInteger(approvalRequestId) && approvalRequestId > 0 ? approvalRequestId : 0;
+  }
+
+  /**
+   * @description Set the totalExpenditures property based on the expenditures array from the current approval request
+   */
+  _setTotalExpenditures(){
+    let total = 0;
+    if ( this.approvalRequest.expenditures ){
+      this.approvalRequest.expenditures.forEach(e => {
+        if ( !e.amount ) return;
+        total += Number(e.amount);
+      });
+    }
+    this.totalExpenditures = total;
   }
 
 }

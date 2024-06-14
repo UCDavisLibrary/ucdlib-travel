@@ -15,9 +15,9 @@ export default class ApprovalRequestValidations {
       {value: 'draft', label: 'Draft'},
       {value: 'submitted', label: 'Submitted'},
       {value: 'in-progress', label: 'In Progress'},
-      {value: 'approved', label: 'Approved'},
-      {value: 'canceled', label: 'Canceled'},
-      {value: 'denied', label: 'Denied'},
+      {value: 'approved', label: 'Approved', isFinal: true},
+      {value: 'canceled', label: 'Canceled', isFinal: true},
+      {value: 'denied', label: 'Denied', isFinal: true},
       {value: 'revision-requested', label: 'Revision Requested'}
     ];
 
@@ -27,6 +27,15 @@ export default class ApprovalRequestValidations {
       {value: 'reimbursment-pending', label: 'Reimbursement Pending'},
       {value: 'partially-reimbursed', label: 'Partially Reimbursed'},
       {value: 'fully-reimbursed', label: 'Fully Reimbursed'}
+    ];
+
+    this.approvalStatusActions = [
+      {value: 'approve', label: 'Approve', actor: 'approver'},
+      {value: 'approve-with-changes', label: 'Approve with Changes', actor: 'approver'},
+      {value: 'deny', label: 'Deny', actor: 'approver'},
+      {value: 'cancel', label: 'Cancel', actor: 'submitter'},
+      {value: 'request-revision', label: 'Request Revision', actor: 'approver'},
+      {value: 'submit', label: 'Submit', actor: 'submitter'}
     ];
   }
 

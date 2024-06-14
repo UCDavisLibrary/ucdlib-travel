@@ -1,4 +1,5 @@
 import approvalRequest from "../lib/db-models/approvalRequest.js";
+import ApprovalRequestValidations from "../lib/db-models/approvalRequestValidations.js";
 import employee from "../lib/db-models/employee.js";
 
 import protect from "../lib/protect.js";
@@ -120,6 +121,64 @@ export default (api) => {
 
   });
 
+  api.post('/approval-request/:id/status-update', protect('hasBasicAccess'), async (req, res) => {
+    const validations = new ApprovalRequestValidations();
+
+    // ensure action is valid
+    const payload = req.body || {};
+    const validActions = validations.approvalStatusActions.map(a => a.value);
+    if ( !validActions.includes(payload.action) ) {
+      return res.status(400).json({error: true, message: 'Invalid action.'});
+    }
+
+    // ensure approval request exists
+    const approvalRequestId = typeTransform.toPositiveInt(req.params.id);
+    if ( !approvalRequestId ) {
+      return res.status(400).json({error: true, message: 'Invalid approvalRequestId.'});
+    }
+    let approvalRequestObj = await approvalRequest.get({requestIds: [approvalRequestId], isCurrent: true});
+    if ( approvalRequestObj.error ) {
+      console.error('Error in POST /approval-request/:id/status-update', approvalRequest.error);
+      return res.status(500).json({error: true, message: 'Error getting approval request.'});
+    }
+    if ( !approvalRequestObj.data.length ) {
+      return res.status(404).json({error: true, message: 'Approval request not found.'});
+    }
+    approvalRequestObj = approvalRequestObj.data[0];
+
+    // bail if approval request cannot be updated
+    const finalStatuses = validations.validApprovalStatuses.filter(s => s.isFinal).map(s => s.value);
+    if ( finalStatuses.includes(approvalRequestObj.approvalStatus) ) {
+      return res.status(400).json({error: true, message: 'Approval request cannot be updated.'});
+    }
+
+    // ensure user is authorized to perform action
+    const kerberos = req.auth.token.id;
+    const action = validations.approvalStatusActions.find(a => a.value === payload.action);
+    if ( action.actor === 'submitter' && approvalRequestObj.employeeKerberos !== kerberos ) {
+      return apiUtils.do403(res);
+    }
+    // todo check if in approval chain
+
+
+    if ( action.value === 'submit' ){
+      const result = await approvalRequest.submitDraft(approvalRequestObj);
+      if ( result.error && result.is400 ) {
+        return res.status(400).json(result);
+      }
+      if ( result.error ) {
+        console.error('Error in POST /approval-request/:id/status-update', result.error);
+        return res.status(500).json({error: true, message: 'Error submitting approval request.'});
+      }
+      return res.json(result);
+    }
+
+    // todo handle other actions
+
+    return res.status(500).json({error: true, message: 'Error performing action on approval request.'});
+
+  });
+
   /**
    * @description Returns the employees that need to approve the given approval request based on the submitter and funding sources selected
    * Called before an approval request is actually submitted.
@@ -144,6 +203,10 @@ export default (api) => {
     }
 
     const approvalChain = await approvalRequest.makeApprovalChain(approvalRequestObj.data[0]);
+    if ( approvalChain.error ) {
+      console.error('Error in GET /approval-request/:id/approval-chain', approvalChain.error);
+      return res.status(500).json({error: true, message: 'Error getting approval chain.'});
+    }
 
     // transform chain object to match format in approvalRequest object
     const out = approvalChain.map((chainObj) => {

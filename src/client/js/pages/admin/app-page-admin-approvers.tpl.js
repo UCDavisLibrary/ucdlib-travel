@@ -4,6 +4,6 @@ import "../../components/ucdlib-employee-search-basic.js";
 
 export function render() {
 return html`
-  <ucdlib-employee-search-basic></ucdlib-employee-search-basic>
+  <app-approver-type></app-approver-type>
 
 `;}

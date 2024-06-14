@@ -46,11 +46,28 @@ funding-source-select {
     }
   }
 
+  .list-view {
+    .funding-source {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: .5rem;
+    }
+  }
+
   .total-row {
     font-weight: 700;
     color: #022851;
     display: flex;
     justify-content: space-between;
     padding: 1rem 0;
+  }
+
+  .indent-body {
+    .total-row {
+      padding-left: .5rem;
+    }
+    .funding-sources {
+      padding-left: .5rem;
+    }
   }
 }
