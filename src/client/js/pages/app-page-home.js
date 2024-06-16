@@ -58,7 +58,7 @@ export default class AppPageHome extends Mixin(LitElement)
    */
      _onApprovalRequestsRequested(e){
       if ( e.state !== 'loaded' ) return;
-      this.approvalRequests = e.payload.data[0];
+      this.approvalRequests = e.payload.data;
       this.requestUpdate();
     }
 
