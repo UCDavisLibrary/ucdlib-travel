@@ -22,6 +22,8 @@ export default class ApprovalRequestTeaser extends Mixin(LitElement)
     super();
     this.render = render.bind(this);    
   
+    this._injectModel('AuthModel');
+
   }
 
   formatDollar(dollar){
@@ -46,10 +48,9 @@ export default class ApprovalRequestTeaser extends Mixin(LitElement)
   }
 
   checkKerb(kerb){
-    
-    return true;
+    if(this.AuthModel.getToken().token.preferred_username == kerb) return true;
+    return false;
   }
-
 }
 
 customElements.define('approval-request-teaser', ApprovalRequestTeaser);
