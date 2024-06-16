@@ -1,0 +1,80 @@
+approval-request-teaser {
+
+    .teaser {
+        container-type: inline-size;
+        margin-bottom: 0.5rem;
+        // margin-top: 0.5rem
+    }
+
+    .approvalStatus {
+        background-color: #13639E;
+        padding: 0.313rem;
+        color:white;
+        width:fit-content;
+        margin-bottom: 2px;
+        display: inline-block;
+    }
+
+    .reimbursementStatus {
+        background-color: #FFF4D2;
+        padding: 0.313rem;
+        color:#022851;
+        width:fit-content;
+        margin-bottom: 2px;
+        display: inline-block;
+
+    }
+
+    h4 {
+        color: var(--forced-contrast-heading-primary, #022851);
+    }
+
+    .requestor {
+        margin: 0;
+        font-size: 1.20em;
+        font-weight: 700;
+        color: var(--forced-contrast-heading-primary, #022851);
+    }
+
+    .title {
+        margin:0;
+        font-size: 1.30em;
+        font-weight: 800;
+        color: var(--forced-contrast-heading-primary, #022851);
+    }
+
+
+    .panel--icon .panel__title {
+        margin: 0;
+        font-size: 1rem;
+        padding: 0.045rem;
+        font-weight: 700;
+        color:#4C4C4C;
+
+    }
+
+    .panel  {
+        margin-bottom: 0;
+    }
+
+
+
+    .l-second {
+        border-left: 1px solid #13639E;
+        padding: 0rem 0rem 0.675rem 0.675rem;
+        align-content: center;
+
+    }
+
+    @container (width < 684px) {
+        .teaser {
+            width: 50%;
+        }
+        .l-second {
+            border-left:0;
+            padding: 0px;
+
+        }
+    }
+}
+  
