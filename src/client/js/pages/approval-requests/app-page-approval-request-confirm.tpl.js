@@ -3,6 +3,7 @@ import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 
 import '../../components/approval-request-status-action.js';
 import '../../components/approval-request-details.js';
+import '../../components/funding-source-select.js';
 
 export function render() {
 return html`

@@ -88,6 +88,8 @@ class AppStateModelImpl extends AppStateModel {
           p = 'approval-request-new';
         } else if ( secondaryRoute === 'confirm' ){
           p = 'approval-request-confirm';
+        } else if ( secondaryRoute === 'approve' ){
+          p = 'approver';
         } else {
           p = 'approval-request';
         }
@@ -96,8 +98,8 @@ class AppStateModelImpl extends AppStateModel {
       }
     }
 
-    else if ( baseRoute === 'approver' ){
-      p = 'approver';
+    else if ( baseRoute === 'approve' ){
+      p = 'approver-landing';
     }
 
     else if ( baseRoute === 'reports' ){
@@ -311,6 +313,16 @@ class AppStateModelImpl extends AppStateModel {
     if ( !update ) update = this.store.data;
     if ( !index ) index = 0;
     return update?.location?.path?.[index];
+  }
+
+  /**
+   * @description Page passed is the active page
+   * @param {Element|String} page - The page to check
+   * @returns {Boolean}
+   */
+  isActivePage(page){
+    page = typeof page === 'string' ? page : page.id;
+    return this.store.data.page === page;
   }
 
 }

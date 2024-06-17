@@ -4,6 +4,7 @@ import { LitCorkUtils, Mixin } from "../../../../lib/appGlobals.js";
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 
 import promiseUtils from '../../../../lib/utils/promiseUtils.js';
+import applicationOptions from '../../../../lib/utils/applicationOptions.js';
 
 export default class AppPageApprovalRequests extends Mixin(LitElement)
 .with(LitCorkUtils, MainDomElement) {
@@ -22,7 +23,8 @@ export default class AppPageApprovalRequests extends Mixin(LitElement)
 
     this.queryArgs = {
       isCurrent: true,
-      employees: this.AuthModel.getToken().id
+      employees: this.AuthModel.getToken().id,
+      approvalStatus: applicationOptions.approvalStatuses.filter(s => s.value != 'draft').map(s => s.value)
     };
   }
 
