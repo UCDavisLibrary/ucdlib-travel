@@ -3,12 +3,15 @@ import {render} from "./app-page-approval-requests.tpl.js";
 import { LitCorkUtils, Mixin } from "../../../../lib/appGlobals.js";
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 
+import promiseUtils from '../../../../lib/utils/promiseUtils.js';
+import applicationOptions from '../../../../lib/utils/applicationOptions.js';
+
 export default class AppPageApprovalRequests extends Mixin(LitElement)
 .with(LitCorkUtils, MainDomElement) {
 
   static get properties() {
     return {
-
+      queryArgs: {type: Object}
     }
   }
 
@@ -16,7 +19,13 @@ export default class AppPageApprovalRequests extends Mixin(LitElement)
     super();
     this.render = render.bind(this);
 
-    this._injectModel('AppStateModel');
+    this._injectModel('AppStateModel', 'ApprovalRequestModel', 'AuthModel');
+
+    this.queryArgs = {
+      isCurrent: true,
+      employees: this.AuthModel.getToken().id,
+      approvalStatus: applicationOptions.approvalStatuses.filter(s => s.value != 'draft').map(s => s.value)
+    };
   }
 
   /**
@@ -35,7 +44,22 @@ export default class AppPageApprovalRequests extends Mixin(LitElement)
     this.AppStateModel.setBreadcrumbs(breadcrumbs);
 
 
+    const d = await this.getPageData();
+    console.log(d[0].value.payload.data);
+
     this.AppStateModel.showLoaded(this.id);
+  }
+
+  /**
+   * @description Get all data required for rendering this page
+   */
+  async getPageData(){
+
+    const promises = [
+      this.ApprovalRequestModel.query(this.queryArgs),
+    ]
+    const resolvedPromises = await Promise.allSettled(promises);
+    return promiseUtils.flattenAllSettledResults(resolvedPromises);
   }
 
 }

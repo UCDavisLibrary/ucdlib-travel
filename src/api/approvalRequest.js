@@ -26,8 +26,10 @@ export default (api) => {
     delete query.pageSize;
 
     // query args that need to be arrays
+    query.approvers = apiUtils.explode(query.approvers);
     query.revisionIds = apiUtils.explode(query.revisionIds, true);
     query.requestIds = apiUtils.explode(query.requestIds, true);
+    query.approvalStatus = apiUtils.explode(query.approvalStatus);
     query.employees = apiUtils.explode(query.employees);
 
     // do query
@@ -42,8 +44,14 @@ export default (api) => {
     for (const approvalRequest of results.data) {
       const isOwnRequest = approvalRequest.employeeKerberos === kerberos;
 
-      // todo check if in approval chain
-      const inApprovalChain = false;
+      // check if user is in approval chain
+      let inApprovalChain = false;
+      for (const approver of approvalRequest.approvalStatusActivity){
+        if ( approver.employeeKerberos === kerberos ) {
+          inApprovalChain = true;
+          break;
+        }
+      }
 
       if ( !isOwnRequest && !inApprovalChain ) return apiUtils.do403(res);
     }
