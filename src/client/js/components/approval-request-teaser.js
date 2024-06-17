@@ -38,11 +38,9 @@ export default class ApprovalRequestTeaser extends Mixin(LitElement)
 
   formatDate(date){
     const event = new Date(date);
-    const month = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-
-    let mon = month[event.getMonth()];
-
-    date = `${mon} ${event.getDay()}, ${event.getFullYear()}`;
+    date = new Intl.DateTimeFormat('en-US', {
+        dateStyle: 'long',
+      }).format(event)
 
     return date;
   }
@@ -51,6 +49,13 @@ export default class ApprovalRequestTeaser extends Mixin(LitElement)
     if(this.AuthModel.getToken().token.preferred_username == kerb) return true;
     return false;
   }
+
+  ToUpperCase(str, separators=['-']) {
+    separators = separators || [ ' ' ];
+    let regex = new RegExp('(^|[' + separators.join('') + '])(\\w)', 'g');
+    return str.toLowerCase().replace(regex, function(x) { return x.toUpperCase(); });
+  }
+
 }
 
 customElements.define('approval-request-teaser', ApprovalRequestTeaser);
