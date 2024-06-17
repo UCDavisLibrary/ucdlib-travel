@@ -3,10 +3,24 @@ approval-request-teaser {
     .teaser {
         container-type: inline-size;
         margin-bottom: 1.25rem;
+        display: flex;
+        flex-wrap: wrap;
+
         // margin-top: 0.5rem
     }
 
-    .approvalStatus {
+    .teaser-info {
+        flex: 70%;
+
+    }
+    .teaser-expenses {
+        flex: 30%;
+        border-left: 1px solid #13639E;
+        padding: 0rem 0rem 0.675rem 0.675rem;
+        align-content: center;
+    }
+
+    .approval-status {
         background-color: #13639E;
         padding: 0.313rem;
         color:white;
@@ -15,7 +29,7 @@ approval-request-teaser {
         display: inline-block;
     }
 
-    .reimbursementStatus {
+    .reimbursement-status {
         background-color: #FFF4D2;
         padding: 0.313rem;
         color:#022851;
@@ -57,24 +71,47 @@ approval-request-teaser {
         margin-bottom: 0;
     }
 
+    .icon-image {
+        width:1rem;
+        height: 1rem;
+        margin-right: .5rem;
+        display:inline-flex;
+        color: #73ABDD;
+
+    }
+
+    .icon-text {
+        margin: 0;
+        font-size: 1rem;
+        padding: 0.045rem;
+        font-weight: 700;
+        color:#4C4C4C;
+        display:inline-flex;
+    }
+
+    .list-content {
+        align-content:center;
+        align-items: center;
+        display: inline-flex;
+    }
 
 
     .l-second {
-        border-left: 1px solid #13639E;
-        padding: 0rem 0rem 0.675rem 0.675rem;
-        align-content: center;
+        
 
     }
 
     @container (width < 684px) {
-        .teaser {
-            width: 50%;
+        .teaser-info {
+            flex: 100%;
+            margin-bottom: 0.625rem;
         }
-        .l-second {
+        .teaser-expenses {
             border-left:0;
             padding: 0px;
-
+            flex: 100%;
         }
+
     }
 }
   
