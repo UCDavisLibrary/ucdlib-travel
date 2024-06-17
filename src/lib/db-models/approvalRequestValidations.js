@@ -1,4 +1,5 @@
 import pg from "./pg.js";
+import applicationOptions from "../utils/applicationOptions.js";
 
 /**
  * @class ApprovalRequestValidations
@@ -11,32 +12,9 @@ export default class ApprovalRequestValidations {
   constructor(model){
     this.model = model;
 
-    this.validApprovalStatuses = [
-      {value: 'draft', label: 'Draft'},
-      {value: 'submitted', label: 'Submitted'},
-      {value: 'in-progress', label: 'In Progress'},
-      {value: 'approved', label: 'Approved', isFinal: true},
-      {value: 'canceled', label: 'Canceled', isFinal: true},
-      {value: 'denied', label: 'Denied', isFinal: true},
-      {value: 'revision-requested', label: 'Revision Requested'}
-    ];
-
-    this.validReimbursementStatuses = [
-      {value: 'not-required', label: 'Not Required'},
-      {value: 'not-submitted', label: 'Not Submitted'},
-      {value: 'reimbursment-pending', label: 'Reimbursement Pending'},
-      {value: 'partially-reimbursed', label: 'Partially Reimbursed'},
-      {value: 'fully-reimbursed', label: 'Fully Reimbursed'}
-    ];
-
-    this.approvalStatusActions = [
-      {value: 'approve', label: 'Approve', actor: 'approver'},
-      {value: 'approve-with-changes', label: 'Approve with Changes', actor: 'approver'},
-      {value: 'deny', label: 'Deny', actor: 'approver'},
-      {value: 'cancel', label: 'Cancel', actor: 'submitter'},
-      {value: 'request-revision', label: 'Request Revision', actor: 'approver'},
-      {value: 'submit', label: 'Submit', actor: 'submitter'}
-    ];
+    this.validApprovalStatuses = applicationOptions.approvalStatuses;
+    this.validReimbursementStatuses = applicationOptions.reimbursementStatuses;
+    this.approvalStatusActions = applicationOptions.approvalStatusActions;
   }
 
   /**
