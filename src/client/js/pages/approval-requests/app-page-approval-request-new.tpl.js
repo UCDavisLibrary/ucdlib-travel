@@ -3,6 +3,8 @@ import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { ref } from 'lit/directives/ref.js';
 
 import "../../components/funding-source-select.js";
+import "../../components/approval-request-draft-list.js";
+
 
 export function render() {
 return html`
@@ -22,6 +24,10 @@ return html`
         ${renderForm.call(this)}
       </div>
       <div class='l-sidebar-second'>
+        <approval-request-draft-list
+          exclude-id=${this.approvalFormId}
+          ${ref(this.draftListSelectRef)}
+        ></approval-request-draft-list>
       </div>
     </div>
   </div>

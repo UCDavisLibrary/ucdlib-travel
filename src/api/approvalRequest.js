@@ -29,6 +29,7 @@ export default (api) => {
     query.approvers = apiUtils.explode(query.approvers);
     query.revisionIds = apiUtils.explode(query.revisionIds, true);
     query.requestIds = apiUtils.explode(query.requestIds, true);
+    query.approvalStatus = apiUtils.explode(query.approvalStatus);
     query.employees = apiUtils.explode(query.employees);
 
     // do query

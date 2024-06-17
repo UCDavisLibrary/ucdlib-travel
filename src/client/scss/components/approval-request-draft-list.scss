@@ -1,0 +1,49 @@
+approval-request-draft-list {
+    .panel {
+        background-color: #FFF9E6;
+        margin: 10px;
+        padding: 40px;
+    }
+
+    .icon {
+        color:#FFBF00;
+        font-weight:900;
+        font-size: 3.125rem;
+        margin-left:0;
+        margin-right:0.625rem;
+    }
+    .draft-heading {
+        color:#022851;
+        text-align:center;
+        vertical-align:center;
+        font-size: 1.75rem;
+        font-weight:800;
+    }
+    .component-header{
+        display: inline-flex;
+	    align-items: center;
+    }
+    .list-title{
+       font-size: 1.188rem; 
+    }
+    .list-description{
+       font-size: 1rem; 
+    }
+    a {
+        cursor:pointer;
+    }
+
+    .panel__custom-icon {
+        font-weight:900;
+        font-size: 3.125rem; 
+    }
+
+    .panel__title {
+        text-align:center;
+        vertical-align:center;
+        display: inline-flex;
+	    align-items: center;
+        margin-bottom: 0.625rem;
+    }
+
+  }
