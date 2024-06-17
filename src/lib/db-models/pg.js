@@ -110,12 +110,12 @@ class Pg {
           sql += `${i > 0 ? sep : ''}${k} ${operator} $${i+1}`;
           i++;
 
-        // if the value is an object without a value key, treat it as nested and recurse. check for operator key
+        // if the value is an object without a value key, treat it as nested and recurse. check for relation key
         } else if ( typeof queryObject[k] === 'object' ){
           const q = {...queryObject[k]};
-          const operator = q.operator;
-          delete q.operator;
-          const nested = this._toEqualsClause(q, operator ? ` ${operator} ` : sep);
+          const relation = q.relation;
+          delete q.relation;
+          const nested = this._toEqualsClause(q, relation ? ` ${relation} ` : sep);
           values.push(...nested.values);
           sql += `${i > 0 ? sep : ''}(${nested.sql})`;
           i += nested.values.length;
