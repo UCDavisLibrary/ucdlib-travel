@@ -103,12 +103,22 @@ class Pg {
           i += queryObject[k].length;
 
         // if the value is an object with an operator key, use that operator
-        } else if ( typeof queryObject[k] === 'object' && queryObject[k].operator ){
+        } else if ( typeof queryObject[k] === 'object' && queryObject[k].operator && queryObject[k].value !== undefined){
           const operator = queryObject[k].operator;
           const value = queryObject[k].value;
           values.push(value);
           sql += `${i > 0 ? sep : ''}${k} ${operator} $${i+1}`;
           i++;
+
+        // if the value is an object without a value key, treat it as nested and recurse. check for operator key
+        } else if ( typeof queryObject[k] === 'object' ){
+          const q = {...queryObject[k]};
+          const operator = q.operator;
+          delete q.operator;
+          const nested = this._toEqualsClause(q, operator ? ` ${operator} ` : sep);
+          values.push(...nested.values);
+          sql += `${i > 0 ? sep : ''}(${nested.sql})`;
+          i += nested.values.length;
 
         // else make an equals clause
         } else {
