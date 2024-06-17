@@ -12,7 +12,7 @@ return html`
     <ucd-theme-primary-nav>
       <a href='/approval-request/new'>Get Approval</a>
       <a href='/approval-request'>Submitted Approval Requests</a>
-      <a href='/approver'>Approve a Request</a>
+      <a href='/approve'>Approve a Request</a>
       <a href='/reports'>Reports</a>
     </ucd-theme-primary-nav>
 
@@ -58,6 +58,7 @@ return html`
     <app-page-approval-request id='approval-request'></app-page-approval-request>
     <app-page-approval-request-new id='approval-request-new'></app-page-approval-request-new>
     <app-page-approval-request-confirm id='approval-request-confirm'></app-page-approval-request-confirm>
+    <app-page-approver-landing id='approver-landing'></app-page-approver-landing>
   </ucdlib-pages>
   <app-toast></app-toast>
   <app-dialog-modal></app-dialog-modal>

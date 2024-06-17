@@ -26,8 +26,9 @@ class UrlUtils {
       if ( Array.isArray(q[k]) ) q[k].sort();
     }
 
-    // remove empty values
+    // remove empty values except for 0
     for (const k in q) {
+      if ( q[k] === 0 ) continue;
       if ( !q[k] ) delete q[k];
       if ( Array.isArray(q[k]) && !q[k].length ) delete q[k];
     }
