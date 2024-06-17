@@ -6,33 +6,41 @@ return html`
   
       <div ?hidden=${!this.approvalRequest} class="l-shrink panel">
             <div>     
-                  ${this.approvalRequest.approvalStatus ? html`<p class="approvalStatus">${this.approvalRequest.approvalStatus}</p>`: html``}
-                  ${this.approvalRequest.reimbursementStatus ? html`<p class="reimbursementStatus">${this.approvalRequest.reimbursementStatus}</p>`: html``}
+                  <p ?hidden=${!this.approvalRequest.approvalStatus} class="approvalStatus">${this.ToUpperCase(this.approvalRequest.approvalStatus)}</p>
+                  <p ?hidden=${!this.approvalRequest.reimbursementStatus} class="reimbursementStatus">${this.ToUpperCase(this.approvalRequest.reimbursementStatus)}</p>
             </div>
 
-            ${console.log(this.approvalRequest)}
             <div class="teaser">
                   <div class="l-2col l-2col--67-33">
                         <div class="l-first panel">
-                                    ${this.approvalRequest ? html`<div class='title'>${this.approvalRequest.label}</div>`:html``}
-                                    ${!this.checkKerb(this.approvalRequest.employeeKerberos) ? html`<div class='requestor'>${this.approvalRequest.employee.firstName} ${this.approvalRequest.employee.lastName}</div>`: html``}
+                                    <div ?hidden=${!this.approvalRequest.label} class='title'>${this.approvalRequest.label}</div>
+                                    <div ?hidden=${!this.approvalRequest.employeeKerberos} class='requestor'>
+                                          ${!this.checkKerb(this.approvalRequest.employeeKerberos) ? 
+                                                html`${this.approvalRequest.employee.firstName} ${this.approvalRequest.employee.lastName}</div>`
+                                                :html``}
+                                    </div>
                                     <div class="panel panel--icon panel--icon-custom panel--icon-rec-pool">
-                                          <p class="panel__title"><span class="panel__custom-icon fa-solid fa-building">
-                                                </span>${this.approvalRequest.locationDetails}
+                                          <p ?hidden=${!this.approvalRequest.locationDetails} class="panel__title"><span class="panel__custom-icon fa-solid fa-building"></span>
+                                                ${this.approvalRequest.locationDetails}
                                           </p>
-                                          <p class="panel__title"><span class="panel__custom-icon fa-solid fa-calendar">                                              
-                                                </span>${this.formatDate(this.approvalRequest.programStartDate)} 
-                                                       ${this.approvalRequest.programEndDate ? 
-                                                       html`- ${this.formatDate(this.approvalRequest.programEndDate)}`
-                                                       :html``}
+
+
+                                          <p ?hidden=${!this.approvalRequest.programStartDate} class="panel__title"><span class="panel__custom-icon fa-solid fa-calendar"></span>
+                                                ${this.formatDate(this.approvalRequest.programStartDate)}
+                                                ${this.approvalRequest.programEndDate ? 
+                                                      html`- ${this.formatDate(this.approvalRequest.programEndDate)}`
+                                                      :html``}
                                           </p>
                                     </div>
                         </div>
-                        <div class="l-second panel">
-                              <b>Projected Expenses</b>
-                              ${this.approvalRequest.fundingSources && this.approvalRequest.fundingSources.map(dep => html`
-                                    ${dep.fundingSourceLabel} - ${this.formatDollar(dep.amount)}<br />
-                              `)}
+                        <div ?hidden=${!this.approvalRequest.fundingSources} class="l-second panel">
+                              <div>
+                                    <b>Projected Expenses</b>
+
+                                    ${this.approvalRequest.fundingSources.map(dep => html`
+                                          ${dep.fundingSourceLabel} - ${this.formatDollar(dep.amount)}<br />
+                                    `)}
+                              </div>
                         </div>
                         
                   </div>
