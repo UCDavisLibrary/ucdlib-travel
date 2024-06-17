@@ -3,15 +3,16 @@ import {render} from "./approval-request-draft-list.tpl.js";
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 import { LitCorkUtils, Mixin } from "../../../lib/appGlobals.js";
 import urlUtils from '../../../lib/utils/urlUtils.js';
+
 /**
  * @class ApprovalRequestDraftList
  * @description Component that displays draft list for active kerberos id
  *
- * @property {Array} drafts - Object of initial array 
- * @property {String} kerb - Kerberos from the active page
- * @property {Number} excludeId - ID to exclude from draft list in the existing Object
+ * @property {Array} drafts - List of approval request drafts - fetched when init method is called
+ * @property {String} kerb - Kerberos id of the logged in user
+ * @property {Number} excludeId - Approval request ID to exclude when displaying drafts
  */
-export default class ApprovalRequestDraftList extends Mixin(LitElement) 
+export default class ApprovalRequestDraftList extends Mixin(LitElement)
   .with(LitCorkUtils, MainDomElement) {
   static get properties() {
     return {
@@ -25,7 +26,7 @@ export default class ApprovalRequestDraftList extends Mixin(LitElement)
     super();
     this.render = render.bind(this);
 
-    this.drafts = [];    
+    this.drafts = [];
     this._injectModel('AppStateModel', 'ApprovalRequestModel', 'AuthModel');
     this.kerb = this.AuthModel.getToken().token.preferred_username;
     this.query = {employees:this.kerb, approvalStatus:'draft', isCurrent:true}
@@ -40,7 +41,7 @@ export default class ApprovalRequestDraftList extends Mixin(LitElement)
       const promises = [
         this.ApprovalRequestModel.query(this.query)
       ];
-  
+
       return await Promise.allSettled(promises);
     }
 
@@ -57,6 +58,16 @@ export default class ApprovalRequestDraftList extends Mixin(LitElement)
 
       this.drafts = e.payload.data.filter(draft => draft.approvalRequestId !== this.excludeId);
 
+    }
+
+    /**
+     * @description Convert date to local date time
+     * @param {Date} date
+     * @returns
+     */
+    _toLocalDateTime(date) {
+      const d = new Date(date);
+      return d.toLocaleString();
     }
 
 

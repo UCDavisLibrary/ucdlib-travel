@@ -1,6 +1,6 @@
 import { html } from 'lit';
 
-export function render() { 
+export function render() {
 return html`
   <div ?hidden=${!this.drafts.length} class='panel panel--icon panel--icon-custom panel--icon-secondary'>
     <div>
@@ -9,18 +9,13 @@ return html`
       </div>
       <p>You have unsubmitted drafts. Click one to resume where you left off:</p>
       <ul class="list--bordered">
-        ${draftList.call(this, this.drafts)}
+        ${this.drafts.map(d => html`
+          <li><a href='/approval-request/new/${d.approvalRequestId}' class='pointer'><span class="list-title">${d.label ? d.label: html`Unititled Request`}</span></a>
+            <br><span class="list-description small">${this._toLocalDateTime(d.submittedAt)}</span>
+          </li>
+        `)}
       </ul>
     </div>
   </div>
 
 `;}
-
-function draftList(draftsList) {
-  return html`        
-    ${draftsList && draftsList.map(d => html`
-      <li><a href='/approval-request/new/${d.approvalRequestId}'><span class="list-title">${d.label ? d.label: html`Unititled Request`}</span></a>
-        <br><span class="list-description">${new Date(d.submittedAt)}</span>
-      </li>
-    `)}
-  `}
