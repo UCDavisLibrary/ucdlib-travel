@@ -17,7 +17,7 @@ class ApplicationOptions {
       {value: 'draft', label: 'Draft'},
       {value: 'submitted', label: 'Submitted'},
       {value: 'in-progress', label: 'In Progress'},
-      {value: 'approved', label: 'Approved', isFinal: true},
+      {value: 'approved', label: 'Approved'},
       {value: 'canceled', label: 'Canceled', isFinal: true},
       {value: 'denied', label: 'Denied', isFinal: true},
       {value: 'revision-requested', label: 'Revision Requested'}
@@ -48,15 +48,16 @@ class ApplicationOptions {
    * - value: the keyword value of the action
    * - label: the label to display in the UI
    * - actor: the role of the user who can take the action
+   * - resultingStatus: the status that the approval request will be set to after the action is taken
    */
   get approvalStatusActions(){
     return [
-      {value: 'approve', label: 'Approve', actor: 'approver'},
-      {value: 'approve-with-changes', label: 'Approve with Changes', actor: 'approver'},
-      {value: 'deny', label: 'Deny', actor: 'approver'},
-      {value: 'cancel', label: 'Cancel', actor: 'submitter'},
-      {value: 'request-revision', label: 'Request Revision', actor: 'approver'},
-      {value: 'submit', label: 'Submit', actor: 'submitter'}
+      {value: 'approve', label: 'Approve', actor: 'approver', resultingStatus: ['in-progress', 'approved']},
+      {value: 'approve-with-changes', label: 'Approve with Changes', actor: 'approver', resultingStatus: ['in-progress', 'approved']},
+      {value: 'deny', label: 'Deny', actor: 'approver', resultingStatus: 'denied'},
+      {value: 'cancel', label: 'Cancel', actor: 'submitter', resultingStatus: 'canceled'},
+      {value: 'request-revision', label: 'Request Revision', actor: 'approver', resultingStatus: 'revision-requested'},
+      {value: 'submit', label: 'Submit', actor: 'submitter', resultingStatus: 'submitted'}
     ];
   }
 
@@ -67,6 +68,24 @@ class ApplicationOptions {
    */
   approvalStatusActionLabel(action){
     return this.approvalStatusActions.find(a => a.value === action)?.label || '';
+  }
+
+  /**
+   * @description - Get the resulting status of an approval request after an action is taken
+   * @param {String} action - The action keyword
+   * @param {Object} approvalRequest - The approval request object
+   * @returns {String}
+   */
+  getResultingStatus(action, approvalRequest){
+    action = this.approvalStatusActions.find(a => a.value === action);
+    if ( !action ) return '';
+    if ( typeof action.resultingStatus === 'string' ) return action.resultingStatus;
+
+    if ( ['approve', 'approve-with-changes'].includes(action.value) ){
+      return approvalRequest.approvalStatusActivity.filter(a => a.action === 'approval-needed').length === 1 ? 'approved' : 'in-progress';
+    }
+
+    return "";
   }
 
 
