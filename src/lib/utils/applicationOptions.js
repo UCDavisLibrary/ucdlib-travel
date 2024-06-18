@@ -60,6 +60,15 @@ class ApplicationOptions {
     ];
   }
 
+  /**
+   * @description - Get the label for an approval status action
+   * @param {String} action - The action keyword
+   * @returns
+   */
+  approvalStatusActionLabel(action){
+    return this.approvalStatusActions.find(a => a.value === action)?.label || '';
+  }
+
 
 }
 
