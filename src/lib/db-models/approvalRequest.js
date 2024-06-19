@@ -5,6 +5,7 @@ import employeeModel from "./employee.js";
 import fundingSourceModel from "./fundingSource.js"
 import typeTransform from "../utils/typeTransform.js";
 import IamEmployeeObjectAccessor from "../utils/iamEmployeeObjectAccessor.js";
+import applicationOptions from "../utils/applicationOptions.js";
 
 class ApprovalRequest {
 
@@ -594,7 +595,7 @@ class ApprovalRequest {
 
   /**
    * @description Construct an approval chain for an approval request based on funding sources selected
-   * @param {Object|Number} approvalRequest - approval request object or approval request ID
+   * @param {Object|Number} approvalRequestObjectOrId - approval request object or approval request ID
    * @returns {Object|Array} - If error returns error object, otherwise returns array of approvers with properties:
    *  - approvalTypeOrder {Integer} - order of approval type
    *  - employeeOrder {Integer} - order of employee within approval type
@@ -604,17 +605,10 @@ class ApprovalRequest {
    * - employeeKerberos {String} - kerberos of approver
    * - employee {Object} - employee record of approver
    */
-  async makeApprovalChain(approvalRequest){
+  async makeApprovalChain(approvalRequestObjectOrId){
 
-    // check if approval request ID was given instead of object
-    // retrieve approval request object if so
-    let approvalRequestId = typeTransform.toPositiveInt(approvalRequest);
-    if ( approvalRequestId ){
-      approvalRequest = await this.get({requestIds: [approvalRequestId], isCurrent: true});
-      if ( approvalRequest.error ) return approvalRequest;
-      if ( !approvalRequest.total ) return {error: true, message: 'Approval request not found', is400: true};
-      approvalRequest = approvalRequest.data[0];
-    }
+    const { approvalRequest, approvalRequestError } = await this._getApprovalRequest(approvalRequestObjectOrId);
+    if ( approvalRequestError ) return approvalRequestError;
 
     // get full funding source objects
     const fundingSourceIds = (approvalRequest.fundingSources || []).map(fs => fs.fundingSourceId);
@@ -750,21 +744,12 @@ class ApprovalRequest {
 
   /**
    * @description Submit an existing approval request draft for approval
-   * @param {Object|Number} approvalRequest - approval request object or approval request ID
+   * @param {Object|Number} approvalRequestObjectOrId - approval request object or approval request ID
    * @returns {Object} - {success: true} or {error: true}
    */
-  async submitDraft(approvalRequest){
-    // check if approval request ID was given instead of object
-    // retrieve approval request object if so
-    let approvalRequestId = typeTransform.toPositiveInt(approvalRequest);
-    if ( approvalRequestId ){
-      approvalRequest = await this.get({requestIds: [approvalRequestId], isCurrent: true});
-      if ( approvalRequest.error ) return approvalRequest;
-      if ( !approvalRequest.total ) return {error: true, message: 'Approval request not found', is400: true};
-      approvalRequest = approvalRequest.data[0];
-    } else {
-      approvalRequestId = approvalRequest.approvalRequestId;
-    }
+  async submitDraft(approvalRequestObjectOrId){
+    const { approvalRequest, approvalRequestError, approvalRequestId } = await this._getApprovalRequest(approvalRequestObjectOrId);
+    if ( approvalRequestError ) return approvalRequestError;
 
     // ensure approval request is in draft status
     if ( approvalRequest.approvalStatus !== 'draft' ) return {error: true, message: 'Approval request must be in draft status', is400: true};
@@ -833,6 +818,93 @@ class ApprovalRequest {
     }
 
     return {success: true, approvalRequestId, approvalRequestRevisionId};
+  }
+
+  async doApproverAction(approvalRequestObjectOrId, actionPayload, approverKerberos){
+
+    // get approval request
+    const { approvalRequest, approvalRequestError, approvalRequestId } = await this._getApprovalRequest(approvalRequestObjectOrId);
+    if ( approvalRequestError ) return approvalRequestError;
+
+    // ensure approver is next in approval chain
+    let isFirstApprover = false;
+    let userActionRecord;
+    for ( const userAction of approvalRequest.approvalStatusActivity ) {
+      if ( userAction.action === 'approval-needed' ) {
+        if ( userAction.employeeKerberos === approverKerberos ) {
+          userActionRecord = userAction;
+          isFirstApprover = true;
+        }
+        break;
+      }
+    }
+    if ( !isFirstApprover ) return {error: true, message: 'Approver is not authorized to perform this action', is403: true};
+
+    // ensure action is valid
+    let action = applicationOptions.approvalStatusActions.find(a => a.value === actionPayload?.action && a.actor === 'approver');
+    if ( !action ) return {error: true, message: 'Invalid action', is400: true};
+
+    // verify approve-with-changes has updated funding sources
+    // and that total funding sources amount is not different from original
+    if ( action.value === 'approve-with-changes') {
+      const newFundingSources = Array.isArray(actionPayload.fundingSources) ? actionPayload.fundingSources : [];
+      if ( !newFundingSources.length ) return {error: true, message: 'Funding sources required for approve-with-changes', is400: true};
+    }
+
+    // do transaction
+    const approvalRequestRevisionId = approvalRequest.approvalRequestRevisionId;
+    const approvalRequestApprovalChainLinkId = userActionRecord.approvalRequestApprovalChainLinkId;
+    const client = await pg.pool.connect();
+    try {
+      await client.query('BEGIN');
+      await client.query('COMMIT');
+    } catch (e) {
+      await client.query('ROLLBACK');
+      return {error: e};
+    } finally {
+      client.release();
+    }
+
+    return {success: true, approvalRequestId, approvalRequestRevisionId};
+
+  }
+
+  /**
+   * @description Check if argument is an approval request object or ID, fetch object if ID
+   * @param {Object|Number} approvalRequest
+   * @returns {Object} - {approvalRequestError: Object|Null, approvalRequest: Object, approvalRequestId: Number}
+   */
+  async _getApprovalRequest(approvalRequest){
+    const out = {
+      approvalRequestError: false,
+      approvalRequest: null,
+      approvalRequestId: null
+    }
+
+    let approvalRequestId = typeTransform.toPositiveInt(approvalRequest);
+
+    // is id, fetch approval request
+    if ( approvalRequestId ){
+      approvalRequest = await this.get({requestIds: [approvalRequestId], isCurrent: true});
+      if ( approvalRequest.error ) {
+        out.approvalRequestError = approvalRequest;
+        return out;
+      }
+      if ( !approvalRequest.total ) {
+        out.approvalRequestError = {error: true, message: 'Approval request not found', is400: true};
+        return out;
+      }
+      out.approvalRequest = approvalRequest.data[0];
+      out.approvalRequestId = approvalRequestId;
+
+    // we are assuming it is the approval request object
+    } else {
+      out.approvalRequest = approvalRequest;
+      out.approvalRequestId = approvalRequest.approvalRequestId;
+    }
+
+    return out;
+
   }
 
 }
