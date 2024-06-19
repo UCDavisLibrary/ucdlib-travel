@@ -164,8 +164,23 @@ export default (api) => {
     const action = validations.approvalStatusActions.find(a => a.value === payload.action);
     if ( action.actor === 'submitter' && approvalRequestObj.employeeKerberos !== kerberos ) {
       return apiUtils.do403(res);
+    } else if ( action.actor === 'approver' ) {
+      let isFirstApprover = false;
+      for ( const userAction of approvalRequestObj.approvalStatusActivity ) {
+        if ( userAction.action === 'approval-needed' ) {
+          if ( userAction.employeeKerberos === kerberos ) {
+            isFirstApprover = true;
+          }
+          break;
+        }
+      }
+      if ( !isFirstApprover ) {
+        return apiUtils.do403(res);
+      }
+
+    } else {
+      return apiUtils.do403(res);
     }
-    // todo check if in approval chain
 
 
     if ( action.value === 'submit' ){
@@ -178,6 +193,10 @@ export default (api) => {
         return res.status(500).json({error: true, message: 'Error submitting approval request.'});
       }
       return res.json(result);
+    }
+
+    if ( action.actor === 'approver' ) {
+
     }
 
     // todo handle other actions

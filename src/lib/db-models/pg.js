@@ -111,7 +111,7 @@ class Pg {
           i++;
 
         // if the value is an object without a value key, treat it as nested and recurse. check for relation key
-        } else if ( typeof queryObject[k] === 'object' ){
+        } else if ( typeof queryObject[k] === 'object' && queryObject[k].relation !== undefined ){
           const q = {...queryObject[k]};
           const relation = q.relation;
           delete q.relation;
