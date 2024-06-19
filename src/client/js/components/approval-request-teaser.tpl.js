@@ -3,10 +3,15 @@ import { html } from 'lit';
 
 export function render() { 
 return html`
-      ${console.log("A:", this.approvalRequest)}
       <div ?hidden=${!this.approvalRequest}>
             <div>     
-                  <p ?hidden=${!this.approvalRequest.approvalStatus} class="approval-status">${this.ToUpperCase(this.approvalRequest.approvalStatus)}</p>
+                  ${(this.approvalRequest.approvalStatus == 'submitted' || this.approvalRequest.approvalStatus == 'in-progress') && this.checkApproverStatus(this.approvalRequest.approvalStatusActivity) ? 
+                        html`
+                        <p ?hidden=${!this.approvalRequest.approvalStatus} class="approval-status">${this.changeApprovalStatus(this.approvalRequest.approvalStatusActivity)}</p>
+                        `
+                        :html`<p ?hidden=${!this.approvalRequest.approvalStatus} class="approval-status">${this.ToUpperCase(this.approvalRequest.approvalStatus)}</p>`
+                  }
+
                   <p ?hidden=${!this.approvalRequest.reimbursementStatus} class="reimbursement-status">${this.ToUpperCase(this.approvalRequest.reimbursementStatus)}</p>
             </div>
 
