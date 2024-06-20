@@ -9,7 +9,21 @@ import promiseUtils from '../../../../lib/utils/promiseUtils.js';
 import urlUtils from "../../../../lib/utils/urlUtils.js";
 import applicationOptions from '../../../../lib/utils/applicationOptions.js';
 
-
+/**
+ * @class AppPageApprover
+ * @description Page element for approving an approval request
+ * @property {Number} approvalRequestId - the id of the approval request to approve - set from url
+ * @property {Object} approvalRequest - the approval request to approve - set from ApprovalRequestModel based on approvalRequestId
+ * @property {Object} queryObject - query for fetching data for this approval request
+ * @property {String} approvalRequestLink - the link to the main page for this approval request
+ * @property {Number} totalExpenditures - the total amount of expenditures for this approval request - calculated from approvalRequest.expenditures
+ * @property {Array} fundingSources - the funding sources for this approval request - set from approvalRequest.fundingSources
+ * @property {Boolean} isFundingSourceChange - true if the approver has changed a funding source value
+ * @property {Boolean} fundingSourceError - true if there is an error with a funding source value - aka the total amount does not match the total expenditures
+ * @property {String} comments - the comments the approver has entered
+ * @property {Boolean} showLoaded - true if the page has loaded
+ * @property {String} action - the action the approver has taken
+ */
 export default class AppPageApprover extends Mixin(LitElement)
 .with(LitCorkUtils, MainDomElement) {
 
