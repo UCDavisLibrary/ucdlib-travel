@@ -196,6 +196,16 @@ export default (api) => {
     }
 
     if ( action.actor === 'approver' ) {
+      const result = await approvalRequest.doApproverAction(approvalRequestObj, payload, kerberos);
+      if ( result.error && result.is400 ) {
+        return res.status(400).json(result);
+      }
+
+      if ( result.error ) {
+        console.error('Error in POST /approval-request/:id/status-update', result.error);
+        return res.status(500).json({error: true, message: 'Error performing action on approval request.'});
+      }
+      return res.json(result);
 
     }
 
