@@ -1,11 +1,14 @@
 import pg from "./pg.js";
-import EntityFields from "../utils/EntityFields.js";
+
 import validations from "./approvalRequestValidations.js";
 import employeeModel from "./employee.js";
 import fundingSourceModel from "./fundingSource.js"
+
+import EntityFields from "../utils/EntityFields.js";
 import typeTransform from "../utils/typeTransform.js";
 import IamEmployeeObjectAccessor from "../utils/iamEmployeeObjectAccessor.js";
 import applicationOptions from "../utils/applicationOptions.js";
+import objectUtils from "../utils/objectUtils.js";
 
 class ApprovalRequest {
 
@@ -820,6 +823,16 @@ class ApprovalRequest {
     return {success: true, approvalRequestId, approvalRequestRevisionId};
   }
 
+  /**
+   * @description Update 'approval-needed' status to a new status for an approver
+   * @param {Object|Number} approvalRequestObjectOrId - approval request object or approval request ID
+   * @param {Object} actionPayload - object with properties:
+   * - action {String} - new action status
+   * - comments {String} OPTIONAL - comments for the action
+   * - fundingSources {Array} OPTIONAL - Array of funding source objects with updated amounts
+   * @param {String} approverKerberos - kerberos of the approver
+   * @returns {Object} - {success: true} or {error: true}
+   */
   async doApproverAction(approvalRequestObjectOrId, actionPayload, approverKerberos){
 
     // get approval request
@@ -849,6 +862,21 @@ class ApprovalRequest {
     if ( action.value === 'approve-with-changes') {
       const newFundingSources = Array.isArray(actionPayload.fundingSources) ? actionPayload.fundingSources : [];
       if ( !newFundingSources.length ) return {error: true, message: 'Funding sources required for approve-with-changes', is400: true};
+
+      // convert old and new funding source arrays to key-value objects
+      const keyFunc = fs => fs.approvalRequestFundingSourceId;
+      const valueFunc = fs => fs.amount;
+      const newFundingSourcesObj = typeTransform.arrayToObject(newFundingSources, keyFunc, valueFunc);
+      const oldFundingSourcesObj = typeTransform.arrayToObject(approvalRequest.fundingSources, keyFunc, valueFunc);
+
+      // run checks on funding sources
+      if ( objectUtils.objectsAreEqual(newFundingSourcesObj, oldFundingSourcesObj) ) {
+        action = applicationOptions.approvalStatusActions.find(a => a.value === 'approve');
+      } else if ( !objectUtils.objectsHaveSameKeys(newFundingSourcesObj, oldFundingSourcesObj) ) {
+        return {error: true, message: 'Funding sources must have the same keys as original', is400: true};
+      } else if ( objectUtils.sumObjectValues(newFundingSourcesObj) !== objectUtils.sumObjectValues(oldFundingSourcesObj) ) {
+        return {error: true, message: 'Total funding source amount must be the same as original', is400: true};
+      }
     }
 
     // do transaction
@@ -857,6 +885,51 @@ class ApprovalRequest {
     const client = await pg.pool.connect();
     try {
       await client.query('BEGIN');
+
+      let data, sql;
+
+      // update funding sources if needed
+      let fundChanges = {};
+      if ( action.value === 'approve-with-changes' ){
+        for (const newFund of actionPayload.fundingSources || []){
+          const oldFund = approvalRequest.fundingSources.find(fs => fs.approvalRequestFundingSourceId === newFund.approvalRequestFundingSourceId);
+          if (oldFund?.amount !== newFund.amount){
+            fundChanges[newFund.approvalRequestFundingSourceId] = {...newFund, oldAmount: oldFund.amount};
+
+            sql = `
+              UPDATE approval_request_funding_source
+              SET amount = $1
+              WHERE approval_request_funding_source_id = $2
+            `;
+            await client.query(sql, [newFund.amount, newFund.approvalRequestFundingSourceId]);
+          }
+        }
+      }
+
+      // update approval chain record
+      data = {
+        action: action.value,
+        comments: actionPayload.comments || null,
+        fund_changes: fundChanges,
+        occurred: new Date()
+      }
+      const updateClause = pg.toUpdateClause(data);
+      sql = `
+        UPDATE approval_request_approval_chain_link
+        SET ${updateClause.sql}
+        WHERE approval_request_approval_chain_link_id = $${updateClause.values.length + 1}
+      `;
+      await client.query(sql, [...updateClause.values, approvalRequestApprovalChainLinkId]);
+
+      // update approval request status
+      sql = `
+        UPDATE approval_request
+        SET approval_status = $1
+        WHERE approval_request_revision_id = $2
+      `;
+      await client.query(sql, [applicationOptions.getResultingStatus(action.value, approvalRequest), approvalRequestRevisionId]);
+
+
       await client.query('COMMIT');
     } catch (e) {
       await client.query('ROLLBACK');

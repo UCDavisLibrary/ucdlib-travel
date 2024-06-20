@@ -24,7 +24,8 @@ export default class AppPageApprover extends Mixin(LitElement)
       isFundingSourceChange: {type: Boolean},
       fundingSourceError: {type: Boolean},
       comments: {type: String},
-      showLoaded: {type: Boolean}
+      showLoaded: {type: Boolean},
+      action: {state: true},
     }
   }
 
@@ -40,6 +41,7 @@ export default class AppPageApprover extends Mixin(LitElement)
     this.isFundingSourceChange = false;
     this.fundingSourceError = false;
     this.comments = '';
+    this.action = '';
 
     this.waitController = new WaitController(this);
 
@@ -90,6 +92,7 @@ export default class AppPageApprover extends Mixin(LitElement)
 
     // reset form properties
     this.comments = '';
+    this.action = '';
 
     const breadcrumbs = [
       this.AppStateModel.store.breadcrumbs.home,
@@ -176,6 +179,11 @@ export default class AppPageApprover extends Mixin(LitElement)
     this.isFundingSourceChange = isFundingSourceChange;
   }
 
+  /**
+   * @description Attached to approval form submit button. Fires when approver submits approval form
+   * @param {Event} e - form submit event
+   * @returns
+   */
   _onApprovalFormSubmit(e){
     let action;
     if (typeof e === 'string') {
@@ -213,7 +221,33 @@ export default class AppPageApprover extends Mixin(LitElement)
     if ( payload.action === 'approve-with-changes' ) {
       payload.fundingSources = this.fundingSources;
     }
+    this.action = payload.action;
     this.ApprovalRequestModel.statusUpdate(this.approvalRequestId, payload);
+  }
+
+  /**
+   * @description Callback for approval-request-status-update event
+   * Fires when the status of an approval request is updated (e.g. after the approval form action is processed by the server)
+   * @param {Object} e - cork-app-utils event object
+   * @returns
+   */
+  _onApprovalRequestStatusUpdate(e){
+    if ( e.approvalRequestId !== this.approvalRequestId ) return;
+    if ( e.action?.action !== this.action ) return;
+    const action = applicationOptions.approvalStatusActions.find(a => a.value === this.action);
+
+    if ( e.state === 'error' ) {
+      this.AppStateModel.showError('Error submitting approval request.');
+      return;
+    }
+
+    if ( e.state === 'loading' ){
+      this.AppStateModel.showLoading();
+      return;
+    }
+
+    this.AppStateModel.showToast({message: action.actionTakenText, type: 'success'});
+    this.AppStateModel.setLocation(`/approval-request/${this.approvalRequestId}`);
   }
 
   /**
