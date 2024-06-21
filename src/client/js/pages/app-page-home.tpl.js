@@ -6,15 +6,12 @@ import "../components/approval-request-teaser.js";
 export function render() {
 return html`
   <div class='l-container'>
-    ${this.approvalRequests.map(ar => html`
-      <approval-request-teaser .approvalRequest=${ar}></approval-request-teaser>
-    `)}
-
-    <div class='l-basic--flipped'>
-      <div class="l-content">
+      <div class="l-shrink">
         <p>Home Page</p>
+        ${this.approvalRequests.map(ar => html`
+          <approval-request-teaser .approvalRequest=${ar}></approval-request-teaser>
+        `)}
       </div>
-    </div>
   </div>
 
 `;}
