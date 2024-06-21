@@ -11,6 +11,7 @@
 // pages
 @use './pages/approval-request-new.scss' as approvalRequestNew;
 @use './pages/approver.scss' as approver;
+@use './pages//approval-request.scss' as approvalRequest;
 
 // components
 @use './components/approval-request-header.scss' as approvalRequestHeader;

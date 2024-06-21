@@ -4,6 +4,7 @@ import {render} from "./approval-request-status-action.tpl.js";
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 
 import { LitCorkUtils, Mixin } from "../../../lib/appGlobals.js";
+import applicationOptions from '../../../lib/utils/applicationOptions.js';
 
 /**
  * @class ApprovalRequestStatusAction
@@ -35,41 +36,14 @@ export default class ApprovalRequestStatusAction extends Mixin(LitElement)
 
     this.byStatus = {
       'approval-needed': {
-        label: 'Pending Approval By:',
+        byLine: 'Pending Approval By:',
         iconClass: 'fa-solid fa-user',
         brandColor: 'primary'
-      },
-      'approve': {
-        label: 'Approved By:',
-        iconClass: 'fa-solid fa-thumbs-up',
-        brandColor: 'redwood'
-      },
-      'deny': {
-        label: 'Denied By:',
-        iconClass: 'fa-solid fa-ban',
-        brandColor: 'double-decker'
-      },
-      'cancel': {
-        label: 'Canceled By:',
-        iconClass: 'fa-solid fa-times',
-        brandColor: 'redbud'
-      },
-      'request-revision': {
-        label: 'Revision Requested By:',
-        iconClass: 'fa-solid fa-edit',
-        brandColor: 'pinot'
-      },
-      'recall': {
-        label: 'Recalled By:',
-        iconClass: 'fa-solid fa-rotate-left',
-        brandColor: 'secondary'
-      },
-      'approve-with-changes': {
-        label: 'Approved With Changes By:',
-        iconClass: 'fa-solid fa-thumbs-up',
-        brandColor: 'redwood'
       }
     }
+    applicationOptions.approvalStatusActions.filter(a => a.actor === 'approver').forEach(action => {
+      this.byStatus[action.value] = action;
+    });
   }
 
   /**

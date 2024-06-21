@@ -169,8 +169,10 @@ export default (api) => {
     // ensure user is authorized to perform action
     const kerberos = req.auth.token.id;
     const action = validations.approvalStatusActions.find(a => a.value === payload.action);
-    if ( action.actor === 'submitter' && approvalRequestObj.employeeKerberos !== kerberos ) {
-      return apiUtils.do403(res);
+    if ( action.actor === 'submitter' ) {
+      if ( approvalRequestObj.employeeKerberos !== kerberos ){
+        return apiUtils.do403(res);
+      }
     } else if ( action.actor === 'approver' ) {
       let isFirstApprover = false;
       for ( const userAction of approvalRequestObj.approvalStatusActivity ) {

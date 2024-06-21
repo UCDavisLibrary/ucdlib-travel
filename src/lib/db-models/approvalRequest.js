@@ -764,11 +764,34 @@ class ApprovalRequest {
     // do transaction
     const approvalRequestRevisionId = approvalRequest.approvalRequestRevisionId;
     const client = await pg.pool.connect();
+    const submittedAt = new Date();
     try {
       await client.query('BEGIN');
 
       let data, sql;
 
+      // insert submission to approval status activity table
+      // not technically approval activity, but using the same table makes things easier
+      data = {
+        approval_request_revision_id: approvalRequestRevisionId,
+        approver_order: 0,
+        action: 'submit',
+        employee_kerberos: approvalRequest.employeeKerberos
+      }
+      data = pg.prepareObjectForInsert(data);
+      sql = `INSERT INTO approval_request_approval_chain_link (${data.keysString}) VALUES (${data.placeholdersString}) RETURNING approval_request_approval_chain_link_id`;
+      const chainRes = await client.query(sql, data.values);
+      const approvalRequestApprovalChainLinkId = chainRes.rows[0].approval_request_approval_chain_link_id;
+
+      data = {
+        approval_request_approval_chain_link_id: approvalRequestApprovalChainLinkId,
+        approver_type_id: 4
+      }
+      data = pg.prepareObjectForInsert(data);
+      sql = `INSERT INTO link_approver_type (${data.keysString}) VALUES (${data.placeholdersString})`;
+      await client.query(sql, data.values);
+
+      // insert approval chain links
       for (const [index, approver] of approvalChain.entries()){
 
         // upsert employee and department
@@ -802,7 +825,7 @@ class ApprovalRequest {
       // update approval request status to 'submitted'
       data = {
         approval_status: 'submitted',
-        submitted_at: new Date()
+        submitted_at: submittedAt
       };
       const updateClause = pg.toUpdateClause(data);
       sql = `
