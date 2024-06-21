@@ -14,6 +14,7 @@ export default class AppPageHome extends Mixin(LitElement)
   constructor() {
     super();
     this.render = render.bind(this);
+    this.approvalRequests = [];
     this._injectModel('AppStateModel','ApprovalRequestModel');
 
   }

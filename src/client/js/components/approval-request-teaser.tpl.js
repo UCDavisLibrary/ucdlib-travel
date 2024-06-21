@@ -4,10 +4,10 @@ import { html } from 'lit';
 export function render() { 
 return html`
       <div ?hidden=${!this.approvalRequest}>
-            <div>     
-                  ${(this.approvalRequest.approvalStatus == 'submitted' || this.approvalRequest.approvalStatus == 'in-progress') && this.checkApproverStatus(this.approvalRequest.approvalStatusActivity) ? 
+            <div> 
+                  ${this.checkApproverStatus(this.approvalRequest.approvalStatusActivity) ? 
                         html`
-                        <p ?hidden=${!this.approvalRequest.approvalStatus} class="approval-status">${this.changeApprovalStatus(this.approvalRequest.approvalStatusActivity)}</p>
+                        <p ?hidden=${!this.approvalRequest.approvalStatus} class="approval-status">${this.approvalStatus}</p>
                         `
                         :html`<p ?hidden=${!this.approvalRequest.approvalStatus} class="approval-status">${this.ToUpperCase(this.approvalRequest.approvalStatus)}</p>`
                   }

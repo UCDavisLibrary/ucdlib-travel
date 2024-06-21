@@ -13,7 +13,8 @@ export default class ApprovalRequestTeaser extends Mixin(LitElement)
 .with(LitCorkUtils, MainDomElement) {
   static get properties() {
     return {
-      approvalRequest: {type: Object}
+      approvalRequest: {type: Object},
+      status: {type: String}
     }
   }
 
@@ -22,17 +23,10 @@ export default class ApprovalRequestTeaser extends Mixin(LitElement)
     super();
     this.render = render.bind(this);    
     this.isApprover = false;
-
+    this.approvalStatus = "";
     this._injectModel('AuthModel');
 
   }
-
-  
-  // firstUpdated(changedProperties) {
-  //   // console.log(changedProperties);
-  //   this.checkApproverStatus(this.approvalRequest.approvalStatusActivity);
-  //   console.log( this.isApprover);
-  // }
 
   /**
    * @description formatting the currency to dollar format
@@ -82,8 +76,10 @@ export default class ApprovalRequestTeaser extends Mixin(LitElement)
   checkApproverStatus(kerbActivity){
     const found = kerbActivity.find(a => this.checkKerb(a.employeeKerberos));
     if(found !== undefined) {
+      this.changeApprovalStatus(this.approvalRequest.approvalStatusActivity, found);
       return found;
     }
+    
     return false;
   }
 
@@ -98,8 +94,8 @@ export default class ApprovalRequestTeaser extends Mixin(LitElement)
       if (index === -1) {
         return undefined
       }
-      
-      return {"prev": prev, "index":apActivity[index], "next":next}
+      let obj = {"prev": prev, "index":apActivity[index], "next":next}
+      return obj;
     }
 
   /**
@@ -107,44 +103,36 @@ export default class ApprovalRequestTeaser extends Mixin(LitElement)
    * @param {Array} ap -  approval request activity array
    * @returns
   */
-  async changeApprovalStatus(apActivity){
-    let approverKerbActivity = this.checkApproverStatus(apActivity);
-    let approverOrder = approverKerbActivity.approverOrder;
-    let status;
-
+  async changeApprovalStatus(apActivity, thisApproverInfo){
+    this.approvalStatus = "Example";
+    let approverOrder = thisApproverInfo.approverOrder;
     let givenStatus = this.PrevAndNext(apActivity, approverOrder);
-
-    console.log(givenStatus);
 
     if(givenStatus.index.action == "approval-needed") {
       let givenprev = givenStatus.prev;
       if(givenprev.action == "approved") {
-        status = "Awaiting Your Approval"
+        this.approvalStatus = "Awaiting Your Approval"
       } else {
-        //add loop for given prev not being undefined and previous is not approved
         let i = approverOrder;
+
         while (i >= 0){
-          let newInd = this.PrevAndNext(givenprev, givenprev.approverOrder);
-          if(newInd.index.action == "approval-needed") {
-            return `Awaiting Approval By ${approverTypeLabel}`
+          let newInd = this.PrevAndNext(apActivity, i);
+
+          if((newInd.index.action == "approval-needed" && newInd.prev && newInd.prev.action == "approved")  ||  
+          (newInd.index.action == "approval-needed" && newInd.prev === undefined)) {
+            this.approvalStatus = `Awaiting Approval By ${newInd.index.employee.firstName} ${newInd.index.employee.lastName}`
+            return;
           }
           i--;
         }
           
       }
     } else if(givenStatus.index.action == "approved" && givenStatus.next) {
-        status = "Approved by You";
+        this.approvalStatus = "Approved by You";
     } else {
-      status = givenStatus.index.action;
+      this.approvalStatus = givenStatus.index.action;
     }
-      
 
-      // console.log("I:",givenStatus.index);
-      // console.log("P:",givenStatus.prev);
-      // console.log("N:",givenStatus.next);
-
-
-    // return newStatus;
   }
 
   /**
