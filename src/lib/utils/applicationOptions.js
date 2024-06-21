@@ -52,12 +52,48 @@ class ApplicationOptions {
    */
   get approvalStatusActions(){
     return [
-      {value: 'approve', label: 'Approve', actor: 'approver', resultingStatus: ['in-progress', 'approved']},
-      {value: 'approve-with-changes', label: 'Approve with Changes', actor: 'approver', resultingStatus: ['in-progress', 'approved']},
-      {value: 'deny', label: 'Deny', actor: 'approver', resultingStatus: 'denied'},
-      {value: 'cancel', label: 'Cancel', actor: 'submitter', resultingStatus: 'canceled'},
-      {value: 'request-revision', label: 'Request Revision', actor: 'approver', resultingStatus: 'revision-requested'},
-      {value: 'submit', label: 'Submit', actor: 'submitter', resultingStatus: 'submitted'}
+      {
+        value: 'approve',
+        label: 'Approve',
+        actor: 'approver',
+        resultingStatus: ['in-progress', 'approved'],
+        actionTakenText: 'Approval request approved.'
+      },
+      {
+        value: 'approve-with-changes',
+        label: 'Approve with Changes',
+        actor: 'approver',
+        resultingStatus: ['in-progress', 'approved'],
+        actionTakenText: 'Approval request approved with changes to funding sources.'
+      },
+      {
+        value: 'deny',
+        label: 'Deny',
+        actor: 'approver',
+        resultingStatus: 'denied',
+        actionTakenText: 'Approval request denied.'
+      },
+      {
+        value: 'cancel',
+        label: 'Cancel',
+        actor: 'submitter',
+        resultingStatus: 'canceled',
+        actionTakenText: 'Approval request canceled.'
+      },
+      {
+        value: 'request-revision',
+        label: 'Request Revision',
+        actor: 'approver',
+        resultingStatus: 'revision-requested',
+        actionTakenText: 'Revisions requested'
+      },
+      {
+        value: 'submit',
+        label: 'Submit',
+        actor: 'submitter',
+        resultingStatus: 'submitted',
+        actionTakenText: 'Approval request submitted.'
+      }
     ];
   }
 
@@ -72,12 +108,12 @@ class ApplicationOptions {
 
   /**
    * @description - Get the resulting status of an approval request after an action is taken
-   * @param {String} action - The action keyword
+   * @param {String} actionValue - The action keyword
    * @param {Object} approvalRequest - The approval request object
    * @returns {String}
    */
-  getResultingStatus(action, approvalRequest){
-    action = this.approvalStatusActions.find(a => a.value === action);
+  getResultingStatus(actionValue, approvalRequest){
+    const action = this.approvalStatusActions.find(a => a.value === actionValue);
     if ( !action ) return '';
     if ( typeof action.resultingStatus === 'string' ) return action.resultingStatus;
 

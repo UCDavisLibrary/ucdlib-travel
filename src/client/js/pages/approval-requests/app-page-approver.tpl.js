@@ -11,7 +11,7 @@ return html`
   <div class='l-basic--flipped'>
     <div class='l-sidebar-second'>
 
-        <div class='panel panel--icon panel--icon-custom'>
+        <div class='panel panel--icon panel--icon-custom' ?hidden=${!this.isNextApprover}>
           <h2 class="panel__title"><span class="panel__custom-icon fa-solid fa-diagram-project panel--icon-secondary"></span>Approver Actions</h2>
           ${renderApprovalForm.call(this)}
         </div>
@@ -20,7 +20,7 @@ return html`
           <h2 class="panel__title"><span class="panel__custom-icon fa-solid fa-chart-bar panel--icon-pinot"></span>Approval Status</h2>
           <div>
             ${(this.approvalRequest.approvalStatusActivity || []).map((chainObj) => html`
-              <approval-request-status-action .action=${chainObj}></approval-request-status-action>
+              <approval-request-status-action .action=${chainObj} hide-comments-links show-date></approval-request-status-action>
             `)}
           </div>
         </div>
@@ -67,7 +67,7 @@ function renderApprovalForm(){
   return html`
     <form @submit=${this._onApprovalFormSubmit} class='approval-form'>
       <div class='field-container'>
-        <label>Comments</label>
+        <label>Your Comments (Optional)</label>
         <textarea rows=4 .value=${this.comments} @input=${e => this.comments = e.target.value } ></textarea>
       </div>
       <div class='alignable-promo__buttons'>
