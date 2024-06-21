@@ -64,6 +64,21 @@ class TypeTransform {
     return `${month} ${day}, ${year}`;
   }
 
+  /**
+   * @description Convert an array to key-value object
+   * @param {Array} arr - array to convert
+   * @param {Function} keyFunc - function to get key from array item, will be passed the item
+   * @param {Function} valFunc - function to get value from array item, will be passed the item
+   * @returns {Object} - key-value object
+   */
+  arrayToObject(arr, keyFunc, valFunc){
+    const obj = {};
+    arr.forEach((item) => {
+      obj[keyFunc(item)] = valFunc(item);
+    });
+    return obj;
+  }
+
 }
 
 export default new TypeTransform();

@@ -18,7 +18,9 @@ export default class ApprovalRequestStatusAction extends Mixin(LitElement)
 
   static get properties() {
     return {
-      action: {type: Object}
+      action: {type: Object},
+      hideCommentsLinks: {type: Boolean, attribute: 'hide-comments-links'},
+      showDate: {type: Boolean, attribute: 'show-date'}
     }
   }
 
@@ -28,6 +30,8 @@ export default class ApprovalRequestStatusAction extends Mixin(LitElement)
     this.render = render.bind(this);
 
     this.action = {};
+    this.hideCommentsLinks = false;
+    this.showDate = false;
 
     this.byStatus = {
       'approval-needed': {
@@ -35,35 +39,35 @@ export default class ApprovalRequestStatusAction extends Mixin(LitElement)
         iconClass: 'fa-solid fa-user',
         brandColor: 'primary'
       },
-      'approved': {
+      'approve': {
         label: 'Approved By:',
-        iconClass: 'fa-solid fa-check',
-        brandColor: 'quad'
+        iconClass: 'fa-solid fa-thumbs-up',
+        brandColor: 'redwood'
       },
-      'denied': {
+      'deny': {
         label: 'Denied By:',
         iconClass: 'fa-solid fa-ban',
         brandColor: 'double-decker'
       },
-      'canceled': {
+      'cancel': {
         label: 'Canceled By:',
         iconClass: 'fa-solid fa-times',
         brandColor: 'redbud'
       },
-      'revision-requested': {
+      'request-revision': {
         label: 'Revision Requested By:',
         iconClass: 'fa-solid fa-edit',
         brandColor: 'pinot'
       },
-      'recalled': {
+      'recall': {
         label: 'Recalled By:',
         iconClass: 'fa-solid fa-rotate-left',
         brandColor: 'secondary'
       },
-      'approved-with-changes': {
+      'approve-with-changes': {
         label: 'Approved With Changes By:',
-        iconClass: 'fa-solid fa-check',
-        brandColor: 'quad'
+        iconClass: 'fa-solid fa-thumbs-up',
+        brandColor: 'redwood'
       }
     }
   }
@@ -75,6 +79,17 @@ export default class ApprovalRequestStatusAction extends Mixin(LitElement)
     this.dispatchEvent(new CustomEvent('view-comments', {
       detail: this.action
     }));
+  }
+
+  /**
+   * @description Get the date the action occurred
+   * @returns {String}
+   */
+  _getDate(){
+    if ( !this.action.occurred ) return '';
+    const d = new Date(this.action.occurred + 'Z');
+    if ( isNaN(d.getTime()) ) return '';
+    return d.toLocaleDateString() + ' ' + d.toLocaleTimeString();
   }
 
 }

@@ -23,6 +23,7 @@ export default (api) => {
 
     // pagination
     query.page = apiUtils.getPageNumber(req);
+    const pageSize = apiUtils.getPageSize(req);
     delete query.pageSize;
 
     // query args that need to be arrays
@@ -31,6 +32,10 @@ export default (api) => {
     query.requestIds = apiUtils.explode(query.requestIds, true);
     query.approvalStatus = apiUtils.explode(query.approvalStatus);
     query.employees = apiUtils.explode(query.employees);
+
+    // allow user to determine page size if getting single approval request, so that can retrieve all revisions
+    const isSingleRequest = query.requestIds.length === 1;
+    if ( isSingleRequest ) query.pageSize = pageSize
 
     // do query
     const results = await approvalRequest.get(query);
@@ -41,20 +46,22 @@ export default (api) => {
 
     // check if user is authorized to view all results
     if ( req.auth.token.hasAdminAccess ) return res.json(results);
+    const requestUsers = new Set();
     for (const approvalRequest of results.data) {
+
       const isOwnRequest = approvalRequest.employeeKerberos === kerberos;
+      const inApprovalChain = approvalRequest.approvalStatusActivity.some(a => a.employeeKerberos === kerberos);
 
-      // check if user is in approval chain
-      let inApprovalChain = false;
-      for (const approver of approvalRequest.approvalStatusActivity){
-        if ( approver.employeeKerberos === kerberos ) {
-          inApprovalChain = true;
-          break;
-        }
+      if ( !isSingleRequest && !isOwnRequest && !inApprovalChain ) return apiUtils.do403(res);
+
+      requestUsers.add(approvalRequest.employeeKerberos);
+      for (const action of approvalRequest.approvalStatusActivity) {
+        requestUsers.add(action.employeeKerberos);
       }
-
-      if ( !isOwnRequest && !inApprovalChain ) return apiUtils.do403(res);
     }
+
+    // if single request, ensure user participated somehow in history of request (not necessarily every revision)
+    if ( isSingleRequest && !requestUsers.has(kerberos) ) return apiUtils.do403(res);
 
     res.json(results);
   });
@@ -196,6 +203,16 @@ export default (api) => {
     }
 
     if ( action.actor === 'approver' ) {
+      const result = await approvalRequest.doApproverAction(approvalRequestObj, payload, kerberos);
+      if ( result.error && result.is400 ) {
+        return res.status(400).json(result);
+      }
+
+      if ( result.error ) {
+        console.error('Error in POST /approval-request/:id/status-update', result.error);
+        return res.status(500).json({error: true, message: 'Error performing action on approval request.'});
+      }
+      return res.json(result);
 
     }
 
