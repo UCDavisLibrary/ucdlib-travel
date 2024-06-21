@@ -6,6 +6,7 @@ import { WaitController } from "@ucd-lib/theme-elements/utils/controllers/wait.j
 
 import promiseUtils from '../../../../lib/utils/promiseUtils.js';
 import urlUtils from "../../../../lib/utils/urlUtils.js";
+import applicationOptions from '../../../../lib/utils/applicationOptions.js';
 
 export default class AppPageApprovalRequest extends Mixin(LitElement)
 .with(LitCorkUtils, MainDomElement) {
@@ -15,6 +16,7 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
       approvalRequestId : {type: Number},
       approvalRequest : {type: Object},
       queryObject: {type: Object},
+      totalExpenditures: {type: Number},
       activity: {type: Array}
     }
   }
@@ -26,6 +28,7 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
     this.approvalRequestId = 0;
     this.approvalRequest = {};
     this.activity = [];
+    this.totalExpenditures = 0;
 
     this.waitController = new WaitController(this);
 
@@ -113,6 +116,7 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
 
     this.approvalRequest = approvalRequest;
     this._setActivity(e.payload.data);
+    this._setTotalExpenditures();
 
     this.showLoaded = true;
   }
@@ -123,25 +127,51 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
    * @returns {Array}
    */
   _setActivity(approvalRequests){
-    const activity = [];
+    let activity = [];
     approvalRequests.forEach(r => {
       r.approvalStatusActivity.forEach(action => {
         if ( action.action === 'approval-needed' ) return;
         action = {...action};
-        action.occurredDate = new Date(action.occurred + 'Z');
-        if (isNaN(action.occurredDate)) {
-          return;
-        }
-        action.occurredDateString = action.occurredDate.toLocaleDateString() + ' ' + action.occurredDate.toLocaleTimeString();
         activity.push(action);
       });
     });
+
+    activity.forEach(action => {
+      action.occurredDate = new Date(action.occurred.endsWith('Z') ? action.occurred : action.occurred + 'Z');
+      action.occurredDateString = action.occurredDate.toLocaleDateString();
+      action.occurredTimeString = action.occurredDate.toLocaleTimeString();
+      action.actionObject = applicationOptions.approvalStatusActions.find(a => a.value === action.action);
+    })
+    activity.filter(action => !isNaN(action.occurredDate.getTime()) && action.actionObject);
 
     activity.sort((a, b) => {
       return a.occurredDate - b.occurredDate;
     });
 
     this.activity = activity;
+    console.log(activity);
+  }
+
+  /**
+   * @description Set the totalExpenditures property based on the expenditures array from the current approval request
+   */
+  _setTotalExpenditures(){
+    let total = 0;
+    if ( this.approvalRequest.expenditures ){
+      this.approvalRequest.expenditures.forEach(e => {
+        if ( !e.amount ) return;
+        total += Number(e.amount);
+      });
+    }
+    this.totalExpenditures = total;
+  }
+
+  _onStatusCommentsClick(e){
+    const actionId = e.detail?.approvalRequestApprovalChainLinkId;
+    if ( !actionId ) return;
+    const actionEle = this.renderRoot.querySelector(`.action[action-id="${actionId}"]`);
+    if ( !actionEle ) return;
+    actionEle.scrollIntoView({behavior: 'smooth'});
   }
 
 }
