@@ -124,6 +124,65 @@ class ApplicationOptions {
     return "";
   }
 
+  getAvailableActions(approvalRequest, userKerberos){
+    const actions = [];
+    if ( !approvalRequest || !userKerberos ) return actions;
+
+    const isSubmitter = approvalRequest.employeeKerberos === userKerberos;
+
+    if ( isSubmitter ){
+
+      if ( approvalRequest.approvalStatus === 'draft' ){
+        this._pushAction(actions, 'submit');
+        return actions;
+      }
+      if ( approvalRequest.approvalStatus === 'revision-requested' ){
+        const submitAction = this.approvalStatusActions.find(a => a.value === 'submit');
+        submitAction.label = 'Edit and Resubmit';
+        actions.push(submitAction);
+      }
+      if ( ['not-required', 'not-submitted'].includes(approvalRequest.reimbursementStatus) ){
+        this._pushAction(actions, 'cancel');
+      }
+    }
+
+    if ( this.isNextApprover(approvalRequest, userKerberos) ){
+      if ( approvalRequest.approvalStatus === 'draft' ) return actions;
+      this._pushAction(actions, 'approve');
+      this._pushAction(actions, 'request-revision');
+      this._pushAction(actions, 'deny');
+    }
+
+    return actions;
+  }
+
+  /**
+   * @description - Add an approval status action to an array by keyword value
+   * @param {Array} arr - The array to add the action to
+   * @param {String} actionValue - The keyword value of the action to add
+   * @returns {null}
+   */
+  _pushAction(arr, actionValue){
+    const action = this.approvalStatusActions.find(a => a.value === actionValue);
+    if ( !action ) return;
+    if ( !arr.find(a => a.value === actionValue)) {
+      arr.push(action);
+    }
+  }
+
+  /**
+   * @description - Check if a user is the next approver for an approval request
+   * @param {Object} approvalRequest - The approval request object
+   * @param {String} userKerberos - The kerberos of the user
+   * @returns {Boolean}
+   */
+  isNextApprover(approvalRequest, userKerberos){
+    if ( !approvalRequest || !userKerberos ) return false;
+
+    const nextApprover = approvalRequest.approvalStatusActivity.find(a => a.action === 'approval-needed');
+    return nextApprover && nextApprover.approverKerberos === userKerberos;
+  }
+
 
 }
 

@@ -1,1 +1,20 @@
-approval-request-header {}
+approval-request-header {
+  .watercolor-bg {
+    background-image: url('/img/wc-gold--1.webp'), linear-gradient(#fff4d2, #fff4d2);
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+  }
+  .actions {
+    height: 100%;
+    margin-bottom: 0 !important
+  }
+
+  @media (min-width: 992px) {
+    .actions {
+      padding-left: 1rem;
+      border-left: 1px solid #ffbf00;
+    }
+
+  }
+}

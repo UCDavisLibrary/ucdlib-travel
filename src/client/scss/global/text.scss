@@ -10,6 +10,12 @@
 .grey {
   color: #4C4C4C;
 }
+a.underline-hover {
+  text-decoration: none;
+  &:hover {
+    text-decoration: underline;
+  }
+}
 
 .size-h4 {
   font-size: 1.092rem !important;
