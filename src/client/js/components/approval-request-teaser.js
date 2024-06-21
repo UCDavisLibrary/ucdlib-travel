@@ -8,7 +8,7 @@ import { LitCorkUtils, Mixin } from "../../../lib/appGlobals.js";
  * @class ApprovalRequestTeaser
  * @description Component that displays active requests
  * @property {Object} approvalRequest - The approval request object
- */
+*/
 export default class ApprovalRequestTeaser extends Mixin(LitElement)
 .with(LitCorkUtils, MainDomElement) {
   static get properties() {
@@ -32,7 +32,7 @@ export default class ApprovalRequestTeaser extends Mixin(LitElement)
    * @description formatting the currency to dollar format
    * @param {Float32Array} dollar -  funding amount 
    * @returns
-   */
+  */
   formatDollar(dollar){
     let dollarFormat = new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -47,7 +47,7 @@ export default class ApprovalRequestTeaser extends Mixin(LitElement)
    * @description formatting the date given
    * @param {String} date -  date string given
    * @returns
-   */
+  */
   formatDate(date){
     const event = new Date(date);
     date = new Intl.DateTimeFormat('en-US', {
@@ -61,8 +61,8 @@ export default class ApprovalRequestTeaser extends Mixin(LitElement)
    * @description check the kerberos is not the current one on the page
    * @param {String} kerb -  approval request kerberos id
    * @returns
-   */
-   checkKerb(kerb){
+  */
+  checkKerb(kerb){
     if( this.AuthModel.getToken().token.preferred_username == kerb) {
         return true;
     };
@@ -72,7 +72,7 @@ export default class ApprovalRequestTeaser extends Mixin(LitElement)
   /**
    * @description check the status of the request if approvers
    * @param {Array} ap -  approval request activity array
-   */
+  */
   checkApproverStatus(kerbActivity){
     const found = kerbActivity.find(a => this.checkKerb(a.employeeKerberos));
     if(found !== undefined) {
@@ -83,11 +83,11 @@ export default class ApprovalRequestTeaser extends Mixin(LitElement)
     return false;
   }
 
-    /**
+  /**
    * @description gets the previous and next values based of index
    * @param {Array} ap -  approval request activity array
-   */
-    PrevAndNext(apActivity, order){
+  */
+  PrevAndNext(apActivity, order){
       const index = apActivity.findIndex((a) => a.approverOrder === order);
       const prev = apActivity[index - 1];
       const next = apActivity[index + 1];
@@ -140,7 +140,7 @@ export default class ApprovalRequestTeaser extends Mixin(LitElement)
    * @param {String} str -  string given
    * @param {Array} separators -  array of strings given for seperation
    * @returns
-   */
+  */
   ToUpperCase(str, separators=['-']) {
     separators = separators || [ ' ' ];
     let regex = new RegExp('(^|[' + separators.join('') + '])(\\w)', 'g');
