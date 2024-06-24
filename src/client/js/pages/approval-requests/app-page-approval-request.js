@@ -5,9 +5,17 @@ import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-el
 import { WaitController } from "@ucd-lib/theme-elements/utils/controllers/wait.js";
 
 import promiseUtils from '../../../../lib/utils/promiseUtils.js';
-import urlUtils from "../../../../lib/utils/urlUtils.js";
 import applicationOptions from '../../../../lib/utils/applicationOptions.js';
 
+/**
+ * @class AppPageApprovalRequest
+ * @description Page for displaying a single approval request
+ * @property {Number} approvalRequestId - The id of the approval request to display - set from url
+ * @property {Object} approvalRequest - The approval request to display - set from ApprovalRequestModel
+ * @property {Object} queryObject - Query object for fetching approval request data
+ * @property {Number} totalExpenditures - Total of all expenditures for the approval request
+ * @property {Array} activity - Array of approvalStatusActivity objects for all of the revisions of this approval request
+ */
 export default class AppPageApprovalRequest extends Mixin(LitElement)
 .with(LitCorkUtils, MainDomElement) {
 
@@ -83,6 +91,18 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
   }
 
   /**
+   * @description Get the approvalStatusActivity array for the current approval request,
+   * excluding actions that are not relevant to the current status
+   * @returns {Array}
+   */
+  getApprovalStatusActivity(){
+    return (this.approvalRequest.approvalStatusActivity || []).filter(a => {
+      if ( ['in-progress', 'submitted', 'approved'].includes(this.approvalRequest?.approvalStatus) ) return true;
+      return a.action !== 'approval-needed';
+    });
+  }
+
+  /**
    * @description Set approvalRequestId property from App State location (the url)
    * @param {Object} state - AppStateModel state
    */
@@ -92,6 +112,12 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
     this.queryObject = {requestIds: this.approvalRequestId, pageSize: -1};
   }
 
+  /**
+   * @description bound to ApprovalRequestModel approval-requests-requested event
+   * Fires after approval request data is requested
+   * @param {Object} e - cork-app-utils event
+   * @returns
+   */
   _onApprovalRequestsRequested(e){
     if ( e.state !== 'loaded' ) return;
 
@@ -149,7 +175,6 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
     });
 
     this.activity = activity;
-    console.log(activity);
   }
 
   /**
@@ -166,6 +191,11 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
     this.totalExpenditures = total;
   }
 
+  /**
+   * @description Bound to view-comments event from approval-request-status-action component
+   * @param {CustomEvent} e - e.detail.approvalRequestApprovalChainLinkId is the id of the action to scroll to
+   * @returns
+   */
   _onStatusCommentsClick(e){
     const actionId = e.detail?.approvalRequestApprovalChainLinkId;
     if ( !actionId ) return;

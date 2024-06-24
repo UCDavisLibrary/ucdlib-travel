@@ -93,7 +93,7 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
       let userCantSubmit = false;
       if ( this.approvalRequest.employeeKerberos && this.approvalRequest.employeeKerberos !== this.AuthModel.getToken().id ){
         userCantSubmit = true;
-      } else if ( !['draft', 'revision-requested'].includes(this.approvalRequest.approvalStatus) ){
+      } else if ( !['draft', 'revision-requested', 'recalled'].includes(this.approvalRequest.approvalStatus) ){
         userCantSubmit = true;
       }
       this.userCantSubmit = userCantSubmit;

@@ -7,6 +7,7 @@ import IamEmployeeObjectAccessor from "../lib/utils/iamEmployeeObjectAccessor.js
 import urlUtils from "../lib/utils/urlUtils.js";
 import apiUtils from "../lib/utils/apiUtils.js";
 import typeTransform from "../lib/utils/typeTransform.js";
+import applicationOptions from "../lib/utils/applicationOptions.js";
 
 export default (api) => {
 
@@ -77,12 +78,17 @@ export default (api) => {
       if ( !approvalRequestId ) {
         return res.status(400).json({error: true, message: 'Invalid approvalRequestId.'});
       }
-      const existingRequest = await approvalRequest.get({requestIds: [approvalRequestId]});
+      let existingRequest = await approvalRequest.get({requestIds: [approvalRequestId]});
       if ( existingRequest.error ) {
         console.error('Error in POST /approval-request', existingRequest.error);
         return res.status(500).json({error: true, message: 'Error creating approval request.'});
       }
-      const existingKerberos = (existingRequest.data.find(r => r.isCurrent) || {}).employeeKerberos;
+      existingRequest = existingRequest.data.find(r => r.isCurrent) || {};
+      const existingStatus = applicationOptions.approvalStatuses.find(s => s.value === existingRequest.approvalStatus);
+      if ( !existingStatus || existingStatus.isFinal ) {
+        return res.status(400).json({error: true, message: 'Cannot revise a final approval request.'});
+      }
+      const existingKerberos = (existingRequest || {}).employeeKerberos;
       if ( existingKerberos !== kerberos ) {
         return apiUtils.do403(res);
       }
@@ -98,7 +104,7 @@ export default (api) => {
     delete data.employeeKerberos;
 
     // set status fields
-    data.approvalStatus = data.approvalStatus === 'draft' ? 'draft' : 'submitted';
+    data.approvalStatus = 'draft'; // all new requests start as drafts
     data.reimbursementStatus = data.noExpenditures ? 'not-required' : 'not-submitted';
 
     // create approval request revision
@@ -215,10 +221,20 @@ export default (api) => {
         return res.status(500).json({error: true, message: 'Error performing action on approval request.'});
       }
       return res.json(result);
-
     }
 
-    // todo handle other actions
+    if ( action.actor === 'submitter' ){
+      const result = await approvalRequest.doRequesterAction(approvalRequestObj, payload);
+      if ( result.error && result.is400 ) {
+        return res.status(400).json(result);
+      }
+
+      if ( result.error ) {
+        console.error('Error in POST /approval-request/:id/status-update', result.error);
+        return res.status(500).json({error: true, message: 'Error performing requester action on approval request.'});
+      }
+      return res.json(result);
+    }
 
     return res.status(500).json({error: true, message: 'Error performing action on approval request.'});
 
