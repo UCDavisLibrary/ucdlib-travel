@@ -95,14 +95,19 @@ class ApplicationOptions {
         actionTakenText: 'Approval request canceled.',
         byLine: 'Canceled By:',
         iconClass: 'fa-solid fa-times',
-        brandColor: 'redbud'
+        brandColor: 'redbud',
+        warningText: `
+          This action cannot be undone.
+          If you cancel this request, it will be permanently removed from the approval process.
+          If you need to make changes to the request, please recall and then resubmit it instead.
+          `
       },
       {
         value: 'request-revision',
         label: 'Request Revision',
         actor: 'approver',
         resultingStatus: 'revision-requested',
-        actionTakenText: 'Revisions requested',
+        actionTakenText: 'Revisions requested.',
         byLine: 'Revision Requested By:',
         iconClass: 'fa-solid fa-edit',
         brandColor: 'pinot'
@@ -125,7 +130,8 @@ class ApplicationOptions {
         actionTakenText: 'Approval request recalled.',
         byLine: 'Recalled By:',
         iconClass: 'fa-solid fa-rotate-left',
-        brandColor: 'secondary'
+        brandColor: 'secondary',
+        warningText: `Recalling this request will revoke all approvals, return the request to 'draft' status, and require you to resubmit.`
       }
     ];
   }
@@ -174,16 +180,23 @@ class ApplicationOptions {
 
     if ( isSubmitter ){
 
+      const noReimbursmentActivity = ['not-required', 'not-submitted'].includes(approvalRequest.reimbursementStatus)
+
       if ( approvalRequest.approvalStatus === 'draft' ){
         this._pushAction(actions, 'submit');
         return actions;
       }
+
       if ( approvalRequest.approvalStatus === 'revision-requested' ){
         const submitAction = this.approvalStatusActions.find(a => a.value === 'submit');
         submitAction.label = 'Edit and Resubmit';
         actions.push(submitAction);
+      } else if ( noReimbursmentActivity && !['canceled', 'recalled'].includes(approvalRequest.approvalStatus) ){
+        this._pushAction(actions, 'recall');
       }
-      if ( ['not-required', 'not-submitted'].includes(approvalRequest.reimbursementStatus) ){
+
+
+      if ( noReimbursmentActivity && approvalRequest.approvalStatus !== 'canceled'){
         this._pushAction(actions, 'cancel');
       }
 
@@ -199,10 +212,11 @@ class ApplicationOptions {
     }
 
     if ( this.isNextApprover(approvalRequest, userKerberos) ){
-      if ( approvalRequest.approvalStatus === 'draft' ) return actions;
-      this._pushAction(actions, 'approve');
-      this._pushAction(actions, 'request-revision');
-      this._pushAction(actions, 'deny');
+      if ( ['in-progress', 'submitted'].includes(approvalRequest.approvalStatus) ){
+        this._pushAction(actions, 'approve');
+        this._pushAction(actions, 'request-revision');
+        this._pushAction(actions, 'deny');
+      }
     }
 
     return actions;
@@ -232,7 +246,7 @@ class ApplicationOptions {
     if ( !approvalRequest || !userKerberos ) return false;
 
     const nextApprover = (approvalRequest.approvalStatusActivity || []).find(a => a.action === 'approval-needed');
-    return nextApprover && nextApprover.approverKerberos === userKerberos;
+    return nextApprover && nextApprover.employeeKerberos === userKerberos;
   }
 
 

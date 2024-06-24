@@ -846,6 +846,77 @@ class ApprovalRequest {
     return {success: true, approvalRequestId, approvalRequestRevisionId};
   }
 
+  async doRequesterAction(approvalRequestObjectOrId, actionPayload){
+
+    // get approval request
+    const { approvalRequest, approvalRequestError, approvalRequestId } = await this._getApprovalRequest(approvalRequestObjectOrId);
+    if ( approvalRequestError ) return approvalRequestError;
+
+    // ensure action is valid
+    let action = applicationOptions.approvalStatusActions.find(a => a.value === actionPayload?.action && a.actor === 'submitter');
+    if ( !action ) return {error: true, message: 'Invalid action', is400: true};
+    if ( !['cancel', 'recall'].includes(actionPayload.action) ) return {error: true, message: 'Invalid action', is400: true};
+    const currentStatus = applicationOptions.approvalStatuses.find(s => s.value === approvalRequest.approvalStatus);
+    if ( !currentStatus ) return {error: true, message: 'Invalid current status'};
+    if ( currentStatus.isFinal ) return {error: true, message: 'Cannot perform action on final status'};
+    if ( applicationOptions.getResultingStatus(action.value, approvalRequest) === currentStatus.value ) return {error: true, message: 'Request is already in this status'};
+
+    // do transaction
+    const approvalRequestRevisionId = approvalRequest.approvalRequestRevisionId;
+    const client = await pg.pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      let data, sql;
+
+      // update approval request status
+      data = {
+        approval_status: applicationOptions.getResultingStatus(action.value, approvalRequest)
+      };
+      const updateClause = pg.toUpdateClause(data);
+      sql = `
+        UPDATE approval_request
+        SET ${updateClause.sql}
+        WHERE approval_request_revision_id = $${updateClause.values.length + 1}
+      `;
+      await client.query(sql, [...updateClause.values, approvalRequestRevisionId]);
+
+      // get max approver order
+      sql = `SELECT MAX(approver_order) as max_order FROM approval_request_approval_chain_link WHERE approval_request_revision_id = $1`;
+      const maxOrderRes = await client.query(sql, [approvalRequestRevisionId]);
+      const maxOrder = maxOrderRes.rows[0].max_order || 0;
+
+      // insert submission to approval status activity table
+      data = {
+        approval_request_revision_id: approvalRequestRevisionId,
+        approver_order: maxOrder + 1,
+        action: action.value,
+        employee_kerberos: approvalRequest.employeeKerberos
+      }
+      data = pg.prepareObjectForInsert(data);
+      sql = `INSERT INTO approval_request_approval_chain_link (${data.keysString}) VALUES (${data.placeholdersString}) RETURNING approval_request_approval_chain_link_id`;
+      const chainRes = await client.query(sql, data.values);
+      const approvalRequestApprovalChainLinkId = chainRes.rows[0].approval_request_approval_chain_link_id;
+
+      data = {
+        approval_request_approval_chain_link_id: approvalRequestApprovalChainLinkId,
+        approver_type_id: 4
+      }
+      data = pg.prepareObjectForInsert(data);
+      sql = `INSERT INTO link_approver_type (${data.keysString}) VALUES (${data.placeholdersString})`;
+      await client.query(sql, data.values);
+
+      await client.query('COMMIT');
+    } catch (e) {
+      await client.query('ROLLBACK');
+      return {error: e};
+    } finally {
+      client.release();
+    }
+
+    return {success: true, approvalRequestId, approvalRequestRevisionId};
+  }
+
   /**
    * @description Update 'approval-needed' status to a new status for an approver
    * @param {Object|Number} approvalRequestObjectOrId - approval request object or approval request ID

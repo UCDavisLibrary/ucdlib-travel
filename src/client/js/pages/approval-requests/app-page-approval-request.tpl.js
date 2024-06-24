@@ -17,7 +17,7 @@ return html`
           <div class='bold primary'>${applicationOptions.approvalStatusLabel(this.approvalRequest.approvalStatus)}</div>
         </div>
         <div>
-          ${(this.approvalRequest.approvalStatusActivity || []).map((chainObj) => html`
+          ${(this.getApprovalStatusActivity()).map((chainObj) => html`
             <approval-request-status-action .action=${chainObj} @view-comments=${this._onStatusCommentsClick}></approval-request-status-action>
           `)}
         </div>
@@ -65,13 +65,13 @@ return html`
                     <i class='fa-solid ${action.actionObject.iconClass} ${action.actionObject.brandColor}'></i>
                   </div>
                   <div class='content'>
-                    <h5>${action.actionObject.actionTakenText}</h5>
+                    <div class='bold primary'>${action.actionObject.actionTakenText}</div>
                     <div class='name-role'>
-                      <div class='bold primary'>${action.employee.firstName} ${action.employee.lastName}</div>
+                      <div class='primary small'>${action.employee.firstName} ${action.employee.lastName}</div>
                       ${action.approverTypes.map(t => html`
                         <div class='flex flex--align-center'>
                           <div class='dot'></div>
-                          <div>${t.approverTypeLabel}</div>
+                          <div class='small grey'>${t.approverTypeLabel}</div>
                         </div>
                       `)}
                     </div>
