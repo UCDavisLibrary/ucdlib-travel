@@ -10,6 +10,7 @@ class FundingSourceStore extends BaseStore {
     };
     this.events = {
       ACTIVE_FUNDING_SOURCES_FETCHED: 'active-funding-sources-fetched',
+      ACTIVE_FUNDING_SOURCES_REQUESTED: 'active-funding-sources-requested'
     };
   }
 
