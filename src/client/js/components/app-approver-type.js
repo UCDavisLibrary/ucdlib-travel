@@ -21,7 +21,8 @@ export default class AppApproverType extends Mixin(LitElement)
     return {
       existingApprovers:{type: Array, attribute: 'existingApprovers'},
       newApproverType:{type: Object, attribute: 'newApproverType'},
-      new: {type:Boolean, attribute: 'new'}
+      new: {type:Boolean, attribute: 'new'},
+      parentPageId: {type: String, attribute: 'parent-page-id'},
     }
   }
 
@@ -35,7 +36,7 @@ export default class AppApproverType extends Mixin(LitElement)
 
 
     this.new = false;
-    this.element = 'admin-approvers';
+    this.parentPageId = '';
 
     this.render = render.bind(this);
     this._injectModel('AppStateModel', 'AdminApproverTypeModel', 'SettingsModel');
@@ -43,32 +44,11 @@ export default class AppApproverType extends Mixin(LitElement)
 
   }
 
-    /**
-   * @description bound to AppStateModel app-state-update event
-   * @param {Object} state - AppStateModel state
-   */
-  async _onAppStateUpdate(state) {
-    if ( state.page != this.element ) return;
-    this.AppStateModel.showLoading();
-
-    const d = await this.getPageData();
-    const hasError = d.some(e => e.status === 'rejected' || e.value.state === 'error');
-    if ( hasError ) {
-      this.AppStateModel.showError(d);
-      return;
-    }
-
-    this.AppStateModel.showLoaded(this.element);
-
-    this.requestUpdate();
-  }
-
-
   /**
    * @description Get all data required for rendering this page
    * @return {Promise}
    */
-  async getPageData(){
+  async init(){
     const promises = [
       this.SettingsModel.getByCategory(this.settingsCategory),
       this.AdminApproverTypeModel.query(this.query)
@@ -221,13 +201,13 @@ export default class AppApproverType extends Mixin(LitElement)
         const getApproverTypeId = e.data.approverTypeId;
         const approverType = this.getApproverTypeById(getApproverTypeId);
         approverType.validationHandler = new ValidationHandler(e);
-        this.AppStateModel.showLoaded(this.element)
+        this.AppStateModel.showLoaded(this.parentPageId)
         this.requestUpdate();
         this.AppStateModel.showToast({message: 'Error when updating the approver type. Form data needs fixing.', type: 'error'})
 
       } else {
         this.AppStateModel.showToast({message: 'An unknown error ocurred when updating the approver type', type: 'error'})
-        this.AppStateModel.showLoaded(this.element)
+        this.AppStateModel.showLoaded(this.parentPageId)
       }
       window.scrollTo(0, this.lastScrollPosition);
     } else if ( e.state === 'loading' ) {
@@ -253,12 +233,12 @@ export default class AppApproverType extends Mixin(LitElement)
     if ( e.state === 'error' ) {
       if ( e.error?.payload?.is400 ) {
         this.newApproverType.validationHandler = new ValidationHandler(e);
-        this.AppStateModel.showLoaded(this.element)
+        this.AppStateModel.showLoaded(this.parentPageId)
         this.requestUpdate();
         this.AppStateModel.showToast({message: 'Error when creating the approver type. Form data needs fixing.', type: 'error'})
       } else {
         this.AppStateModel.showToast({message: 'An unknown error ocurred when creating the approver type', type: 'error'})
-        this.AppStateModel.showLoaded(this.element)
+        this.AppStateModel.showLoaded(this.parentPageId)
       }
       window.scrollTo(0, this.lastScrollPosition);
     } else if ( e.state === 'loading' ) {

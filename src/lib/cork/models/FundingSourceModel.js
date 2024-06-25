@@ -25,6 +25,7 @@ class FundingSourceModel extends BaseModel {
         await this.service.getActiveFundingSources();
       }
     } catch(e) {}
+    this.store.emit(this.store.events.ACTIVE_FUNDING_SOURCES_REQUESTED, this.store.data.activeFundingSources)
     return this.store.data.activeFundingSources;
   }
 
