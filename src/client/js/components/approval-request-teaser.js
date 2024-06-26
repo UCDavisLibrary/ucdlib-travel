@@ -14,7 +14,7 @@ export default class ApprovalRequestTeaser extends Mixin(LitElement)
   static get properties() {
     return {
       approvalRequest: {type: Object},
-      status: {type: String}
+      approvalStatus: {type: String},
     }
   }
 
@@ -22,10 +22,13 @@ export default class ApprovalRequestTeaser extends Mixin(LitElement)
   constructor() {
     super();
     this.render = render.bind(this);    
-    this.isApprover = false;
     this.approvalStatus = "";
     this._injectModel('AuthModel');
 
+  }
+
+  firstUpdated(changedProperties) { 
+    this.checkApproverStatus(this.approvalRequest.approvalStatusActivity);
   }
 
   /**
@@ -33,14 +36,14 @@ export default class ApprovalRequestTeaser extends Mixin(LitElement)
    * @param {Float32Array} dollar -  funding amount 
    * @returns
   */
-  formatDollar(dollar){
+  formatDollar(dollar) {
     let dollarFormat = new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
     });
 
-    dollar = dollarFormat.format(dollar)
-    return dollar
+    dollar = dollarFormat.format(dollar);
+    return dollar;
   }
 
   /**
@@ -104,7 +107,6 @@ export default class ApprovalRequestTeaser extends Mixin(LitElement)
    * @returns
   */
   async changeApprovalStatus(apActivity, thisApproverInfo){
-    this.approvalStatus = "Example";
     let approverOrder = thisApproverInfo.approverOrder;
     let givenStatus = this.PrevAndNext(apActivity, approverOrder);
 
