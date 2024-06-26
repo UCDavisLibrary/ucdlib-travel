@@ -7,7 +7,7 @@ import "../../components/admin-funding-source-management.js";
 export function render() {
 return html`
 <div class='l-basic--flipped l-gutter'>
-  <div class="l-content">
+  <div class="l-content u-space-mb--large">
     <app-approver-type
       ${ref(this.approverTypeEle)}
       parent-page-id=${this.id}
