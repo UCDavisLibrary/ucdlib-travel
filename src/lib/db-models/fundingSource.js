@@ -1,19 +1,66 @@
 import pg from "./pg.js";
 import EntityFields from "../utils/EntityFields.js";
+import typeTransform from "../utils/typeTransform.js";
 
+/**
+ * @class FundingSource
+ * @description Interface for funding_source table
+ */
 class FundingSource {
   constructor(){
     this.entityFields = new EntityFields([
-      {dbName: 'funding_source_id', jsonName: 'fundingSourceId', required: true},
-      {dbName: 'label', jsonName: 'label', label: 'Label', required: true, charLimit: 50},
-      {dbName: 'description', jsonName: 'description'},
-      {dbName: 'has_cap', jsonName: 'hasCap'},
-      {dbName: 'cap_default', jsonName: 'capDefault', validateType: 'number'},
-      {dbName: 'require_description', jsonName: 'requireDescription'},
-      {dbName: 'form_order', jsonName: 'formOrder', validateType: 'integer'},
-      {db_name: 'hide_from_form', jsonName: 'hideFromForm'},
-      {dbName: 'archived', jsonName: 'archived'},
-      {dbName: 'approver_types', jsonName: 'approverTypes', validateType: 'array'}
+      {
+        dbName: 'funding_source_id',
+        jsonName: 'fundingSourceId',
+        customValidationAsync: this._validateFundingSourceId.bind(this)
+      },
+      {
+        dbName: 'label',
+        jsonName: 'label',
+        label: 'Label',
+        required: true,
+        charLimit: 50
+      },
+      {
+        dbName: 'description',
+        jsonName: 'description',
+        charLimit: 200
+      },
+      {
+        dbName: 'has_cap',
+        jsonName: 'hasCap',
+        validateType: 'boolean'
+      },
+      {
+        dbName: 'cap_default',
+        jsonName: 'capDefault',
+        validateType: 'number',
+        customValidation: this._validateCapDefault.bind(this)
+      },
+      {
+        dbName: 'require_description',
+        jsonName: 'requireDescription',
+        validateType: 'boolean'
+      },
+      {
+        dbName: 'form_order',
+        jsonName: 'formOrder',
+        validateType: 'integer'
+      },
+      {
+        dbName: 'hide_from_form',
+        jsonName: 'hideFromForm'
+      },
+      {
+        dbName: 'archived',
+        jsonName: 'archived',
+        validateType: 'boolean'
+      },
+      {
+        dbName: 'approver_types',
+        jsonName: 'approverTypes',
+        customValidationAsync: this._validateApproverTypes.bind(this)
+      }
     ]);
   }
 
@@ -93,6 +140,216 @@ class FundingSource {
       }
     }
     return fundingSources;
+  }
+
+  /**
+   * @description Update an existing funding source
+   * @param {Object} data - complete funding source object with camelCase keys
+   * @returns {Object} - {success: true, fundingSourceId} or {error: true, message: 'Error updating funding source'}
+   */
+  async update(data){
+
+    data = this.entityFields.toDbObj(data);
+    const validation = await this.entityFields.validate(data);
+    if ( !validation.valid ) {
+      return {error: true, message: 'Validation Error', is400: true, fieldsWithErrors: validation.fieldsWithErrors};
+    }
+
+    // delete system fields
+    const fundingSourceId = data.funding_source_id;
+    delete data.funding_source_id;
+    delete data.hide_from_form;
+    const approverTypes = data.approver_types;
+    delete data.approver_types;
+
+    // start transaction
+    const client = await pg.pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      // update funding source
+      const updateClause = pg.toUpdateClause(data);
+      const updateQuery = `
+        UPDATE funding_source
+        SET ${updateClause.sql}
+        WHERE funding_source_id = $${updateClause.values.length + 1}
+        RETURNING *
+      `;
+      const res = await client.query(updateQuery, [...updateClause.values, fundingSourceId]);
+      if( res.rowCount !== 1 ) {
+        throw new Error('Error updating funding source');
+      }
+
+      // update approver types
+      await this._updateApproverTypes(client, fundingSourceId, approverTypes);
+
+      await client.query('COMMIT');
+
+    } catch (e) {
+      await client.query('ROLLBACK');
+      return {error: e, message: 'Error updating funding source'};
+    } finally {
+      client.release();
+    }
+
+    return {success: true, fundingSourceId};
+  }
+
+  /**
+   * @description Create a new funding source
+   * @param {Object} data - complete funding source object with camelCase keys
+   * @returns {Object} - {success: true, fundingSourceId} or {error: true, message: 'Error creating funding source'}
+   */
+  async create(data){
+    data = this.entityFields.toDbObj(data);
+    const validation = await this.entityFields.validate(data, ['funding_source_id']);
+    if ( !validation.valid ) {
+      return {error: true, message: 'Validation Error', is400: true, fieldsWithErrors: validation.fieldsWithErrors};
+    }
+
+    // delete system fields
+    delete data.funding_source_id;
+    delete data.hide_from_form;
+    const approverTypes = data.approver_types;
+    delete data.approver_types;
+
+    // start transaction
+    let fundingSourceId;
+    const client = await pg.pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      // insert funding source
+      data = pg.prepareObjectForInsert(data);
+      const sql = `INSERT INTO funding_source (${data.keysString}) VALUES (${data.placeholdersString}) RETURNING funding_source_id`;
+      const res = await client.query(sql, data.values);
+      if( res.rowCount !== 1 ) {
+        throw new Error('Error creating funding source');
+      }
+      fundingSourceId = res.rows[0].funding_source_id;
+
+      // update approver types
+      await this._updateApproverTypes(client, fundingSourceId, approverTypes);
+
+      await client.query('COMMIT');
+
+    } catch (e) {
+      await client.query('ROLLBACK');
+      return {error: e, message: 'Error creating funding source'};
+    } finally {
+      client.release();
+    }
+
+    return {success: true, fundingSourceId};
+  }
+
+  /**
+   * @description Update approver types for a funding source
+   * @param {*} client - pg client
+   * @param {Number} fundingSourceId - funding source id
+   * @param {Array} approverTypes - array of approver types
+   */
+  async _updateApproverTypes(client, fundingSourceId, approverTypes){
+
+    // delete existing approver type assignments
+    const deleteQuery = `DELETE FROM funding_source_approver WHERE funding_source_id = $1`;
+    await client.query(deleteQuery, [fundingSourceId]);
+
+    // insert new approver type assignments
+    for (const [index, at] of approverTypes.entries()) {
+      const query = `
+        INSERT INTO funding_source_approver (funding_source_id, approver_type_id, approval_order)
+        VALUES ($1, $2, $3)
+      `;
+      await client.query(query, [fundingSourceId, at.approverTypeId, index]);
+    }
+  }
+
+  /**
+   * @description Validate approver types for a funding source
+   * See EntityFields class for parameter descriptions
+   * @returns
+   */
+  async _validateApproverTypes(field, value, out){
+    let error;
+
+    // check value is array of objects with approverTypeId property as positive integer
+    const approverTypeIds = []
+    if( !Array.isArray(value) ) {
+      error = {errorType: 'required', message: 'Must be an array of approver types'};
+    } else {
+      for (const at of value) {
+        const approverTypeId = typeTransform.toPositiveInt(at?.approverTypeId);
+        if( !approverTypeId ) {
+          error = {errorType: 'invalid', message: 'Invalid approver type id'};
+          break;
+        }
+        approverTypeIds.push(approverTypeId);
+      }
+    }
+    if( error ) {
+      this.entityFields.pushError(out, field, error);
+      return;
+    }
+
+    // check there is at least one approver type
+    if( approverTypeIds.length === 0 ) {
+      this.entityFields.pushError(out, field, {errorType: 'required', message: 'At least one approver type is required'});
+      return;
+    }
+
+    // check there are no duplicates
+    const uniqueIds = [...(new Set(approverTypeIds))];
+    if( approverTypeIds.length !== uniqueIds.length ) {
+      this.entityFields.pushError(out, field, {errorType: 'duplicate', message: 'An approver type can only be assigned to a funding source once'});
+      return;
+    }
+
+    // check all approver types exist
+    let query = `SELECT approver_type_id FROM approver_type WHERE approver_type_id = ANY($1)`;
+    let res = await pg.query(query, [approverTypeIds]);
+    if ( res.error || res.res.rowCount !== approverTypeIds.length ) {
+      this.entityFields.pushError(out, field, {errorType: 'invalid', message: 'Invalid approver type id'});
+      return;
+    }
+  }
+
+  /**
+   * @description Validate a funding source id
+   * See EntityFields class for parameter descriptions
+   * @returns
+   */
+  async _validateFundingSourceId(field, value, out){
+
+    const error = {error: 'required', message: 'This funding source does not exist'};
+
+    // check if is a positive integer
+    const fundingSourceId = typeTransform.toPositiveInt(value);
+    if( !fundingSourceId ) {
+      this.entityFields.pushError(out, field, error);
+      return;
+    }
+
+    // check funding source exists
+    const query = `SELECT funding_source_id FROM funding_source WHERE funding_source_id = $1`;
+    const res = await pg.query(query, [fundingSourceId]);
+    if( res.error || res.res.rowCount === 0 ) {
+      this.entityFields.pushError(out, field, error);
+    }
+  }
+
+  /**
+   * @description Validate a funding source cap default value
+   * See EntityFields class for parameter descriptions
+   * @returns
+   */
+  _validateCapDefault(field, value, out, payload){
+    if ( !payload.has_cap ) return;
+
+    if ( !typeTransform.toPositiveNumber(value) ) {
+      this.entityFields.pushError(out, field, {errorType: 'invalid', message: 'Invalid allocation cap'});
+    }
+
   }
 }
 

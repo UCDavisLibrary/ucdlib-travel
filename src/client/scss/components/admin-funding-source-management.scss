@@ -1,0 +1,37 @@
+admin-funding-source-management {
+  .funding-source {
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #DBEAF7;
+  }
+  .funding-source__header {
+    display: flex;
+    align-items: center;
+    margin-bottom: .25rem;
+
+    h3 {
+      margin-right: 1rem;
+      margin-bottom: 0;
+    }
+
+    a {
+      margin-right: .5rem;
+    }
+  }
+
+  .funding-source-form {
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #DBEAF7;
+
+    .buttons {
+      display: flex;
+      align-items: center;
+      margin-top: 1rem;
+
+      button {
+        margin-left: .5rem;
+      }
+    }
+  }
+}

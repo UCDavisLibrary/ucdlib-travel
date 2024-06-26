@@ -99,7 +99,7 @@ class ApprovalRequestModel extends BaseModel {
     try {
       await this.service.statusUpdate(approvalRequestId, action);
     } catch(e) {}
-    const state = this.store.data.statusUpdate[`${approvalRequestId}--${action}`];
+    const state = this.store.data.statusUpdate[`${approvalRequestId}--${action.action}`];
     if ( state && state.state === 'loaded' ) {
       this.store.data.fetched = {};
       this.store.data.approvalChainByRequestId = {};

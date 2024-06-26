@@ -340,8 +340,8 @@ export default class ApprovalRequestValidations {
       this.model.entityFields.pushError(out, field, error);
     }
 
-    error = {errorType: 'invalid', message: "Approval request must be in 'draft' or 'revision-requested' status to be revised"};
-    if ( !['draft', 'revision-requested'].includes(res.res.rows[0].approval_status) ) {
+    error = {errorType: 'invalid', message: "Approval request must be in 'draft', 'revision-requested', or 'recalled' status to be revised"};
+    if ( !['draft', 'revision-requested', 'recalled'].includes(res.res.rows[0].approval_status) ) {
       this.model.entityFields.pushError(out, field, error);
     }
   }

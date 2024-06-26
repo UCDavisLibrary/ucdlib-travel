@@ -12,6 +12,7 @@ class AdminApproverTypeModel extends BaseModel {
     this.service = AdminApproverTypeService;
 
     this.register('AdminApproverTypeModel');
+    this.inject('FundingSourceModel')
   }
 
  /**
@@ -54,7 +55,7 @@ class AdminApproverTypeModel extends BaseModel {
 
     const state = this.store.data.create;
     if ( state && state.state === 'loaded' ) {
-      this.store.data.query = {};
+      this._clearCache();
     }
 
     return state;
@@ -72,10 +73,18 @@ class AdminApproverTypeModel extends BaseModel {
     const state = this.store.data.update;
 
     if ( state && state.state === 'loaded' ) {
-      this.store.data.query = {};
+      this._clearCache();
     }
 
     return state;
+  }
+
+  /**
+   * @description Clear all caches that are affected by updating approvers
+   */
+  _clearCache(){
+    this.store.data.query = {};
+    this.FundingSourceModel.store.data.activeFundingSources = {};
   }
 }
 

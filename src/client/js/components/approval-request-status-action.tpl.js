@@ -15,7 +15,7 @@ export function render() {
         <i class=${status.iconClass}></i>
       </div>
       <div class='content'>
-        <div class='smaller grey'>${status.label}</div>
+        <div class='smaller grey'>${status.byLine}</div>
         <div class='bold primary'>${this.action?.employee?.firstName} ${this.action?.employee?.lastName}</div>
         <div class='small primary'>${(this.action.approverTypes || []).map(at => at.approverTypeLabel).join(', ')}</div>
         <div ?hidden=${!this.showDate || this.action.action === 'approval-needed'} class='smaller grey'>at ${this._getDate()}</div>
