@@ -1,6 +1,9 @@
 import { html } from 'lit';
 
-
+/**
+ * @description Main render function for the component
+ * @returns {TemplateResult}
+ */
 export function render() {
 return html`
   <div>
@@ -11,9 +14,23 @@ return html`
         return renderFundingSource.call(this, fundingSource);})
       }
     </div>
+    <div>
+      <div ?hidden=${!this.showNewFundingSourceForm} class='new-funding-source-form'>
+        ${renderFundingSourceForm.call(this, this.newFundingSource)}
+      </div>
+      <button
+        @click=${this._onNewClick}
+        ?disabled=${this.showNewFundingSourceForm}
+        class='btn btn--primary'>Add New Funding Source</button>
+    </div>
   </div>
 `;}
 
+/**
+ * @description Render a single funding source
+ * @param {Object} fundingSource - funding source object
+ * @returns
+ */
 function renderFundingSource(fundingSource){
   const capAmount = Number(fundingSource.capDefault)?.toFixed(2);
   return html`
@@ -56,14 +73,20 @@ function renderFundingSource(fundingSource){
   `;
 }
 
+/**
+ * @description Render the form for creating or editing a funding source
+ * @param {Object} fundingSource - funding source object
+ * @returns {TemplateResult}
+ */
 function renderFundingSourceForm(fundingSource){
-  if ( !fundingSource ) return html``;
+  if ( !fundingSource || !Object.keys(fundingSource).length ) return html``;
   const id = fundingSource.fundingSourceId || 'new';
   const inputIdLabel = `funding-source-label-${id}`;
   const inputIdDescription = `funding-source-description-${id}`;
   const inputIdHasCap = `funding-source-has-cap-${id}`;
   const inputIdCapDefault = `funding-source-cap-default-${id}`;
   const inputIdRequireDescription = `funding-source-require-description-${id}`;
+  const inputIdFormOrder = `funding-source-form-order-${id}`;
 
   return html`
     <form funding-source-id=${fundingSource.fundingSourceId} @submit=${this._onSubmit} class='funding-source-form'>
@@ -124,6 +147,17 @@ function renderFundingSourceForm(fundingSource){
         </div>
       </div>
 
+      <div class='field-container ${fundingSource.validationHandler.errorClass('formOrder')}'>
+        <label for=${inputIdFormOrder}>Form Order</label>
+        <input
+          id=${inputIdFormOrder}
+          type='number'
+          .value=${fundingSource.formOrder || 0}
+          @input=${e => this._onFormInput('formOrder', e.target.value, fundingSource)}
+        >
+        ${fundingSource.validationHandler.renderErrorMessages('formOrder')}
+      </div>
+
       <div class='field-container ${fundingSource.validationHandler.errorClass('approverTypes')}'>
         <div class='flex flex--space-between flex--align-center'>
           <label>Approval Chain</label>
@@ -169,10 +203,11 @@ function renderFundingSourceForm(fundingSource){
                 @click=${e => this._onMoveApproverTypeClick(fundingSource, i, 'down')}
                 class='icon-link'>
                 <i class="fa-solid fa-circle-arrow-down"></i>
+              </a>
             </div>
           `)}
         </div>
-
+        ${fundingSource.validationHandler.renderErrorMessages('approverTypes')}
       </div>
 
 

@@ -29,6 +29,19 @@ class TypeTransform {
   }
 
   /**
+   * @description Convert value to a positive number
+   * @param {*} value - value to convert
+   * @returns {Number|null}
+   */
+  toPositiveNumber(value) {
+    value = Number(value);
+    if ( isNaN(value) || value < 0 ) {
+      return null;
+    }
+    return value;
+  }
+
+  /**
    * @description Convert YYYY-MM-DD date string to Date object
    * @param {String} value - date string
    * @returns {Date|null}
