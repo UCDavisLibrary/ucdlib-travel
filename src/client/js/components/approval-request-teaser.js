@@ -3,6 +3,7 @@ import {render} from "./approval-request-teaser.tpl.js";
 
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 import { LitCorkUtils, Mixin } from "../../../lib/appGlobals.js";
+import applicationOptions from '../../../lib/utils/applicationOptions.js';
 
 /**
  * @class ApprovalRequestTeaser
@@ -15,6 +16,7 @@ export default class ApprovalRequestTeaser extends Mixin(LitElement)
     return {
       approvalRequest: {type: Object},
       approvalStatus: {type: String},
+      reimbursementStatus: {type: String},
     }
   }
 
@@ -23,12 +25,15 @@ export default class ApprovalRequestTeaser extends Mixin(LitElement)
     super();
     this.render = render.bind(this);    
     this.approvalStatus = "";
+    this.reimbursementStatus = "";
     this._injectModel('AuthModel');
 
   }
 
   firstUpdated(changedProperties) { 
     this.checkApproverStatus(this.approvalRequest.approvalStatusActivity);
+    this.reimbursementStatus = applicationOptions.reimbursementStatusLabel(this.approvalRequest.reimbursementStatus)
+
   }
 
   /**
@@ -80,26 +85,12 @@ export default class ApprovalRequestTeaser extends Mixin(LitElement)
     const found = kerbActivity.find(a => this.checkKerb(a.employeeKerberos));
     if(found !== undefined) {
       this.changeApprovalStatus(this.approvalRequest.approvalStatusActivity, found);
-      return found;
+      return;
     }
-    
-    return false;
+    this.approvalStatus = applicationOptions.approvalStatusLabel(this.approvalRequest.approvalStatus)
+    return;
   }
 
-  /**
-   * @description gets the previous and next values based of index
-   * @param {Array} ap -  approval request activity array
-  */
-  PrevAndNext(apActivity, order){
-      const index = apActivity.findIndex((a) => a.approverOrder === order);
-      const prev = apActivity[index - 1];
-      const next = apActivity[index + 1];
-      if (index === -1) {
-        return undefined
-      }
-      let obj = {"prev": prev, "index":apActivity[index], "next":next}
-      return obj;
-    }
 
   /**
    * @description change the approval status for an approver
@@ -108,31 +99,22 @@ export default class ApprovalRequestTeaser extends Mixin(LitElement)
   */
   async changeApprovalStatus(apActivity, thisApproverInfo){
     let approverOrder = thisApproverInfo.approverOrder;
-    let givenStatus = this.PrevAndNext(apActivity, approverOrder);
+    let givenStatus = apActivity[approverOrder];
+    let stat = (this.approvalRequest.approvalStatusActivity || []).find(a => a.action === 'approval-needed');
 
-    if(givenStatus.index.action == "approval-needed") {
-      let givenprev = givenStatus.prev;
-      if(givenprev.action == "approved") {
-        this.approvalStatus = "Awaiting Your Approval"
-      } else {
-        let i = approverOrder;
+    if(this.approvalRequest.approvalStatus == 'submitted' || this.approvalRequest.approvalStatus == 'in-progress'){
+      if(givenStatus.action == "approval-needed") {
 
-        while (i >= 0){
-          let newInd = this.PrevAndNext(apActivity, i);
-
-          if((newInd.index.action == "approval-needed" && newInd.prev && newInd.prev.action == "approved")  ||  
-          (newInd.index.action == "approval-needed" && newInd.prev === undefined)) {
-            this.approvalStatus = `Awaiting Approval By ${newInd.index.employee.firstName} ${newInd.index.employee.lastName}`
-            return;
-          }
-          i--;
+        if(applicationOptions.isNextApprover(this.approvalRequest, givenStatus.employeeKerberos)){
+          this.approvalStatus = "Awaiting Your Approval"
+        } else {
+          this.approvalStatus = `Awaiting Approval By ${stat.employee.firstName} ${stat.employee.lastName}`;
         }
-          
+      } else if(givenStatus.action == "approved" && stat) {
+          this.approvalStatus = "Approved by You";
+      } else {
+        this.approvalStatus = applicationOptions.approvalStatusLabel(givenStatus.action);
       }
-    } else if(givenStatus.index.action == "approved" && givenStatus.next) {
-        this.approvalStatus = "Approved by You";
-    } else {
-      this.approvalStatus = givenStatus.index.action;
     }
 
   }
