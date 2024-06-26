@@ -246,7 +246,9 @@ COMMENT ON TABLE reimbursement_request_receipt IS 'Receipts uploaded by users fo
 CREATE TABLE daily_expense_category (
     daily_expense_category_id SERIAL PRIMARY KEY,
     label VARCHAR(200) NOT NULL,
-    sub_category TEXT[],
+    parent_id INTEGER REFERENCES daily_expense_category(daily_expense_category_id),
+    added_by VARCHAR(100) REFERENCES employee(kerberos),
+    added_at timestamp DEFAULT NOW(),
     archived BOOLEAN DEFAULT FALSE,
     archived_by VARCHAR(100) REFERENCES employee(kerberos),
     archived_at timestamp
