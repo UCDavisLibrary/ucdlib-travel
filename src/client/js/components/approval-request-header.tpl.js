@@ -17,7 +17,7 @@ return html`
         </div>
       </div>
 
-      <div class='l-sidebar-first actions' ?hidden=${!this.availableActions.length}>
+      <div class='l-sidebar-first actions' ?hidden=${!this.availableActions.length || this.hideActions}>
         <h5>Available Actions</h5>
         ${this.availableActions.map(action => html`
           <a @click=${e => this._onActionClick(action)} class='flex flex--align-center pointer underline-hover u-space-mb--small'>

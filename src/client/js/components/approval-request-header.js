@@ -21,6 +21,7 @@ export default class ApprovalRequestHeader extends Mixin(LitElement)
     return {
       approvalRequest: {type: Object},
       availableActions: {type: Array},
+      hideActions: {type: Boolean, attribute: 'hide-actions'},
       action: {state: true}
     }
   }
@@ -31,6 +32,8 @@ export default class ApprovalRequestHeader extends Mixin(LitElement)
 
     this.approvalRequest = {};
     this.availableActions = [];
+    this.action = '';
+    this.hideActions = false;
 
     this._injectModel('AuthModel', 'AppStateModel', 'ApprovalRequestModel');
   }
