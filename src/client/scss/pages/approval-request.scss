@@ -1,0 +1,66 @@
+app-page-approval-request {
+
+  .activity-history {
+
+    .action:first-child {
+      padding-top: 0;
+    }
+
+    .action {
+      padding: 1rem 0;
+      border-bottom: 1px solid #b0d0ed;
+
+      .name-role {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+
+        .dot {
+          width: .3rem;
+          height: .3rem;
+          min-width: .3rem;
+          min-height: .3rem;
+          border-radius: 50%;
+          background-color: #b0d0ed;
+          margin-right: 10px;
+          margin-left: 10px;
+        }
+      }
+      @media (max-width: 768px) {
+        .name-role {
+          display: block;
+        }
+      }
+
+      .comment {
+        margin-left: 40px;
+        margin-top: .5rem;
+      }
+
+      .action__header {
+        display: flex;
+
+        .icon {
+          display: flex;
+          justify-content: center;
+          width: 40px;
+          min-width: 40px;
+          margin-left: 0;
+          margin-top: 3px;
+        }
+
+        .content {
+          flex-grow: 1;
+        }
+        .date {
+          text-align: right;
+          min-width: 115px;
+          width: 115px;
+          font-size: .875rem;
+          color: #4C4C4C;
+        }
+      }
+    }
+  }
+
+}

@@ -5,8 +5,17 @@ import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-el
 import { WaitController } from "@ucd-lib/theme-elements/utils/controllers/wait.js";
 
 import promiseUtils from '../../../../lib/utils/promiseUtils.js';
-import urlUtils from "../../../../lib/utils/urlUtils.js";
+import applicationOptions from '../../../../lib/utils/applicationOptions.js';
 
+/**
+ * @class AppPageApprovalRequest
+ * @description Page for displaying a single approval request
+ * @property {Number} approvalRequestId - The id of the approval request to display - set from url
+ * @property {Object} approvalRequest - The approval request to display - set from ApprovalRequestModel
+ * @property {Object} queryObject - Query object for fetching approval request data
+ * @property {Number} totalExpenditures - Total of all expenditures for the approval request
+ * @property {Array} activity - Array of approvalStatusActivity objects for all of the revisions of this approval request
+ */
 export default class AppPageApprovalRequest extends Mixin(LitElement)
 .with(LitCorkUtils, MainDomElement) {
 
@@ -15,6 +24,7 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
       approvalRequestId : {type: Number},
       approvalRequest : {type: Object},
       queryObject: {type: Object},
+      totalExpenditures: {type: Number},
       activity: {type: Array}
     }
   }
@@ -26,6 +36,7 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
     this.approvalRequestId = 0;
     this.approvalRequest = {};
     this.activity = [];
+    this.totalExpenditures = 0;
 
     this.waitController = new WaitController(this);
 
@@ -80,6 +91,18 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
   }
 
   /**
+   * @description Get the approvalStatusActivity array for the current approval request,
+   * excluding actions that are not relevant to the current status
+   * @returns {Array}
+   */
+  getApprovalStatusActivity(){
+    return (this.approvalRequest.approvalStatusActivity || []).filter(a => {
+      if ( ['in-progress', 'submitted', 'approved'].includes(this.approvalRequest?.approvalStatus) ) return true;
+      return a.action !== 'approval-needed';
+    });
+  }
+
+  /**
    * @description Set approvalRequestId property from App State location (the url)
    * @param {Object} state - AppStateModel state
    */
@@ -89,6 +112,12 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
     this.queryObject = {requestIds: this.approvalRequestId, pageSize: -1};
   }
 
+  /**
+   * @description bound to ApprovalRequestModel approval-requests-requested event
+   * Fires after approval request data is requested
+   * @param {Object} e - cork-app-utils event
+   * @returns
+   */
   _onApprovalRequestsRequested(e){
     if ( e.state !== 'loaded' ) return;
 
@@ -113,6 +142,7 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
 
     this.approvalRequest = approvalRequest;
     this._setActivity(e.payload.data);
+    this._setTotalExpenditures();
 
     this.showLoaded = true;
   }
@@ -123,25 +153,55 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
    * @returns {Array}
    */
   _setActivity(approvalRequests){
-    const activity = [];
+    let activity = [];
     approvalRequests.forEach(r => {
       r.approvalStatusActivity.forEach(action => {
         if ( action.action === 'approval-needed' ) return;
         action = {...action};
-        action.occurredDate = new Date(action.occurred + 'Z');
-        if (isNaN(action.occurredDate)) {
-          return;
-        }
-        action.occurredDateString = action.occurredDate.toLocaleDateString() + ' ' + action.occurredDate.toLocaleTimeString();
         activity.push(action);
       });
     });
+
+    activity.forEach(action => {
+      action.occurredDate = new Date(action.occurred.endsWith('Z') ? action.occurred : action.occurred + 'Z');
+      action.occurredDateString = action.occurredDate.toLocaleDateString();
+      action.occurredTimeString = action.occurredDate.toLocaleTimeString();
+      action.actionObject = applicationOptions.approvalStatusActions.find(a => a.value === action.action);
+    })
+    activity.filter(action => !isNaN(action.occurredDate.getTime()) && action.actionObject);
 
     activity.sort((a, b) => {
       return a.occurredDate - b.occurredDate;
     });
 
     this.activity = activity;
+  }
+
+  /**
+   * @description Set the totalExpenditures property based on the expenditures array from the current approval request
+   */
+  _setTotalExpenditures(){
+    let total = 0;
+    if ( this.approvalRequest.expenditures ){
+      this.approvalRequest.expenditures.forEach(e => {
+        if ( !e.amount ) return;
+        total += Number(e.amount);
+      });
+    }
+    this.totalExpenditures = total;
+  }
+
+  /**
+   * @description Bound to view-comments event from approval-request-status-action component
+   * @param {CustomEvent} e - e.detail.approvalRequestApprovalChainLinkId is the id of the action to scroll to
+   * @returns
+   */
+  _onStatusCommentsClick(e){
+    const actionId = e.detail?.approvalRequestApprovalChainLinkId;
+    if ( !actionId ) return;
+    const actionEle = this.renderRoot.querySelector(`.action[action-id="${actionId}"]`);
+    if ( !actionEle ) return;
+    actionEle.scrollIntoView({behavior: 'smooth'});
   }
 
 }

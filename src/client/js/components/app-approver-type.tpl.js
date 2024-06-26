@@ -1,19 +1,20 @@
 import { html } from 'lit';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import '@ucd-lib/theme-elements/brand/ucd-theme-brand-textbox/ucd-theme-brand-textbox.js'
+import "./ucdlib-employee-search-basic.js";
 
 export function render() {
 return html`
-    <div class="l-container">
+    <div>
       <h2 class='heading--underline'>Approvers</h2>
       <div class="approvertype_description">
-      <p>${unsafeHTML(this.SettingsModel.getByKey('approver_type_description'))}</p>
-    </div>
+        <p>${unsafeHTML(this.SettingsModel.getByKey('approver_type_description'))}</p>
+      </div>
       <section class="approvertype-info">
-      ${this.existingApprovers.map((approver) => {
-        if(approver.editing) return renderApproverForm.call(this, approver);
-        return renderApproverItem.call(this, approver);
-      })}
+        ${this.existingApprovers.map((approver) => {
+          if(approver.editing) return renderApproverForm.call(this, approver);
+          return renderApproverItem.call(this, approver);
+        })}
       </section>
 
       ${this.new ? renderApproverForm.call(this, this.newApproverType) : html`
