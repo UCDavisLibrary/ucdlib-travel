@@ -1,17 +1,12 @@
 import { html } from 'lit';
-import applicationOptions from '../../../lib/utils/applicationOptions.js';
 
 
 export function render() { 
 return html`
 <div ?hidden=${!this.approvalRequest}>
   <div> 
-    ${this.approvalStatus ? 
-        html`<p ?hidden=${!this.approvalRequest.approvalStatus} class="approval-status">${this.approvalStatus}</p>
-        `:html`<p ?hidden=${!this.approvalRequest.approvalStatus} class="approval-status">${this.ToUpperCase(this.approvalRequest.approvalStatus)}</p>`
-    }
-
-    <p ?hidden=${!this.approvalRequest.reimbursementStatus} class="reimbursement-status">${this.applicationOptions(this.approvalRequest.reimbursementStatus)}</p>
+    <p ?hidden=${!this.approvalStatus} class="approval-status">${this.approvalStatus}</p>
+    <p ?hidden=${!this.reimbursementStatus} class="reimbursement-status">${this.reimbursementStatus}</p>
   </div>
 
   <div class="teaser">
