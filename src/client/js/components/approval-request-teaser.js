@@ -119,18 +119,6 @@ export default class ApprovalRequestTeaser extends Mixin(LitElement)
 
   }
 
-  /**
-   * @description change the Status bar text to upper case
-   * @param {String} str -  string given
-   * @param {Array} separators -  array of strings given for seperation
-   * @returns
-  */
-  ToUpperCase(str, separators=['-']) {
-    separators = separators || [ ' ' ];
-    let regex = new RegExp('(^|[' + separators.join('') + '])(\\w)', 'g');
-    return str.toLowerCase().replace(regex, function(x) { return x.toUpperCase(); });
-  }
-
 }
 
 customElements.define('approval-request-teaser', ApprovalRequestTeaser);
