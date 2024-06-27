@@ -2,17 +2,16 @@ approval-request-teaser {
   display: block;
   .teaser {
       container-type: inline-size;
-      margin-bottom: 1.25rem;
       display: flex;
       flex-wrap: wrap;
   }
 
   .teaser-info {
-      flex: 70%;
+      flex: 60%;
   }
   .teaser-expenses {
     font-size: .875rem;
-    flex: 30%;
+    flex: 40%;
     border-left: 1px solid #B0D0ED;
     padding: 0rem 0rem 0.675rem 0.675rem;
     align-content: center;
@@ -71,7 +70,7 @@ approval-request-teaser {
     }
   }
 
-    @container (width < 684px) {
+    @container (width < 550px) {
         .teaser-info {
             flex: 100%;
             margin-bottom: 0.625rem;
