@@ -10,8 +10,14 @@ export function render() {
   return html`
   <div>
     <div class='flex flex--align-center flex--wrap'>
-      <div ?hidden=${!this.approvalStatus} class="badge approval-status">${this.approvalStatus}</div>
-      <div ?hidden=${!this.reimbursementStatus} class="badge reimbursement-status">${this.reimbursementStatus}</div>
+      <div
+        title='Approval Status'
+        ?hidden=${!this.approvalStatus}
+        class="badge approval-status">${this.approvalStatus}</div>
+      <div
+        title='Reimbursement Status'
+        ?hidden=${!this.reimbursementStatus}
+        class="badge reimbursement-status">${this.reimbursementStatus}</div>
     </div>
 
     <div class="teaser">

@@ -11,7 +11,7 @@ return html`
 
     <ucd-theme-primary-nav>
       <a href='/approval-request/new'>Get Approval</a>
-      <a href='/approval-request'>Submitted Approval Requests</a>
+      <a href='/approval-request'>Your Approval Requests</a>
       <a href='/approve'>Approve a Request</a>
       <a href='/reports'>Reports</a>
     </ucd-theme-primary-nav>
