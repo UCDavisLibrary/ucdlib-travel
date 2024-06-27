@@ -247,6 +247,7 @@ CREATE TABLE daily_expense_category (
     daily_expense_category_id SERIAL PRIMARY KEY,
     label VARCHAR(200) NOT NULL,
     parent_id INTEGER REFERENCES daily_expense_category(daily_expense_category_id),
+    category_order INTEGER NOT NULL DEFAULT 0,
     added_by VARCHAR(100) REFERENCES employee(kerberos),
     added_at timestamp DEFAULT NOW(),
     archived BOOLEAN DEFAULT FALSE,
