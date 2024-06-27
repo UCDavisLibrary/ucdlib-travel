@@ -35,7 +35,7 @@ class ApplicationOptions {
   get reimbursementStatuses(){
     return [
       {value: 'not-required', label: 'Not Required'},
-      {value: 'not-submitted', label: 'Not Submitted'},
+      {value: 'not-submitted', label: 'Reimbursement Not Submitted'},
       {value: 'reimbursment-pending', label: 'Reimbursement Pending'},
       {value: 'partially-reimbursed', label: 'Partially Reimbursed'},
       {value: 'fully-reimbursed', label: 'Fully Reimbursed'}

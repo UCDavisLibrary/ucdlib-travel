@@ -1,107 +1,75 @@
 approval-request-teaser {
-    a {
-        text-decoration: none;
-    }
-    .teaser {
-        container-type: inline-size;
-        margin-bottom: 1.25rem;
-        display: flex;
-        flex-wrap: wrap;
+  display: block;
+  .teaser {
+      container-type: inline-size;
+      margin-bottom: 1.25rem;
+      display: flex;
+      flex-wrap: wrap;
+  }
 
-        // margin-top: 0.5rem
-    }
+  .teaser-info {
+      flex: 70%;
+  }
+  .teaser-expenses {
+    font-size: .875rem;
+    flex: 30%;
+    border-left: 1px solid #B0D0ED;
+    padding: 0rem 0rem 0.675rem 0.675rem;
+    align-content: center;
+  }
 
-    .teaser-info {
-        flex: 70%;
+  .badge {
+    display: inline-block;
+    font-size: .875rem;
+    margin-bottom: .5rem;
+    margin-right: .5rem;
+    padding: .1rem .5rem;
+    background-color: #DBEAF7;
+    border-radius: .5rem;
+    color:white;
 
-    }
-    .teaser-expenses {
-        flex: 30%;
-        border-left: 1px solid #13639E;
-        padding: 0rem 0rem 0.675rem 0.675rem;
-        align-content: center;
-    }
-
-    .approval-status {
-        background-color: #13639E;
-        padding: 0.313rem;
-        color:white;
-        width:fit-content;
-        margin-bottom: 2px;
-        display: inline-block;
-    }
-
-    .reimbursement-status {
-        background-color: #FFF4D2;
-        padding: 0.313rem;
-        color:#022851;
-        width:fit-content;
-        margin-bottom: 2px;
-        display: inline-block;
-
-    }
-
-    h4 {
-        color: var(--forced-contrast-heading-primary, #022851);
-    }
-
-    .requestor {
-        margin: 0;
-        font-size: 1.20em;
-        font-weight: 700;
-        color: var(--forced-contrast-heading-primary, #022851);
-    }
-
-    .title {
-        margin:0;
-        font-size: 1.30em;
-        font-weight: 800;
-        color: var(--forced-contrast-heading-primary, #022851);
+    &.approval-status {
+      background-color: #DBEAF7;
+      color:#022851;
     }
 
 
-    .panel--icon .panel__title {
-        margin: 0;
-        font-size: 1rem;
-        padding: 0.045rem;
-        font-weight: 700;
-        color:#4C4C4C;
-
+    &.reimbursement-status {
+      background-color: #FFF4D2;
+      color:#022851;
     }
+  }
 
-    .panel  {
-        margin-bottom: 0;
+  .icon-grid {
+    display: grid;
+    grid-template-columns: 20px 1fr;
+    grid-gap: 0.25rem;
+    margin-bottom: 0.25rem;
+
+    .icon-container {
+      color: #73ABDD;
+      font-size: .875rem;
     }
+  }
 
-    .icon-image {
-        width:1rem;
-        height: 1rem;
-        margin-right: .5rem;
-        display:inline-flex;
-        color: #73ABDD;
+  .requestor {
+    margin: 0;
+    font-size: 1.20em;
+    font-weight: 700;
+    color: var(--forced-contrast-heading-primary, #022851);
+  }
 
+  a.title {
+    margin:0;
+    font-size: 1.30em;
+    font-weight: 800;
+    color: var(--forced-contrast-heading-primary, #022851);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
     }
-
-    .icon-text {
-        margin: 0;
-        font-size: 1rem;
-        padding: 0.045rem;
-        font-weight: 700;
-        color:#4C4C4C;
-        display:inline-flex;
-    }
-
-    .list-content {
-        align-content:center;
-        align-items: center;
-        display: inline-flex;
-    }
-
-
-    .l-second {
-        
-
-    }
+  }
 
     @container (width < 684px) {
         .teaser-info {
@@ -116,4 +84,3 @@ approval-request-teaser {
 
     }
 }
-  
