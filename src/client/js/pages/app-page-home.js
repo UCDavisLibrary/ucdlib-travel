@@ -14,7 +14,8 @@ export default class AppPageHome extends Mixin(LitElement)
   constructor() {
     super();
     this.render = render.bind(this);
-    this._injectModel('AppStateModel',);
+    this.approvalRequests = [];
+    this._injectModel('AppStateModel','ApprovalRequestModel');
 
   }
 
@@ -33,9 +34,12 @@ export default class AppPageHome extends Mixin(LitElement)
     ];
     this.AppStateModel.setBreadcrumbs(breadcrumbs);
 
-    // const d = await this.getPageData();
-    // const hasError = d.some(e => e.state === 'error');
-    // if ( !hasError ) this.AppStateModel.showLoaded(this.id);
+    const d = await this.getPageData();
+    const hasError = d.some(e => e.state === 'error');
+    if ( !hasError ) this.AppStateModel.showLoaded(this.id);
+
+    this.AppStateModel.showLoaded(this.id);
+    this.requestUpdate();
   }
 
   /**
@@ -44,9 +48,20 @@ export default class AppPageHome extends Mixin(LitElement)
   async getPageData(){
     const promises = [];
     //promises.push(this.YourModel.getData());
+    promises.push(this.ApprovalRequestModel.query({}));
     const resolvedPromises = await Promise.all(promises);
     return resolvedPromises;
   }
+
+    /**
+   * @description bound to ApprovalRequestModel approval-requests-fetched event
+   * Handles setting the form state based on a previously saved (or submitted and rejected) approval request
+   */
+     _onApprovalRequestsRequested(e){
+      if ( e.state !== 'loaded' ) return;
+      this.approvalRequests = e.payload.data;
+      this.requestUpdate();
+    }
 
 
 }

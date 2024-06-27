@@ -155,6 +155,15 @@ class ApplicationOptions {
   }
 
   /**
+   * @description - Get the label for an reimbursement status
+   * @param {String} status - The status keyword
+   * @returns {String}
+   */
+  reimbursementStatusLabel(status){
+    return this.reimbursementStatuses.find(s => s.value === status)?.label || '';
+  }
+
+  /**
    * @description - Get the resulting status of an approval request after an action is taken
    * @param {String} actionValue - The action keyword
    * @param {Object} approvalRequest - The approval request object
