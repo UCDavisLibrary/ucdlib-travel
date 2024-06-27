@@ -92,6 +92,26 @@ class TypeTransform {
     return obj;
   }
 
+  /**
+   * @description Convert 2 iso date strings to a date range string
+   * @param {String} date1 - YYYY-MM-DD date string
+   * @param {String} date2 - YYYY-MM-DD date string
+   * @returns {String}
+   */
+  dateRangeFromIsoString(date1, date2){
+    const startDate = this.toDateFromISO(date1);
+    const endDate = this.toDateFromISO(date2);
+
+    if ( !startDate ) return '';
+
+    if ( !endDate || startDate.getTime() === endDate.getTime() ) {
+      return this.toUtcString(startDate);
+    }
+
+    return `${this.toUtcString(startDate)} - ${this.toUtcString(endDate)}`;
+
+  }
+
 }
 
 export default new TypeTransform();

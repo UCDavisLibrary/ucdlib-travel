@@ -60,16 +60,7 @@ export default class ApprovalRequestHeader extends Mixin(LitElement)
    * @returns {String}
    */
   getProgramDates(){
-    const startDate = typeTransform.toDateFromISO(this.approvalRequest.programStartDate);
-    const endDate = typeTransform.toDateFromISO(this.approvalRequest.programEndDate);
-
-    if ( !startDate ) return '';
-
-    if ( !endDate || startDate.getTime() === endDate.getTime() ) {
-      return typeTransform.toUtcString(startDate);
-    }
-
-    return `${typeTransform.toUtcString(startDate)} - ${typeTransform.toUtcString(endDate)}`;
+    return typeTransform.dateRangeFromIsoString(this.approvalRequest.programStartDate, this.approvalRequest.programEndDate);
   }
 
   /**

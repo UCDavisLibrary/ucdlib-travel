@@ -9,7 +9,7 @@ return html`
       <div class="l-shrink">
         <p>Home Page</p>
         ${this.approvalRequests.map(ar => html`
-          <approval-request-teaser .approvalRequest=${ar}></approval-request-teaser>
+          <approval-request-teaser .approvalRequest=${ar} class='u-space-mb--large'></approval-request-teaser>
         `)}
       </div>
   </div>
