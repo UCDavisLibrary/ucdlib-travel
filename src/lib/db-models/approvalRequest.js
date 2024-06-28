@@ -207,6 +207,8 @@ class ApprovalRequest {
    * - isCurrent {Boolean} OPTIONAL - whether to get only the current revision
    * - isNotCurrent {Boolean} OPTIONAL - whether to get only revisions that are not current
    * - employees {Array} OPTIONAL - array of employee kerberos
+   * - approvalStatus {Array} OPTIONAL - array of approval statuses
+   * - approvers {Array} OPTIONAL - array of approver kerberos
    * - page {Integer} OPTIONAL - page number
    * - pageSize {Integer} OPTIONAL - number of records per page
    */
@@ -250,6 +252,9 @@ class ApprovalRequest {
     }
 
     const whereClause = pg.toWhereClause(whereArgs);
+    let approverActionArray = applicationOptions.approvalStatusActions.filter(s => s.actor === 'approver');
+    approverActionArray.push({value: 'approval-needed'});
+    approverActionArray = `(${approverActionArray.map(s => `'${s.value}'`).join(',')})`;
 
     const countQuery = `
       SELECT
@@ -262,6 +267,7 @@ class ApprovalRequest {
         ${whereClause.sql}
       ${approvers.length ? `
         AND aracl.employee_kerberos = ANY($${whereClause.values.length + 1})
+        AND aracl.action IN ${approverActionArray}
       ` : ''}
     `;
     const countRes = await pg.query(countQuery, approvers.length ? [...whereClause.values, approvers] : whereClause.values);
@@ -373,7 +379,8 @@ class ApprovalRequest {
         FROM
           json_array_elements(asa.approval_status_activity) AS activity
         WHERE
-          (activity->>'employeeKerberos')::text = ANY($${whereClause.values.length + 1})
+          (activity->>'employeeKerberos')::text = ANY($${whereClause.values.length + 1}) AND
+          (activity->>'action')::text IN ${approverActionArray}
       )
     ` : ''}
     ORDER BY

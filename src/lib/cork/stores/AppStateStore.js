@@ -14,7 +14,7 @@ class AppStateStoreImpl extends AppStateStore {
       'approval-request-confirm': {text: 'Review and Submit', link: '/approval-request/confirm'},
       'approval-requests': {text: 'Your Approval Requests', link: '/approval-request'},
       'approver': {text: 'Approve', link: '/approval-request/approve'},
-      'approver-landing': {text: 'Approver Landing Page', link: '/approve'},
+      'approver-landing': {text: 'Approve Requests', link: '/approve'},
       'reports': {text: 'Reports', link: '/reports'},
       'admin': {text: 'Admin', link: '/admin'},
       'admin-allocations': {text: 'Employee Allocations', link: '/admin/allocations'},

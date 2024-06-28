@@ -34,7 +34,6 @@ export default class AppPageApprovalRequests extends Mixin(LitElement)
 
     this._injectModel('AppStateModel', 'ApprovalRequestModel', 'AuthModel');
 
-
     this.queryArgs = {
       isCurrent: true,
       employees: this.AuthModel.getToken().id,

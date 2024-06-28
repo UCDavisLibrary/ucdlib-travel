@@ -22,15 +22,18 @@ export function render() {
 
     <div class="teaser">
       <div class="teaser-info">
-        <div>
-          <a class='title' href="/approval-request/${this.approvalRequest.approvalRequestId}">
-            ${this.approvalRequest.label || 'Untitled Request'}
-          </a>
+        <div class='u-space-mb--small'>
+          <div>
+            <a class='title' href="/approval-request/${this.approvalRequest.approvalRequestId}">
+              ${this.approvalRequest.label || 'Untitled Request'}
+            </a>
+          </div>
+
+          <div ?hidden=${this.AuthModel.isCurrentUser(this.approvalRequest.employeeKerberos)} class='primary bold'>
+            ${this.approvalRequest?.employee?.firstName} ${this.approvalRequest?.employee?.lastName}
+          </div>
         </div>
 
-        <div ?hidden=${this.AuthModel.isCurrentUser(this.approvalRequest.employeeKerberos)} class='requestor'>
-          ${this.approvalRequest?.employee?.firstName} ${this.approvalRequest?.employee?.lastName}
-        </div>
 
         ${renderIconGrid('fa-solid fa-building', this.approvalRequest.organization)}
         ${renderIconGrid('fa-solid fa-calendar', this.programDates)}
