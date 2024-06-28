@@ -32,7 +32,7 @@ return html`
         </div>
       </div>
 
-      <div class='alignable-promo__buttons flex flex--justify-center u-space-mt--large'>
+      <div class='alignable-promo__buttons flex flex--justify-center flex--wrap u-space-mt--large'>
         <a class='btn' href='/approval-request'>View All Your Requests</a>
         <a class='btn btn--alt3' href='/approval-request/new'>Submit A New Request</a>
       </div>

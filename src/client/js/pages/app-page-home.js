@@ -60,7 +60,7 @@ export default class AppPageHome extends Mixin(LitElement)
     this.approverPage = 1;
     this.approverApprovalRequests = [];
     this.approverQueryArgs = {
-      activeOnly: true,
+      isCurrent: true,
       approvers: this.AuthModel.getToken().id,
       approvalStatus: applicationOptions.approvalStatuses.filter(s => s.isActive).map(s => s.value),
       page: this.page
