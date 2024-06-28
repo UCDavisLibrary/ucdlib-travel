@@ -160,7 +160,10 @@ export default class AppPageApprover extends Mixin(LitElement)
       return;
     }
 
-    const userAction = approvalRequest.approvalStatusActivity.find(a => a.employeeKerberos === this.AuthModel.getToken().id);
+    const approverActionList = applicationOptions.approvalStatusActions.filter(a => a.actor === 'approver').map(a => a.value);
+    approverActionList.push('approval-needed');
+    const requestApproverActions = approvalRequest.approvalStatusActivity.filter(a => approverActionList.includes(a.action));
+    const userAction = requestApproverActions.find(a => a.employeeKerberos === this.AuthModel.getToken().id);
     if ( !userAction ) {
       this.AppStateModel.showError('You are not authorized to approve this request.');
       return;
@@ -168,7 +171,7 @@ export default class AppPageApprover extends Mixin(LitElement)
 
     this.isNextApprover =
       userAction.action === 'approval-needed' &&
-      !approvalRequest.approvalStatusActivity.find(a =>
+      !requestApproverActions.find(a =>
         a.action === 'approval-needed' &&
         a.employeeKerberos !== this.AuthModel.getToken().id && a.approverOrder < userAction.approverOrder
       );
