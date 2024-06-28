@@ -28,7 +28,7 @@ return html`
       <div ?hidden=${this.approvalRequests.length}>
         <div class='flex flex--align-center'>
           <i class='fa-solid fa-circle-exclamation fa-2x admin-blue'></i>
-          <div class='u-space-ml--small'>You have not submitted any approval requests.</div>
+          <div class='u-space-ml--small'>You have not submitted any approval requests. <a href='/approval-request/new'>Submit one now.</a></div>
         </div>
       </div>
     </div>

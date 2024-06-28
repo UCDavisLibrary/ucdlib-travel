@@ -220,7 +220,7 @@ class ApprovalRequest {
     const noPaging = pageSize === -1;
 
     // construct where clause conditions for query
-    const whereArgs = {
+    let whereArgs = {
       "1" : "1"
     };
 
@@ -249,6 +249,29 @@ class ApprovalRequest {
     let approvers = [];
     if ( Array.isArray(kwargs.approvers) && kwargs.approvers.length ){
       approvers = kwargs.approvers;
+    }
+
+    // if activeOnly is set, only return approval requests that need approval or reimbursement
+    // overrides most other query parameters
+    if ( kwargs.activeOnly ) {
+      const activeStatus = applicationOptions.approvalStatuses.filter(s => s.isActive).map(s => s.value);
+      const reimbursementStatus = applicationOptions.reimbursementStatuses.filter(s => s.isActive).map(s => s.value);
+      whereArgs = {
+        'ar.is_current': true,
+        'statusQuery': {
+          relation: 'OR',
+          'ar.approval_status': activeStatus,
+          'reimbursement_status': {
+            relation: 'AND',
+            'ar.approval_status': 'approved',
+            'ar.reimbursement_status': reimbursementStatus
+          }
+        }
+      }
+
+      if ( Array.isArray(kwargs.employees) && kwargs.employees.length ){
+        whereArgs['ar.employee_kerberos'] = kwargs.employees;
+      }
     }
 
     const whereClause = pg.toWhereClause(whereArgs);
