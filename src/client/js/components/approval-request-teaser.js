@@ -89,9 +89,10 @@ export default class ApprovalRequestTeaser extends Mixin(LitElement)
       this.approvalStatus = "Approved by You";
       return;
     }
+    const currentUserNeedsApproval = activity.find(a => a.employeeKerberos === this.currentUser && a.action === 'approval-needed');
     const nextApprover = activity.find(a => a.action === 'approval-needed');
-    if ( currentUserApproved && nextApprover ) {
-      this.approvalStatus = `Awaiting Approval By ${nextApprover?.employee?.firstName} ${nextApprover?.employee?.lastName}`;
+    if ( (currentUserApproved || currentUserNeedsApproval) && nextApprover ) {
+      this.approvalStatus = `Awaiting Approval From ${nextApprover?.employee?.firstName} ${nextApprover?.employee?.lastName}`;
       return;
     }
     this.approvalStatus = applicationOptions.approvalStatusLabel(this.approvalRequest.approvalStatus)

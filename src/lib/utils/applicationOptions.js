@@ -11,17 +11,48 @@ class ApplicationOptions {
    * - value: the keyword value of the status
    * - label: the label to display in the UI
    * - isFinal: boolean indicating whether the status is a final status for the approval request (i.e. no further actions can be taken on the request)
+   * - isActive: boolean indicating whether the status is an active status for the approval request (i.e. actions can be taken on the request)
    */
   get approvalStatuses(){
     return [
-      {value: 'draft', label: 'Draft'},
-      {value: 'submitted', label: 'Submitted'},
-      {value: 'in-progress', label: 'In Progress'},
-      {value: 'approved', label: 'Approved'},
-      {value: 'canceled', label: 'Canceled', isFinal: true},
-      {value: 'denied', label: 'Denied', isFinal: true},
-      {value: 'revision-requested', label: 'Revision Requested'},
-      {value: 'recalled', label: 'Recalled'}
+      {
+        value: 'draft',
+        label: 'Draft'
+      },
+      {
+        value: 'submitted',
+        label: 'Submitted',
+        isActive: true
+      },
+      {
+        value: 'in-progress',
+        label: 'In Progress',
+        isActive: true
+      },
+      {
+        value: 'approved',
+        label: 'Approved'
+      },
+      {
+        value: 'canceled',
+        label: 'Canceled',
+        isFinal: true
+      },
+      {
+        value: 'denied',
+        label: 'Denied',
+        isFinal: true
+      },
+      {
+        value: 'revision-requested',
+        label: 'Revision Requested',
+        isActive: true
+      },
+      {
+        value: 'recalled',
+        label: 'Recalled',
+        isActive: true
+      }
     ];
   }
 
@@ -31,14 +62,33 @@ class ApplicationOptions {
    * Contains the following values:
    * - value: the keyword value of the status
    * - label: the label to display in the UI
+   * - isActive: the approval request is in an active state
    */
   get reimbursementStatuses(){
     return [
-      {value: 'not-required', label: 'Not Required'},
-      {value: 'not-submitted', label: 'Reimbursement Not Submitted'},
-      {value: 'reimbursment-pending', label: 'Reimbursement Pending'},
-      {value: 'partially-reimbursed', label: 'Partially Reimbursed'},
-      {value: 'fully-reimbursed', label: 'Fully Reimbursed'}
+      {
+        value: 'not-required',
+        label: 'Not Required'
+      },
+      {
+        value: 'not-submitted',
+        label: 'Reimbursement Not Submitted',
+        isActive: true
+      },
+      {
+        value: 'reimbursment-pending',
+        label: 'Reimbursement Pending',
+        isActive: true
+      },
+      {
+        value: 'partially-reimbursed',
+        label: 'Partially Reimbursed',
+        isActive: true
+      },
+      {
+        value: 'fully-reimbursed',
+        label: 'Fully Reimbursed'
+      }
     ];
   }
 

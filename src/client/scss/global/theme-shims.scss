@@ -14,3 +14,9 @@
 .panel__title {
   margin-bottom: 1rem;
 }
+
+@media (max-width: 767px) {
+  .l-shrink {
+    width: 100%;
+  }
+}
