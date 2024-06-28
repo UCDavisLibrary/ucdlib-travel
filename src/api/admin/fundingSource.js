@@ -64,7 +64,7 @@ export default (api) => {
       return res.status(500).json({error: true, message: 'Error creating funding source.'});
     }
 
-    return res.json
+    return res.json(data);
   });
 
 };
