@@ -68,9 +68,13 @@ export default class ApprovalRequestHeader extends Mixin(LitElement)
    * @param {Object} action - action object from applicationOptions.js
    */
   _onActionClick(action){
-    console.log(action);
     if ( action.actor === 'approver' ){
       const loc = `${this.AppStateModel.store.breadcrumbs['approver'].link}/${this.approvalRequest.approvalRequestId}`
+      this.AppStateModel.setLocation(loc);
+      return;
+    }
+    if ( action.value === 'create-reimbursement' ){
+      const loc = `${this.AppStateModel.store.breadcrumbs['reimbursement-new'].link}/${this.approvalRequest.approvalRequestId}`
       this.AppStateModel.setLocation(loc);
       return;
     }

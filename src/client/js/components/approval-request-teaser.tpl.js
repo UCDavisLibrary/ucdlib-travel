@@ -37,6 +37,7 @@ export function render() {
 
         ${renderIconGrid('fa-solid fa-building', this.approvalRequest.organization)}
         ${renderIconGrid('fa-solid fa-calendar', this.programDates)}
+        ${renderIconGrid('fa-solid fa-plane-up', this.approvalRequest.travelRequired ? 'Travel Required' : '')}
       </div>
 
       <div ?hidden=${this.approvalRequest.noExpenditures} class="teaser-expenses">

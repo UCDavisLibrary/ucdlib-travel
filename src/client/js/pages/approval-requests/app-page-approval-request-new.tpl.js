@@ -47,7 +47,7 @@ export function renderForm(){
   }
 
   return html`
-    <form class='skinny-form approval-request-form'>
+    <form class='skinny-form approval-request-form' @submit=${this._onSubmit}>
       <div class="field-container ${this.validationHandler.errorClass('label')}">
         <label for="${page}--label">Title of Trip, Training, or Professional Development Opportunity <abbr title="Required">*</abbr></label>
         <input
@@ -310,7 +310,6 @@ export function renderForm(){
         <button
           type="submit"
           class='btn btn--primary'
-          @click=${this._onSubmit}
           ?disabled=${this.userCantSubmit}
           >Review and Submit</button>
         <button

@@ -22,7 +22,8 @@ class AppStateStoreImpl extends AppStateStore {
       'admin-approvers': {text: 'Approvers and Funding Sources', link: '/admin/approvers'},
       'admin-reimbursement': {text: 'Reimbursement Requests', link: '/admin/reimbursement'},
       'admin-settings': {text: 'General Settings', link: '/admin/settings'},
-      'admin-line-items': {text: 'Line Items', link: '/admin/items'}
+      'admin-line-items': {text: 'Line Items', link: '/admin/items'},
+      'reimbursement-new': {text: 'New Reimbursement Request', link: '/approval-request/new-reimbursement'},
     };
 
     this.userProfile = {};
