@@ -1,10 +1,12 @@
 import { LitElement } from 'lit';
+import { createRef } from 'lit/directives/ref.js';
 import {render} from "./app-page-reimbursement-new.tpl.js";
 import { LitCorkUtils, Mixin } from "../../../../lib/appGlobals.js";
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 import { WaitController } from "@ucd-lib/theme-elements/utils/controllers/wait.js";
 
 import promiseUtils from '../../../../lib/utils/promiseUtils.js';
+import applicationOptions from '../../../../lib/utils/applicationOptions.js';
 
 export default class AppPageReimbursementNew extends Mixin(LitElement)
   .with(LitCorkUtils, MainDomElement) {
@@ -23,6 +25,7 @@ export default class AppPageReimbursementNew extends Mixin(LitElement)
     this.render = render.bind(this);
     this.approvalRequestId = 0;
     this.approvalRequest = {};
+    this.form = createRef();
 
     this.waitController = new WaitController(this);
 
@@ -101,8 +104,14 @@ export default class AppPageReimbursementNew extends Mixin(LitElement)
   }
 
   // todo check reimbursement request status
+  if ( !applicationOptions.reimbursementStatuses.filter(s => s.isActive).map(s => s.value).includes(approvalRequest.reimbursementStatus) ) {
+    this.AppStateModel.showError('Cannot create reimbursement new request.');
+    return;
+  }
 
   this.approvalRequest = approvalRequest;
+  this.form.value.resetForm();
+  this.form.value.setDatesFromApprovalRequest(approvalRequest);
 
   this.showLoaded = true;
 }
