@@ -33,6 +33,12 @@ fieldset.field-error {
   font-size: .875rem;
   margin-bottom: .5rem;
 }
+.radio--horizontal {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+
+}
 .field-container {
   margin-bottom: 1rem !important;
 }

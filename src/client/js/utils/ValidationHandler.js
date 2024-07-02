@@ -29,16 +29,28 @@ export default class ValidationHandler {
 
   /**
    * @description Get the error class (if any) for a field
+   * @param {String} field - field json name
+   * @param {String} subField - optional. subfield json name in error object.
    */
-  errorClass(field){
-    return this.errorsByField[field] ? this._errorClass : '';
+  errorClass(field, subField){
+    const errors = this.errorsByField[field];
+    if ( !subField ) {
+      return  errors ? this._errorClass : '';
+    }
+    return (errors || []).find(e => e.subField === subField) ? this._errorClass : '';
+
   }
 
   /**
    * @description Render error messages for a field (if any)
+   * @param {String} field - field name
+   * @param {String} subField - optional. subfield name in error object
    */
-  renderErrorMessages(field){
-    const messages = this.errorsByField[field] || [];
+  renderErrorMessages(field, subField){
+    let messages = this.errorsByField[field] || [];
+    if ( subField ) {
+      messages = messages.filter(e => e.subField === subField);
+    }
     return html`
       <div class=${this._errorMessageClass}>
         ${messages.map(err => html`<div>${err.message}</div>`)}
