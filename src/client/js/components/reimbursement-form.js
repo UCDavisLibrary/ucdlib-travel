@@ -51,17 +51,34 @@ export default class ReimbursementForm extends Mixin(LitElement)
     this.requestUpdate();
   }
 
+  /**
+   * @description Handle the input event for a property on the reimbursement request
+   * @param {String} prop - the property to set
+   * @param {*} value - the value to set the property to
+   */
   _onInput(prop, value ){
     this.reimbursementRequest[prop] = value;
     this.requestUpdate();
   }
 
+  /**
+   * @description Handle the input event for a date property on the reimbursement request
+   * Used for departure and return dates
+   * @param {String} prop - a datetime property on the reimbursement request
+   * @param {String} value - the date value to set - format: YYYY-MM-DD
+   */
   _onDateInput(prop, value){
     const time = this.getTime(prop);
     this.reimbursementRequest[prop] = `${value}${time ? 'T'+time : ''}`;
     this.requestUpdate();
   }
 
+  /**
+   * @description Handle the input event for a time property on the reimbursement request
+   * Used for departure and return times
+   * @param {String} prop - a datetime property on the reimbursement request
+   * @param {String} value - the time value to set - format: HH:MM
+   */
   _onTimeInput(prop, value){
     const date = this.getDate(prop);
     this.reimbursementRequest[prop] = `${date}T${value}`;
@@ -181,10 +198,20 @@ export default class ReimbursementForm extends Mixin(LitElement)
     this.requestUpdate();
   }
 
-  _onNewDateClick(action){
-    action === 'add' ? this.showNewDate = true : this.showNewDate = false;
+  /**
+   * @description Handles the click event for when a new date for a daily expense is added or canceled
+   * @param {String} action - 'add' or 'cancel'
+   */
+  async _onNewDateClick(action){
     this._resetNewDateInput();
-    this.requestUpdate();
+    if ( action === 'add' ){
+      this.showNewDate = true;
+      await this.waitController.waitForUpdate();
+      await this.waitController.waitForFrames(2);
+      this.newDateInput.value.focus();
+      return;
+    }
+    this.showNewDate = false;
   }
 
   /**

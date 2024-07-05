@@ -45,7 +45,7 @@ class ReimbursementExpenses {
           parent: 'meals'
         },
         {
-          label: 'Meal- Dinner',
+          label: 'Meal - Dinner',
           shortLabel: 'Dinner',
           value: 'dinner',
           parent: 'meals'
