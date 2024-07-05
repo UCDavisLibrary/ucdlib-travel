@@ -1,4 +1,5 @@
 import { html } from 'lit';
+import { ref } from 'lit/directives/ref.js';
 import reimbursmentExpenses from '../../../lib/utils/reimbursmentExpenses.js';
 
 export function render() {
@@ -156,6 +157,66 @@ export function render() {
             </div>
           `)}
         </div>
+      </fieldset>
+
+      <fieldset class=${this.validationHandler.errorClass('expenses', reimbursmentExpenses.dailyExpense.value)}>
+        <legend>${reimbursmentExpenses.dailyExpense.label}</legend>
+        <div>${this.validationHandler.renderErrorMessages('expenses', reimbursmentExpenses.dailyExpense.value)}</div>
+
+        <div class='flex flex--justify-end'>
+          <a class='icon-link' @click=${() => this._onNewDateClick('add')}>
+            <i class="fa-solid fa-circle-plus quad"></i>
+            <span>Add New Date</span>
+          </a>
+        </div>
+
+        <div>
+          ${this.uniqueDates.map(date => html`
+            <div class='flex u-space-mb'>
+              <div class='u-space-mr--small'>
+                <a
+                  title='Delete Date'
+                  @click=${() => this._onDailyExpenseDateDelete(date)}
+                  class='icon-link double-decker'>
+                  <i class="fa-solid fa-trash-can"></i>
+                </a>
+              </div>
+              <div class='flex--grow'>
+                <div class='field-container'>
+                  <label>Date</label>
+                  <input
+                    type="date"
+                    .value=${date}
+                    @input=${e => this._onDailyExpenseDateInput(date, e.target.value)} />
+                </div>
+              </div>
+            </div>
+          `)}
+        </div>
+
+        <div class='flex u-space-mb' ?hidden=${!this.showNewDate}>
+          <div class='u-space-mr--small'>
+            <a
+              title='Delete Date'
+              @click=${() => this._onNewDateClick('remove')}
+              class='icon-link double-decker'>
+              <i class="fa-solid fa-trash-can"></i>
+            </a>
+          </div>
+          <div class='flex--grow'>
+            <div class='field-container'>
+              <label for="${idPrefix}--daily-expense-new-date">Date</label>
+              <input
+                ${ref(this.newDateInput)}
+                id="${idPrefix}--daily-expense-new-date"
+                type="date"
+                .value=${this.newDate}
+                @input=${this._onNewDateInput} />
+            </div>
+          </div>
+        </div>
+
+
       </fieldset>
 
       <div class='form-buttons alignable-promo__buttons'>

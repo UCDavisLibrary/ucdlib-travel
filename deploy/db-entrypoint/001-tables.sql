@@ -222,6 +222,7 @@ CREATE TABLE reimbursement_request_expense (
     amount NUMERIC NOT NULL DEFAULT 0,
     category VARCHAR(100) NOT NULL,
     date DATE,
+    notes VARCHAR(500),
     details JSONB NOT NULL DEFAULT '{}'::JSONB
 );
 COMMENT ON TABLE reimbursement_request_expense IS 'Line item expenses for reimbursement requests.';
