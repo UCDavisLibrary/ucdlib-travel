@@ -1,4 +1,5 @@
 import { html } from 'lit';
+import { ref } from 'lit/directives/ref.js';
 import reimbursmentExpenses from '../../../lib/utils/reimbursmentExpenses.js';
 
 export function render() {
@@ -158,17 +159,141 @@ export function render() {
         </div>
       </fieldset>
 
+      <fieldset class=${this.validationHandler.errorClass('expenses', reimbursmentExpenses.dailyExpense.value)}>
+        <legend>${reimbursmentExpenses.dailyExpense.label}</legend>
+        <div>${this.validationHandler.renderErrorMessages('expenses', reimbursmentExpenses.dailyExpense.value)}</div>
+
+        <div class='flex flex--justify-end'>
+          <a class='icon-link' @click=${() => this._onNewDateClick('add')}>
+            <i class="fa-solid fa-circle-plus quad"></i>
+            <span>Add New Date</span>
+          </a>
+        </div>
+
+        <div>
+          ${this.uniqueDates.map(date => html`
+            <div class='flex u-space-mb'>
+              <div class='u-space-mr--small'>
+                <a
+                  title='Delete Date'
+                  @click=${() => this._onDailyExpenseDateDelete(date)}
+                  class='icon-link double-decker'>
+                  <i class="fa-solid fa-trash-can"></i>
+                </a>
+              </div>
+              <div class='flex--grow'>
+                <div class='field-container'>
+                  <label>Date</label>
+                  <input
+                    type="date"
+                    .value=${date}
+                    @input=${e => this._onDailyExpenseDateInput(date, e.target.value)} />
+                </div>
+                <div class='flex flex--space-between u-space-mb--small'>
+                  <label>Expenses</label>
+                  <a class='icon-link' @click=${() => this.addBlankExpense(reimbursmentExpenses.dailyExpense.value, null, date)}>
+                    <i class="fa-solid fa-circle-plus quad"></i>
+                    <span>Add New Expense</span>
+                  </a>
+                </div>
+                <div>
+                  ${this.reimbursementRequest.expenses.filter(e => e.category === reimbursmentExpenses.dailyExpense.value && e.date === date).map(expense => html`
+                    <div class='flex u-space-mb'>
+                      <div class='u-space-mr--small'>
+                        <a
+                          title='Delete Expense'
+                          @click=${() => this.deleteExpense(expense)}
+                          class='icon-link double-decker'>
+                          <i class="fa-solid fa-trash-can"></i>
+                        </a>
+                      </div>
+                      <div class='flex--grow'>${renderDailyExpenseForm.call(this, expense)}</div>
+                    </div>
+                  `)}
+                </div>
+              </div>
+            </div>
+          `)}
+        </div>
+
+        <div class='flex u-space-mb' ?hidden=${!this.showNewDate}>
+          <div class='u-space-mr--small'>
+            <a
+              title='Delete Date'
+              @click=${() => this._onNewDateClick('remove')}
+              class='icon-link double-decker'>
+              <i class="fa-solid fa-trash-can"></i>
+            </a>
+          </div>
+          <div class='flex--grow'>
+            <div class='field-container'>
+              <label for="${idPrefix}--daily-expense-new-date">Date</label>
+              <input
+                ${ref(this.newDateInput)}
+                id="${idPrefix}--daily-expense-new-date"
+                type="date"
+                .value=${this.newDate}
+                @input=${this._onNewDateInput} />
+            </div>
+          </div>
+        </div>
+
+
+      </fieldset>
+
       <div class='form-buttons alignable-promo__buttons'>
         <button
           type="submit"
           class='btn btn--primary'
           >Submit</button>
-
       </div>
     </form>
 
 
   `;}
+
+function renderDailyExpenseForm(expense){
+  const nonce = expense.nonce || expense.reimbursementRequestExpenseId;
+  const idPrefix = `reimbursement-form-expense--${nonce}`;
+  return html`
+    <div>
+      <div class='l-2col'>
+        <div class='l-first'>
+          <div class='field-container'>
+            <label for="${idPrefix}--amount">Amount *</label>
+            <div class='amount input--dollar width-100'>
+              <input
+                id="${idPrefix}--amount"
+                type="number"
+                step="0.01"
+                .value=${expense.amount}
+                @input=${e => this._setObjectProperty(expense, 'amount', Number(e.target.value))} />
+            </div>
+          </div>
+
+        </div>
+        <div class='l-second'>
+          <div class='field-container'>
+            <label for="${idPrefix}--type">Type</label>
+            <select
+              .value=${expense.details?.subCategory || ''}
+              @change=${e => this._setObjectProperty(expense.details, 'subCategory', e.target.value)}
+            >
+              <option value="" ?selected=${!expense?.details?.subCategory}>Select an expense type</option>
+              ${reimbursmentExpenses.dailyExpense.subCategories.filter(sc => !sc.hideFromSelect).map(subCategory => html`
+                <option
+                  value="${subCategory.value}"
+                  ?selected=${expense?.details?.subCategory === subCategory.value}
+                  >${subCategory.label}</option>
+                `)}
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    `;
+}
 
 /**
  * @description Render the registration fee form
@@ -177,7 +302,7 @@ export function render() {
  */
 function renderRegistrationFeeForm(expense){
   const nonce = expense.nonce || expense.reimbursementRequestExpenseId;
-  const idPrefix = `reimbursement-form--${nonce}`;
+  const idPrefix = `reimbursement-form-expense--${nonce}`;
   return html`
     <div class='l-2col l-2col--33-67'>
       <div class='l-first'>
@@ -218,7 +343,7 @@ function renderTransportationExpenseForm(expense){
   const subCategory = (expense?.details || {}).subCategory;
   if ( !subCategory ) return html``;
   const nonce = expense.nonce || expense.reimbursementRequestExpenseId;
-  const idPrefix = `reimbursement-form--${nonce}`;
+  const idPrefix = `reimbursement-form-expense--${nonce}`;
 
   const roundTripRadioButtons = html`
     <div class='radio radio--horizontal'>

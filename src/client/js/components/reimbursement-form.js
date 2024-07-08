@@ -1,7 +1,9 @@
 import { LitElement } from 'lit';
+import { createRef } from 'lit/directives/ref.js';
 import {render} from "./reimbursement-form.tpl.js";
 
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
+import { WaitController } from '@ucd-lib/theme-elements/utils/controllers/wait.js';
 
 import { LitCorkUtils, Mixin } from "../../../lib/appGlobals.js";
 import ValidationHandler from "../utils/ValidationHandler.js";
@@ -13,7 +15,9 @@ export default class ReimbursementForm extends Mixin(LitElement)
   static get properties() {
     return {
       reimbursementRequest: {type: Object},
-      validationHandler: {type: Object}
+      validationHandler: {type: Object},
+      showNewDate: {type: Boolean},
+      uniqueDates: {type: Array}
     }
   }
 
@@ -21,6 +25,11 @@ export default class ReimbursementForm extends Mixin(LitElement)
     super();
     this.render = render.bind(this);
     this.resetForm();
+
+    this.newDateInput = createRef();
+    this.waitController = new WaitController(this);
+
+    this._injectModel('AppStateModel');
 
   }
 
@@ -42,17 +51,34 @@ export default class ReimbursementForm extends Mixin(LitElement)
     this.requestUpdate();
   }
 
+  /**
+   * @description Handle the input event for a property on the reimbursement request
+   * @param {String} prop - the property to set
+   * @param {*} value - the value to set the property to
+   */
   _onInput(prop, value ){
     this.reimbursementRequest[prop] = value;
     this.requestUpdate();
   }
 
+  /**
+   * @description Handle the input event for a date property on the reimbursement request
+   * Used for departure and return dates
+   * @param {String} prop - a datetime property on the reimbursement request
+   * @param {String} value - the date value to set - format: YYYY-MM-DD
+   */
   _onDateInput(prop, value){
     const time = this.getTime(prop);
     this.reimbursementRequest[prop] = `${value}${time ? 'T'+time : ''}`;
     this.requestUpdate();
   }
 
+  /**
+   * @description Handle the input event for a time property on the reimbursement request
+   * Used for departure and return times
+   * @param {String} prop - a datetime property on the reimbursement request
+   * @param {String} value - the time value to set - format: HH:MM
+   */
   _onTimeInput(prop, value){
     const date = this.getDate(prop);
     this.reimbursementRequest[prop] = `${date}T${value}`;
@@ -70,6 +96,8 @@ export default class ReimbursementForm extends Mixin(LitElement)
       expenses: []
     };
     this.validationHandler = new ValidationHandler();
+    this.showNewDate = false;
+    this.uniqueDates = [];
     this.requestUpdate();
   }
 
@@ -132,13 +160,15 @@ export default class ReimbursementForm extends Mixin(LitElement)
    * @description Add a blank expense to the reimbursement request
    * @param {String} category - the category of the expense
    * @param {String} subCategory - optional. the subcategory of the expense
+   * @param {String} date - optional. the date of the expense for daily expenses
    */
-  addBlankExpense(category, subCategory){
+  addBlankExpense(category, subCategory, date){
     const expense = {
       category,
       nonce: Math.random().toString(36).substring(3),
       details: {}
     };
+    if ( date ) expense.date = date;
     if ( subCategory ) expense.details = {subCategory};
     this.reimbursementRequest.expenses.push(expense);
     this.requestUpdate();
@@ -165,6 +195,84 @@ export default class ReimbursementForm extends Mixin(LitElement)
    */
   _setObjectProperty(object, prop, value){
     object[prop] = value;
+    this.requestUpdate();
+  }
+
+  /**
+   * @description Handles the click event for when a new date for a daily expense is added or canceled
+   * @param {String} action - 'add' or 'cancel'
+   */
+  async _onNewDateClick(action){
+    this._resetNewDateInput();
+    if ( action === 'add' ){
+      this.showNewDate = true;
+      await this.waitController.waitForUpdate();
+      await this.waitController.waitForFrames(2);
+      this.newDateInput.value.focus();
+      return;
+    }
+    this.showNewDate = false;
+  }
+
+  /**
+   * @description Handle the input of a new date in the daily expenses section
+   * If valid date,
+   * - Add a blank daily expense for that date
+   * - Hide the new date input
+   * @param {Event} e - date input event
+   * @returns
+   */
+  _onNewDateInput(e){
+    const value = e.target.value;
+    if ( !value ) return;
+
+    if ( this.uniqueDates.includes(value) ) {
+      this.AppStateModel.showToast({message: 'Date already added', type: 'error'})
+      return;
+    }
+
+    this.addBlankExpense(reimbursmentExpenses.dailyExpense.value, null, value);
+    this._setUniqueDates();
+    this._resetNewDateInput();
+    this.showNewDate = false;
+  }
+
+  /**
+   * @description Reset the value of the new date input in the daily expenses section
+   */
+  _resetNewDateInput(){
+    this.newDateInput.value.value = '';
+  }
+
+  /**
+   * @description Set the unique dates for daily expenses in the reimbursement request from the expenses array
+   */
+  _setUniqueDates(){
+    const dates = this.reimbursementRequest.expenses.filter(e => e.category === reimbursmentExpenses.dailyExpense.value).map(e => e.date);
+    this.uniqueDates = [...new Set(dates)];
+  }
+
+  /**
+   * @description Handle the deletion of a date from the daily expenses section
+   * @param {String} date - the date. Format: YYYY-MM-DD
+   */
+  _onDailyExpenseDateDelete(date){
+    this.reimbursementRequest.expenses = this.reimbursementRequest.expenses.filter(e => e.date !== date);
+    this._setUniqueDates();
+    this.requestUpdate();
+  }
+
+  /**
+   * @description Handle the input of a date for an existing daily expense
+   * Updates all daily expenses with the old date to the new date
+   * @param {String} oldDate - the old date. Format: YYYY-MM-DD
+   * @param {String} newDate - the new date. Format: YYYY-MM-DD
+   */
+  _onDailyExpenseDateInput(oldDate, newDate){
+    this.reimbursementRequest.expenses.forEach(e => {
+      if ( e.date === oldDate ) e.date = newDate;
+    });
+    this._setUniqueDates();
     this.requestUpdate();
   }
 
