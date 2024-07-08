@@ -75,6 +75,8 @@ class AppStateModelImpl extends AppStateModel {
         }
       } else if ( secondaryRoute === 'line-items' ){
         p = 'admin-line-items';
+      } else if ( secondaryRoute === 'email-settings' ){
+        p = 'admin-email-settings';
       } else if ( secondaryRoute === 'reimbursement' ){
         p = 'admin-reimbursement';
       } else if ( !secondaryRoute ) {
