@@ -1,4 +1,5 @@
 import { html } from 'lit';
+import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 
 export function render() {
 return html`
@@ -27,7 +28,10 @@ return html`
       <a href="/admin/settings">General Settings</a>
       <a href="/admin/line-items">Line Items</a>
     </ucd-theme-quick-links>
+
   </ucd-theme-header>
+
+  <site-wide-banner ?hidden=${this.SettingsModel.getByKey('site_wide_banner') === 'This is site wide banner text.'} .bannerText=${this.SettingsModel.getByKey('site_wide_banner')}></site-wide-banner>
 
   <section ?hidden=${!this.pageIsLoaded || !this.showPageTitle}>
     <h1 class="page-title">${this.pageTitle}</h1>

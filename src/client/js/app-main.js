@@ -47,6 +47,7 @@ import "./pages/app-page-home.js";
 // global components
 import "./components/app-toast.js";
 import "./components/app-dialog-modal.js";
+import "./components/site-wide-banner.js";
 
 // utils
 import urlUtils from '../../lib/utils/urlUtils.js';
@@ -62,6 +63,7 @@ export default class AppMain extends Mixin(LitElement)
     return {
       page: {type: String},
       pageTitle: {type: String},
+      bannerText: {type: String},
       showPageTitle: {type: Boolean},
       breadcrumbs: {type: Array},
       showBreadcrumbs: {type: Boolean},
@@ -78,7 +80,8 @@ export default class AppMain extends Mixin(LitElement)
     this.render = render.bind(this);
     this.loadedBundles = {};
 
-    this.pageTitle = '';
+    this.pageTitle = 'This is a test title';
+    this.bannerText = '';
     this.showPageTitle = false;
     this.breadcrumbs = [];
     this.showBreadcrumbs = false;
@@ -90,7 +93,8 @@ export default class AppMain extends Mixin(LitElement)
     this.pageState = 'loading';
     this.errorMessage = '';
 
-    const models = ['AppStateModel'];
+    this.settingsCategory = 'app-main';
+    const models = ['AppStateModel','SettingsModel'];
     if ( appConfig.auth.requireAuth ) {
       models.push('AuthModel');
     }
@@ -126,8 +130,11 @@ export default class AppMain extends Mixin(LitElement)
    * @param {Object} state - AppStateModel state
    */
   async _onAppStateUpdate(state) {
+
     const { page } = state;
     if ( ['home', 'page-not-loaded'].includes(page) ) {
+      this.checkForSettingsData();
+
       this.page = page;
       window.scroll(0,0);
       return;
@@ -157,6 +164,8 @@ export default class AppMain extends Mixin(LitElement)
         AuthModel._onAuthRefreshSuccess();
       }
     }
+
+    this.checkForSettingsData();
 
     this.page = page;
     window.scroll(0,0);
@@ -198,6 +207,23 @@ export default class AppMain extends Mixin(LitElement)
   }
 
   /**
+   * @description checks for page data from the settings model. Repeated here because
+   * settings need to load independent of page data
+   */
+  async checkForSettingsData() {
+    const d = await this.getPageData();
+    const hasError = d.some(e => e.status === 'rejected' || e.value.state === 'error');
+    if ( hasError ) {
+      this.AppStateModel.showError(d);
+      console.error('AppMain: error loading page data', d);
+      return;
+    }
+
+    this.requestUpdate();
+  }
+
+
+  /**
    * @description Listens for breadcrumb-update event from AppStateModel
    * Sets the page breadcrumbs and whether or not to show them
    * @param {Object} breadcrumbs - {show: bool, breadcrumbs: [text: string, link: string]}
@@ -208,6 +234,16 @@ export default class AppMain extends Mixin(LitElement)
     this.breadcrumbs = breadcrumbs;
     this.showBreadcrumbs = show;
   }
+
+    /**
+   * @description Get all data required for rendering this page
+   */
+    async getPageData(){
+      const promises = [];
+      promises.push(this.SettingsModel.getByCategory(this.settingsCategory));
+      const resolvedPromises = await Promise.allSettled(promises);
+      return resolvedPromises;
+    }
 
   /**
    * @description Get name of bundle a page element is in
