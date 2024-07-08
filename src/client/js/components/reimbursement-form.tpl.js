@@ -5,7 +5,7 @@ import reimbursmentExpenses from '../../../lib/utils/reimbursmentExpenses.js';
 export function render() {
   const idPrefix = `reimbursement-form--${this.reimbursementRequest.approval_request_revision_id || 'new'}`;
   return html`
-    <form @submit=${this._onSubmit}>
+    <form @submit=${this._onSubmit} ${ref(this.form)}>
       <div class="field-container ${this.validationHandler.errorClass('label')}">
         <label for="${idPrefix}--label">Request Title</label>
         <input
@@ -189,7 +189,7 @@ export function render() {
                     .value=${date}
                     @input=${e => this._onDailyExpenseDateInput(date, e.target.value)} />
                 </div>
-                <div class='flex flex--space-between u-space-mb--small'>
+                <div class='flex flex--space-between flex--wrap u-space-mb--small'>
                   <label>Expenses</label>
                   <a class='icon-link' @click=${() => this.addBlankExpense(reimbursmentExpenses.dailyExpense.value, null, date)}>
                     <i class="fa-solid fa-circle-plus quad"></i>
@@ -210,6 +210,14 @@ export function render() {
                       <div class='flex--grow'>${renderDailyExpenseForm.call(this, expense)}</div>
                     </div>
                   `)}
+                </div>
+                <div class='field-container'>
+                  <label for="${idPrefix}--daily-expense-${date}--notes">Comments</label>
+                  <textarea
+                    id="${idPrefix}--daily-expense-${date}--notes"
+                    .value=${this.dateComments[date] || ''}
+                    rows="4"
+                    @input=${e => this._setObjectProperty(this.dateComments, date, e.target.value)}></textarea>
                 </div>
               </div>
             </div>
@@ -237,8 +245,34 @@ export function render() {
             </div>
           </div>
         </div>
+      </fieldset>
 
-
+      <fieldset class=${this.validationHandler.errorClass('receipts')}>
+        <legend>Receipts</legend>
+        <div>${this.validationHandler.renderErrorMessages('receipts')}</div>
+        <div class='flex flex--justify-end'>
+          <a class='icon-link' @click=${() => this.addBlankReceipt()}>
+            <i class="fa-solid fa-circle-plus quad"></i>
+            <span>Add Receipt</span>
+          </a>
+        </div>
+        <div>
+          ${(this.reimbursementRequest.receipts).map(receipt => html`
+            <div class='flex u-space-mb'>
+              <div class='u-space-mr--small'>
+                <a
+                  title='Delete Receipt'
+                  @click=${() => this.deleteReceipt(receipt)}
+                  class='icon-link double-decker'>
+                  <i class="fa-solid fa-trash-can"></i>
+                </a>
+              </div>
+              <div class='flex--grow'>
+                ${renderReceiptForm.call(this, receipt)}
+              </div>
+            </div>
+            `)}
+        </div>
       </fieldset>
 
       <div class='form-buttons alignable-promo__buttons'>
@@ -251,6 +285,39 @@ export function render() {
 
 
   `;}
+
+function renderReceiptForm(receipt){
+  const nonce = receipt.nonce || receipt.reimbursementRequestReceiptId;
+  const idPrefix = `reimbursement-form-receipt--${nonce}`;
+  return html`
+    <div>
+      <div class='field-container'>
+        <label for="${idPrefix}--file">File</label>
+        <input
+          id="${idPrefix}--file"
+          name='receiptUploads'
+          type="file"
+          @change=${e => this._onReceiptFileChange(receipt, e.target.files[0])} />
+      </div>
+      <div class='field-container'>
+        <label for="${idPrefix}--label">Receipt Label</label>
+        <input
+          id="${idPrefix}--label"
+          type="text"
+          .value=${receipt.label || ''}
+          @input=${e => this._setObjectProperty(receipt, 'label', e.target.value)} />
+      </div>
+      <div class='field-container'>
+        <label for="${idPrefix}--description">Receipt Description</label>
+        <textarea
+          id="${idPrefix}--description"
+          .value=${receipt.description || ''}
+          rows="4"
+          @input=${e => this._setObjectProperty(receipt, 'description', e.target.value)}></textarea>
+      </div>
+    </div>
+  `;
+}
 
 function renderDailyExpenseForm(expense){
   const nonce = expense.nonce || expense.reimbursementRequestExpenseId;
