@@ -17,7 +17,8 @@ export default class ReimbursementForm extends Mixin(LitElement)
       reimbursementRequest: {type: Object},
       validationHandler: {type: Object},
       showNewDate: {type: Boolean},
-      uniqueDates: {type: Array}
+      uniqueDates: {type: Array},
+      dateComments: {type: Object}
     }
   }
 
@@ -27,6 +28,7 @@ export default class ReimbursementForm extends Mixin(LitElement)
     this.resetForm();
 
     this.newDateInput = createRef();
+    this.form = createRef();
     this.waitController = new WaitController(this);
 
     this._injectModel('AppStateModel');
@@ -49,6 +51,24 @@ export default class ReimbursementForm extends Mixin(LitElement)
     }
 
     this.requestUpdate();
+  }
+
+  submit(){
+    const formData = new FormData(this.form.value);
+    for (let key of formData.keys()) {
+      if ( key !== 'receiptUploads' ){
+        formData.delete(key);
+      }
+    }
+    this.reimbursementRequest.expenses.forEach(expense => {
+      if ( !expense.date ) return;
+      if ( this.dateComments[expense.date] ){
+        expense.notes = this.dateComments[expense.date];
+      }
+
+    });
+    formData.append('reimbursementRequest', JSON.stringify(this.reimbursementRequest));
+    console.log('submit', formData);
   }
 
   /**
@@ -87,17 +107,19 @@ export default class ReimbursementForm extends Mixin(LitElement)
 
   _onSubmit(e) {
     e.preventDefault();
-    console.log('submit', this.reimbursementRequest);
+    this.submit();
   }
 
   resetForm() {
     this.reimbursementRequest = {
       label: 'Reimbursement Request',
-      expenses: []
+      expenses: [],
+      receipts: []
     };
     this.validationHandler = new ValidationHandler();
     this.showNewDate = false;
     this.uniqueDates = [];
+    this.dateComments = {};
     this.requestUpdate();
   }
 
@@ -184,6 +206,45 @@ export default class ReimbursementForm extends Mixin(LitElement)
     } else if ( expense.reimbursementRequestExpenseId ){
       this.reimbursementRequest.expenses = this.reimbursementRequest.expenses.filter(e => e.reimbursementRequestExpenseId !== expense.reimbursementRequestExpenseId);
     }
+    this.requestUpdate();
+  }
+
+  /**
+   * @description Add a blank receipt record to the reimbursement request
+   */
+  addBlankReceipt(){
+    const receipt = {
+      nonce: Math.random().toString(36).substring(3)
+    };
+    this.reimbursementRequest.receipts.push(receipt);
+    this.requestUpdate();
+  }
+
+  /**
+   * @description Delete a receipt from the reimbursement request
+   * @param {Object} receipt - the receipt to delete from reimbursementRequest.receipts
+   */
+  deleteReceipt(receipt){
+    if ( receipt.nonce ){
+      this.reimbursementRequest.receipts = this.reimbursementRequest.receipts.filter(r => r.nonce !== receipt.nonce);
+    } else if ( receipt.reimbursementRequestReceiptId ){
+      this.reimbursementRequest.receipts = this.reimbursementRequest.receipts.filter(r => r.reimbursementRequestReceiptId !== receipt.reimbursementRequestReceiptId);
+    }
+    this.requestUpdate();
+  }
+
+  /**
+   * @description bound to the change event for a receipt file input
+   * @param {Object} receipt - Object in reimbursementRequest.receipts
+   * @param {File} file - the file object from the input
+   */
+  _onReceiptFileChange(receipt, file){
+    let label = file.name;
+    if ( label.includes('.') ) {
+      label = label.split('.').slice(0, -1).join('.');
+    }
+
+    receipt.label = label;
     this.requestUpdate();
   }
 
