@@ -2,10 +2,10 @@ import { LitElement } from 'lit';
 // import {render, Templates} from "./app-questions-or-comments.tpl.js";
 import * as Templates from "./app-questions-or-comments.tpl.js";
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
-
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 import { createRef } from 'lit/directives/ref.js';
 import { LitCorkUtils, Mixin } from "../../../lib/appGlobals.js";
+import AccessToken from '../../../lib/utils/AccessToken.js';
 
 /**
  * @class AppQuestionsOrComments
@@ -25,7 +25,8 @@ export default class AppQuestionsOrComments extends Mixin(LitElement)
       modalTitle: {type: String},
       modalContent: {type: String},
       data: {type: Object},
-      comments: {type:String}
+      comments: {type:String},
+      page:{type:String},
     }
   }
 
@@ -34,7 +35,7 @@ export default class AppQuestionsOrComments extends Mixin(LitElement)
 
     this.render = Templates.render.bind(this);
 
-
+    this.page = "";
     this.data = {};
     this.comments = '';
     this.actions = [
@@ -44,8 +45,22 @@ export default class AppQuestionsOrComments extends Mixin(LitElement)
 
     this.dialogRef = createRef();
 
-    this._injectModel('AppStateModel', 'NotificationModel');
+    this._injectModel('AppStateModel', 'NotificationModel', 'ApprovalRequestModel', 'AuthModel');
   }
+
+  /**
+   * @description Get all data required for rendering this page
+   * @return {Promise}
+   */
+  //  async init(){
+  //   const promises = [
+  //     this.SettingsModel.getByCategory(this.settingsCategory),
+  //     this.ApprovalRequestModel.query({requestIds: this.approvalRequestId})
+  //   ];
+  //   const resolvedPromises = await Promise.allSettled(promises);
+  //   return resolvedPromises;
+  // }
+
 
 
   /**
@@ -72,20 +87,28 @@ export default class AppQuestionsOrComments extends Mixin(LitElement)
   */
   async _onDialogAction(e){
     if ( e.action !== 'questions-comments-item' ) return;
-    console.log(e.data);
-
-    // let approverItem = e.data.approver;
-    // approverItem.archived = true;
-
-    // await this.AdminApproverTypeModel.update(approverItem);
+    let token = await this.AuthModel.getToken().token;
+    let adminEmail;
     this.comments = '';
+    if(this.approvalRequestId) this.approvalRequest = await this.ApprovalRequestModel.query({requestIds: this.approvalRequestId})
+    if(this.reimbursementRequestId) this.reimbursementRequest = await this.ReimbursementModel.query({requestIds: this.reimbursementRequestId})
+
     this.data = {
-      userEmail: '',
-      adminEmail: '',
+      commenterEmail: token.email || '',
+      adminEmail: adminEmail || 'sabaggett@ucdavis.edu',
       content: e.data,
-      detail: {}
+      detail: {
+        page: this.page,
+        request: this.approvalRequest.payload.data || '',
+        reimbursement: this.reimbursementRequest || '',
+        commenterKerb: token.preferred_username || '',
+        requestPage: this.approvalRequestId ? "approval-request/" + this.approvalRequestId : undefined,
+        reimbursementPage: this.reimbursementRequestId ? "reimbursement/" + this.approvalRequestId : undefined
+      }
     }
 
+    let result = await this.NotificationModel.createNotificationComments(this.data);
+    console.log("Result:", result);
 
   }
 }
