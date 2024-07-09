@@ -12,6 +12,7 @@ class AdminApproverTypeModel extends BaseModel {
     this.service = AdminApproverTypeService;
 
     this.register('AdminApproverTypeModel');
+    this.inject('FundingSourceModel')
   }
 
  /**
@@ -23,6 +24,7 @@ class AdminApproverTypeModel extends BaseModel {
    *
    */
   async query(args = {}) {
+    let query = args;
     args = urlUtils.queryStringFromObject(args);
     let state = this.store.data.query[args];
 
@@ -33,6 +35,10 @@ class AdminApproverTypeModel extends BaseModel {
         await this.service.query(args);
       }
     } catch(e) {}
+
+    this.store.data.query[args].query = query;
+
+    this.store.emit(this.store.events.APPROVER_TYPE_QUERY_REQUEST, this.store.data.query[args]);
 
     return this.store.data.query[args];
   }
@@ -49,7 +55,7 @@ class AdminApproverTypeModel extends BaseModel {
 
     const state = this.store.data.create;
     if ( state && state.state === 'loaded' ) {
-      this.store.data.query = {};
+      this._clearCache();
     }
 
     return state;
@@ -67,10 +73,18 @@ class AdminApproverTypeModel extends BaseModel {
     const state = this.store.data.update;
 
     if ( state && state.state === 'loaded' ) {
-      this.store.data.query = {};
+      this._clearCache();
     }
 
     return state;
+  }
+
+  /**
+   * @description Clear all caches that are affected by updating approvers
+   */
+  _clearCache(){
+    this.store.data.query = {};
+    this.FundingSourceModel.store.data.activeFundingSources = {};
   }
 }
 

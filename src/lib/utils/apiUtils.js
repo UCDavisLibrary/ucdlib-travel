@@ -1,3 +1,5 @@
+import typeTransform from "./typeTransform.js";
+
 /**
  * @description Utility functions for common API tasks - mostly request parsing stuff
  */
@@ -12,6 +14,19 @@ class ApiUtils {
     let page = parseInt(req.query.page);
     if ( isNaN(page) || page < 1 ) return 1;
     return page;
+  }
+
+  /**
+   * @description Get the page size from the query string
+   * @param {*} req - Express request object
+   * @returns {Number}
+   */
+  getPageSize(req){
+    let pageSize = req.query['page-size'];
+    if ( pageSize == '-1' ) return -1;
+    pageSize = typeTransform.toPositiveInt(pageSize);
+    if ( !pageSize ) return 10;
+    return pageSize;
   }
 
   /**

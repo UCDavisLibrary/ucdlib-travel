@@ -48,8 +48,8 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
     this.approvalFormId = 0;
     this.settingsCategory = 'approval-requests';
     this.expenditureOptions = [];
-
     this.fundingSourceSelectRef = createRef();
+    this.draftListSelectRef = createRef();
     this.waitController = new WaitController(this);
 
     this._injectModel(
@@ -93,7 +93,7 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
       let userCantSubmit = false;
       if ( this.approvalRequest.employeeKerberos && this.approvalRequest.employeeKerberos !== this.AuthModel.getToken().id ){
         userCantSubmit = true;
-      } else if ( !['draft', 'revision-requested'].includes(this.approvalRequest.approvalStatus) ){
+      } else if ( !['draft', 'revision-requested', 'recalled'].includes(this.approvalRequest.approvalStatus) ){
         userCantSubmit = true;
       }
       this.userCantSubmit = userCantSubmit;
@@ -140,7 +140,8 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
     const promises = [
       this.SettingsModel.getByCategory(this.settingsCategory),
       this.LineItemsModel.getActiveLineItems(),
-      this.fundingSourceSelectRef.value.init()
+      this.fundingSourceSelectRef.value.init(),
+      this.draftListSelectRef.value.init()
     ];
     if ( this.approvalFormId ) {
       promises.push(this.ApprovalRequestModel.query({requestIds: this.approvalFormId}));

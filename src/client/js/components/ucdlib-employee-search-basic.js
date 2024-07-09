@@ -147,8 +147,14 @@ export default class UcdlibEmployeeSearchBasic extends Mixin(LitElement)
      */
     async _getEmployeeRecordByAttribute(p){
       if (p.has('selectedValue') &&
-        this.selectedValue !== this.selectedObject.user_id &&
-        this.selectedValue) {
+        this.selectedValue !== this.selectedObject.user_id ) {
+
+        if ( !this.selectedValue ) {
+          this.selectedObject = {};
+          this.selectedText = '';
+          this.query = '';
+          return;
+        }
 
         let iamObject = await this.EmployeeModel.getIamRecordById(this.selectedValue);
         this.iamRecordMissing = false;

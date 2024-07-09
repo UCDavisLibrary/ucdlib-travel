@@ -4,6 +4,7 @@ import {render} from "./approval-request-status-action.tpl.js";
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 
 import { LitCorkUtils, Mixin } from "../../../lib/appGlobals.js";
+import applicationOptions from '../../../lib/utils/applicationOptions.js';
 
 /**
  * @class ApprovalRequestStatusAction
@@ -18,7 +19,9 @@ export default class ApprovalRequestStatusAction extends Mixin(LitElement)
 
   static get properties() {
     return {
-      action: {type: Object}
+      action: {type: Object},
+      hideCommentsLinks: {type: Boolean, attribute: 'hide-comments-links'},
+      showDate: {type: Boolean, attribute: 'show-date'}
     }
   }
 
@@ -28,44 +31,19 @@ export default class ApprovalRequestStatusAction extends Mixin(LitElement)
     this.render = render.bind(this);
 
     this.action = {};
+    this.hideCommentsLinks = false;
+    this.showDate = false;
 
     this.byStatus = {
       'approval-needed': {
-        label: 'Pending Approval By:',
+        byLine: 'Pending Approval By:',
         iconClass: 'fa-solid fa-user',
         brandColor: 'primary'
-      },
-      'approved': {
-        label: 'Approved By:',
-        iconClass: 'fa-solid fa-check',
-        brandColor: 'quad'
-      },
-      'denied': {
-        label: 'Denied By:',
-        iconClass: 'fa-solid fa-ban',
-        brandColor: 'double-decker'
-      },
-      'canceled': {
-        label: 'Canceled By:',
-        iconClass: 'fa-solid fa-times',
-        brandColor: 'redbud'
-      },
-      'revision-requested': {
-        label: 'Revision Requested By:',
-        iconClass: 'fa-solid fa-edit',
-        brandColor: 'pinot'
-      },
-      'recalled': {
-        label: 'Recalled By:',
-        iconClass: 'fa-solid fa-rotate-left',
-        brandColor: 'secondary'
-      },
-      'approved-with-changes': {
-        label: 'Approved With Changes By:',
-        iconClass: 'fa-solid fa-check',
-        brandColor: 'quad'
       }
     }
+    applicationOptions.approvalStatusActions.filter(a => a.actor === 'approver').forEach(action => {
+      this.byStatus[action.value] = action;
+    });
   }
 
   /**
@@ -75,6 +53,17 @@ export default class ApprovalRequestStatusAction extends Mixin(LitElement)
     this.dispatchEvent(new CustomEvent('view-comments', {
       detail: this.action
     }));
+  }
+
+  /**
+   * @description Get the date the action occurred
+   * @returns {String}
+   */
+  _getDate(){
+    if ( !this.action.occurred ) return '';
+    const d = new Date(this.action.occurred + 'Z');
+    if ( isNaN(d.getTime()) ) return '';
+    return d.toLocaleDateString() + ' ' + d.toLocaleTimeString();
   }
 
 }

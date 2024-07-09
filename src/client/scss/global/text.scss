@@ -1,0 +1,31 @@
+.bold {
+  font-weight: 700;
+}
+.small {
+  font-size: .875rem;
+}
+.smaller {
+  font-size: .75rem;
+}
+.grey {
+  color: #4C4C4C;
+}
+.keep-together {
+  white-space: nowrap;
+}
+a.underline-hover {
+  text-decoration: none;
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.size-h4 {
+  font-size: 1.092rem !important;
+  line-height: 1.2 !important;
+}
+@media (min-width: 768px) {
+  .size-h4 {
+    font-size: 1.428rem !important;
+  }
+}

@@ -74,6 +74,15 @@ class AuthModel extends BaseModel {
   }
 
   /**
+   * @description Returns true if user is the current logged in user
+   * @param {String} kerb - kerberos id
+   * @returns {Boolean}
+   */
+  isCurrentUser(kerb){
+    return this.getToken().token.preferred_username == kerb;
+  }
+
+  /**
    * @description Returns true if logged in user would like to log out
    * @param {Object} location - location object from AppStateStore
    * @returns {Boolean}

@@ -303,8 +303,8 @@ export default class AppMain extends Mixin(LitElement)
     customElements.define('app-main', AppMain);
 
     // replace state in history to remove keycloak state
-    const hash = urlUtils.stripFromHash(['iss']);
-    window.history.replaceState(null, null, hash ? `#${hash}` : window.location.pathname);
+    // const hash = urlUtils.stripFromHash(['iss']);
+    // window.history.replaceState(null, null, hash ? `#${hash}` : window.location.pathname);
 
     AuthModel.init();
     AuthModel._onAuthRefreshSuccess();

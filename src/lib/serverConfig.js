@@ -10,7 +10,7 @@ class ServerConfig {
 
     this.title = this.getEnv('APP_TITLE', 'Travel, Training, and Professional Development');
 
-    this.routes = ['approval-request', 'approver', 'reimbursement', 'reports', 'admin'];
+    this.routes = ['approval-request', 'approve', 'reimbursement', 'reports', 'admin'];
 
     this.apiRoot = this.getEnv('APP_API_ROOT', '/api');
 
@@ -38,7 +38,7 @@ class ServerConfig {
         realm: this.getEnv('APP_KEYCLOAK_REALM', 'internal'),
         clientId: this.getEnv('APP_KEYCLOAK_CLIENT_ID', 'travel-app')
       },
-      oidcScope: this.getEnv('APP_OIDC_SCOPE', 'profile roles ucd-ids'),
+      oidcScope: this.getEnv('APP_OIDC_SCOPE', 'profile ucd-ids'),
       serverCacheExpiration: this.getEnv('APP_SERVER_CACHE_EXPIRATION', '12 hours')
     };
 
