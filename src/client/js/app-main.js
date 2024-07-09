@@ -47,7 +47,6 @@ import "./pages/app-page-home.js";
 // global components
 import "./components/app-toast.js";
 import "./components/app-dialog-modal.js";
-import "./components/site-wide-banner.js";
 
 // utils
 import urlUtils from '../../lib/utils/urlUtils.js';
@@ -219,7 +218,10 @@ export default class AppMain extends Mixin(LitElement)
       return;
     }
 
+    this.SettingsModel.getByKey('site_wide_banner') != 'default' ? this.bannerText = this.SettingsModel.getByKey('site_wide_banner') : this.bannerText = '';
+
     this.requestUpdate();
+
   }
 
 

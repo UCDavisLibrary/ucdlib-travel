@@ -31,7 +31,9 @@ return html`
 
   </ucd-theme-header>
 
-  <site-wide-banner ?hidden=${this.SettingsModel.checkFieldValue('site_wide_banner')} .bannerText=${this.SettingsModel.getByKey('site_wide_banner')}></site-wide-banner>
+  <section class="brand-textbox category-brand__background" ?hidden=${!this.bannerText}>
+    <p>${this.bannerText}</p>
+  </section>
 
   <section ?hidden=${!this.pageIsLoaded || !this.showPageTitle}>
     <h1 class="page-title">${this.pageTitle}</h1>
