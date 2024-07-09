@@ -31,7 +31,7 @@ return html`
 
   </ucd-theme-header>
 
-  <site-wide-banner ?hidden=${this.SettingsModel.getByKey('site_wide_banner') === 'This is site wide banner text.'} .bannerText=${this.SettingsModel.getByKey('site_wide_banner')}></site-wide-banner>
+  <site-wide-banner ?hidden=${this.SettingsModel.checkFieldValue('site_wide_banner')} .bannerText=${this.SettingsModel.getByKey('site_wide_banner')}></site-wide-banner>
 
   <section ?hidden=${!this.pageIsLoaded || !this.showPageTitle}>
     <h1 class="page-title">${this.pageTitle}</h1>
