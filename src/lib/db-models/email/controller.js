@@ -1,14 +1,14 @@
 // import { appConfig } from "../appGlobals.js";
-import logging from "./logging"
-import nodemailer from "./nodemailer"
-import settings from "./settings"
-import hydration from "./hydration"
+// import logging from "./logging"
+// import nodemailer from "./nodemailer"
+// import settings from "./settings"
+// import hydration from "./hydration"
 
 
 /**
  * @description Class for accessing properties of an access token for this client
  */
-export default class Email {
+class Email {
   constructor(data){
     this.data = data || {};
   }
@@ -48,8 +48,10 @@ export default class Email {
    * @param {Array|String} accessType - The role location. Can be 'realm', 'resource', or both.
    * @returns
    */
-  _email(){
-
-    return false;
+  createEmail(payload){
+    return payload;
   }
 }
+
+export default new Email();
+
