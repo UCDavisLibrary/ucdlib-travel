@@ -52,40 +52,6 @@ class SettingsModel extends BaseModel {
 
   }
 
-    /**
-   * @description Get a settings default value by key from the settings store
-   * It must have aleady been fetched as part of a getByCategory call
-   * @param {String} key - key of setting to get
-   * @param {String} defaultValue - default value to return if setting does not exist
-   * @returns {String} setting value or default value if setting does not exist
-   */
-    getDefaultValue(key, defaultValue=''){
-      for( let category in this.store.data.byCategory ) {
-        let settings = this.store.data.byCategory[category].payload;
-        if( settings && Array.isArray(settings) ) {
-          for( let setting of settings ) {
-            return setting.defaultValue;
-          }
-        }
-      } 
-
-    }
-
-  /**
-   * @description Check settings field has value by key from the settings store
-   * It must have aleady been fetched as part of a getByCategory call
-   * @param {String} key - key of setting to get
-   * @returns {String} setting value or default value if setting does not exist
-   */
-    checkFieldValue(key){
-      if (this.getByKey(key) === this.getDefaultValue(key)){
-        return true
-      }
-      else {
-        return false
-      }
-    }
-
   /**
    * @description Clear browser cache for all categories or a specific category
    * @param {String} category - category to clear cache for, if not provided all categories will be cleared

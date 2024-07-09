@@ -52,4 +52,4 @@ VALUES ('admin_allocations_line_items_page_description', '', 'Admin - Employee A
 
 -- site wide settings
 INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
-VALUES ('site_wide_banner', '', 'Site wide banner text', NULL, 'This is site wide banner text.', '1', NULL, '100', 'textarea', '{app-main,admin-settings}', '0');
+VALUES ('site_wide_banner', '', 'Site wide banner text', NULL, 'default', '1', NULL, '100', 'textarea', '{app-main,admin-settings}', '0');
