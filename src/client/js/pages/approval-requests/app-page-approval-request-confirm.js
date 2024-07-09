@@ -2,10 +2,21 @@ import { LitElement } from 'lit';
 import {render } from "./app-page-approval-request-confirm.tpl.js";
 import { LitCorkUtils, Mixin } from "../../../../lib/appGlobals.js";
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
+import { WaitController } from "@ucd-lib/theme-elements/utils/controllers/wait.js";
 
 import promiseUtils from '../../../../lib/utils/promiseUtils.js';
 import urlUtils from "../../../../lib/utils/urlUtils.js";
 
+/**
+ * @class AppPageApprovalRequestConfirm
+ * @description Page component for confirming an approval request before submitting
+ * @property {Number} approvalRequestId - the id of the approval request to confirm - set from url
+ * @property {Object} approvalRequest - the approval request to confirm - set from ApprovalRequestModel based on approvalRequestId
+ * @property {Array} approvalChain - the approval chain for the approval request - set from ApprovalRequestModel based on approvalRequestId
+ * @property {String} formLink - the link to the approval request form for this request
+ * @property {Number} totalExpenditures - the total amount of expenditures for this approval request - calculated from approvalRequest.expenditures
+ * @property {Object} queryObject - query for fetching data for this approval request
+ */
 export default class AppPageApprovalRequestConfirm extends Mixin(LitElement)
   .with(LitCorkUtils, MainDomElement) {
 
@@ -15,7 +26,8 @@ export default class AppPageApprovalRequestConfirm extends Mixin(LitElement)
       approvalRequest : {type: Object},
       approvalChain : {type: Array},
       formLink : {type: String},
-
+      totalExpenditures: {type: Number},
+      queryObject: {type: Object}
     }
   }
 
@@ -29,6 +41,7 @@ export default class AppPageApprovalRequestConfirm extends Mixin(LitElement)
     this.formLink = '';
 
     this._injectModel('AppStateModel', 'ApprovalRequestModel', 'SettingsModel');
+    this.waitController = new WaitController(this);
   }
 
   /**
@@ -54,6 +67,11 @@ export default class AppPageApprovalRequestConfirm extends Mixin(LitElement)
       return;
     }
 
+    // bail if a callback redirected us
+    await this.waitController.wait(50);
+    state = await this.AppStateModel.get();
+    if ( this.id !== state.page ) return;
+
     this.formLink = `${this.AppStateModel.store.breadcrumbs['approval-request-new'].link}/${this.approvalRequestId}`;
 
     const breadcrumbs = [
@@ -76,7 +94,7 @@ export default class AppPageApprovalRequestConfirm extends Mixin(LitElement)
   async getPageData(){
 
     const promises = [
-      this.ApprovalRequestModel.query({requestIds: this.approvalRequestId, isCurrent: true}),
+      this.ApprovalRequestModel.query(this.queryObject),
       this.ApprovalRequestModel.getApprovalChain(this.approvalRequestId),
       this.SettingsModel.getByCategory(this.settingsCategory)
     ]
@@ -84,26 +102,76 @@ export default class AppPageApprovalRequestConfirm extends Mixin(LitElement)
     return promiseUtils.flattenAllSettledResults(resolvedPromises);
   }
 
+  /**
+   * @description Lit lifecycle hook
+   * @param {Map} props - changed properties
+   */
+  willUpdate(props){
+    if ( props.has('approvalRequest') ){
+      this._setTotalExpenditures();
+    }
+  }
+
+  /**
+   * @description Callback for approval-request-chain-fetched event
+   * Fires when the approval chain for the current approval request is fetched
+   * @param {Object} e - cork-app-utils event object
+   * @returns
+   */
   _onApprovalRequestChainFetched(e) {
     if ( e.state !== 'loaded' ) return;
     if ( e.approvalRequestId !== this.approvalRequestId ) return;
     this.approvalChain = e.payload;
   }
 
-  _onSubmitButtonClick(){}
+  /**
+   * @description Callback for when the submit button is clicked
+   */
+  _onSubmitButtonClick(){
+    this.ApprovalRequestModel.statusUpdate(this.approvalRequestId, {action: 'submit'});
+  }
 
+  /**
+   * @description Callback for approval-request-status-update event
+   * Fires when the status of an approval request is updated (e.g. after a submit action)
+   * @param {Object} e - cork-app-utils event object
+   * @returns
+   */
+  _onApprovalRequestStatusUpdate(e){
+    if ( e.approvalRequestId !== this.approvalRequestId ) return;
+    if ( e.action?.action !== 'submit' ) return;
+
+    if ( e.state === 'error' ) {
+      this.AppStateModel.showError('Error submitting approval request.');
+      return;
+    }
+
+    if ( e.state === 'loading' ){
+      this.AppStateModel.showLoading();
+      return;
+    }
+
+    this.AppStateModel.showToast({message: 'Approval request submitted succesfully', type: 'success'});
+    this.AppStateModel.setLocation(`/approval-request/${this.approvalRequestId}`);
+  }
+
+  /**
+   * @description Callback for approval-requests-requested event
+   * Fires when the approval request for the current approvalRequestId is fetched
+   * @param {*} e
+   * @returns
+   */
   _onApprovalRequestsRequested(e){
     if ( e.state !== 'loaded' ) return;
 
     // check that request was issue by this element
-    const elementQueryString = urlUtils.queryObjectToKebabString({requestIds: this.approvalRequestId, isCurrent: true});
+    if ( !this.AppStateModel.isActivePage(this) ) return;
+    const elementQueryString = urlUtils.queryObjectToKebabString(this.queryObject);
     if ( e.query !== elementQueryString ) return;
 
     if ( !e.payload.total ){
       this.resetForm();
-      setTimeout(() => {
-        this.AppStateModel.showError('This approval request does not exist.');
-      }, 100);
+      this.AppStateModel.setLocation(this.AppStateModel.store.breadcrumbs['approval-requests'].link);
       return;
     }
 
@@ -120,7 +188,6 @@ export default class AppPageApprovalRequestConfirm extends Mixin(LitElement)
     }
 
     this.approvalRequest = approvalRequest;
-    console.log(approvalRequest);
   }
 
 
@@ -131,6 +198,21 @@ export default class AppPageApprovalRequestConfirm extends Mixin(LitElement)
   _setApprovalRequestId(state) {
     let approvalRequestId = Number(state?.location?.path?.[2]);
     this.approvalRequestId = Number.isInteger(approvalRequestId) && approvalRequestId > 0 ? approvalRequestId : 0;
+    this.queryObject = {requestIds: this.approvalRequestId, isCurrent: true};
+  }
+
+  /**
+   * @description Set the totalExpenditures property based on the expenditures array from the current approval request
+   */
+  _setTotalExpenditures(){
+    let total = 0;
+    if ( this.approvalRequest.expenditures ){
+      this.approvalRequest.expenditures.forEach(e => {
+        if ( !e.amount ) return;
+        total += Number(e.amount);
+      });
+    }
+    this.totalExpenditures = total;
   }
 
 }

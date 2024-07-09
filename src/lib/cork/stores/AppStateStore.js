@@ -13,7 +13,8 @@ class AppStateStoreImpl extends AppStateStore {
       'approval-request-new': {text: 'New', link: '/approval-request/new'},
       'approval-request-confirm': {text: 'Review and Submit', link: '/approval-request/confirm'},
       'approval-requests': {text: 'Your Approval Requests', link: '/approval-request'},
-      'approver': {text: 'Approve a Request', link: '/approver'},
+      'approver': {text: 'Approve', link: '/approval-request/approve'},
+      'approver-landing': {text: 'Approve Requests', link: '/approve'},
       'reports': {text: 'Reports', link: '/reports'},
       'admin': {text: 'Admin', link: '/admin'},
       'admin-allocations': {text: 'Employee Allocations', link: '/admin/allocations'},
@@ -21,7 +22,8 @@ class AppStateStoreImpl extends AppStateStore {
       'admin-approvers': {text: 'Approvers and Funding Sources', link: '/admin/approvers'},
       'admin-reimbursement': {text: 'Reimbursement Requests', link: '/admin/reimbursement'},
       'admin-settings': {text: 'General Settings', link: '/admin/settings'},
-      'admin-line-items': {text: 'Line Items', link: '/admin/items'}
+      'admin-line-items': {text: 'Line Items', link: '/admin/items'},
+      'reimbursement-new': {text: 'New Reimbursement Request', link: '/approval-request/new-reimbursement'},
     };
 
     this.userProfile = {};

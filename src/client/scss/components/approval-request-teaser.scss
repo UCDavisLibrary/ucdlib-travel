@@ -1,0 +1,78 @@
+approval-request-teaser {
+  display: block;
+  .teaser {
+      container-type: inline-size;
+      display: flex;
+      flex-wrap: wrap;
+  }
+
+  .teaser-info {
+      flex: 60%;
+  }
+  .teaser-expenses {
+    font-size: .875rem;
+    flex: 40%;
+    border-left: 1px solid #B0D0ED;
+    padding: 0rem 0rem 0.675rem 0.675rem;
+    align-content: center;
+  }
+
+  .badge {
+    display: inline-block;
+    font-size: .875rem;
+    margin-bottom: .5rem;
+    margin-right: .5rem;
+    padding: .1rem .5rem;
+    background-color: #DBEAF7;
+    border-radius: .5rem;
+    color:white;
+
+    &.approval-status {
+      background-color: #DBEAF7;
+      color:#022851;
+    }
+
+
+    &.reimbursement-status {
+      background-color: #FFF4D2;
+      color:#022851;
+    }
+  }
+
+  .icon-grid {
+    display: grid;
+    grid-template-columns: 20px 1fr;
+    grid-gap: 0.25rem;
+    margin-bottom: 0.25rem;
+
+    .icon-container {
+      color: #73ABDD;
+      font-size: .875rem;
+    }
+  }
+
+  a.title {
+    margin:0;
+    font-size: 1.30em;
+    font-weight: 800;
+    color: var(--forced-contrast-heading-primary, #022851);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+    @container (width < 550px) {
+        .teaser-info {
+            flex: 100%;
+            margin-bottom: 0.625rem;
+        }
+        .teaser-expenses {
+            border-left:0;
+            padding: 0px;
+            flex: 100%;
+        }
+
+    }
+}

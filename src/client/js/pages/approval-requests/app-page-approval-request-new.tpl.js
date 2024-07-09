@@ -3,6 +3,8 @@ import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { ref } from 'lit/directives/ref.js';
 
 import "../../components/funding-source-select.js";
+import "../../components/approval-request-draft-list.js";
+
 
 export function render() {
 return html`
@@ -22,6 +24,10 @@ return html`
         ${renderForm.call(this)}
       </div>
       <div class='l-sidebar-second'>
+        <approval-request-draft-list
+          exclude-id=${this.approvalFormId}
+          ${ref(this.draftListSelectRef)}
+        ></approval-request-draft-list>
       </div>
     </div>
   </div>
@@ -41,7 +47,7 @@ export function renderForm(){
   }
 
   return html`
-    <form class='skinny-form approval-request-form'>
+    <form class='skinny-form approval-request-form' @submit=${this._onSubmit}>
       <div class="field-container ${this.validationHandler.errorClass('label')}">
         <label for="${page}--label">Title of Trip, Training, or Professional Development Opportunity <abbr title="Required">*</abbr></label>
         <input
@@ -304,7 +310,6 @@ export function renderForm(){
         <button
           type="submit"
           class='btn btn--primary'
-          @click=${this._onSubmit}
           ?disabled=${this.userCantSubmit}
           >Review and Submit</button>
         <button

@@ -25,7 +25,32 @@ class FundingSourceModel extends BaseModel {
         await this.service.getActiveFundingSources();
       }
     } catch(e) {}
+    this.store.emit(this.store.events.ACTIVE_FUNDING_SOURCES_REQUESTED, this.store.data.activeFundingSources)
     return this.store.data.activeFundingSources;
+  }
+
+  async update(payload){
+    let timestamp = Date.now();
+    try {
+      await this.service.update(payload, timestamp);
+    } catch(e) {}
+    const state = this.store.data.updated[timestamp];
+    if ( state && state.state === 'loaded' ) {
+      this.store.data.activeFundingSources = {};
+    }
+    return state;
+  }
+
+  async create(payload){
+    let timestamp = Date.now();
+    try {
+      await this.service.create(payload, timestamp);
+    } catch(e) {}
+    const state = this.store.data.created[timestamp];
+    if ( state && state.state === 'loaded' ) {
+      this.store.data.activeFundingSources = {};
+    }
+    return state;
   }
 
 }

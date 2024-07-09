@@ -222,6 +222,7 @@ CREATE TABLE reimbursement_request_expense (
     amount NUMERIC NOT NULL DEFAULT 0,
     category VARCHAR(100) NOT NULL,
     date DATE,
+    notes VARCHAR(500),
     details JSONB NOT NULL DEFAULT '{}'::JSONB
 );
 COMMENT ON TABLE reimbursement_request_expense IS 'Line item expenses for reimbursement requests.';
@@ -246,7 +247,10 @@ COMMENT ON TABLE reimbursement_request_receipt IS 'Receipts uploaded by users fo
 CREATE TABLE daily_expense_category (
     daily_expense_category_id SERIAL PRIMARY KEY,
     label VARCHAR(200) NOT NULL,
-    sub_category TEXT[],
+    parent_id INTEGER REFERENCES daily_expense_category(daily_expense_category_id),
+    category_order INTEGER NOT NULL DEFAULT 0,
+    added_by VARCHAR(100) REFERENCES employee(kerberos),
+    added_at timestamp DEFAULT NOW(),
     archived BOOLEAN DEFAULT FALSE,
     archived_by VARCHAR(100) REFERENCES employee(kerberos),
     archived_at timestamp

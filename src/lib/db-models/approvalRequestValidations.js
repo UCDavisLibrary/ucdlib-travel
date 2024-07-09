@@ -1,4 +1,5 @@
 import pg from "./pg.js";
+import applicationOptions from "../utils/applicationOptions.js";
 
 /**
  * @class ApprovalRequestValidations
@@ -11,23 +12,9 @@ export default class ApprovalRequestValidations {
   constructor(model){
     this.model = model;
 
-    this.validApprovalStatuses = [
-      {value: 'draft', label: 'Draft'},
-      {value: 'submitted', label: 'Submitted'},
-      {value: 'in-progress', label: 'In Progress'},
-      {value: 'approved', label: 'Approved'},
-      {value: 'canceled', label: 'Canceled'},
-      {value: 'denied', label: 'Denied'},
-      {value: 'revision-requested', label: 'Revision Requested'}
-    ];
-
-    this.validReimbursementStatuses = [
-      {value: 'not-required', label: 'Not Required'},
-      {value: 'not-submitted', label: 'Not Submitted'},
-      {value: 'reimbursment-pending', label: 'Reimbursement Pending'},
-      {value: 'partially-reimbursed', label: 'Partially Reimbursed'},
-      {value: 'fully-reimbursed', label: 'Fully Reimbursed'}
-    ];
+    this.validApprovalStatuses = applicationOptions.approvalStatuses;
+    this.validReimbursementStatuses = applicationOptions.reimbursementStatuses;
+    this.approvalStatusActions = applicationOptions.approvalStatusActions;
   }
 
   /**
@@ -353,8 +340,8 @@ export default class ApprovalRequestValidations {
       this.model.entityFields.pushError(out, field, error);
     }
 
-    error = {errorType: 'invalid', message: "Approval request must be in 'draft' or 'revision-requested' status to be revised"};
-    if ( !['draft', 'revision-requested'].includes(res.res.rows[0].approval_status) ) {
+    error = {errorType: 'invalid', message: "Approval request must be in 'draft', 'revision-requested', or 'recalled' status to be revised"};
+    if ( !['draft', 'revision-requested', 'recalled'].includes(res.res.rows[0].approval_status) ) {
       this.model.entityFields.pushError(out, field, error);
     }
   }

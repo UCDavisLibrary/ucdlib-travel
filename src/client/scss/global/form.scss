@@ -33,6 +33,12 @@ fieldset.field-error {
   font-size: .875rem;
   margin-bottom: .5rem;
 }
+.radio--horizontal {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+
+}
 .field-container {
   margin-bottom: 1rem !important;
 }
@@ -64,6 +70,28 @@ fieldset.field-error {
     border: none;
     box-shadow: none;
     height: calc(2.5rem - 2px);
+  }
+}
+
+.skinny-form {
+  padding: 1rem .5rem;
+  border: 1px solid #ffbf00;
+}
+@media (min-width: 768px) {
+  .skinny-form {
+    padding: 2rem 1rem;
+    width: 70%;
+    margin: 0 auto;
+  }
+}
+@media (min-width: 992px) {
+  .l-basic--flipped .skinny-form {
+    width: 90%;
+  }
+}
+@media (min-width: 1200px) {
+  .skinny-form {
+    width: 70%;
   }
 }
 

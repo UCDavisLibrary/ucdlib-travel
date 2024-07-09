@@ -1,4 +1,5 @@
 import approvalRequest from "../lib/db-models/approvalRequest.js";
+import ApprovalRequestValidations from "../lib/db-models/approvalRequestValidations.js";
 import employee from "../lib/db-models/employee.js";
 
 import protect from "../lib/protect.js";
@@ -6,6 +7,7 @@ import IamEmployeeObjectAccessor from "../lib/utils/iamEmployeeObjectAccessor.js
 import urlUtils from "../lib/utils/urlUtils.js";
 import apiUtils from "../lib/utils/apiUtils.js";
 import typeTransform from "../lib/utils/typeTransform.js";
+import applicationOptions from "../lib/utils/applicationOptions.js";
 
 export default (api) => {
 
@@ -22,12 +24,19 @@ export default (api) => {
 
     // pagination
     query.page = apiUtils.getPageNumber(req);
+    const pageSize = apiUtils.getPageSize(req);
     delete query.pageSize;
 
     // query args that need to be arrays
+    query.approvers = apiUtils.explode(query.approvers);
     query.revisionIds = apiUtils.explode(query.revisionIds, true);
     query.requestIds = apiUtils.explode(query.requestIds, true);
+    query.approvalStatus = apiUtils.explode(query.approvalStatus);
     query.employees = apiUtils.explode(query.employees);
+
+    // allow user to determine page size if getting single approval request, so that can retrieve all revisions
+    const isSingleRequest = query.requestIds.length === 1;
+    if ( isSingleRequest ) query.pageSize = pageSize
 
     // do query
     const results = await approvalRequest.get(query);
@@ -38,14 +47,22 @@ export default (api) => {
 
     // check if user is authorized to view all results
     if ( req.auth.token.hasAdminAccess ) return res.json(results);
+    const requestUsers = new Set();
     for (const approvalRequest of results.data) {
+
       const isOwnRequest = approvalRequest.employeeKerberos === kerberos;
+      const inApprovalChain = approvalRequest.approvalStatusActivity.some(a => a.employeeKerberos === kerberos);
 
-      // todo check if in approval chain
-      const inApprovalChain = false;
+      if ( !isSingleRequest && !isOwnRequest && !inApprovalChain ) return apiUtils.do403(res);
 
-      if ( !isOwnRequest && !inApprovalChain ) return apiUtils.do403(res);
+      requestUsers.add(approvalRequest.employeeKerberos);
+      for (const action of approvalRequest.approvalStatusActivity) {
+        requestUsers.add(action.employeeKerberos);
+      }
     }
+
+    // if single request, ensure user participated somehow in history of request (not necessarily every revision)
+    if ( isSingleRequest && !requestUsers.has(kerberos) ) return apiUtils.do403(res);
 
     res.json(results);
   });
@@ -61,12 +78,17 @@ export default (api) => {
       if ( !approvalRequestId ) {
         return res.status(400).json({error: true, message: 'Invalid approvalRequestId.'});
       }
-      const existingRequest = await approvalRequest.get({requestIds: [approvalRequestId]});
+      let existingRequest = await approvalRequest.get({requestIds: [approvalRequestId]});
       if ( existingRequest.error ) {
         console.error('Error in POST /approval-request', existingRequest.error);
         return res.status(500).json({error: true, message: 'Error creating approval request.'});
       }
-      const existingKerberos = (existingRequest.data.find(r => r.isCurrent) || {}).employeeKerberos;
+      existingRequest = existingRequest.data.find(r => r.isCurrent) || {};
+      const existingStatus = applicationOptions.approvalStatuses.find(s => s.value === existingRequest.approvalStatus);
+      if ( !existingStatus || existingStatus.isFinal ) {
+        return res.status(400).json({error: true, message: 'Cannot revise a final approval request.'});
+      }
+      const existingKerberos = (existingRequest || {}).employeeKerberos;
       if ( existingKerberos !== kerberos ) {
         return apiUtils.do403(res);
       }
@@ -82,7 +104,7 @@ export default (api) => {
     delete data.employeeKerberos;
 
     // set status fields
-    data.approvalStatus = data.approvalStatus === 'draft' ? 'draft' : 'submitted';
+    data.approvalStatus = 'draft'; // all new requests start as drafts
     data.reimbursementStatus = data.noExpenditures ? 'not-required' : 'not-submitted';
 
     // create approval request revision
@@ -119,6 +141,105 @@ export default (api) => {
 
   });
 
+  api.post('/approval-request/:id/status-update', protect('hasBasicAccess'), async (req, res) => {
+    const validations = new ApprovalRequestValidations();
+
+    // ensure action is valid
+    const payload = req.body || {};
+    const validActions = validations.approvalStatusActions.map(a => a.value);
+    if ( !validActions.includes(payload.action) ) {
+      return res.status(400).json({error: true, message: 'Invalid action.'});
+    }
+
+    // ensure approval request exists
+    const approvalRequestId = typeTransform.toPositiveInt(req.params.id);
+    if ( !approvalRequestId ) {
+      return res.status(400).json({error: true, message: 'Invalid approvalRequestId.'});
+    }
+    let approvalRequestObj = await approvalRequest.get({requestIds: [approvalRequestId], isCurrent: true});
+    if ( approvalRequestObj.error ) {
+      console.error('Error in POST /approval-request/:id/status-update', approvalRequest.error);
+      return res.status(500).json({error: true, message: 'Error getting approval request.'});
+    }
+    if ( !approvalRequestObj.data.length ) {
+      return res.status(404).json({error: true, message: 'Approval request not found.'});
+    }
+    approvalRequestObj = approvalRequestObj.data[0];
+
+    // bail if approval request cannot be updated
+    const finalStatuses = validations.validApprovalStatuses.filter(s => s.isFinal).map(s => s.value);
+    if ( finalStatuses.includes(approvalRequestObj.approvalStatus) ) {
+      return res.status(400).json({error: true, message: 'Approval request cannot be updated.'});
+    }
+
+    // ensure user is authorized to perform action
+    const kerberos = req.auth.token.id;
+    const action = validations.approvalStatusActions.find(a => a.value === payload.action);
+    if ( action.actor === 'submitter' ) {
+      if ( approvalRequestObj.employeeKerberos !== kerberos ){
+        return apiUtils.do403(res);
+      }
+    } else if ( action.actor === 'approver' ) {
+      let isFirstApprover = false;
+      for ( const userAction of approvalRequestObj.approvalStatusActivity ) {
+        if ( userAction.action === 'approval-needed' ) {
+          if ( userAction.employeeKerberos === kerberos ) {
+            isFirstApprover = true;
+          }
+          break;
+        }
+      }
+      if ( !isFirstApprover ) {
+        return apiUtils.do403(res);
+      }
+
+    } else {
+      return apiUtils.do403(res);
+    }
+
+
+    if ( action.value === 'submit' ){
+      const result = await approvalRequest.submitDraft(approvalRequestObj);
+      if ( result.error && result.is400 ) {
+        return res.status(400).json(result);
+      }
+      if ( result.error ) {
+        console.error('Error in POST /approval-request/:id/status-update', result.error);
+        return res.status(500).json({error: true, message: 'Error submitting approval request.'});
+      }
+      return res.json(result);
+    }
+
+    if ( action.actor === 'approver' ) {
+      const result = await approvalRequest.doApproverAction(approvalRequestObj, payload, kerberos);
+      if ( result.error && result.is400 ) {
+        return res.status(400).json(result);
+      }
+
+      if ( result.error ) {
+        console.error('Error in POST /approval-request/:id/status-update', result.error);
+        return res.status(500).json({error: true, message: 'Error performing action on approval request.'});
+      }
+      return res.json(result);
+    }
+
+    if ( action.actor === 'submitter' ){
+      const result = await approvalRequest.doRequesterAction(approvalRequestObj, payload);
+      if ( result.error && result.is400 ) {
+        return res.status(400).json(result);
+      }
+
+      if ( result.error ) {
+        console.error('Error in POST /approval-request/:id/status-update', result.error);
+        return res.status(500).json({error: true, message: 'Error performing requester action on approval request.'});
+      }
+      return res.json(result);
+    }
+
+    return res.status(500).json({error: true, message: 'Error performing action on approval request.'});
+
+  });
+
   /**
    * @description Returns the employees that need to approve the given approval request based on the submitter and funding sources selected
    * Called before an approval request is actually submitted.
@@ -143,6 +264,10 @@ export default (api) => {
     }
 
     const approvalChain = await approvalRequest.makeApprovalChain(approvalRequestObj.data[0]);
+    if ( approvalChain.error ) {
+      console.error('Error in GET /approval-request/:id/approval-chain', approvalChain.error);
+      return res.status(500).json({error: true, message: 'Error getting approval chain.'});
+    }
 
     // transform chain object to match format in approvalRequest object
     const out = approvalChain.map((chainObj) => {

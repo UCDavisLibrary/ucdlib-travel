@@ -37,6 +37,7 @@ export default class FundingSourceSelect extends Mixin(LitElement)
       reallocateOnly: {type: Boolean, attribute: 'reallocate-only'},
       customError: {type: String, attribute: 'custom-error'},
       alwaysShowOne: {type: Boolean, attribute: 'always-show-one'},
+      indentBody: {type: Boolean, attribute: 'indent-body'},
       activeFundingSources: {type: Array, state: true},
       fundingSourceTotal: {type: Number, state: true},
       hasError: {type: Boolean, state: true},
@@ -55,6 +56,7 @@ export default class FundingSourceSelect extends Mixin(LitElement)
     this.customError = '';
     this.label = 'Funding Sources';
     this.alwaysShowOne = false;
+    this.indentBody = false;
 
     this.activeFundingSources = [];
     this.data = [];

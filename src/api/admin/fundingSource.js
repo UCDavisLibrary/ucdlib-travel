@@ -31,4 +31,40 @@ export default (api) => {
     return res.json(data);
   });
 
+  /**
+   * @description Update a funding source
+   * @param {Object} req.body - funding source data - see db-models/fundingSource.js
+   */
+  api.put('/funding-source', protect('hasAdminAccess'), async (req, res) => {
+    const data = await fundingSource.update(req.body);
+
+    if ( data.error && data.is400 ) {
+      return res.status(400).json(data);
+    }
+    if ( data.error ) {
+      console.error('Error in PUT /funding-source', data.error);
+      return res.status(500).json({error: true, message: 'Error updating funding source.'});
+    }
+
+    return res.json(data);
+  });
+
+  /**
+   * @description Create a new funding source
+   * @param {Object} req.body - funding source data - see db-models/fundingSource.js
+   */
+  api.post('/funding-source', protect('hasAdminAccess'), async (req, res) => {
+    const data = await fundingSource.create(req.body);
+
+    if ( data.error && data.is400 ) {
+      return res.status(400).json(data);
+    }
+    if ( data.error ) {
+      console.error('Error in POST /funding-source', data.error);
+      return res.status(500).json({error: true, message: 'Error creating funding source.'});
+    }
+
+    return res.json(data);
+  });
+
 };
