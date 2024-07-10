@@ -15,6 +15,9 @@ export default class ReimbursementForm extends Mixin(LitElement)
   static get properties() {
     return {
       reimbursementRequest: {type: Object},
+      approvalRequestId: {type: Number},
+      parentPageId: {type: String},
+      hasTravel: {type: Boolean},
       validationHandler: {type: Object},
       showNewDate: {type: Boolean},
       uniqueDates: {type: Array},
@@ -30,8 +33,9 @@ export default class ReimbursementForm extends Mixin(LitElement)
     this.newDateInput = createRef();
     this.form = createRef();
     this.waitController = new WaitController(this);
+    this.parentPageId = '';
 
-    this._injectModel('AppStateModel');
+    this._injectModel('AppStateModel', 'ReimbursementRequestModel');
 
   }
 
@@ -67,8 +71,32 @@ export default class ReimbursementForm extends Mixin(LitElement)
       }
 
     });
-    formData.append('reimbursementRequest', JSON.stringify(this.reimbursementRequest));
+    const reimbursementRequest = {...this.reimbursementRequest, approvalRequestId: this.approvalRequestId};
+    formData.append('reimbursementRequest', JSON.stringify(reimbursementRequest));
     console.log('submit', formData);
+    this.ReimbursementRequestModel.create(formData);
+  }
+
+  _onReimbursementRequestCreated(e){
+    if ( !this.AppStateModel.isActivePage(this.parentPageId) ) return;
+    if ( e.state === 'error' ) {
+      if ( e.error?.payload?.is400 ) {
+        this.validationHandler = new ValidationHandler(e);
+        this.requestUpdate();
+        this.AppStateModel.showToast({message: 'Error when submitting your reimbursement request. Form data needs fixing.', type: 'error'});
+      } else {
+        this.AppStateModel.showToast({message: 'An unknown error occurred when submitting your approval request', type: 'error'});
+      }
+      this.AppStateModel.showLoaded(this.parentPageId);
+    } else if ( e.state === 'loading') {
+      this.AppStateModel.showLoading();
+    } else if ( e.state === 'loaded' ) {
+      // todo update
+      this.validationHandler = new ValidationHandler();
+      this.requestUpdate();
+      this.AppStateModel.showLoaded(this.parentPageId);
+      this.AppStateModel.showToast({message: 'Reimbursement request submitted', type: 'success'});
+    }
   }
 
   /**
@@ -120,6 +148,7 @@ export default class ReimbursementForm extends Mixin(LitElement)
     this.showNewDate = false;
     this.uniqueDates = [];
     this.dateComments = {};
+    this.hasTravel = false;
     this.requestUpdate();
   }
 

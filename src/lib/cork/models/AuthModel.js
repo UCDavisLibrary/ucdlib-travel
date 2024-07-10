@@ -115,9 +115,22 @@ class AuthModel extends BaseModel {
    */
   _onAuthRefreshSuccess(){
     this.store.setToken(this.client.tokenParsed);
+    this._setCookie();
     if ( !this.store.token.hasAccess ){
       this.redirectUnauthorized();
     }
+  }
+
+  /**
+   * @description Set jwt token in cookie.
+   * jwt is mostly consumed via headers, but some services may require it in a cookie
+   */
+  _setCookie(){
+    const name = 'ucdlib-travel';
+    const value = this.client.token;
+    const path = '/uploads';
+
+    document.cookie = `${name}=${value}; Secure; SameSite=Strict; Path=${path}`;
   }
 
   /**
