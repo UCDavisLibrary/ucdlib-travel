@@ -93,6 +93,19 @@ class ApplicationOptions {
   }
 
   /**
+   * @description - get status options for a single reimbursement request
+   * @returns {Array} - Array of objects containing the options for the status column in the reimbursement_request table
+   */
+  get reimbursementRequestStatuses(){
+    return [
+      {
+        value: 'submitted',
+        label: 'Submitted'
+      }
+    ]
+  }
+
+  /**
    * @description - get approval status actions
    * @returns {Array} - Array of objects containing the options for actions that can be taken on an approval request
    * Contains the following values:

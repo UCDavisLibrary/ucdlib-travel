@@ -27,55 +27,59 @@ export function render() {
         <div>${this.validationHandler.renderErrorMessages('employeeResidence')}</div>
       </div>
 
-      <fieldset>
+      <fieldset ?hidden=${!this.hasTravel}>
         <legend>Dates *</legend>
-        <div class='l-2col u-space-mb ${this.validationHandler.errorClass('travelStart')}'>
-          <div class='l-first'>
-            <div class='field-container'>
-              <label for="${idPrefix}--departure-date">Departure Date</label>
-              <input
-                id="${idPrefix}--departure-date"
-                type="date"
-                .value=${this.getDate('travelStart')}
-                @input=${e => this._onDateInput('travelStart', e.target.value)} />
+        <div class='${this.validationHandler.errorClass('travelStart')} u-space-mb'>
+          <div class='l-2col'>
+            <div class='l-first'>
+              <div class='field-container'>
+                <label for="${idPrefix}--departure-date">Departure Date</label>
+                <input
+                  id="${idPrefix}--departure-date"
+                  type="date"
+                  .value=${this.getDate('travelStart')}
+                  @input=${e => this._onDateInput('travelStart', e.target.value)} />
+              </div>
+            </div>
+            <div class='l-second'>
+              <div class='field-container'>
+                <label for="${idPrefix}--departure-time">Departure Time</label>
+                <input
+                  id="${idPrefix}--departure-time"
+                  type="time"
+                  .value=${this.getTime('travelStart')}
+                  @input=${e => this._onTimeInput('travelStart', e.target.value)} />
+              </div>
             </div>
           </div>
-          <div class='l-second'>
-            <div class='field-container'>
-              <label for="${idPrefix}--departure-time">Departure Time</label>
-              <input
-                id="${idPrefix}--departure-time"
-                type="time"
-                .value=${this.getTime('travelStart')}
-                @input=${e => this._onTimeInput('travelStart', e.target.value)} />
-            </div>
-          </div>
+          <div>${this.validationHandler.renderErrorMessages('travelStart')}</div>
         </div>
-        <div>${this.validationHandler.renderErrorMessages('travelStart')}</div>
 
-        <div class='l-2col u-space-mb ${this.validationHandler.errorClass('travelEnd')}'>
-          <div class='l-first'>
-            <div class='field-container'>
-              <label for="${idPrefix}--return-date">Return Date</label>
-              <input
-                id="${idPrefix}--return-date"
-                type="date"
-                .value=${this.getDate('travelEnd')}
-                @input=${e => this._onDateInput('travelEnd', e.target.value)} />
+        <div class='${this.validationHandler.errorClass('travelEnd')} u-space-mb'>
+          <div class='l-2col'>
+            <div class='l-first'>
+              <div class='field-container'>
+                <label for="${idPrefix}--return-date">Return Date</label>
+                <input
+                  id="${idPrefix}--return-date"
+                  type="date"
+                  .value=${this.getDate('travelEnd')}
+                  @input=${e => this._onDateInput('travelEnd', e.target.value)} />
+              </div>
+            </div>
+            <div class='l-second'>
+              <div class='field-container'>
+                <label for="${idPrefix}--return-time">Return Time</label>
+                <input
+                  id="${idPrefix}--return-time"
+                  type="time"
+                  .value=${this.getTime('travelEnd')}
+                  @input=${e => this._onTimeInput('travelEnd', e.target.value)} />
+              </div>
             </div>
           </div>
-          <div class='l-second'>
-            <div class='field-container'>
-              <label for="${idPrefix}--return-time">Return Time</label>
-              <input
-                id="${idPrefix}--return-time"
-                type="time"
-                .value=${this.getTime('travelEnd')}
-                @input=${e => this._onTimeInput('travelEnd', e.target.value)} />
-            </div>
-          </div>
+          <div>${this.validationHandler.renderErrorMessages('travelEnd')}</div>
         </div>
-        <div>${this.validationHandler.renderErrorMessages('travelEnd')}</div>
 
         <div class='field-container ${this.validationHandler.errorClass('personalTime')}'>
           <label for="${idPrefix}--personal-time">Personal Time</label>

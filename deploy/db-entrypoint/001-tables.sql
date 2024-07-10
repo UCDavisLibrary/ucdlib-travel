@@ -191,14 +191,13 @@ COMMENT ON TABLE employee_allocation IS 'Funding source allocations for employee
 
 CREATE TABLE reimbursement_request (
     reimbursement_request_id SERIAL PRIMARY KEY,
-    approval_request_revision_id INTEGER REFERENCES approval_request(approval_request_revision_id),
+    approval_request_id INTEGER,
     label VARCHAR(200) NOT NULL DEFAULT 'Reimbursement Request',
     employee_residence VARCHAR(100),
     travel_start timestamp,
     travel_end timestamp,
     personal_time VARCHAR(500),
     comments VARCHAR(500),
-    amount NUMERIC NOT NULL,
     status VARCHAR(100) NOT NULL DEFAULT 'submitted'
 );
 COMMENT ON TABLE reimbursement_request IS 'Reimbursement requests for travel expenses.';

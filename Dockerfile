@@ -33,6 +33,9 @@ RUN chmod 0644 /etc/cron.d/backup
 RUN mkdir data/init
 COPY deploy/utils/init init
 
+# uploads volume
+RUN mkdir /uploads
+
 # Server dependencies
 WORKDIR /app
 COPY src/start-server.sh start-server.sh
