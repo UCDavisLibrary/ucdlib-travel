@@ -6,7 +6,6 @@ import { WaitController } from "@ucd-lib/theme-elements/utils/controllers/wait.j
 import ValidationHandler from "../../utils/ValidationHandler.js";
 
 
-import "../../components/app-questions-or-comments.js";
 import "../../components/email-template.js";
 
 /**
