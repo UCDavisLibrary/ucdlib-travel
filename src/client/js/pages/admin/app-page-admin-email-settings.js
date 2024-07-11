@@ -171,6 +171,20 @@ export default class AppPageAdminEmailSettings extends Mixin(LitElement)
     this.noSettings = this.settings.every(s => s.hidden);
   }
 
+  _onEmailUpdate(e){
+    const page = this.pages.find(p => p.value === this.page);
+    if ( !page ) return;
+    const data = this[page.formProperty] || {};
+  
+    const { emailPrefix, bodyTemplate, subjectTemplate, disableNotification } = e.detail;
+    data[`${emailPrefix}Body`] = bodyTemplate;
+    data[`${emailPrefix}Subject`] = subjectTemplate;
+    data[`${emailPrefix}Disable`] = disableNotification ? 'true' : '';
+  
+    this[page.formProperty] = {...data};
+  
+  }
+
   /**
    * @description clears search string and focuses search input
    * Bound to "Try another search term" link click event
