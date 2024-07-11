@@ -112,6 +112,22 @@ class TypeTransform {
 
   }
 
+  /**
+   * @description Parse a string as JSON
+   * @param {String} data - JSON string
+   * @param {*} defaultData - default data to return if parsing fails, defaults to empty object
+   * @returns
+   */
+  parseJsonString(data, defaultData = {}){
+    let parsedData;
+    try {
+      parsedData = JSON.parse(data);
+    } catch (e) {
+      parsedData = defaultData;
+    }
+    return parsedData;
+  }
+
 }
 
 export default new TypeTransform();

@@ -13,7 +13,12 @@ return html`
   <div class='l-gutter l-basic--flipped'>
     <div class='l-content'>
       <h2 class='heading--underline'>New Reimbursement Request</h2>
-      <reimbursement-form ${ref(this.form)}></reimbursement-form>
+      <reimbursement-form
+        ${ref(this.form)}
+        .approvalRequestId=${this.approvalRequestId}
+        .parentPageId=${this.id}
+        .hasTravel=${this.approvalRequest?.travelRequired ? true : false}>
+      </reimbursement-form>
     </div>
     <div class='l-sidebar-first'>
       <a

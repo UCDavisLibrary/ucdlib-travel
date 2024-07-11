@@ -12,6 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "@ucd-lib/spa-router-middleware": "^0.2.3",
+    "cookie-parser": "^1.4.6",
     "express": "^4.18.2",
     "jwt-decode": "^3.1.2",
     "multer": "^1.4.5-lts.1",
