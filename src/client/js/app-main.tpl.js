@@ -1,4 +1,5 @@
 import { html } from 'lit';
+import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 
 export function render() {
 return html`
@@ -27,7 +28,12 @@ return html`
       <a href="/admin/settings">General Settings</a>
       <a href="/admin/line-items">Line Items</a>
     </ucd-theme-quick-links>
+
   </ucd-theme-header>
+
+  <section class="brand-textbox category-brand__background" ?hidden=${!this.bannerText}>
+    <p>${this.bannerText}</p>
+  </section>
 
   <section ?hidden=${!this.pageIsLoaded || !this.showPageTitle}>
     <h1 class="page-title">${this.pageTitle}</h1>
