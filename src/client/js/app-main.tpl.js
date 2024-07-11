@@ -31,8 +31,8 @@ return html`
 
   </ucd-theme-header>
 
-  <section class="brand-textbox category-brand__background" ?hidden=${!this.bannerText}>
-    <p>${this.bannerText}</p>
+  <section class="brand-textbox category-brand__background category-brand--double-decker" ?hidden=${!this.bannerText}>
+    ${unsafeHTML(this.bannerText)}
   </section>
 
   <section ?hidden=${!this.pageIsLoaded || !this.showPageTitle}>

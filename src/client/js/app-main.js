@@ -221,7 +221,7 @@ export default class AppMain extends Mixin(LitElement)
       return;
     }
 
-    this.SettingsModel.getByKey('site_wide_banner') ? this.bannerText = this.SettingsModel.getByKey('site_wide_banner') : this.bannerText = '';
+    this.bannerText = this.SettingsModel.getByKey('site_wide_banner');
 
     this.requestUpdate();
 
