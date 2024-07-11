@@ -14,6 +14,9 @@ class ServerConfig {
 
     this.apiRoot = this.getEnv('APP_API_ROOT', '/api');
 
+    this.uploadsRoot = this.getEnv('APP_UPLOADS_ROOT', '/uploads');
+    this.uploadsDir = this.getEnv('APP_UPLOADS_DIR', '/uploads');
+
     this.port = {
       container: this.getEnv('APP_CONTAINER_PORT', 3000), // server port within docker container
       host: this.getEnv('APP_HOST_PORT', 3000), // server port on host machine

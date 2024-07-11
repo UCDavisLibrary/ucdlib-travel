@@ -9,6 +9,8 @@ services:
     depends_on:
       - db
     restart: always
+    volumes:
+      - uploads-data:/uploads
     command: ./start-server.sh
   init:
     image: gcr.io/ucdlib-pubreg/ucdlib-travel:dev
@@ -22,6 +24,7 @@ services:
       BACKUP_FILE_NAME: db.sql.gz
     volumes:
       - ../gc-reader-key.json:/etc/service-account.json
+      - uploads-data:/uploads
     command: ./deploy-utils/init/init.sh
   backup:
     image: gcr.io/ucdlib-pubreg/ucdlib-travel:dev
@@ -35,6 +38,7 @@ services:
       BACKUP_FILE_NAME: db.sql.gz
     volumes:
       - ../gc-writer-key.json:/etc/service-account.json
+      - uploads-data:/uploads
     command: ./deploy-utils/backup/entrypoint.sh
   db:
     image: postgres:16
@@ -45,3 +49,4 @@ services:
       - db-data:/var/lib/postgresql/data
 volumes:
   db-data:
+  uploads-data:
