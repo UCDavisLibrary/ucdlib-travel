@@ -79,7 +79,7 @@ export default class AppMain extends Mixin(LitElement)
     this.render = render.bind(this);
     this.loadedBundles = {};
 
-    this.pageTitle = 'This is a test title';
+    this.pageTitle = '';
     this.bannerText = '';
     this.showPageTitle = false;
     this.breadcrumbs = [];
@@ -210,7 +210,9 @@ export default class AppMain extends Mixin(LitElement)
    * settings need to load independent of page data
    */
   async checkForSettingsData() {
-    const d = await this.getPageData();
+    const promises = [];
+    promises.push(this.SettingsModel.getByCategory(this.settingsCategory));
+    const d = await Promise.allSettled(promises);
     const hasError = d.some(e => e.status === 'rejected' || e.value.state === 'error');
     if ( hasError ) {
       this.AppStateModel.showError(d);
@@ -218,7 +220,7 @@ export default class AppMain extends Mixin(LitElement)
       return;
     }
 
-    this.SettingsModel.getByKey('site_wide_banner') != 'default' ? this.bannerText = this.SettingsModel.getByKey('site_wide_banner') : this.bannerText = '';
+    this.SettingsModel.getByKey('site_wide_banner') ? this.bannerText = this.SettingsModel.getByKey('site_wide_banner') : this.bannerText = '';
 
     this.requestUpdate();
 
@@ -236,16 +238,6 @@ export default class AppMain extends Mixin(LitElement)
     this.breadcrumbs = breadcrumbs;
     this.showBreadcrumbs = show;
   }
-
-    /**
-   * @description Get all data required for rendering this page
-   */
-    async getPageData(){
-      const promises = [];
-      promises.push(this.SettingsModel.getByCategory(this.settingsCategory));
-      const resolvedPromises = await Promise.allSettled(promises);
-      return resolvedPromises;
-    }
 
   /**
    * @description Get name of bundle a page element is in
