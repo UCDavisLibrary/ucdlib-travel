@@ -53,6 +53,32 @@ class ReimbursementRequest {
         dbName: 'status',
         jsonName: 'status',
         customValidation: this.validations.status.bind(this.validations)
+      },
+      {
+        dbName: 'expenses',
+        jsonName: 'expenses',
+        customValidationAsync: this.validations.expenses.bind(this.validations)
+      }
+    ]);
+
+    this.expenseFields = new EntityFields([
+      {
+        dbName: 'reimbursement_request_expense_id',
+        jsonName: 'reimbursementRequestExpenseId',
+        validateType: 'integer'
+      },
+      {
+        dbName: 'reimbursement_request_id',
+        jsonName: 'reimbursementRequestId'
+      },
+      {
+        dbName: 'amount',
+        jsonName: 'amount',
+        customValidationAsync: this.validations.expenseAmount.bind(this.validations)
+      },
+      {
+        dbName: 'category',
+        jsonName: 'category',
       }
     ]);
   }
@@ -60,12 +86,18 @@ class ReimbursementRequest {
   async create(data){
 
     data = this.entityFields.toDbObj(data);
+    data.expenses = this.expenseFields.toDbArray(Array.isArray(data.expenses) ?  data.expenses : []);
 
     // system fields
     delete data.reimbursement_request_id
     data.status = 'submitted';
 
     const validation = await this.entityFields.validate(data, ['reimbursement_request_id']);
+
+    // wait 2 seconds
+    //await new Promise(resolve => setTimeout(resolve, 2000));
+
+
     if ( !validation.valid ) {
       return {error: true, message: 'Validation Error', is400: true, fieldsWithErrors: validation.fieldsWithErrors};
     }

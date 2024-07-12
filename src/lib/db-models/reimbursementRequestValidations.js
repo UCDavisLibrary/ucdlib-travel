@@ -8,7 +8,7 @@ export default class ReimbursementRequestValidations {
     this.model = model;
   }
 
-  async approvalRequestId(field, value, out, payload){
+  async approvalRequestId(field, value, out, payload, cache){
     let error;
 
     const approvalRequestId = typeTransform.toPositiveInt(value);
@@ -31,7 +31,7 @@ export default class ReimbursementRequestValidations {
     }
 
     approvalRequest = approvalRequest.data[0];
-    this.model.approvalRequest = approvalRequest;
+    cache.approvalRequest = approvalRequest;
     if ( approvalRequest.approvalStatus !== 'approved' ){
       error = {errorType: 'invalid', message: 'Approval request has not been approved'};
       this.model.entityFields.pushError(out, field, error);
@@ -46,9 +46,9 @@ export default class ReimbursementRequestValidations {
     }
   }
 
-  travelDates(field, value, out, payload){
+  travelDates(field, value, out, payload, cache){
     let error;
-    if ( !this.model.approvalRequest?.travelRequired ) return;
+    if ( !cache?.approvalRequest?.travelRequired ) return;
 
     if ( typeof value !== 'string' ){
       error = {errorType: 'invalid', message: 'Invalid date'};
@@ -90,6 +90,36 @@ export default class ReimbursementRequestValidations {
     if ( !statuses.includes(value) ){
       const error = {errorType: 'invalid', message: 'Invalid status'};
       this.model.entityFields.pushError(out, field, error);
+    }
+  }
+
+  async expenses(field, value, out){
+    const skipFields = ['reimbursement_request_expense_id', 'reimbursement_request_id'];
+    const errors = [];
+    for (const expense of value){
+      const expenseValidations = await this.model.expenseFields.validate(expense, skipFields);
+      if ( expenseValidations.valid ) continue;
+      for (const expenseField of expenseValidations.fieldsWithErrors){
+        const error = expenseField.errors[0];
+        if ( !errors.find(e => e.subField === error.subField && e.expenseField === error.expenseField) ){
+          errors.push(error);
+        }
+      }
+    }
+    for (const error of errors){
+      this.model.entityFields.pushError(out, field, error);
+    }
+  }
+
+  expenseAmount(field, value, out, payload){
+    const subField = payload.category;
+    const expenseField = field.jsonName;
+    if ( subField === 'transportation' && payload?.details?.subCategory === 'private-car' ) return;
+    const amount = typeTransform.toPositiveNumber(value);
+    if ( !amount ){
+      const error = {errorType: 'required', message: 'An amount value is missing.', subField, expenseField};
+      this.model.expenseFields.pushError(out, field, error);
+      return;
     }
   }
 }

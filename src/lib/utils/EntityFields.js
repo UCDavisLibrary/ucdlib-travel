@@ -81,6 +81,7 @@ export default class EntityFields {
     */
    async validate(record, skipFields=[], namingScheme='dbName') {
     const out = {valid: true, fieldsWithErrors: []};
+    const cache = {};
 
     for (const field of this.fields) {
       if ( skipFields.includes(field[namingScheme]) ) continue;
@@ -94,11 +95,11 @@ export default class EntityFields {
       if ( skipFields.includes(field[namingScheme]) ) continue;
       const value = record[field[namingScheme]];
       if ( field.customValidation ) {
-        field.customValidation(field, value, out, record);
+        field.customValidation(field, value, out, record, cache);
       }
 
       if ( field.customValidationAsync ) {
-        await field.customValidationAsync(field, value, out, record);
+        await field.customValidationAsync(field, value, out, record, cache);
       }
     }
 

@@ -95,3 +95,6 @@ INSERT INTO "settings" ("key", "value", "label", "description", "default_value",
 VALUES ('admin_email_subject_request','','Admin - Email Subject Request Submitted','Primary Email Subject for sending notifications to the admin within the approval chain - "Requester submits/resubmits approval request"','A Requester has Submitted a Travel Request','1', NULL, '10','textarea','{admin-email-settings,admin-settings}','1');
 INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
 VALUES ('admin_email_address','','Admin - Primary Email Address','Primary Email Address for sending notifications to the admin inside the approval chain','admin-libtravel@ucdavis.edu','1', NULL, '10','textarea','{admin-email-settings,admin-settings}','1');
+-- site wide settings
+INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
+VALUES ('site_wide_banner', '', 'Site wide banner text', NULL, '', '0', NULL, '100', 'textarea', '{app-main,admin-settings}', '0');
