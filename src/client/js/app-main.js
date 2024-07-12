@@ -64,6 +64,7 @@ export default class AppMain extends Mixin(LitElement)
     return {
       page: {type: String},
       pageTitle: {type: String},
+      bannerText: {type: String},
       showPageTitle: {type: Boolean},
       breadcrumbs: {type: Array},
       showBreadcrumbs: {type: Boolean},
@@ -81,6 +82,7 @@ export default class AppMain extends Mixin(LitElement)
     this.loadedBundles = {};
 
     this.pageTitle = '';
+    this.bannerText = '';
     this.showPageTitle = false;
     this.breadcrumbs = [];
     this.showBreadcrumbs = false;
@@ -92,7 +94,8 @@ export default class AppMain extends Mixin(LitElement)
     this.pageState = 'loading';
     this.errorMessage = '';
 
-    const models = ['AppStateModel'];
+    this.settingsCategory = 'app-main';
+    const models = ['AppStateModel','SettingsModel'];
     if ( appConfig.auth.requireAuth ) {
       models.push('AuthModel');
     }
@@ -128,8 +131,11 @@ export default class AppMain extends Mixin(LitElement)
    * @param {Object} state - AppStateModel state
    */
   async _onAppStateUpdate(state) {
+
     const { page } = state;
     if ( ['home', 'page-not-loaded'].includes(page) ) {
+      this.checkForSettingsData();
+
       this.page = page;
       window.scroll(0,0);
       return;
@@ -159,6 +165,8 @@ export default class AppMain extends Mixin(LitElement)
         AuthModel._onAuthRefreshSuccess();
       }
     }
+
+    this.checkForSettingsData();
 
     this.page = page;
     window.scroll(0,0);
@@ -198,6 +206,28 @@ export default class AppMain extends Mixin(LitElement)
     this.pageTitle = text;
     this.showPageTitle = show;
   }
+
+  /**
+   * @description checks for page data from the settings model. Repeated here because
+   * settings need to load independent of page data
+   */
+  async checkForSettingsData() {
+    const promises = [];
+    promises.push(this.SettingsModel.getByCategory(this.settingsCategory));
+    const d = await Promise.allSettled(promises);
+    const hasError = d.some(e => e.status === 'rejected' || e.value.state === 'error');
+    if ( hasError ) {
+      this.AppStateModel.showError(d);
+      console.error('AppMain: error loading page data', d);
+      return;
+    }
+
+    this.bannerText = this.SettingsModel.getByKey('site_wide_banner');
+
+    this.requestUpdate();
+
+  }
+
 
   /**
    * @description Listens for breadcrumb-update event from AppStateModel
