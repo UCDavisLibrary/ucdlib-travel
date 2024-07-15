@@ -231,7 +231,7 @@ COMMENT ON COLUMN reimbursement_request_expense.details IS 'Additional details a
 CREATE TABLE reimbursement_request_receipt (
     reimbursement_request_receipt_id SERIAL PRIMARY KEY,
     reimbursement_request_id INTEGER REFERENCES reimbursement_request(reimbursement_request_id),
-    file_name VARCHAR(200) NOT NULL,
+    file_path TEXT NOT NULL,
     file_type VARCHAR(100) NOT NULL,
     label VARCHAR(200),
     description VARCHAR(500),
