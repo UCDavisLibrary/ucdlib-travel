@@ -73,7 +73,6 @@ export default class ReimbursementForm extends Mixin(LitElement)
     });
     const reimbursementRequest = {...this.reimbursementRequest, approvalRequestId: this.approvalRequestId};
     formData.append('reimbursementRequest', JSON.stringify(reimbursementRequest));
-    console.log('submit', formData);
     this.ReimbursementRequestModel.create(formData);
   }
 
