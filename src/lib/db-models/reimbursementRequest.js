@@ -175,7 +175,55 @@ class ReimbursementRequest {
       return {error: true, message: 'Validation Error', is400: true, fieldsWithErrors: validation.fieldsWithErrors};
     }
 
-    return {success: true};
+    const expenses = data.expenses;
+    delete data.expenses;
+    const receipts = data.receipts;
+    delete data.receipts;
+    let out = {};
+    let reimbursementRequestId;
+
+    // start transaction
+    const client = await pg.pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      // insert approval request revision
+      data = pg.prepareObjectForInsert(data);
+      const sql = `INSERT INTO reimbursement_request (${data.keysString}) VALUES (${data.placeholdersString}) RETURNING reimbursement_request_id`;
+      const res = await client.query(sql, data.values);
+      reimbursementRequestId = res.rows[0].reimbursement_request_id;
+
+      // insert expenses
+      for ( const expense of expenses ){
+        delete expense.reimbursement_request_expense_id;
+        expense.reimbursement_request_id = reimbursementRequestId;
+        const expenseData = pg.prepareObjectForInsert(expense);
+        const sql = `INSERT INTO reimbursement_request_expense (${expenseData.keysString}) VALUES (${expenseData.placeholdersString})`;
+        await client.query(sql, expenseData.values);
+      }
+
+      // insert receipts
+      for ( const receipt of receipts ){
+        delete receipt.reimbursement_request_receipt_id;
+        receipt.reimbursement_request_id = reimbursementRequestId;
+        const receiptData = pg.prepareObjectForInsert(receipt);
+        const sql = `INSERT INTO reimbursement_request_receipt (${receiptData.keysString}) VALUES (${receiptData.placeholdersString})`;
+        await client.query(sql, receiptData.values);
+      }
+
+      await client.query('COMMIT');
+
+    } catch (e) {
+      console.log('Error in createReimbursementRequest', e);
+      await client.query('ROLLBACK');
+      out = {error: e};
+    } finally {
+      client.release();
+    }
+
+    if ( out.error ) return out;
+
+    return {success: true, reimbursementRequestId};
 
   }
 }
