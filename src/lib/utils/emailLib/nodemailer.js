@@ -14,10 +14,7 @@ export default class Nodemailer {
   constructor(payload = {}){
     this.message = payload;
 
-
-// off by default unless env (turn n email flag)
-      // console.log("P", process.env);
-    // if (process.env.APP_ENV !== 'production') {
+    if (serverConfig.notification == true) {
         this.transporter = nodemailer.createTransport({
           host: 'smtp.lib.ucdavis.edu',
           port: 25,
@@ -28,7 +25,7 @@ export default class Nodemailer {
           },
         });
         this.verifyTransport();
-      // }
+      }
 
   }
 

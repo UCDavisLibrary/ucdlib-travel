@@ -53,6 +53,10 @@ import EntityFields from "../EntityFields.js";
       {
         dbName: 'details',
         jsonName: 'details'
+      },
+      {
+        dbName: 'notification_type',
+        jsonName: 'notificationType'
       }
     ]);
   }
@@ -94,7 +98,7 @@ import EntityFields from "../EntityFields.js";
     } finally {
       client.release();
     }
- 
+
     return {success: true, notificationId};
   }
 

@@ -5,10 +5,20 @@ class ReimbursementExpenses {
     return {
       label: 'Transportation Expenses',
       value: 'transportation',
+      requiredDetails: this.getDetailsFields(['from', 'to']),
       subCategories: [
-        {label: 'Private Car', value: 'private-car'},
-        {label: 'Airfare/train', value: 'airfare-train'},
-        {label: 'Rental Car', value: 'rental-car'},
+        {
+          label: 'Private Car',
+          value: 'private-car',
+        },
+        {
+          label: 'Airfare/train',
+          value: 'airfare-train',
+        },
+        {
+          label: 'Rental Car',
+          value: 'rental-car',
+        },
       ]
     }
   }
@@ -17,7 +27,8 @@ class ReimbursementExpenses {
     return {
       label: 'Registration/Membership Fees',
       value: 'registration-fee',
-      subCategories: []
+      subCategories: [],
+      requiredDetails: this.getDetailsFields(['name'])
     }
   }
 
@@ -25,6 +36,7 @@ class ReimbursementExpenses {
     return {
       label: 'Daily Expenses',
       value: 'daily-expense',
+      requiredDetails: [],
       subCategories: [
         {
           label: 'Meals',
@@ -62,6 +74,30 @@ class ReimbursementExpenses {
         }
       ]
     }
+  }
+
+  get allCategories(){
+    return [
+      this.transportation,
+      this.registrationFee,
+      this.dailyExpense
+    ]
+  }
+
+  /**
+   * @description Properties that can be in the expense.details object
+   */
+  get detailsFields(){
+    return [
+      { value: 'subCategory', label: 'SubCategory' },
+      { value: 'from', label: 'From' },
+      { value: 'to', label: 'To' },
+      { value: 'name', label: 'Name' }
+    ]
+  }
+
+  getDetailsFields(values){
+    return this.detailsFields.filter(f => values.includes(f.value));
   }
 }
 

@@ -13,6 +13,7 @@ class ServerConfig {
     this.routes = ['approval-request', 'approve', 'reimbursement', 'reports', 'admin'];
 
     this.apiRoot = this.getEnv('APP_API_ROOT', '/api');
+    this.notification = this.getEnv('NOTIFICATION', true);
 
     this.uploadsRoot = this.getEnv('APP_UPLOADS_ROOT', '/uploads');
     this.uploadsDir = this.getEnv('APP_UPLOADS_DIR', '/uploads');
