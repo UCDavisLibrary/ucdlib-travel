@@ -8,9 +8,7 @@ export default (api) => {
    * @description Get array of active (non-archived) line items
    */
   api.get('/notification', protect('hasBasicAccess'), async (req, res) => {
-    console.log("There");
-
-    const data = await email.getHistory({active: true});
+    const data = await email.getHistory();
     if( data.error ) {
       console.error('Error in GET /notification', data.error);
       return res.status(500).json({error: true, message: 'Error getting request history.'});
@@ -25,7 +23,6 @@ export default (api) => {
    * @param {Object} req.body - new line item data
    */
   api.post('/notification', protect('hasAdminAccess'), async (req, res) => {
-    console.log("Here");
     const payload = (typeof req.body === 'object') && !Array.isArray(req.body) ? req.body : {};
     const data = await email.createEmail(payload);
 

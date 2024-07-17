@@ -99,17 +99,33 @@ export default class AppPageHome extends Mixin(LitElement)
   async getPageData(){
     await this.waitController.waitForUpdate();
     let ar = await this.ApprovalRequestModel.query({revisionIds:[1]});
+
+    let subject = `Requestor: {{requesterFullName}} Submitted Status`
+
+    let content = `
+    Hi {{requesterFirstName}},
+    
+    Your travel, training, or professional development request has been successfully submitted. 
+    It has been sent to {{nextApproverFullName}} for approval.
+    
+    
+    You may cancel, resubmit, or view the status of this request at anytime by going to the following url: 
+    {{approvalRequestUrl}}
+    `;
+
+
     const payload = {
       "emailContent": {
-        from: 'sender@example.com',
+        from: 'ucdlib-travel@example.com',
         to: 'sabaggett@ucdavis.edu',
-        subject: 'Message',
-        text: 'I hope this is another message gets delivered!'
+        subject: subject,
+        text: content
       },
       "requests": {
         approvalRequest: ar.payload.data[0],
         reimbursementRequest: {},
-        token: this.AuthModel.getToken().token
+        token: this.AuthModel.getToken().token,
+        type: 'approval-requested'
       }
     }
 

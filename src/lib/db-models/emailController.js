@@ -11,105 +11,60 @@ import serverConfig from "../serverConfig.js";
  * @description Class for accessing properties of an access token for this client
  */
 class Email {
-  constructor(data){
-    this.data = data || {};
-  }
-
-  /**
-   * @description Returns true if user has access to this client
-   */
-  get logging(){
-    console.log(logging);
-    return true;
-  }
-
-  /**
-   * @description Returns true if user has basic access to this client
-   */
-  get nodemailer(){
-    console.log(nodemailer);
-
-    return true;
-  }
-
-  /**
-   * @description Returns true if user has basic access to this client
-   */
-  // get settings(){
-  //   return true;
-  // }
- 
- /**
-   * @description Returns true if user has basic access to this client
-   */
-  get hydration(){
-    console.log(hydration);
-
-    return true;
-  }
-
+  constructor(){}
 
   /**
    * @description run the email function
-   * @param {String} role - The role to check for
-   * @param {Array|String} accessType - The role location. Can be 'realm', 'resource', or both.
-   * @returns
+   * @param {Object} payload - The object with email content and approval and reimbursement requests
+   * @returns {Object} status, id
    */
-  createEmail(payload){
-    let content = `
-    Hi {{requesterFirstName}},
-    
-    Your travel, training, or professional development request has been successfully submitted. 
-    It has been sent to {{nextApproverFullName}} for approval.
-    
-    
-    You may cancel, resubmit, or view the status of this request at anytime by going to the following url: 
-    {{approvalRequestUrl}}
-    `
+  async createEmail(payload){
+
     //Hydrate keywords
-    const hydration = new Hydration(payload.requests);
-    console.log("X:",hydration.hydrate(content));
+    const hydration = new Hydration(payload.requests.approvalRequest, payload.requests.reimbursementRequest);
 
-    // payload.emailContent.subject = hydration.hydrate(payload.emailContent.subject);
-    // payload.emailContent.text = hydration.hydrate(payload.emailContent.text);
-
+    payload.emailContent.subject = hydration.hydrate(payload.emailContent.subject);
+    payload.emailContent.text = hydration.hydrate(payload.emailContent.text);
 
     // //Form, Curate, and Send Message with Nodemailer
-    // const emailMessage = payload.emailContent;
+    const emailMessage = payload.emailContent;
 
-    // const mailer = new Nodemailer(emailMessage);
-    // mailer.runEmail();
+    const mailer = new Nodemailer(emailMessage);
+    mailer.runEmail();
 
-    // //log it and send to database 
-    // let notification = {
-    //   approvalRequestRevisionId: 0,
-    //   reimbursementRequestId: 0,
-    //   employeeKerberos: payload.requests.token.preferred_username,
-    //   subject: payload.emailContent.subject,
-    //   emailSent: true,
-    //   details: {}
-    // };
-    // const logging = new Logging(payload);
-    // logging.addNotificationLogging(notification);
+    //log it and send to database 
+    let notification = {
+      approvalRequestRevisionId: payload.requests.approvalRequest.approvalRequestRevisionId || null,
+      reimbursementRequestId: payload.requests.reimbursementRequest.reimbursementRequestId || null,
+      employeeKerberos: payload.requests.token.preferred_username,
+      subject: payload.emailContent.subject,
+      emailSent: true,
+      details: payload,
+      notificationType: payload.requests.type
+    };
 
-    //return success
-    return payload;
+    const logging = new Logging();
+    let result = await logging.addNotificationLogging(notification);
+
+    return result;
   }
 
   /**
    * @description get the email function
-   * @param {String} role - The role to check for
+   * @param {String} query - The role to check for
    * @param {Array|String} accessType - The role location. Can be 'realm', 'resource', or both.
    * @returns
    */
-  getHistory(query={active: true}){
-    console.log("Queried");
-
+  async getHistory(query={email_sent: true}){
+    const logging = new Logging();
+    let res = await logging.getNotificationLogging(query);
       //Format query if exists
       //Use logger to run get on Notifications database
       //Format for notification history
-      return "Queried";
-    }
+
+    console.log(res);
+    return "Queried";
+  }
   
 }
 

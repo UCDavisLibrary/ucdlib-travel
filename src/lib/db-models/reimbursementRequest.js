@@ -58,6 +58,11 @@ class ReimbursementRequest {
         dbName: 'expenses',
         jsonName: 'expenses',
         customValidationAsync: this.validations.expenses.bind(this.validations)
+      },
+      {
+        dbName: 'receipts',
+        jsonName: 'receipts',
+        customValidationAsync: this.validations.receipts.bind(this.validations)
       }
     ]);
 
@@ -79,6 +84,77 @@ class ReimbursementRequest {
       {
         dbName: 'category',
         jsonName: 'category',
+      },
+      {
+        dbName: 'date',
+        jsonName: 'date',
+        customValidationAsync: this.validations.expenseDate.bind(this.validations)
+      },
+      {
+        dbName: 'notes',
+        jsonName: 'notes',
+        charLimit: 500
+      },
+      {
+        dbName: 'details',
+        jsonName: 'details',
+        customValidationAsync: this.validations.expenseDetails.bind(this.validations)
+      }
+    ]);
+
+    this.receiptFields = new EntityFields([
+      {
+        dbName: 'reimbursement_request_receipt_id',
+        jsonName: 'reimbursementRequestReceiptId',
+        validateType: 'integer'
+      },
+      {
+        dbName: 'reimbursement_request_id',
+        jsonName: 'reimbursementRequestId',
+        validateType: 'integer'
+      },
+      {
+        dbName: 'file_path',
+        jsonName: 'filePath',
+        required: true,
+        label: 'File'
+      },
+      {
+        dbName: 'file_type',
+        jsonName: 'fileType'
+      },
+      {
+        dbName: 'label',
+        jsonName: 'label',
+        label: 'Receipt Label',
+        required: true,
+        charLimit: 200
+      },
+      {
+        dbName: 'description',
+        jsonName: 'description',
+        label: 'Receipt Description',
+        charLimit: 500
+      },
+      {
+        dbName: 'uploaded_by',
+        jsonName: 'uploadedBy'
+      },
+      {
+        dbName: 'uploaded_at',
+        jsonName: 'uploadedAt'
+      },
+      {
+        dbName: 'deleted',
+        jsonName: 'deleted'
+      },
+      {
+        dbName: 'deleted_by',
+        jsonName: 'deletedBy'
+      },
+      {
+        dbName: 'deleted_at',
+        jsonName: 'deletedAt'
       }
     ]);
   }
@@ -87,6 +163,7 @@ class ReimbursementRequest {
 
     data = this.entityFields.toDbObj(data);
     data.expenses = this.expenseFields.toDbArray(Array.isArray(data.expenses) ?  data.expenses : []);
+    data.receipts = this.receiptFields.toDbArray(Array.isArray(data.receipts) ?  data.receipts : []);
 
     // system fields
     delete data.reimbursement_request_id
@@ -94,15 +171,59 @@ class ReimbursementRequest {
 
     const validation = await this.entityFields.validate(data, ['reimbursement_request_id']);
 
-    // wait 2 seconds
-    //await new Promise(resolve => setTimeout(resolve, 2000));
-
-
     if ( !validation.valid ) {
       return {error: true, message: 'Validation Error', is400: true, fieldsWithErrors: validation.fieldsWithErrors};
     }
 
-    return {success: true};
+    const expenses = data.expenses;
+    delete data.expenses;
+    const receipts = data.receipts;
+    delete data.receipts;
+    let out = {};
+    let reimbursementRequestId;
+
+    // start transaction
+    const client = await pg.pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      // insert approval request revision
+      data = pg.prepareObjectForInsert(data);
+      const sql = `INSERT INTO reimbursement_request (${data.keysString}) VALUES (${data.placeholdersString}) RETURNING reimbursement_request_id`;
+      const res = await client.query(sql, data.values);
+      reimbursementRequestId = res.rows[0].reimbursement_request_id;
+
+      // insert expenses
+      for ( const expense of expenses ){
+        delete expense.reimbursement_request_expense_id;
+        expense.reimbursement_request_id = reimbursementRequestId;
+        const expenseData = pg.prepareObjectForInsert(expense);
+        const sql = `INSERT INTO reimbursement_request_expense (${expenseData.keysString}) VALUES (${expenseData.placeholdersString})`;
+        await client.query(sql, expenseData.values);
+      }
+
+      // insert receipts
+      for ( const receipt of receipts ){
+        delete receipt.reimbursement_request_receipt_id;
+        receipt.reimbursement_request_id = reimbursementRequestId;
+        const receiptData = pg.prepareObjectForInsert(receipt);
+        const sql = `INSERT INTO reimbursement_request_receipt (${receiptData.keysString}) VALUES (${receiptData.placeholdersString})`;
+        await client.query(sql, receiptData.values);
+      }
+
+      await client.query('COMMIT');
+
+    } catch (e) {
+      console.log('Error in createReimbursementRequest', e);
+      await client.query('ROLLBACK');
+      out = {error: e};
+    } finally {
+      client.release();
+    }
+
+    if ( out.error ) return out;
+
+    return {success: true, reimbursementRequestId};
 
   }
 }
