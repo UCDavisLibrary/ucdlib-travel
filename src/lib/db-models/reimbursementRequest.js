@@ -226,6 +226,61 @@ class ReimbursementRequest {
     return {success: true, reimbursementRequestId};
 
   }
+
+  /**
+   * @description Get reimbursement request receipts
+   * @param {Object} query - query object with the following properties:
+   * - reimbursementRequestIds: Array of reimbursement request ids
+   * - receiptIds: Array of receipt ids
+   * - filePath: Array of file paths
+   * @param {Object} kwargs - optional keyword arguments with the following properties:
+   * - returnReimbursementRequest: Boolean - if true, return the basic reimbursement request data associated with the receipt
+   * @returns {Object|Array} - returns an array of receipt objects or an object with an error property
+   */
+  async getReceipts(query={}, kwargs={}){
+
+    const returnReimbursementRequest = kwargs.returnReimbursementRequest || false;
+    const whereArgs = {
+      "1" : "1"
+    };
+
+    if ( Array.isArray(query.reimbursementRequestIds) && query.reimbursementRequestIds.length ) {
+      whereArgs["reimbursement_request_id"] = query.reimbursementRequestIds;
+    }
+
+    if ( Array.isArray(query.receiptIds) && query.receiptIds.length ) {
+      whereArgs["reimbursement_request_receipt_id"] = query.receiptIds;
+    }
+
+    if ( Array.isArray(query.filePath) && query.filePath.length ) {
+      whereArgs["file_path"] = query.filePath;
+    }
+
+    const whereClause = pg.toWhereClause(whereArgs);
+    const sql = `
+      SELECT *
+      FROM
+        reimbursement_request_receipt
+      ${returnReimbursementRequest ? `
+        LEFT JOIN
+          reimbursement_request ON reimbursement_request.reimbursement_request_id = reimbursement_request_receipt.reimbursement_request_id
+        ` : ''}
+      WHERE ${whereClause.sql}
+    `;
+
+    const res = await pg.query(sql, whereClause.values);
+    if( res.error ) return res;
+
+    const out = [];
+    for ( const row of res.res.rows ){
+      const receipt = this.receiptFields.toJsonObj(row);
+      if ( returnReimbursementRequest ){
+        receipt.reimbursementRequest = this.entityFields.toJsonObj(row);
+      }
+      out.push(receipt);
+    }
+    return out;
+  }
 }
 
 export default new ReimbursementRequest();
