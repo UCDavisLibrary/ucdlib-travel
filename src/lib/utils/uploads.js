@@ -5,6 +5,9 @@ import path from 'path';
 
 import config from "../serverConfig.js";
 import authMiddleware from "./authMiddleware.js";
+import reimbursementRequest from '../db-models/reimbursementRequest.js';
+import approvalRequest from '../db-models/approvalRequest.js';
+import typeTransform from './typeTransform.js';
 
 
 /**
@@ -32,7 +35,6 @@ class Uploads {
 
     app.use(config.uploadsRoot, router);
   }
-
 
   /**
    * @description Middleware for uploading receipts for a reimbursement request
@@ -73,17 +75,54 @@ class Uploads {
     });
   }
 
+  /**
+   * @description Middleware to authorize viewing of uploaded receipts
+   * @returns
+   */
   async _authorizeReceiptUploadView(req, res, next){
 
-    if ( req.path.startsWith(path.normalize('/reimbursement-receipts'))){
-
-      // todo: check if user has access to view this file
-      // return res.status(403).json({error: 'Not authorized to view this file.'});
+    if ( !req.path.startsWith(path.normalize('/reimbursement-receipts'))){
+      return next();
     }
-    next();
+
+    if ( req.auth.token.hasAdminAccess ) {
+      return next();
+    }
+
+    // get receipt data for this file
+    const filePath = `${config.uploadsRoot}${req.path}`;
+    let receipt = await reimbursementRequest.getReceipts({filePath: [filePath]}, {returnReimbursementRequest: true});
+    if ( receipt.error ){
+      return res.status(500).json({error: 'Error retrieving receipt data.'});
+    }
+    if ( !receipt.length ){
+      return res.status(404).json({error: 'Receipt not found.'});
+    }
+
+    // get approval request associated with receipt
+    receipt = receipt[0];
+    const approvalRequestId = typeTransform.toPositiveInt(receipt.reimbursementRequest?.approvalRequestId);
+    if ( !approvalRequestId ) {
+      return res.status(404).json({error: 'Receipt not found.'});
+    }
+    let approvalRequestData = await approvalRequest.get({requestIds: [approvalRequestId], isCurrent: true});
+    if ( approvalRequestData.error ) {
+      return res.status(500).json({error: 'Error retrieving approval request data.'});
+    }
+    if ( !approvalRequestData.total ) {
+      return res.status(404).json({error: 'Receipt not found.'});
+    }
+    approvalRequestData = approvalRequestData.data[0];
+
+    // check if user is authorized to view this receipt
+    const isOwnRequest = approvalRequestData.employeeKerberos === req.auth.token.id;;
+    const inApprovalChain = approvalRequestData.approvalStatusActivity.some(a => a.employeeKerberos === req.auth.token.id);
+    if ( !isOwnRequest && !inApprovalChain ){
+      return res.status(403).json({error: 'You are not authorized to view this receipt.'});
+    }
+
+  next();
   }
-
-
 }
 
 export default new Uploads();
