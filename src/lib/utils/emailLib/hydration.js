@@ -9,14 +9,43 @@ import fetch from 'node-fetch';
  */
 export default class Hydration {
 
-  constructor(payload = {}){
-    this.payload = payload;
- }
+  constructor(approvalRequest, reimbursementRequest){
+    this.approvalRequest = approvalRequest;
+    this.reimbursementRequest = reimbursementRequest
+  }
 
- hydrate(keywords){
+_getContext(content){
+  
 
-    const sql = `SELECT`
- }
+  // extract variables from content string
+  const variables = content.split('{{').slice(1).map(x => x.split('}}')[0]);
+
+  // get values from approvalRequest/reimbursmentRequest
+  const context = {};
+  for (let v of variables) {
+    context[v] = this._getVariableFunction(v)
+  }
+  return context;
+}
+
+_getVariableFunction(variable){
+  // return method for getting data for variable
+  if (variable === 'requesterFirstName') return this._getRequesterFirstName;
+  // etc
+  return () => {return ''}
+}
+
+hydrate(content){
+  const context = this._getContext(content);
+  return this._evaluateTemplate(content, context);
+}
+
+_evaluateTemplate(template, context) {
+  const templateFunction = new Function(...Object.keys(context), `return \`${template}\`;`);
+  console.log("H:",templateFunction)
+
+  return templateFunction(...Object.values(context));
+}
 
 }
  
