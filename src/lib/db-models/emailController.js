@@ -1,8 +1,10 @@
 // import { appConfig } from "../appGlobals.js";
-import logging from "./logging"
-import nodemailer from "./nodemailer"
+import Logging from "../utils/emailLib/logging.js"
+import Nodemailer from "../utils/emailLib/nodemailer.js"
+
 // import settings from "./settings"
-import hydration from "./hydration"
+import Hydration from "../utils/emailLib/hydration.js"
+import serverConfig from "../serverConfig.js";
 
 
 /**
@@ -17,6 +19,7 @@ class Email {
    * @description Returns true if user has access to this client
    */
   get logging(){
+    console.log(logging);
     return true;
   }
 
@@ -24,6 +27,8 @@ class Email {
    * @description Returns true if user has basic access to this client
    */
   get nodemailer(){
+    console.log(nodemailer);
+
     return true;
   }
 
@@ -33,11 +38,13 @@ class Email {
   // get settings(){
   //   return true;
   // }
-
+ 
  /**
    * @description Returns true if user has basic access to this client
    */
   get hydration(){
+    console.log(hydration);
+
     return true;
   }
 
@@ -49,12 +56,31 @@ class Email {
    * @returns
    */
   createEmail(payload){
-    console.log("Pay:",payload);
-    //Format email
     //Hydrate keywords
-    //send email - Nodemailer
-    //log it
-    //send log to database
+    const hydration = new Hydration(payload.requests);
+    payload.emailContent.subject = hydration.hydrate(payload.emailContent.subject);
+    payload.emailContent.text = hydration.hydrate(payload.emailContent.text);
+
+
+    //Form, Curate, and Send Message with Nodemailer
+    const emailMessage = payload.emailContent;
+
+    const mailer = new Nodemailer(emailMessage);
+    mailer.runEmail();
+
+
+    console.log("S:", serverConfig)
+    //log it and send to database 
+    let notification = {
+      approvalRequestRevisionId: 0,
+      reimbursementRequestId: 0,
+      employeeKerberos: "sbagg",
+      subject: payload.emailContent.subject,
+      emailSent: true,
+      details: {}
+    };
+    const logging = new Logging(payload);
+    // logging.addNotificationLogging(notification);
     //return success
     return payload;
   }
@@ -65,11 +91,13 @@ class Email {
    * @param {Array|String} accessType - The role location. Can be 'realm', 'resource', or both.
    * @returns
    */
-    getEmails(query={}){
+  getHistory(query={active: true}){
+    console.log("Queried");
+
       //Format query if exists
       //Use logger to run get on Notifications database
       //Format for notification history
-      return payload;
+      return "Queried";
     }
   
 }

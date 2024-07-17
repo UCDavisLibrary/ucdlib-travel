@@ -99,20 +99,49 @@ export default class AppPageHome extends Mixin(LitElement)
   async getPageData(){
     await this.waitController.waitForUpdate();
 
+    const payload = {
+      "emailContent": {
+        from: 'sender@example.com',
+        to: 'sabaggett@ucdavis.edu',
+        subject: 'Message',
+        text: 'I hope this is another message gets delivered!'
+      },
+      "requests": {
+        approvalRequest: {},
+        reimbursementRequest: {},
+      }
+    }
+
     const promises = [
       this.ApprovalRequestModel.query(this.ownQueryArgs),
       this.ApprovalRequestModel.query(this.approverQueryArgs),
-      this.NotificationModel.createNotificationComments()
+      this.NotificationModel.createNotificationComments(payload)
     ]
     const resolvedPromises = await Promise.allSettled(promises);
     return promiseUtils.flattenAllSettledResults(resolvedPromises);
   }
 
-  _onCreateNotificationComments(e) {
+  /**
+   * @description bound to NotificationModel notification-comments event
+   * @param {Object} e - cork-app-utils event
+   * @returns
+   */
+  _onNotificationComments(e) {
     if ( e.state !== 'loaded' ) return;
 
     console.log("E:", e);
   }
+
+    /**
+   * @description bound to NotificationModel notification-history event
+   * @param {Object} e - cork-app-utils event
+   * @returns
+   */
+    //  _onNotificationHistory(e) {
+    //   if ( e.state !== 'loaded' ) return;
+  
+    //   console.log("F:", e);
+    // }
 
 
   /**
