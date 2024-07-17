@@ -56,31 +56,42 @@ class Email {
    * @returns
    */
   createEmail(payload){
+    let content = `
+    Hi {{requesterFirstName}},
+    
+    Your travel, training, or professional development request has been successfully submitted. 
+    It has been sent to {{nextApproverFullName}} for approval.
+    
+    
+    You may cancel, resubmit, or view the status of this request at anytime by going to the following url: 
+    {{approvalRequestUrl}}
+    `
     //Hydrate keywords
     const hydration = new Hydration(payload.requests);
-    payload.emailContent.subject = hydration.hydrate(payload.emailContent.subject);
-    payload.emailContent.text = hydration.hydrate(payload.emailContent.text);
+    console.log("X:",hydration.hydrate(content));
+
+    // payload.emailContent.subject = hydration.hydrate(payload.emailContent.subject);
+    // payload.emailContent.text = hydration.hydrate(payload.emailContent.text);
 
 
-    //Form, Curate, and Send Message with Nodemailer
-    const emailMessage = payload.emailContent;
+    // //Form, Curate, and Send Message with Nodemailer
+    // const emailMessage = payload.emailContent;
 
-    const mailer = new Nodemailer(emailMessage);
-    mailer.runEmail();
+    // const mailer = new Nodemailer(emailMessage);
+    // mailer.runEmail();
 
-
-    console.log("S:", serverConfig)
-    //log it and send to database 
-    let notification = {
-      approvalRequestRevisionId: 0,
-      reimbursementRequestId: 0,
-      employeeKerberos: "sbagg",
-      subject: payload.emailContent.subject,
-      emailSent: true,
-      details: {}
-    };
-    const logging = new Logging(payload);
+    // //log it and send to database 
+    // let notification = {
+    //   approvalRequestRevisionId: 0,
+    //   reimbursementRequestId: 0,
+    //   employeeKerberos: payload.requests.token.preferred_username,
+    //   subject: payload.emailContent.subject,
+    //   emailSent: true,
+    //   details: {}
+    // };
+    // const logging = new Logging(payload);
     // logging.addNotificationLogging(notification);
+
     //return success
     return payload;
   }

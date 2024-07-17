@@ -98,7 +98,7 @@ export default class AppPageHome extends Mixin(LitElement)
    */
   async getPageData(){
     await this.waitController.waitForUpdate();
-
+    let ar = await this.ApprovalRequestModel.query({revisionIds:[1]});
     const payload = {
       "emailContent": {
         from: 'sender@example.com',
@@ -107,8 +107,9 @@ export default class AppPageHome extends Mixin(LitElement)
         text: 'I hope this is another message gets delivered!'
       },
       "requests": {
-        approvalRequest: {},
+        approvalRequest: ar.payload.data[0],
         reimbursementRequest: {},
+        token: this.AuthModel.getToken().token
       }
     }
 
