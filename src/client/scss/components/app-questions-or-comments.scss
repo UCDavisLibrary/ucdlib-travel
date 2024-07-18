@@ -1,33 +1,4 @@
 app-questions-or-comments {
-   .comment-container {
-    display: flex;
-    padding: 1.25rem;
-    justify-content: center;
-    align-items: center;
-    width:fit-content;
-    cursor:pointer;
-  }
-
-  .icon-circle {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 4rem;
-    height: 4rem;
-    min-width: 4rem;
-    min-height: 4rem;
-    font-size: 2rem;
-    border-radius: 50%;
-    color: var(--category-brand-contrast-color, #fff);
-    margin-right: 1rem;
-  }
-
-  .content {
-      font-weight:800;
-      font-size: 1.188rem;
-      color: #022851;
-  }
-
   dialog::backdrop {
     background-color: black;
     opacity: 0.5;

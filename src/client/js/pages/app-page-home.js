@@ -9,7 +9,7 @@ import promiseUtils from '../../../lib/utils/promiseUtils.js';
 import applicationOptions from '../../../lib/utils/applicationOptions.js';
 import typeTransform from "../../../lib/utils/typeTransform.js";
 import urlUtils from '../../../lib/utils/urlUtils.js';
-
+import "../components/app-questions-or-comments.js"
 /**
  * @description Element for displaying the home page
  * @param {Object} ownQueryArgs - query arguments for approval requests submitted BY user
