@@ -7,7 +7,7 @@ export default (api) => {
   /**
    * @description Get array of active (non-archived) line items
    */
-  api.get('/notification', protect('hasBasicAccess'), async (req, res) => {
+  api.get('/comments-notification', protect('hasBasicAccess'), async (req, res) => {
     const data = await email.getHistory();
     if( data.error ) {
       console.error('Error in GET /notification', data.error);
@@ -20,9 +20,9 @@ export default (api) => {
    * @description Create a new line item
    * @param {Object} req.body - new line item data
    */
-  api.post('/notification', protect('hasAdminAccess'), async (req, res) => {
+  api.post('/comments-notification', protect('hasAdminAccess'), async (req, res) => {
     const payload = (typeof req.body === 'object') && !Array.isArray(req.body) ? req.body : {};
-    const data = await email.createEmail(payload);
+    const data = await email.sendHelpEmail(payload);
 
     if ( data.error && data.is400 ) {
       return res.status(400).json(data);
