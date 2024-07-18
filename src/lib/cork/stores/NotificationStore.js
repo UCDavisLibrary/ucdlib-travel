@@ -23,13 +23,13 @@ class NotificationStore extends BaseStore {
   }
   notificationHistoryLoaded(payload) {
     this._setNotificationHistoryState({
-      state : this.STATE.LOADING,
+      state : this.STATE.LOADED,
       payload
     });
   }
   notificationHistoryError(error) {
     this._setNotificationHistoryState({
-      state : this.STATE.LOADING,
+      state : this.STATE.ERROR,
       error
     });
   }
@@ -46,13 +46,13 @@ class NotificationStore extends BaseStore {
   }
   notificationCommentsLoaded(payload, timestamp) {
     this._setNotificationCommentsState({
-      state : this.STATE.LOADING,
+      state : this.STATE.LOADED,
       payload
     }, timestamp);
   }
   notificationCommentsError(error, timestamp) {
     this._setNotificationCommentsState({
-      state : this.STATE.LOADING,
+      state : this.STATE.ERROR,
       error
     }, timestamp);
   }

@@ -56,14 +56,15 @@ class Email {
    * @returns
    */
   async getHistory(query={email_sent: true}){
-    const logging = new Logging();
-    let res = await logging.getNotificationLogging(query);
       //Format query if exists
       //Use logger to run get on Notifications database
       //Format for notification history
 
-    console.log(res);
-    return "Queried";
+    const logging = new Logging();
+    let res = await logging.getNotificationLogging(query);
+
+
+    return res;
   }
   
 }

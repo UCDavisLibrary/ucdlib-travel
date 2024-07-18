@@ -34,6 +34,7 @@ class NotificationModel extends BaseModel {
      */
     async createNotificationComments(payload) {
       let timestamp = Date.now();
+
       try {
         await this.service.createNotificationComments(payload, timestamp);
       } catch(e) {}
