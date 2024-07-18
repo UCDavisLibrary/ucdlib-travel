@@ -13,9 +13,7 @@ export default (api) => {
       console.error('Error in GET /notification', data.error);
       return res.status(500).json({error: true, message: 'Error getting request history.'});
     }
-
-    // return res.json(data);
-    return true;
+    return res.json(data);
   });
 
   /**
@@ -33,7 +31,6 @@ export default (api) => {
       console.error('Error in POST /notification', data.error);
       return res.status(500).json({error: true, message: 'Error creating comment/question item.'});
     }
-
     return res.json(data);
   });
 

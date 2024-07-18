@@ -98,67 +98,14 @@ export default class AppPageHome extends Mixin(LitElement)
    */
   async getPageData(){
     await this.waitController.waitForUpdate();
-    let ar = await this.ApprovalRequestModel.query({revisionIds:[1]});
-
-    let subject = `Requestor: {{requesterFullName}} Submitted Status`
-
-    let content = `
-    Hi {{requesterFirstName}},
-    
-    Your travel, training, or professional development request has been successfully submitted. 
-    It has been sent to {{nextApproverFullName}} for approval.
-    
-    
-    You may cancel, resubmit, or view the status of this request at anytime by going to the following url: 
-    {{approvalRequestUrl}}
-    `;
-
-
-    const payload = {
-      "emailContent": {
-        from: 'ucdlib-travel@example.com',
-        to: 'sabaggett@ucdavis.edu',
-        subject: subject,
-        text: content
-      },
-      "requests": {
-        approvalRequest: ar.payload.data[0],
-        reimbursementRequest: {},
-        token: this.AuthModel.getToken().token,
-        type: 'approval-requested'
-      }
-    }
 
     const promises = [
       this.ApprovalRequestModel.query(this.ownQueryArgs),
-      this.ApprovalRequestModel.query(this.approverQueryArgs),
-      this.NotificationModel.createNotificationComments(payload)
+      this.ApprovalRequestModel.query(this.approverQueryArgs)
     ]
     const resolvedPromises = await Promise.allSettled(promises);
     return promiseUtils.flattenAllSettledResults(resolvedPromises);
   }
-
-  /**
-   * @description bound to NotificationModel notification-comments event
-   * @param {Object} e - cork-app-utils event
-   * @returns
-   */
-  _onNotificationComments(e) {
-    if ( e.state !== 'loaded' ) return;
-
-    console.log("E:", e);
-  }
-
-    /**
-   * @description bound to NotificationModel notification-history event
-   * @param {Object} e - cork-app-utils event
-   * @returns
-   */
-    //  _onNotificationHistory(e) {
-    //   if ( e.state !== 'loaded' ) return;
-  
-    //   console.log("F:", e);
-    // }
 
 
   /**
