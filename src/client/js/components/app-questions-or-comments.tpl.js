@@ -4,12 +4,14 @@ import { ref } from 'lit/directives/ref.js';
 
 export function render() { 
     return html`
-    <div class="comment-container"  @click=${e => this._onModalClick(e)}> 
-        <div class='icon-circle category-brand--delta category-brand__background'>
-            <i class="fa fa-question"></i>
-        </div>
-        <div class='content'>Questions or Comments</div>
-    </div>
+    <a @click=${e => this._onModalClick(e)} class="focal-link category-brand--delta u-space-mb">
+          <div class="focal-link__figure focal-link__icon">
+            <i class="fa fa-question fa-2x"></i>
+          </div>
+          <div class="focal-link__body">
+            <h2 class='heading--highlight'>Question and Comments</h2>
+          </div>
+    </a>
 
     <dialog ${ref(this.dialogRef)}>
         <div>
@@ -29,6 +31,8 @@ export function render() {
         `)}
         </div>
     </dialog>
+
+
 `;}
 
 
