@@ -14,11 +14,48 @@ class Email {
   constructor(){}
 
   /**
+   * @description run the questions/comments help email function
+   * @param {Object} payload - The object with email content and approval and reimbursement requests
+   * @returns {Object} status, id
+   */
+   async sendHelpEmail(payload){
+    // emailContent: {
+    //   from: 'ucdlib-travel@example.com',
+    //   to: 'sabaggett@ucdavis.edu',
+    //   subject: subject,
+    //   text: content
+    // }
+
+    // Form, Curate, and Send Message with Nodemailer
+    // const emailMessage = payload.emailContent;
+
+    // const mailer = new Nodemailer(emailMessage);
+    // mailer.runEmail();
+
+    // //log it and send to database 
+    // let notification = {
+    //   approvalRequestRevisionId: payload.requests.approvalRequest.approvalRequestRevisionId || null,
+    //   reimbursementRequestId: payload.requests.reimbursementRequest.reimbursementRequestId || null,
+    //   employeeKerberos: payload.requests.token.preferred_username,
+    //   subject: payload.emailContent.subject,
+    //   emailSent: true,
+    //   details: payload,
+    //   notificationType: payload.requests.type
+    // };
+
+    // const logging = new Logging();
+    // let result = await logging.addNotificationLogging(notification);
+
+    return result;
+  }
+
+  /**
    * @description run the email function
    * @param {Object} payload - The object with email content and approval and reimbursement requests
    * @returns {Object} status, id
    */
   async createEmail(payload){
+    //Go into the settings and get the template for the situation
 
     //Hydrate keywords
     const hydration = new Hydration(payload.requests.approvalRequest, payload.requests.reimbursementRequest);

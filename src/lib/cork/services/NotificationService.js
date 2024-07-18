@@ -9,7 +9,7 @@ class NotificationService extends BaseService {
   }
   getNotificationHistory(){
     return this.request({
-      url : `/api/admin/notification`,
+      url : `/api/admin/comments-notification`,
       checkCached: () => this.store.data.notificationHistory,
       onLoading : request => this.store.notificationHistoryLoading(request),
       onLoad : result => this.store.notificationHistoryLoaded(result.body),
@@ -19,7 +19,7 @@ class NotificationService extends BaseService {
 
   createNotificationComments(payload, timestamp) {
     return this.request({
-      url : '/api/admin/notification',
+      url : '/api/admin/comments-notification',
       fetchOptions : {
         method : 'POST',
         body : payload
