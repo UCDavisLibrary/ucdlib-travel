@@ -2,6 +2,7 @@ import pg from "./pg.js";
 
 import validations from "./reimbursementRequestValidations.js";
 import EntityFields from "../utils/EntityFields.js";
+import employee from "./employee.js";
 
 class ReimbursementRequest {
   constructor(){
@@ -187,10 +188,15 @@ class ReimbursementRequest {
     try {
       await client.query('BEGIN');
 
+      // get approval request data
+      let approvalRequestData = await client.query('SELECT * FROM approval_request WHERE approval_request_id = $1 AND is_current = true', [data.approval_request_id]);
+      approvalRequestData = approvalRequestData.rows[0];
+      const approvalRequestRevisionId = approvalRequestData.approval_request_revision_id;
+
       // insert approval request revision
-      data = pg.prepareObjectForInsert(data);
-      const sql = `INSERT INTO reimbursement_request (${data.keysString}) VALUES (${data.placeholdersString}) RETURNING reimbursement_request_id`;
-      const res = await client.query(sql, data.values);
+      const d = pg.prepareObjectForInsert(data);
+      let sql = `INSERT INTO reimbursement_request (${d.keysString}) VALUES (${d.placeholdersString}) RETURNING reimbursement_request_id`;
+      const res = await client.query(sql, d.values);
       reimbursementRequestId = res.rows[0].reimbursement_request_id;
 
       // insert expenses
@@ -210,6 +216,42 @@ class ReimbursementRequest {
         const sql = `INSERT INTO reimbursement_request_receipt (${receiptData.keysString}) VALUES (${receiptData.placeholdersString})`;
         await client.query(sql, receiptData.values);
       }
+
+      // set reimbursement status on approval request
+      let currentReimbursementStatus = await client.query('SELECT reimbursement_status FROM approval_request WHERE approval_request_revision_id = $1', [approvalRequestRevisionId]);
+      currentReimbursementStatus = currentReimbursementStatus.rows[0].reimbursement_status;
+      let newReimbursementStatus = 'reimbursment-pending';
+      if ( ['partially-reimbursed', 'fully-reimbursed'].includes(currentReimbursementStatus) ){
+        newReimbursementStatus = 'reimbursment-pending';
+      }
+      await client.query('UPDATE approval_request SET reimbursement_status = $1 WHERE approval_request_revision_id = $2', [newReimbursementStatus, approvalRequestRevisionId]);
+
+      // insert into approval request activity
+      sql = `SELECT MAX(approver_order) as max_order FROM approval_request_approval_chain_link WHERE approval_request_revision_id = $1`;
+      const maxOrderRes = await client.query(sql, [approvalRequestRevisionId]);
+      const maxOrder = maxOrderRes.rows[0].max_order || 0;
+
+      let activityData = {
+        approval_request_revision_id: approvalRequestRevisionId,
+        approver_order: maxOrder + 1,
+        action: 'reimbursement-request-submitted',
+        employee_kerberos: approvalRequestData.employee_kerberos,
+        reimbursement_request_id: reimbursementRequestId
+      }
+      activityData = pg.prepareObjectForInsert(activityData);
+      sql = `INSERT INTO approval_request_approval_chain_link (${activityData.keysString}) VALUES (${activityData.placeholdersString})  RETURNING approval_request_approval_chain_link_id`;
+      let activityId = await client.query(sql, activityData.values);
+      activityId = activityId.rows[0].approval_request_approval_chain_link_id;
+
+      // insert "approver type"
+      let approverTypeData = {
+        approval_request_approval_chain_link_id: activityId,
+        approver_type_id: 4
+      }
+      approverTypeData = pg.prepareObjectForInsert(approverTypeData);
+      sql = `INSERT INTO link_approver_type (${approverTypeData.keysString}) VALUES (${approverTypeData.placeholdersString})`;
+      await client.query(sql, approverTypeData.values);
+
 
       await client.query('COMMIT');
 

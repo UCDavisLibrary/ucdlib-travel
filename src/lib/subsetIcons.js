@@ -38,6 +38,7 @@ class subsetIcons {
         'list',
         'magnifying-glass',
         'money-bill',
+        'money-bill-wave',
         'money-check',
         'pen',
         'pen-to-square',
