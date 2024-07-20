@@ -7,11 +7,14 @@ class NotificationStore extends BaseStore {
 
     this.data = {
       notificationHistory: {},
-      notificationComments: {}
+      notificationComments: {},
+      notificationSystems: {}
     };
     this.events = {
       NOTIFICATION_HISTORY: 'notification-history',
       NOTIFICATION_COMMENTS: 'notification-comments',
+      NOTIFICATION_SYSTEMS: 'notification-systems',
+
     };
   }
 
@@ -59,6 +62,29 @@ class NotificationStore extends BaseStore {
   _setNotificationCommentsState(state, timestamp) {
     this.data.notificationComments[timestamp] = state;
     this.emit(this.events.NOTIFICATION_COMMENTS, state);
+  }
+
+  systemNotificationLoading(request, timestamp) {
+    this._setSystemNotificationState({
+      state : this.STATE.LOADING,
+      request
+    }, timestamp);
+  }
+  systemNotificationLoaded(payload, timestamp) {
+    this._setSystemNotificationState({
+      state : this.STATE.LOADED,
+      payload
+    }, timestamp);
+  }
+  systemNotificationError(error, timestamp) {
+    this._setSystemNotificationState({
+      state : this.STATE.ERROR,
+      error
+    }, timestamp);
+  }
+  _setSystemNotificationState(state, timestamp) {
+    this.data.notificationSystems[timestamp] = state;
+    this.emit(this.events.NOTIFICATION_SYSTEMS, state);
   }
 
 }

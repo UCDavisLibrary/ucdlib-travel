@@ -30,6 +30,20 @@ class NotificationService extends BaseService {
       onError : e => this.store.notificationCommentsError(e, timestamp)
     });
   }
+
+  createSystemNotification(payload, timestamp) {
+    return this.request({
+      url : '/api/admin/system-notification',
+      fetchOptions : {
+        method : 'POST',
+        body : payload
+      },
+      json: true,
+      onLoading : request => this.store.systemNotificationLoading(request, timestamp),
+      onLoad : result => this.store.systemNotificationLoaded(result.body, timestamp),
+      onError : e => this.store.systemNotificationError(e, timestamp)
+    });
+  }
 }
 
 const service = new NotificationService();
