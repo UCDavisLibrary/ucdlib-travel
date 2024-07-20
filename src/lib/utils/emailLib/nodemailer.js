@@ -1,7 +1,4 @@
 import serverConfig from "../../serverConfig.js";
-import pg from "../../db-models/pg.js";
-import fetch from 'node-fetch';
-import { createTransport, createTestAccount, getTestMessageUrl } from "nodemailer";
 import nodemailer from 'nodemailer';
 
 /**
@@ -9,42 +6,31 @@ import nodemailer from 'nodemailer';
  * @description Utility class for querying the .
  * Does auth. 
  */
-export default class Nodemailer {
+class Nodemailer {
 
-  constructor(payload = {}){
-    this.message = payload;
-
-    if (serverConfig.notification == true) {
-        this.transporter = nodemailer.createTransport({
-          host: 'smtp.lib.ucdavis.edu',
-          port: 25,
-          secure: false,
-          tls: {
-            // do not fail on invalid certs
-            rejectUnauthorized: false,
-          },
-        });
-        this.verifyTransport();
-      }
-
-  }
-
-  async runEmail(){
-    this.transporter.sendMail(this.message, (err, info) => {
-          console.log(info.envelope);
-          console.log(info.messageId);
+  constructor(){
+    this.transporter = nodemailer.createTransport({
+      host: serverConfig.email.host,
+      port: serverConfig.email.port,
+      secure: serverConfig.email.secure,
+      tls: {
+        // do not fail on invalid certs
+        rejectUnauthorized: false,
+      },
     });
   }
 
-  verifyTransport(){
-    this.transporter.verify(function (error, success) {
-      if (error) {
-        console.log(error);
-      } else {
-        console.log("Server is ready to take our messages");
-      }
-    });
-  } 
+  async runEmail(message){
+      await this.transporter.sendMail(message, (err, info) => {
+            if (err) console.error(err);
+            console.log(info);
+            return info;
+
+      });
+    
+  }
 
 
 }
+export default new Nodemailer();
+

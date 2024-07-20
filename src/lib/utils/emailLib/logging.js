@@ -1,6 +1,5 @@
 import serverConfig from "../../serverConfig.js";
 import pg from "../../db-models/pg.js";
-import fetch from 'node-fetch';
 import EntityFields from "../EntityFields.js";
 
 /**
@@ -8,7 +7,7 @@ import EntityFields from "../EntityFields.js";
  * @description Utility class for querying the library IAM API.
  * Does auth.
  */
- export default class Logging {
+class Logging {
 
   constructor(payload = {}){
     this.payload = payload;
@@ -77,9 +76,7 @@ import EntityFields from "../EntityFields.js";
     let notificationId;
     const client = await pg.pool.connect();
     try {
-      await client.query('BEGIN');
 
-      // insert funding source
       data = pg.prepareObjectForInsert(data);
       const sql = `INSERT INTO notification (${data.keysString}) VALUES (${data.placeholdersString}) RETURNING notification_id`;
       const res = await client.query(sql, data.values);
@@ -88,12 +85,8 @@ import EntityFields from "../EntityFields.js";
       }
       notificationId = res.rows[0].notification_id;
 
-      // update approver types
-
-      await client.query('COMMIT');
 
     } catch (e) {
-      await client.query('ROLLBACK');
       return {error: e, message: 'Error creating notification'};
     } finally {
       client.release();
@@ -103,10 +96,11 @@ import EntityFields from "../EntityFields.js";
   }
 
   async getNotificationLogging(kwargs={}){
+
     const whereArgs = {};
     if( kwargs.email_sent ) {
       whereArgs['n.email_sent'] = true;
-    } else if( kwargs.archived ) {
+    } else if( kwargs.email_sent ) {
       whereArgs['n.email_sent'] = false;
     }
     if( kwargs.request_ids ) {
@@ -189,3 +183,4 @@ import EntityFields from "../EntityFields.js";
   }
 
 }
+export default new Logging();

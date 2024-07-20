@@ -1,8 +1,8 @@
 // import { appConfig } from "../appGlobals.js";
-import Logging from "../utils/emailLib/logging.js"
-import Nodemailer from "../utils/emailLib/nodemailer.js"
+import logging from "../utils/emailLib/logging.js"
+import nodemailer from "../utils/emailLib/nodemailer.js"
 
-// import settings from "./settings"
+import settings from "../utils/emailLib/settings.js"
 import Hydration from "../utils/emailLib/hydration.js"
 import serverConfig from "../serverConfig.js";
 
@@ -11,14 +11,17 @@ import serverConfig from "../serverConfig.js";
  * @description Class for accessing properties of an access token for this client
  */
 class Email {
-  constructor(){}
+  constructor(){
+
+  }
 
   /**
    * @description run the questions/comments help email function
    * @param {Object} payload - The object with email content and approval and reimbursement requests
    * @returns {Object} status, id
    */
-   async sendHelpEmail(payload){
+   async sendHelpEmail(email, url, token){
+     console.log(payload);
     // emailContent: {
     //   from: 'ucdlib-travel@example.com',
     //   to: 'sabaggett@ucdavis.edu',
@@ -33,20 +36,20 @@ class Email {
     // mailer.runEmail();
 
     // //log it and send to database 
-    // let notification = {
-    //   approvalRequestRevisionId: payload.requests.approvalRequest.approvalRequestRevisionId || null,
-    //   reimbursementRequestId: payload.requests.reimbursementRequest.reimbursementRequestId || null,
-    //   employeeKerberos: payload.requests.token.preferred_username,
-    //   subject: payload.emailContent.subject,
-    //   emailSent: true,
-    //   details: payload,
-    //   notificationType: payload.requests.type
-    // };
+    let notification = {
+      approvalRequestRevisionId: payload.requests.approvalRequest.approvalRequestRevisionId || null,
+      reimbursementRequestId: payload.requests.reimbursementRequest.reimbursementRequestId || null,
+      employeeKerberos: payload.token.preferred_username,
+      subject: payload.emailContent.subject,
+      emailSent: true,
+      details: payload,
+      notificationType: payload.requests.type
+    };
 
     // const logging = new Logging();
     // let result = await logging.addNotificationLogging(notification);
 
-    return result;
+    return payload;
   }
 
   /**
@@ -54,36 +57,58 @@ class Email {
    * @param {Object} payload - The object with email content and approval and reimbursement requests
    * @returns {Object} status, id
    */
-  async createEmail(payload){
-    //Go into the settings and get the template for the situation
+  async sendSystemNotification(notificationType, approvalRequest, reimbursementRequest, token){
+  let emailSent;
+  let details = {};
 
-    //Hydrate keywords
-    const hydration = new Hydration(payload.requests.approvalRequest, payload.requests.reimbursementRequest);
+  //Go into the settings and get the template for the situation
+  const {bodyTemplate, subjectTemplate} = settings._getTemplates(notificationType); //Do this
+  console.log("X:",bodyTemplate);
+  console.log("Y:",subjectTemplate);
 
-    payload.emailContent.subject = hydration.hydrate(payload.emailContent.subject);
-    payload.emailContent.text = hydration.hydrate(payload.emailContent.text);
+  const hydration = new Hydration(approvalRequest, reimbursementRequest, notificationType);
 
-    // //Form, Curate, and Send Message with Nodemailer
-    const emailMessage = payload.emailContent;
+  //Hydrate keywords
+  const from = serverConfig.email.systemEmailAddress;
+  const to = hydration.getNotificationRecipient() //Do this
+  const subject = hydration.hydrate(subjectTemplate);
+  const text = hydration.hydrate(bodyTemplate);
 
-    const mailer = new Nodemailer(emailMessage);
-    mailer.runEmail();
+  console.log("FROM:", from);
+  console.log("TO:", to);
+  console.log("SUBJECT:", subject);
+  console.log("TEXT:", text);
 
-    //log it and send to database 
-    let notification = {
-      approvalRequestRevisionId: payload.requests.approvalRequest.approvalRequestRevisionId || null,
-      reimbursementRequestId: payload.requests.reimbursementRequest.reimbursementRequestId || null,
-      employeeKerberos: payload.requests.token.preferred_username,
-      subject: payload.emailContent.subject,
-      emailSent: true,
-      details: payload,
-      notificationType: payload.requests.type
-    };
+  // if ( bodyTemplate && subjectTemplate && from && serverConfig.email.enabled ) {
+  //   //Initiate Hydration class
+  //   const emailMessage = {from, to, subject, text}
 
-    const logging = new Logging();
-    let result = await logging.addNotificationLogging(notification);
+  // Form, Curate, and Send Message with Nodemailer
+  //   email = nodemailer.runEmail(emailMessage);
+  //   if (email.error) {
+  //     emailSent = false;
+  //     details.error = email.error
+  //   }
 
-    return result;
+  //   emailSent = true;
+  // } else {
+  //   emailSent = false;
+  // }
+
+  // Log it and send to database 
+  // let notification = {
+  //   approvalRequestRevisionId: approvalRequest.approvalRequestRevisionId || null,
+  //   reimbursementRequestId: reimbursementRequest.reimbursementRequestId || null,
+  //   employeeKerberos: token,
+  //   subject: subject,
+  //   emailSent: emailSent,
+  //   details: details,
+  //   notificationType: notificationType
+  // };
+
+  // let result = await logging.addNotificationLogging(notification);
+
+  return approvalRequest;
   }
 
   /**

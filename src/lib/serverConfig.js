@@ -52,6 +52,14 @@ class ServerConfig {
       key: this.getEnv('UCDLIB_PERSONNEL_API_KEY', ''),
       serverCacheExpiration: this.getEnv('UCDLIB_PERSONNEL_API_CACHE_EXPIRATION', '24 hours')
     }
+    
+    this.email = {
+      host: this.getEnv('APP_SMTP_HOST', 'smtp.lib.ucdavis.edu'),
+      port: this.getEnv('APP_SMTP_PORT', '25'),
+      secure: this.getEnv('APP_SMTP_SECURE', false),
+      enabled: this.getEnv('APP_SEND_EMAIL_NOTIFICATIONS', true),
+      systemEmailAddress: this.getEnv('APP_SMTP_SYSTEM_EMAIL_ADDRESS', 'ucdlib-travel@example.com'),
+    }
   }
 
   /**

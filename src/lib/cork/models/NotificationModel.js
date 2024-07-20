@@ -45,6 +45,23 @@ class NotificationModel extends BaseModel {
       return state;
     }
 
+    /**
+     * @description Create a system notification 
+     * @param {Object} payload - comment information - see db-models/email/controller.js
+     */
+    async createSystemNotification(payload) {
+      let timestamp = Date.now();
+
+      try {
+        await this.service.createSystemNotification(payload, timestamp);
+      } catch(e) {}
+      const state = this.store.data.notificationComments[timestamp];
+      if ( state && state.state === 'loaded' ) {
+        this.store.data.notificationComments = {};
+      }
+      return state;
+    }
+
 }
 
 const model = new NotificationModel();
