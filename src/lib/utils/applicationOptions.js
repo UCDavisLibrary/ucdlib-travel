@@ -199,6 +199,19 @@ class ApplicationOptions {
     ];
   }
 
+  get approvalRequestReimbursementActivity(){
+    return [
+      {
+        value: 'reimbursement-request-submitted',
+        label: 'Submitted',
+        actionTakenText: 'Reimbursement request submitted.',
+        byLine: 'Submitted By:',
+        iconClass: 'fa-solid fa-money-bill-wave',
+        brandColor: 'delta'
+      },
+    ]
+  }
+
   /**
    * @description - Get the label for an approval status action
    * @param {String} action - The action keyword

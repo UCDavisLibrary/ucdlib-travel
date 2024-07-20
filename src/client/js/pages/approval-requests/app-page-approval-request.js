@@ -166,9 +166,14 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
       action.occurredDate = new Date(action.occurred.endsWith('Z') ? action.occurred : action.occurred + 'Z');
       action.occurredDateString = action.occurredDate.toLocaleDateString();
       action.occurredTimeString = action.occurredDate.toLocaleTimeString();
-      action.actionObject = applicationOptions.approvalStatusActions.find(a => a.value === action.action);
+      if (action.reimbursementRequestId ){
+        action.actionObject = applicationOptions.approvalRequestReimbursementActivity.find(a => a.value === action.action);
+      } else {
+        action.actionObject = applicationOptions.approvalStatusActions.find(a => a.value === action.action);
+      }
+
     })
-    activity.filter(action => !isNaN(action.occurredDate.getTime()) && action.actionObject);
+    activity = activity.filter(action => !isNaN(action.occurredDate.getTime()) && action.actionObject);
 
     activity.sort((a, b) => {
       return a.occurredDate - b.occurredDate;

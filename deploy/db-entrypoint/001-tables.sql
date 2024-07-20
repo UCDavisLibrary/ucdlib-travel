@@ -153,6 +153,8 @@ CREATE TABLE approval_request_expenditure (
 );
 COMMENT ON TABLE approval_request_expenditure IS 'Mapping table for travel approval requests and expenditure line items.';
 
+-- TODO rename this table to something like 'approval_request_activity'
+-- also update 'approval_status_activity/approvalStatusActivity' property name to 'action' on approvalRequest object
 CREATE TABLE approval_request_approval_chain_link (
     approval_request_approval_chain_link_id SERIAL PRIMARY KEY,
     approval_request_revision_id INTEGER REFERENCES approval_request(approval_request_revision_id),
@@ -161,6 +163,7 @@ CREATE TABLE approval_request_approval_chain_link (
     employee_kerberos VARCHAR(100) REFERENCES employee(kerberos),
     comments VARCHAR(2000),
     fund_changes JSONB NOT NULL DEFAULT '{}'::JSONB,
+    reimbursement_request_id INTEGER NULL,
     occurred timestamp DEFAULT NOW()
 );
 COMMENT ON TABLE approval_request_approval_chain_link IS 'Table for storing the approval chain (past approval actions and future placeholders) for a travel approval request.';
