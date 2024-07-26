@@ -13,7 +13,7 @@ class ServerConfig {
     this.routes = ['approval-request', 'approve', 'reimbursement', 'reports', 'admin'];
 
     this.apiRoot = this.getEnv('APP_API_ROOT', '/api');
-    this.notification = this.getEnv('NOTIFICATION', true);
+    this.appRoot = this.getEnv('APP_ROOT_URL', 'https://travel.library.ucdavis.edu');
 
     this.uploadsRoot = this.getEnv('APP_UPLOADS_ROOT', '/uploads');
     this.uploadsDir = this.getEnv('APP_UPLOADS_DIR', '/uploads');
@@ -57,7 +57,7 @@ class ServerConfig {
       host: this.getEnv('APP_SMTP_HOST', 'smtp.lib.ucdavis.edu'),
       port: this.getEnv('APP_SMTP_PORT', '25'),
       secure: this.getEnv('APP_SMTP_SECURE', false),
-      enabled: this.getEnv('APP_SEND_EMAIL_NOTIFICATIONS', true),
+      enabled: this.getEnv('APP_SEND_EMAIL_NOTIFICATIONS', false),
       systemEmailAddress: this.getEnv('APP_SMTP_SYSTEM_EMAIL_ADDRESS', 'ucdlib-travel@example.com'),
     }
   }

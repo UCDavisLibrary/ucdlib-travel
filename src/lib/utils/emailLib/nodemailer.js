@@ -22,7 +22,10 @@ class Nodemailer {
 
   async runEmail(message){
       await this.transporter.sendMail(message, (err, info) => {
-            if (err) console.error(err);
+            if (err) {
+              console.log("E:", err)
+              return err;
+            }
             console.log(info);
             return info;
 
