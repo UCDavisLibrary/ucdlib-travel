@@ -20,8 +20,8 @@ export default class AppQuestionsOrComments extends Mixin(LitElement)
 
   static get properties() {
     return {
-      approvalRequestId: {type: Number},
-      reimbursementRequestId: {type: Number},
+      approvalRequestId: {type: Number, attribute: 'approval-request-id'},
+      reimbursementRequestId: {type: Number, attribute: 'reimbursement-request-id'},
       modalTitle: {type: String},
       modalContent: {type: String},
       data: {type: Object},
@@ -42,10 +42,10 @@ export default class AppQuestionsOrComments extends Mixin(LitElement)
           {text: 'Submit', value: 'questions-comments-item', color: 'quad'},
           {text: 'Cancel', value: 'cancel', invert: true, color: 'primary'}
         ];
-
+    this.settingsCategory = 'admin-email-settings'
     this.dialogRef = createRef();
 
-    this._injectModel('AppStateModel', 'NotificationModel', 'ApprovalRequestModel', 'AuthModel');
+    this._injectModel('AppStateModel', 'NotificationModel', 'ApprovalRequestModel', 'AuthModel', 'SettingsModel');
   }
 
   /**
@@ -87,24 +87,35 @@ export default class AppQuestionsOrComments extends Mixin(LitElement)
   */
   async _onDialogAction(e){
     if ( e.action !== 'questions-comments-item' ) return;
-    let token = await this.AuthModel.getToken().token;
-    let adminEmail;
-    this.comments = '';
-    if(this.approvalRequestId) this.approvalRequest = await this.ApprovalRequestModel.query({requestIds: this.approvalRequestId})
-    if(this.reimbursementRequestId) this.reimbursementRequest = await this.ReimbursementModel.query({requestIds: this.reimbursementRequestId})
+
+    let emailCategory = await this.SettingsModel.getByCategory(this.settingsCategory);
+    let url;
+    this.comments = e.data;
+    this.subject = `Comment Added: Request ${this.approvalRequestId}`
+    if(this.approvalRequestId) {
+        url = `approval-request/${this.approvalRequestId}`
+        this.approvalRequest = await this.ApprovalRequestModel.query({requestIds: this.approvalRequestId});
+    }
+    if(this.reimbursementRequestId) {
+        url = `approval-request/${this.reimbursementRequestId}`
+        this.reimbursementRequest = await this.ReimbursementModel.query({requestIds: this.reimbursementRequestId});
+    }
+
+    let ap = this.approvalRequest ? this.approvalRequest.payload.data[0] : {};
+    let rb = this.reimbursementRequest ? this.reimbursementRequest.payload.data[0] : {};
 
     this.data = {
-      commenterEmail: token.email || '',
-      adminEmail: adminEmail || 'sabaggett@ucdavis.edu',
-      content: e.data,
-      detail: {
-        page: this.page,
-        request: this.approvalRequest.payload.data || '',
-        reimbursement: this.reimbursementRequest || '',
-        commenterKerb: token.preferred_username || '',
-        requestPage: this.approvalRequestId ? "approval-request/" + this.approvalRequestId : undefined,
-        reimbursementPage: this.reimbursementRequestId ? "reimbursement/" + this.approvalRequestId : undefined
-      }
+        "emailContent": {
+          subject: this.subject,
+          text: this.comments
+        }, //email content 
+        "url": url, //url
+        "temp": emailCategory.payload, //temporary payload
+        "requests": {
+          approvalRequest: ap,
+          reimbursementRequest: rb,
+        }, //requests could be replaced with id
+        notificationType: 'questions-comments' //notification type
     }
 
     let result = await this.NotificationModel.createNotificationComments(this.data);
