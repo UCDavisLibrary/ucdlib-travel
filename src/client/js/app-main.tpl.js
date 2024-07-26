@@ -56,6 +56,7 @@ return html`
     <app-page-admin-allocations id='admin-allocations'></app-page-admin-allocations>
     <app-page-admin-allocations-new id='admin-allocations-new'></app-page-admin-allocations-new>
     <app-page-admin-line-items id='admin-line-items'></app-page-admin-line-items>
+    <app-page-admin-email-settings id='admin-email-settings'></app-page-admin-email-settings>
     <app-page-admin-reimbursement id='admin-reimbursement'></app-page-admin-reimbursement>
     <app-page-approver id='approver'></app-page-approver>
     <app-page-reimbursement id='reimbursement'></app-page-reimbursement>
