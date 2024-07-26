@@ -57,6 +57,9 @@ COPY src/client/js client/js
 COPY src/client/public client/public
 COPY src/client/scss client/scss
 
+# subset icons
+RUN node lib/subsetIcons.js
+
 # client build
 RUN cd client && npm run dist
 
