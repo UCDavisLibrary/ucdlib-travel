@@ -43,7 +43,7 @@ export default class AppPageHome extends Mixin(LitElement)
 
     this.waitController = new WaitController(this);
 
-    this._injectModel('AppStateModel', 'ApprovalRequestModel', 'AuthModel');
+    this._injectModel('AppStateModel', 'ApprovalRequestModel', 'AuthModel', 'NotificationModel', 'SettingsModel');
 
     // properties for approval requests submitted BY user
     this.ownTotalPages = 1;
@@ -101,7 +101,7 @@ export default class AppPageHome extends Mixin(LitElement)
 
     const promises = [
       this.ApprovalRequestModel.query(this.ownQueryArgs),
-      this.ApprovalRequestModel.query(this.approverQueryArgs)
+      this.ApprovalRequestModel.query(this.approverQueryArgs),
     ]
     const resolvedPromises = await Promise.allSettled(promises);
     return promiseUtils.flattenAllSettledResults(resolvedPromises);

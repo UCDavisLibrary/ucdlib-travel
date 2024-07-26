@@ -9,7 +9,7 @@ class NotificationService extends BaseService {
   }
   getNotificationHistory(){
     return this.request({
-      url : `/api/admin/notification`,
+      url : `/api/admin/comments-notification`,
       checkCached: () => this.store.data.notificationHistory,
       onLoading : request => this.store.notificationHistoryLoading(request),
       onLoad : result => this.store.notificationHistoryLoaded(result.body),
@@ -19,7 +19,7 @@ class NotificationService extends BaseService {
 
   createNotificationComments(payload, timestamp) {
     return this.request({
-      url : '/api/admin/notification',
+      url : '/api/admin/comments-notification',
       fetchOptions : {
         method : 'POST',
         body : payload
@@ -28,6 +28,20 @@ class NotificationService extends BaseService {
       onLoading : request => this.store.notificationCommentsLoading(request, timestamp),
       onLoad : result => this.store.notificationCommentsLoaded(result.body, timestamp),
       onError : e => this.store.notificationCommentsError(e, timestamp)
+    });
+  }
+
+  createSystemNotification(payload, timestamp) {
+    return this.request({
+      url : '/api/admin/system-notification',
+      fetchOptions : {
+        method : 'POST',
+        body : payload
+      },
+      json: true,
+      onLoading : request => this.store.systemNotificationLoading(request, timestamp),
+      onLoad : result => this.store.systemNotificationLoaded(result.body, timestamp),
+      onError : e => this.store.systemNotificationError(e, timestamp)
     });
   }
 }
