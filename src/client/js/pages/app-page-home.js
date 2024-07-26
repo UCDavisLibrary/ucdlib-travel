@@ -99,87 +99,13 @@ export default class AppPageHome extends Mixin(LitElement)
   async getPageData(){
     await this.waitController.waitForUpdate();
 
-
-  /********************** Delete ****************************/
-    let ar = await this.ApprovalRequestModel.query({revisionIds:[1]});
-    let subject = `Sample Subject`;
-    let content = `Sample Question`;
-    let emailCategory = await this.SettingsModel.getByCategory('admin-email-settings')
-
-    const payloadSystem = {
-      "temp": emailCategory.payload, //temporary payload
-      "requests": {
-        approvalRequest: ar.payload.data[0],
-        reimbursementRequest: {},
-      }, //requests could be replaced with id
-      notificationType: 'request' //notification type
-    }
-
-    const payloadComments = {
-      "emailContent": {
-        subject: subject,
-        text: content
-      }, //email content 
-      "url": "approval-request/1", //url
-      "temp": emailCategory.payload, //temporary payload
-      "requests": {
-        approvalRequest: ar.payload.data[0],
-        reimbursementRequest: {},
-      }, //requests could be replaced with id
-      notificationType: 'request' //notification type
-    }
-  /********************** Delete ****************************/
-
     const promises = [
       this.ApprovalRequestModel.query(this.ownQueryArgs),
       this.ApprovalRequestModel.query(this.approverQueryArgs),
-      /********************** Delete ****************************/
-
-      // this.NotificationModel.createSystemNotification(payloadSystem)
-      // this.NotificationModel.createNotificationComments(payloadComments),
-      this.NotificationModel.getNotificationHistory()
-
-      /********************** Delete ****************************/
     ]
     const resolvedPromises = await Promise.allSettled(promises);
     return promiseUtils.flattenAllSettledResults(resolvedPromises);
   }
-
-  /********************** Delete ****************************/
-  /**
-   * @description bound to NotificationModel notification-systems event
-   * @param {Object} e - cork-app-utils event
-   * @returns
-   */
-   _onNotificationSystems(e) {
-    if ( e.state !== 'loaded' ) return;
-
-    console.log("Created Notification System:", e);
-  }
-
-
-  /**
-   * @description bound to NotificationModel notification-comments event
-   * @param {Object} e - cork-app-utils event
-   * @returns
-   */
-  _onNotificationComments(e) {
-    if ( e.state !== 'loaded' ) return;
-
-    console.log("Created Notification Comments:", e);
-  }
-
-    /**
-   * @description bound to NotificationModel notification-history event
-   * @param {Object} e - cork-app-utils event
-   * @returns
-   */
-   _onNotificationHistory(e) {
-      if ( e.state !== 'loaded' ) return;
-  
-      console.log("Retrieved No:", e);
-  }
-  /********************** Delete ****************************/
 
   /**
    * @description bound to ApprovalRequestModel approval-requests-requested event
