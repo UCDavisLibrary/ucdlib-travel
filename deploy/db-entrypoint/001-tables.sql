@@ -268,6 +268,6 @@ CREATE TABLE notification (
     subject VARCHAR(200) NOT NULL,
     email_sent BOOLEAN DEFAULT FALSE,
     details JSONB NOT NULL DEFAULT '{}'::JSONB,
-    notification_type VARCHAR(200),
+    notification_type VARCHAR(200)
 );
 COMMENT ON TABLE notification IS 'Notifications (emails) to employees about travel approval requests and reimbursement requests.';

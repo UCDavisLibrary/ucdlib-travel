@@ -11,45 +11,55 @@ import serverConfig from "../serverConfig.js";
  * @description Class for accessing properties of an access token for this client
  */
 class Email {
-  constructor(){
-
-  }
+  constructor(){}
 
   /**
    * @description run the questions/comments help email function
    * @param {Object} payload - The object with email content and approval and reimbursement requests
    * @returns {Object} status, id
    */
-   async sendHelpEmail(email, url, token){
-     console.log(payload);
-    // emailContent: {
-    //   from: 'ucdlib-travel@example.com',
-    //   to: 'sabaggett@ucdavis.edu',
-    //   subject: subject,
-    //   text: content
-    // }
+   async sendHelpEmail(sender, sub, body, url, payload){// url, requests, temp, token){
+    let requests = payload.requests;
+    let temp = payload.temp; //Delete
+    let token = payload.token;
+    let notificationType = payload.notificationType;
 
+    let emailSent;
+    let details = {};
+    body = body + `\n${serverConfig.appRoot}/${url}`
+
+    const from = sender;
+    const to = await settings._getEmail(temp); //Do this
+    const subject = sub;
+    const text = body;
+  
+      //Initiate Hydration class
+    const emailMessage = {from, to, subject, text}
+    console.log(emailMessage);
     // Form, Curate, and Send Message with Nodemailer
-    // const emailMessage = payload.emailContent;
+    let email = nodemailer.runEmail(emailMessage);
+    if (email.error) {
+      emailSent = false;
+      details.error = email.error
+    }
 
-    // const mailer = new Nodemailer(emailMessage);
-    // mailer.runEmail();
+    emailSent = true;
 
     // //log it and send to database 
     let notification = {
-      approvalRequestRevisionId: payload.requests.approvalRequest.approvalRequestRevisionId || null,
-      reimbursementRequestId: payload.requests.reimbursementRequest.reimbursementRequestId || null,
-      employeeKerberos: payload.token.preferred_username,
-      subject: payload.emailContent.subject,
-      emailSent: true,
-      details: payload,
-      notificationType: payload.requests.type
+      approvalRequestRevisionId: requests.approvalRequest.approvalRequestRevisionId || null,
+      reimbursementRequestId: requests.reimbursementRequest.reimbursementRequestId || null,
+      employeeKerberos: token.preferred_username,
+      subject: subject,
+      emailSent: emailSent,
+      details: details,
+      notificationType: notificationType
     };
-
+  
     // const logging = new Logging();
-    // let result = await logging.addNotificationLogging(notification);
+    let result = await logging.addNotificationLogging(notification);
 
-    return payload;
+    return result;
   }
 
   /**
@@ -57,58 +67,52 @@ class Email {
    * @param {Object} payload - The object with email content and approval and reimbursement requests
    * @returns {Object} status, id
    */
-  async sendSystemNotification(notificationType, approvalRequest, reimbursementRequest, token){
-  let emailSent;
-  let details = {};
+  async sendSystemNotification(notificationType, approvalRequest, reimbursementRequest, temp, payload){ // Delete temp when fix
+    let emailSent;
+    let details = {};
+    let token = payload.token;
+    //Go into the settings and get the template for the situation
+    const [bodyTemplate, subjectTemplate] =  await settings._getTemplates(notificationType, temp); // Delete temp when fix
 
-  //Go into the settings and get the template for the situation
-  const {bodyTemplate, subjectTemplate} = settings._getTemplates(notificationType); //Do this
-  console.log("X:",bodyTemplate);
-  console.log("Y:",subjectTemplate);
+    const hydration = new Hydration(approvalRequest, reimbursementRequest, notificationType);
 
-  const hydration = new Hydration(approvalRequest, reimbursementRequest, notificationType);
+    //Hydrate keywords
+    const from = serverConfig.email.systemEmailAddress;
+    const to = 'sabaggett@ucdavis.edu';//await hydration.getNotificationRecipient() //Do this
+    const subject = hydration.hydrate(subjectTemplate);
+    const text = hydration.hydrate(bodyTemplate);
 
-  //Hydrate keywords
-  const from = serverConfig.email.systemEmailAddress;
-  const to = hydration.getNotificationRecipient() //Do this
-  const subject = hydration.hydrate(subjectTemplate);
-  const text = hydration.hydrate(bodyTemplate);
+    if ( bodyTemplate && subjectTemplate && from && serverConfig.email.enabled ) {
+      //Initiate Hydration class
+      const emailMessage = {from, to, subject, text}
 
-  console.log("FROM:", from);
-  console.log("TO:", to);
-  console.log("SUBJECT:", subject);
-  console.log("TEXT:", text);
+    // Form, Curate, and Send Message with Nodemailer
+    let email = nodemailer.runEmail(emailMessage);
+      if (email.error) {
+        emailSent = false;
+        details.error = email.error
+      }
 
-  // if ( bodyTemplate && subjectTemplate && from && serverConfig.email.enabled ) {
-  //   //Initiate Hydration class
-  //   const emailMessage = {from, to, subject, text}
+      emailSent = true;
+    } else {
+      emailSent = false;
+    }
 
-  // Form, Curate, and Send Message with Nodemailer
-  //   email = nodemailer.runEmail(emailMessage);
-  //   if (email.error) {
-  //     emailSent = false;
-  //     details.error = email.error
-  //   }
 
-  //   emailSent = true;
-  // } else {
-  //   emailSent = false;
-  // }
+    // Log it and send to database 
+    let notification = {
+      approvalRequestRevisionId: approvalRequest.approvalRequestRevisionId || null,
+      reimbursementRequestId: reimbursementRequest.reimbursementRequestId || null,
+      employeeKerberos: token.preferred_username,
+      subject: subject,
+      emailSent: emailSent,
+      details: details,
+      notificationType: notificationType
+    };
 
-  // Log it and send to database 
-  // let notification = {
-  //   approvalRequestRevisionId: approvalRequest.approvalRequestRevisionId || null,
-  //   reimbursementRequestId: reimbursementRequest.reimbursementRequestId || null,
-  //   employeeKerberos: token,
-  //   subject: subject,
-  //   emailSent: emailSent,
-  //   details: details,
-  //   notificationType: notificationType
-  // };
+    let result = await logging.addNotificationLogging(notification);
 
-  // let result = await logging.addNotificationLogging(notification);
-
-  return approvalRequest;
+    return result;
   }
 
   /**
@@ -117,12 +121,10 @@ class Email {
    * @param {Array|String} accessType - The role location. Can be 'realm', 'resource', or both.
    * @returns
    */
-  async getHistory(query={email_sent: true}){
+  async getHistory(query={}){
       //Format query if exists
       //Use logger to run get on Notifications database
       //Format for notification history
-
-    const logging = new Logging();
     let res = await logging.getNotificationLogging(query);
 
 

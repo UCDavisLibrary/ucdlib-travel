@@ -9,14 +9,14 @@ import settings from "../../db-models/settings.js";
  */
 export default class Hydration {
 
-  constructor(approvalRequest={}, reimbursementRequest={}, notificationType='approval-request'){
+  constructor(approvalRequest={}, reimbursementRequest={}, notificationType='request'){
     this.approvalRequest = approvalRequest;
     this.reimbursementRequest = reimbursementRequest,
     this.type = notificationType;
   }
 
 approvers(){
-  if(this.type == "approval-request" || this.type == "next-approver") return this.approvalRequest.approvalStatusActivity.filter(x => x.action == 'approval-needed');
+  if(this.type == "request" || this.type == "next-approver") return this.approvalRequest.approvalStatusActivity.filter(x => x.action == 'approval-needed');
   if(this.type == "request-cancel") return this.approvalRequest.approvalStatusActivity.filter(x => (x.action == 'approved') || (x.action == 'approved-with-changes'));
 
 }
@@ -105,14 +105,12 @@ _getReimbursementStatus(){
 }
 
 _getApprovalRequestUrl(){
-  return `localhost:3000/approval-request/${this.approvalRequest.approvalRequestId}`;
+  return `${serverConfig.appRoot}/approval-request/${this.approvalRequest.approvalRequestId}`;
 }
 
 _getReimbursementRequestUrl(){
-  return `localhost:3000/reimbursement-request/${this.reimbursementRequest.reimbursementRequestId}`;
+  return `${serverConfig.appRoot}/reimbursement-request/${this.reimbursementRequest.reimbursementRequestId}`;
 }
-
-
 
 async _getRequesterEmail(){
   let emp = {};
@@ -120,20 +118,14 @@ async _getRequesterEmail(){
   return emp.emp.res.email;
 }
 
-// async _getfirstApproverEmail(){
-//   let emp = {};
-//   let results = this.approvers("approver");
-//   let approver = results[0].employeeKerberos;
-//   emp.emp = await employee.getIamRecordById(approver);
-//   return emp.emp.res.email;
-// }
-
 async _getNextApproverEmail(){
   let emp = {};
   let results = this.approvers("approved");
+
   let approver = results[0].employeeKerberos;
 
   emp.emp = await employee.getIamRecordById(approver);
+
   return emp.emp.res.email;
 }
 
@@ -158,45 +150,42 @@ async _getHrEmail(){
 
 _getContext(content){
   // extract variables from content string
+  const variables = content.split('${').slice(1).map(x => x.split('}')[0]);
 
-  const variables = content.split('{{').slice(1).map(x => x.split('}}')[0]);
-
+  this._variables = [
+    {name: 'requesterFirstName', cb: this._getRequesterFirstName()},
+    {name: 'requesterLastName', cb: this._getRequesterLastName()},
+    {name: 'requesterFullName', cb: this._getRequesterFullName()},
+    {name: 'requesterKerberos', cb: this._getRequesterKerberos()},
+    {name: 'requesterLabel', cb: this._getRequesterLabel()},
+    {name: 'requesterOrganization', cb: this._getRequesterOrganization()},
+    {name: 'requesterBuisnessPurpose', cb: this._getRequesterBuisnessPurpose()},
+    {name: 'requesterLocation', cb: this._getRequesterLocation()},
+    {name: 'requesterProgramDate', cb: this._getRequesterProgramDate()},
+    {name: 'requesterTravelDate', cb: this._getRequesterTravelDate()},
+    {name: 'requesterComments', cb: this._getRequesterComments()},
+    {name: 'nextApproverFullName', cb: this._getNextApproverFullName()},
+    {name: 'nextApproverFundChanges', cb: this._getNextApproverFundChanges()},
+    {name: 'nextApproverKerberos', cb: this._getNextApproverKerberos()},
+    {name: 'reimbursementLabel', cb: this._getReimbursementLabel()},
+    {name: 'reimbursementEmployeeResidence', cb: this._getReimbursementEmployeeResidence()},
+    {name: 'reimbursementTravelDate', cb: this._getReimbursementTravelDate()},
+    {name: 'reimbursementPersonalTime', cb: this._getReimbursementPersonalTime()},
+    {name: 'reimbursementComments', cb: this._getReimbursementComments()},
+    {name: 'reimbursementStatus', cb: this._getReimbursementStatus()},
+    {name: 'approvalRequestUrl', cb: this._getApprovalRequestUrl()},
+    {name: 'reimbursementRequestUrl', cb: this._getReimbursementRequestUrl()}
+  ];
   // get values from approvalRequest/reimbursmentRequest
   const context = {};
   for (let v of variables) {
-    context[v] = this._getVariableFunction(v)
+    const found = this._variables.find((element) => element.name == v);
+
+    if(found) context[found.name] = found.cb;
   }
+
+
   return context;
-}
-
-_getVariableFunction(variable){
-  // return method for getting data for variable
-
-  if (variable === 'requesterFirstName') return this._getRequesterFirstName();
-  if (variable === 'requesterLastName') return this._getRequesterLastName();
-  if (variable === 'requesterFullName') return this._getRequesterFullName();
-  if (variable === 'requesterKerberos') return this._getRequesterKerberos();
-  if (variable === 'requesterLabel') return this._getRequesterLabel();
-  if (variable === 'requesterOrganization') return this._getRequesterOrganization();
-  if (variable === 'requesterBuisnessPurpose') return this._getRequesterBuisnessPurpose();
-  if (variable === 'requesterLocation') return this._getRequesterLocation();
-  if (variable === 'requesterProgramDate') return this._getRequesterProgramDate();
-  if (variable === 'requesterTravelDate') return this._getRequesterTravelDate();
-  if (variable === 'requesterComments') return this._getRequesterComments();
-
-  if (variable === 'nextApproverFullName') return this._getNextApproverFullName();
-  if (variable === 'nextApproverFundChanges') return this._getNextApproverFundChanges();
-  if (variable === 'nextApproverKerberos') return this._getNextApproverKerberos();
-  if (variable === 'reimbursementLabel') return this._getReimbursementLabel();
-  if (variable === 'reimbursementEmployeeResidence') return this._getReimbursementEmployeeResidence();
-  if (variable === 'reimbursementTravelDate') return this._getReimbursementTravelDate();
-  if (variable === 'reimbursementPersonalTime') return this._getReimbursementPersonalTime();
-  if (variable === 'reimbursementComments') return this._getReimbursementComments();
-  if (variable === 'reimbursementStatus') return this._getReimbursementStatus();
-  if (variable === 'approvalRequestUrl') return this._getApprovalRequestUrl();
-  if (variable === 'reimbursementRequestUrl') return this._getReimbursementRequestUrl();
-  // etc
-  return () => {return ''}
 }
 
   hydrate(content){
@@ -205,13 +194,13 @@ _getVariableFunction(variable){
   }
 
   _evaluateTemplate(template, context) {
-    //template = template.replaceAll('{{', '${').replaceAll('}}', '}');
-    const templateFunction = new Function(...Object.keys(context), `return \`${template}\`;`);
-
-    return templateFunction(...Object.values(context)).replace(/[ \t]{1,}/g, ' ');
+    const templateFunction = new Function(...Object.keys(context), `return \`${JSON.stringify(template)}\`;`);
+    return templateFunction(...Object.values(context));
   }
 
   getNotificationRecipient(){
+    let recipient;
+
     /* Requester 
       - Approver denies, changes requested, or approves but modifies request
       - All approvers in chain have approved request
@@ -226,7 +215,7 @@ _getVariableFunction(variable){
          this.type == 'enter-reimbursement' ||
          this.type == 'reimbursement-refund' ||
          this.type == 'reimbursement-completed' 
-        ) this._getRequesterEmail();
+        ) recipient = this._getRequesterEmail();
    
       
     /* One/Next Approver 
@@ -234,19 +223,21 @@ _getVariableFunction(variable){
       - An approver approves approval request
       -
     */
-      if(this.type == 'approval-request' ||
+      if(this.type == 'request' ||
          this.type == 'next-approver'
-        ) this._getNextApproverEmail();
+        ) recipient = this._getNextApproverEmail();
 
     /* Many Approvers 
       - Requester recalls/cancels approval request
     */
-      if(this.type == 'request-cancel') this._getAllApprovedEmail();
+      if(this.type == 'request-cancel') recipient = this._getAllApprovedEmail();
 
     /* Finance/HR  
       - Requester submits reimbursement
     */
-      if(this.type == 'submit-reimbursement') this._getHrEmail();
+      if(this.type == 'submit-reimbursement') recipient = this._getHrEmail();
+
+    return recipient;
 
   }
 

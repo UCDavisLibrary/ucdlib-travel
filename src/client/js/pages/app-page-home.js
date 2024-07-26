@@ -43,7 +43,7 @@ export default class AppPageHome extends Mixin(LitElement)
 
     this.waitController = new WaitController(this);
 
-    this._injectModel('AppStateModel', 'ApprovalRequestModel', 'AuthModel', 'NotificationModel');
+    this._injectModel('AppStateModel', 'ApprovalRequestModel', 'AuthModel', 'NotificationModel', 'SettingsModel');
 
     // properties for approval requests submitted BY user
     this.ownTotalPages = 1;
@@ -98,47 +98,65 @@ export default class AppPageHome extends Mixin(LitElement)
    */
   async getPageData(){
     await this.waitController.waitForUpdate();
+
+
+  /********************** Delete ****************************/
     let ar = await this.ApprovalRequestModel.query({revisionIds:[1]});
+    let subject = `Sample Subject`;
+    let content = `Sample Question`;
+    let emailCategory = await this.SettingsModel.getByCategory('admin-email-settings')
 
-    let subject = `Requestor: {{requesterFullName}} Submitted Status`
-
-    let content = `
-    Hi {{requesterFirstName}},
-    
-    Your travel, training, or professional development request has been successfully submitted. 
-    It has been sent to {{nextApproverFullName}} for approval.
-    
-    
-    You may cancel, resubmit, or view the status of this request at anytime by going to the following url: 
-    {{approvalRequestUrl}}
-    `;
-
-
-    const payload = {
-      "emailContent": {
-        from: 'ucdlib-travel@example.com',
-        to: 'sabaggett@ucdavis.edu',
-        subject: subject,
-        text: content
-      },
-      "url": "approval-request/1",
+    const payloadSystem = {
+      "temp": emailCategory.payload, //temporary payload
       "requests": {
         approvalRequest: ar.payload.data[0],
         reimbursementRequest: {},
-      },
-      notificationType: 'approval-request'
+      }, //requests could be replaced with id
+      notificationType: 'request' //notification type
     }
+
+    const payloadComments = {
+      "emailContent": {
+        subject: subject,
+        text: content
+      }, //email content 
+      "url": "approval-request/1", //url
+      "temp": emailCategory.payload, //temporary payload
+      "requests": {
+        approvalRequest: ar.payload.data[0],
+        reimbursementRequest: {},
+      }, //requests could be replaced with id
+      notificationType: 'request' //notification type
+    }
+  /********************** Delete ****************************/
 
     const promises = [
       this.ApprovalRequestModel.query(this.ownQueryArgs),
       this.ApprovalRequestModel.query(this.approverQueryArgs),
-      this.NotificationModel.createSystemNotification(payload),
-      // this.NotificationModel.getNotificationHistory()
+      /********************** Delete ****************************/
 
+      // this.NotificationModel.createSystemNotification(payloadSystem)
+      // this.NotificationModel.createNotificationComments(payloadComments),
+      this.NotificationModel.getNotificationHistory()
+
+      /********************** Delete ****************************/
     ]
     const resolvedPromises = await Promise.allSettled(promises);
     return promiseUtils.flattenAllSettledResults(resolvedPromises);
   }
+
+  /********************** Delete ****************************/
+  /**
+   * @description bound to NotificationModel notification-systems event
+   * @param {Object} e - cork-app-utils event
+   * @returns
+   */
+   _onNotificationSystems(e) {
+    if ( e.state !== 'loaded' ) return;
+
+    console.log("Created Notification System:", e);
+  }
+
 
   /**
    * @description bound to NotificationModel notification-comments event
@@ -148,7 +166,7 @@ export default class AppPageHome extends Mixin(LitElement)
   _onNotificationComments(e) {
     if ( e.state !== 'loaded' ) return;
 
-    console.log("Created Notification:", e);
+    console.log("Created Notification Comments:", e);
   }
 
     /**
@@ -161,7 +179,7 @@ export default class AppPageHome extends Mixin(LitElement)
   
       console.log("Retrieved No:", e);
   }
-
+  /********************** Delete ****************************/
 
   /**
    * @description bound to ApprovalRequestModel approval-requests-requested event

@@ -55,9 +55,9 @@ class NotificationModel extends BaseModel {
       try {
         await this.service.createSystemNotification(payload, timestamp);
       } catch(e) {}
-      const state = this.store.data.notificationComments[timestamp];
+      const state = this.store.data.notificationSystems[timestamp];
       if ( state && state.state === 'loaded' ) {
-        this.store.data.notificationComments = {};
+        this.store.data.notificationSystems = {};
       }
       return state;
     }

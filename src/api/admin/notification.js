@@ -23,10 +23,15 @@ export default (api) => {
   api.post('/comments-notification', protect('hasAdminAccess'), async (req, res) => {
     const payload = (typeof req.body === 'object') && !Array.isArray(req.body) ? req.body : {};
     payload.token = req.auth.token;
-    
+    const sender = payload.token.token.email;
     const emailContent = payload.emailContent;
 
-    // const data = await email.sendHelpEmail(emailContent, payload.url, payload.token);
+    const data = await email.sendHelpEmail(sender, 
+                                           emailContent.subject, 
+                                           emailContent.text, 
+                                           payload.url,
+                                           payload
+                                          );
 
     if ( data.error && data.is400 ) {
       return res.status(400).json(data);
@@ -45,9 +50,13 @@ export default (api) => {
      api.post('/system-notification', protect('hasAdminAccess'), async (req, res) => {
       const payload = (typeof req.body === 'object') && !Array.isArray(req.body) ? req.body : {};
       payload.token = req.auth.token;
+      const data = await email.sendSystemNotification(payload.notificationType, 
+                                                      payload.requests.approvalRequest, 
+                                                      payload.requests.reimbursementRequest, 
+                                                      payload.temp, 
+                                                      payload
+                                                     );
 
-      const data = await email.sendSystemNotification(payload.notificationType, payload.requests.approvalRequest, payload.requests.reimbursementRequest, payload.token);
-  
       if ( data.error && data.is400 ) {
         return res.status(400).json(data);
       }
