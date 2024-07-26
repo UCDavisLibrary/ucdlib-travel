@@ -95,7 +95,7 @@ export function render() {
 
       <fieldset class=${this.validationHandler.errorClass('expenses', reimbursmentExpenses.transportation.value)}>
         <legend>${reimbursmentExpenses.transportation.label}</legend>
-        <div>${this.validationHandler.renderErrorMessages('expenses', reimbursmentExpenses.transportation.value)}</div>
+        <div>${this.validationHandler.renderErrorMessages('expenses', reimbursmentExpenses.transportation.value, 'u-space-mb')}</div>
 
         ${reimbursmentExpenses.transportation.subCategories.map(category => html`
           <div class='u-space-mb'>
@@ -139,7 +139,7 @@ export function render() {
 
       <fieldset class=${this.validationHandler.errorClass('expenses', reimbursmentExpenses.registrationFee.value)}>
         <legend>${reimbursmentExpenses.registrationFee.label}</legend>
-        <div>${this.validationHandler.renderErrorMessages('expenses', reimbursmentExpenses.registrationFee.value)}</div>
+        <div>${this.validationHandler.renderErrorMessages('expenses', reimbursmentExpenses.registrationFee.value, 'u-space-mb')}</div>
         <div class='flex flex--justify-end'>
           <a class='icon-link' @click=${() => this.addBlankExpense(reimbursmentExpenses.registrationFee.value)}>
             <i class="fa-solid fa-circle-plus quad"></i>
@@ -165,7 +165,7 @@ export function render() {
 
       <fieldset class=${this.validationHandler.errorClass('expenses', reimbursmentExpenses.dailyExpense.value)}>
         <legend>${reimbursmentExpenses.dailyExpense.label}</legend>
-        <div>${this.validationHandler.renderErrorMessages('expenses', reimbursmentExpenses.dailyExpense.value)}</div>
+        <div>${this.validationHandler.renderErrorMessages('expenses', reimbursmentExpenses.dailyExpense.value, 'u-space-mb')}</div>
 
         <div class='flex flex--justify-end'>
           <a class='icon-link' @click=${() => this._onNewDateClick('add')}>
@@ -253,7 +253,7 @@ export function render() {
 
       <fieldset class=${this.validationHandler.errorClass('receipts')}>
         <legend>Receipts</legend>
-        <div>${this.validationHandler.renderErrorMessages('receipts')}</div>
+        <div>${this.validationHandler.renderErrorMessages('receipts', null, 'u-space-mb')}</div>
         <div class='flex flex--justify-end'>
           <a class='icon-link' @click=${() => this.addBlankReceipt()}>
             <i class="fa-solid fa-circle-plus quad"></i>

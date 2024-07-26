@@ -45,14 +45,15 @@ export default class ValidationHandler {
    * @description Render error messages for a field (if any)
    * @param {String} field - field name
    * @param {String} subField - optional. subfield name in error object
+   * @param {String} classes - optional. Additional classes to add to the error message div
    */
-  renderErrorMessages(field, subField){
+  renderErrorMessages(field, subField, classes=''){
     let messages = this.errorsByField[field] || [];
     if ( subField ) {
       messages = messages.filter(e => e.subField === subField);
     }
     return html`
-      <div class=${this._errorMessageClass}>
+      <div class='${this._errorMessageClass} ${classes}'>
         ${messages.map(err => html`<div>${err.message}</div>`)}
       </div>
     `
