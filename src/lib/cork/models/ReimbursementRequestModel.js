@@ -11,6 +11,7 @@ class ReimbursementRequestModel extends BaseModel {
     this.service = ReimbursementRequestService;
 
     this.register('ReimbursementRequestModel');
+    this.inject('ApprovalRequestModel');
   }
 
   async create(payload){
@@ -21,6 +22,8 @@ class ReimbursementRequestModel extends BaseModel {
     const state = this.store.data.created[timestamp];
     if ( state && state.state === 'loaded' ) {
       // todo clear cache
+
+      this.ApprovalRequestModel.clearCache();
     }
     return state;
   }
