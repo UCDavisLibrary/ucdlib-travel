@@ -143,7 +143,7 @@ async _getAllApprovedEmail(){
 }
 
 async _getHrEmail(){
-  return settings.getByKey("admin_hr_email_address").default_value;
+  return settings.getByKey("admin_email_address").default_value;
 }
 
 

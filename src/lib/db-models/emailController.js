@@ -18,9 +18,8 @@ class Email {
    * @param {Object} payload - The object with email content and approval and reimbursement requests
    * @returns {Object} status, id
    */
-   async sendHelpEmail(sender, sub, body, url, payload){// url, requests, temp, token){
+   async sendHelpEmail(sender, sub, body, url, payload) {
     let requests = payload.requests;
-    let temp = payload.temp; //Delete
     let token = payload.token;
     let notificationType = payload.notificationType;
 
@@ -29,13 +28,13 @@ class Email {
     body = body + `\n${serverConfig.appRoot}/${url}`
 
     const from = sender;
-    const to = await settings._getEmail(temp); //Do this
+    const to = await settings._getEmail(); //Do this
     const subject = sub;
     const text = body;
   
       //Initiate Hydration class
     const emailMessage = {from, to, subject, text}
-    console.log(emailMessage);
+
     // Form, Curate, and Send Message with Nodemailer
     let email = nodemailer.runEmail(emailMessage);
     if (email.error) {
@@ -56,7 +55,6 @@ class Email {
       notificationType: notificationType
     };
   
-    // const logging = new Logging();
     let result = await logging.addNotificationLogging(notification);
 
     return result;
@@ -67,12 +65,13 @@ class Email {
    * @param {Object} payload - The object with email content and approval and reimbursement requests
    * @returns {Object} status, id
    */
-  async sendSystemNotification(notificationType, approvalRequest, reimbursementRequest, temp, payload){ // Delete temp when fix
+  async sendSystemNotification(notificationType, approvalRequest, reimbursementRequest, payload){ 
     let emailSent;
     let details = {};
     let token = payload.token;
+    
     //Go into the settings and get the template for the situation
-    const [bodyTemplate, subjectTemplate] =  await settings._getTemplates(notificationType, temp); // Delete temp when fix
+    const [bodyTemplate, subjectTemplate] =  await settings._getTemplates(notificationType); 
 
     const hydration = new Hydration(approvalRequest, reimbursementRequest, notificationType);
 

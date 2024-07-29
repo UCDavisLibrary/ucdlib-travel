@@ -53,7 +53,6 @@ export default (api) => {
       const data = await email.sendSystemNotification(payload.notificationType, 
                                                       payload.requests.approvalRequest, 
                                                       payload.requests.reimbursementRequest, 
-                                                      payload.temp, 
                                                       payload
                                                      );
 
