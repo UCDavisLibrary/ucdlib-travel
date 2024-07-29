@@ -90,10 +90,9 @@ export default class ReimbursementForm extends Mixin(LitElement)
     } else if ( e.state === 'loading') {
       this.AppStateModel.showLoading();
     } else if ( e.state === 'loaded' ) {
-      // todo update
       this.validationHandler = new ValidationHandler();
       this.requestUpdate();
-      this.AppStateModel.showLoaded(this.parentPageId);
+      this.AppStateModel.setLocation(`/approval-request/${this.approvalRequestId}`);
       this.AppStateModel.showToast({message: 'Reimbursement request submitted', type: 'success'});
     }
   }

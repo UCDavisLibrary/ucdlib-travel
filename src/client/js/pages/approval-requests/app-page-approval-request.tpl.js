@@ -8,20 +8,28 @@ return html`
   <div class='l-gutter u-space-mb'>
     <div class='l-basic--flipped'>
 
-    <div class='l-sidebar-second'>
+      <div class='l-sidebar-second'>
 
-      <div class='panel panel--icon panel--icon-custom'>
-        <h2 class="panel__title"><span class="panel__custom-icon fa-solid fa-chart-bar panel--icon-pinot"></span>Approval Status</h2>
-        <div class='flex flex--align-center flex--wrap u-space-mb'>
-          <div class='keep-together u-space-mr--small small grey'>Overall Status: </div>
-          <div class='bold primary'>${applicationOptions.approvalStatusLabel(this.approvalRequest.approvalStatus)}</div>
+        <div class='panel panel--icon panel--icon-custom'>
+          <h2 class="panel__title"><span class="panel__custom-icon fa-solid fa-chart-bar panel--icon-pinot"></span>Approval Status</h2>
+          <div class='flex flex--align-center flex--wrap u-space-mb'>
+            <div class='keep-together u-space-mr--small small grey'>Overall Status: </div>
+            <div class='bold primary'>${applicationOptions.approvalStatusLabel(this.approvalRequest.approvalStatus)}</div>
+          </div>
+          <div>
+            ${(this.getApprovalStatusActivity()).map((chainObj) => html`
+              <approval-request-status-action .action=${chainObj} @view-comments=${this._onStatusCommentsClick}></approval-request-status-action>
+            `)}
+          </div>
         </div>
-        <div>
-          ${(this.getApprovalStatusActivity()).map((chainObj) => html`
-            <approval-request-status-action .action=${chainObj} @view-comments=${this._onStatusCommentsClick}></approval-request-status-action>
-          `)}
+
+        <div class='panel panel--icon panel--icon-custom'>
+          <h2 class="panel__title"><span class="panel__custom-icon fa-solid fa-money-bill-wave panel--icon-delta"></span>Reimbursement Status</h2>
+          <div class='flex flex--align-center flex--wrap u-space-mb'>
+            <div class='keep-together u-space-mr--small small grey'>Overall Status: </div>
+            <div class='bold primary'>${applicationOptions.reimbursementStatusLabel(this.approvalRequest.reimbursementStatus)}</div>
+          </div>
         </div>
-      </div>
 
       </div>
       <div class='l-content'>

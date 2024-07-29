@@ -207,7 +207,7 @@ class ApplicationOptions {
         actionTakenText: 'Reimbursement request submitted.',
         byLine: 'Submitted By:',
         iconClass: 'fa-solid fa-money-bill-wave',
-        brandColor: 'delta'
+        brandColor: 'putah-creek'
       },
     ]
   }

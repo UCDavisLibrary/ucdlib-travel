@@ -82,10 +82,17 @@ class ApprovalRequestModel extends BaseModel {
     } catch(e) {}
     const state = this.store.data.created[timestamp];
     if ( state && state.state === 'loaded' ) {
-      this.store.data.fetched = {};
-      this.store.data.approvalChainByRequestId = {};
+      this.clearCache();
     }
     return state;
+  }
+
+  /**
+   * @description Clear the cache of fetched data
+   */
+  clearCache(){
+    this.store.data.fetched = {};
+    this.store.data.approvalChainByRequestId = {};
   }
 
   /**

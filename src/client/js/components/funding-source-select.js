@@ -226,11 +226,11 @@ export default class FundingSourceSelect extends Mixin(LitElement)
 
   /**
    * @description Attached to active-funding-sources-fetched event from FundingSourceModel
-   * Fires when active funding sources are fetched from the server
+   * Fires when active funding sources are requested - from server or cache
    * @param {Object} e - cork-app-utils event object
    * @returns
    */
-  _onActiveFundingSourcesFetched(e) {
+  _onActiveFundingSourcesRequested(e) {
     if ( e.state !== 'loaded' ) return;
     this.activeFundingSources = e.payload.filter(source => source.fundingSourceId !== 8);
   }

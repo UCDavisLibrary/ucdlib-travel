@@ -2,7 +2,6 @@ import pg from "./pg.js";
 
 import validations from "./reimbursementRequestValidations.js";
 import EntityFields from "../utils/EntityFields.js";
-import employee from "./employee.js";
 
 class ReimbursementRequest {
   constructor(){
@@ -158,6 +157,27 @@ class ReimbursementRequest {
         jsonName: 'deletedAt'
       }
     ]);
+  }
+
+  async get(query={}, kwargs={}){
+
+    // pagination
+    const page = Number(kwargs.page) || 1;
+    const pageSize = Number(kwargs.pageSize) || 10;
+    const noPaging = pageSize === -1;
+
+    // construct where clause conditions for query
+    let whereArgs = {
+      "1" : "1"
+    };
+
+    if ( Array.isArray(kwargs.approvalRequestIds) && kwargs.approvalRequestIds.length ) {
+      whereArgs["rr.approval_request_id"] = kwargs.approvalRequestIds;
+    }
+
+    if ( Array.isArray(kwargs.reimbursementRequestIds) && kwargs.reimbursementRequestIds.length ) {
+      whereArgs["rr.reimbursement_request_id"] = kwargs.reimbursementRequestIds;
+    }
   }
 
   async create(data){
