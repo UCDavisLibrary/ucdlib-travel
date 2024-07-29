@@ -105,6 +105,26 @@ export default class AppPageAdminEmailSettings extends Mixin(LitElement)
     this.requestUpdate();
   }
 
+  sortSettings(){
+    let body = this.settings.filter(set => set.key.includes("admin_email_body"));
+    let subject = this.settings.filter(set => set.key.includes("admin_email_subject"));
+
+    body = this.sort(body);
+    subject = this.sort(subject);
+    let newArray= [];
+
+    if(body.length == subject.length) {
+      body.map((e, i) => {
+        let tempArray = []
+        tempArray.push(e)
+        tempArray.push(subject[i])
+        newArray.push(tempArray)
+      });
+    }
+
+    return newArray;
+  }
+
 
   /**
    * @description bound to "use default value" checkbox change event
@@ -129,6 +149,24 @@ export default class AppPageAdminEmailSettings extends Mixin(LitElement)
         this.AppStateModel.showToast({message: 'Email Settings update failed', type: 'error'});
       }
     }
+
+  sort(item){
+    item.sort((a, b) => {
+      const A = a.key.toUpperCase(); // ignore upper and lowercase
+      const B = b.key.toUpperCase(); // ignore upper and lowercase
+
+      if (A < B) {
+        return -1;
+      }
+      if (A > B) {
+        return 1;
+      }
+    
+      // names must be equal
+      return 0;
+    });
+    return item;
+  }
 
       /**
    * @description bound to setting value input event

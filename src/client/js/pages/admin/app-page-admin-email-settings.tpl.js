@@ -3,10 +3,8 @@ import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 
 
 export function render() { 
+  const group = this.sortSettings()
 return html`
-
-  <app-questions-or-comments page=${this.id} approvalRequestId=1></app-questions-or-comments>
-
   <div class='l-gutter l-container--narrow u-space-mb--large'>
     <ucd-theme-search-form
       placeholder='Search settings'
@@ -15,7 +13,7 @@ return html`
       @search=${this._onSearch}>
     </ucd-theme-search-form>
     <div>
-      ${this.settings.map(setting => renderEmailSetting.call(this, setting))}
+      ${group.map((setting) => renderEmailSetting.call(this, setting))}
     </div>
     <div ?hidden=${!this.noSettings} class='u-space-mt--large'>
       <p>No settings match your search. <a class='pointer' @click=${this.clearAndFocusSearch}>Try another search term.</a></p>
@@ -30,10 +28,11 @@ return html`
 `;}
 
 function renderEmailSetting(setting) {
-  console.log("D:",setting);
+  
   return html`
     <email-template
-
+      .defaultBodyTemplate=${setting[0].defaultValue}
+      .defaultSubjectTemplate=${setting[1].defaultValue}
     ></email-template>
 `;}
 
