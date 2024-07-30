@@ -70,11 +70,12 @@ class ReimbursementRequest {
       {
         dbName: 'reimbursement_request_expense_id',
         jsonName: 'reimbursementRequestExpenseId',
-        validateType: 'integer'
+        validateType: 'integer',
       },
       {
         dbName: 'reimbursement_request_id',
-        jsonName: 'reimbursementRequestId'
+        jsonName: 'reimbursementRequestId',
+        jsonBuildObjectOptions: {exclude: true}
       },
       {
         dbName: 'amount',
@@ -100,7 +101,9 @@ class ReimbursementRequest {
         jsonName: 'details',
         customValidationAsync: this.validations.expenseDetails.bind(this.validations)
       }
-    ]);
+    ],
+    {jsonBuildObjectTable: 're'}
+    );
 
     this.receiptFields = new EntityFields([
       {
@@ -156,14 +159,29 @@ class ReimbursementRequest {
         dbName: 'deleted_at',
         jsonName: 'deletedAt'
       }
-    ]);
+    ], {jsonBuildObjectTable: 'rrr'});
   }
 
-  async get(query={}, kwargs={}){
+  /**
+   * @description Get reimbursement requests
+   * @param {Object} query - query object with the following properties:
+   * - approvalRequestIds: Array of approval request ids
+   * - reimbursementRequestIds: Array of reimbursement request ids
+   * - page: Number - page number
+   * - pageSize: Number - number of items per page
+   * @returns {Object} - if successful, returns an object with the following properties:
+   *  - data: Array of reimbursement request objects
+   *  - total: Number - total number of reimbursement requests
+   *  - page: Number - current page number
+   *  - pageSize: Number - number of items per page
+   *  - totalPages: Number - total number of pages
+   * - if unsuccessful, returns an object with an error property
+   */
+  async get(query={}){
 
     // pagination
-    const page = Number(kwargs.page) || 1;
-    const pageSize = Number(kwargs.pageSize) || 10;
+    const page = Number(query.page) || 1;
+    const pageSize = Number(query.pageSize) || 10;
     const noPaging = pageSize === -1;
 
     // construct where clause conditions for query
@@ -171,15 +189,71 @@ class ReimbursementRequest {
       "1" : "1"
     };
 
-    if ( Array.isArray(kwargs.approvalRequestIds) && kwargs.approvalRequestIds.length ) {
-      whereArgs["rr.approval_request_id"] = kwargs.approvalRequestIds;
+    if ( Array.isArray(query.approvalRequestIds) && query.approvalRequestIds.length ) {
+      whereArgs["rr.approval_request_id"] = query.approvalRequestIds;
     }
 
-    if ( Array.isArray(kwargs.reimbursementRequestIds) && kwargs.reimbursementRequestIds.length ) {
-      whereArgs["rr.reimbursement_request_id"] = kwargs.reimbursementRequestIds;
+    if ( Array.isArray(query.reimbursementRequestIds) && query.reimbursementRequestIds.length ) {
+      whereArgs["rr.reimbursement_request_id"] = query.reimbursementRequestIds;
     }
+    const whereClause = pg.toWhereClause(whereArgs);
+
+    // get total count
+    const countSql = `
+      SELECT
+        COUNT(rr.reimbursement_request_id) as total
+      FROM
+        reimbursement_request rr
+      WHERE
+        ${whereClause.sql}
+    `;
+    const countRes = await pg.query(countSql, whereClause.values);
+    if( countRes.error ) return countRes;
+    const total = Number(countRes.res.rows[0].total);
+
+    // get data
+    const sql = `
+      SELECT
+        rr.*,
+        json_agg(${this.expenseFields.jsonBuildObject()}) as expenses,
+        json_agg(${this.receiptFields.jsonBuildObject()}) as receipts
+      FROM
+        reimbursement_request rr
+      LEFT JOIN
+        reimbursement_request_expense re ON rr.reimbursement_request_id = re.reimbursement_request_id
+      LEFT JOIN
+        reimbursement_request_receipt rrr ON rr.reimbursement_request_id = rrr.reimbursement_request_id
+      WHERE
+        ${whereClause.sql}
+      GROUP BY
+        rr.reimbursement_request_id
+      ORDER BY
+        rr.reimbursement_request_id DESC
+      ${noPaging ? '' : `LIMIT ${pageSize} OFFSET ${(page - 1) * pageSize}`}
+    `;
+
+    const res = await pg.query(sql, whereClause.values);
+    if( res.error ) return res;
+
+    const data = this.entityFields.toJsonArray(res.res.rows);
+    for ( const row of data ){
+      if ( !row.expenses?.[0]?.reimbursementRequestExpenseId ) row.expenses = [];
+      if ( !row.receipts?.[0]?.reimbursementRequestReceiptId ) row.receipts = [];
+    }
+    const totalPages = noPaging ? 1 : Math.ceil(total / pageSize);
+
+    return {data, total, page, pageSize, totalPages};
+
   }
 
+  /**
+   * @description Create a reimbursement request
+   * @param {Object} data - reimbursement request data. See this.entityFields for field names
+   * @returns {Object} - returns an object with the following properties:
+   *  - success: Boolean - true if successful
+   *  - reimbursementRequestId: Number - the id of the new reimbursement request
+   *  - error: Boolean - true if an error occurred
+   */
   async create(data){
 
     data = this.entityFields.toDbObj(data);
