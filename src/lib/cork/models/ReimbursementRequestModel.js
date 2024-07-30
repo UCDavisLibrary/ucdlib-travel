@@ -2,6 +2,8 @@ import {BaseModel} from '@ucd-lib/cork-app-utils';
 import ReimbursementRequestService from '../services/ReimbursementRequestService.js';
 import ReimbursementRequestStore from '../stores/ReimbursementRequestStore.js';
 
+import urlUtils from '../../utils/urlUtils.js';
+
 class ReimbursementRequestModel extends BaseModel {
 
   constructor() {
@@ -21,11 +23,28 @@ class ReimbursementRequestModel extends BaseModel {
     } catch(e) {}
     const state = this.store.data.created[timestamp];
     if ( state && state.state === 'loaded' ) {
-      // todo clear cache
-
+      this.store.data.fetched = {};
       this.ApprovalRequestModel.clearCache();
     }
     return state;
+  }
+
+  async query(query={}){
+
+    const queryString = urlUtils.queryObjectToKebabString(query);
+
+    let state = this.store.data.fetched[queryString];
+    try {
+      if( state && state.state === 'loading' ) {
+        await state.request;
+      } else {
+        await this.service.query(queryString);
+      }
+    } catch(e) {}
+
+    this.store.emit(this.store.events.REIMBURSEMENT_REQUEST_REQUESTED, this.store.data.fetched[queryString]);
+
+    return this.store.data.fetched[queryString];
   }
 
 }

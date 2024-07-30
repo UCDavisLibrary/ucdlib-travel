@@ -42,7 +42,7 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
 
     this.waitController = new WaitController(this);
 
-    this._injectModel('AppStateModel', 'ApprovalRequestModel');
+    this._injectModel('AppStateModel', 'ApprovalRequestModel', 'ReimbursementRequestModel');
   }
 
   /**

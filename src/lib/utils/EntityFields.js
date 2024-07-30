@@ -11,8 +11,9 @@
  * - customValidationAsync {Function} OPTIONAL - custom async validation function
  */
 export default class EntityFields {
-   constructor(fields = []){
+   constructor(fields = [], kwargs={}) {
       this.fields = fields;
+      this.jsonBuildObjectTable = kwargs.jsonBuildObjectTable || '';
    }
 
    /**
@@ -65,6 +66,21 @@ export default class EntityFields {
     */
    toDbArray(arr=[]) {
     return arr.map(obj => this.toDbObj(obj));
+   }
+
+   /**
+    * @description Returns a json_build_object sql function with the fields of this class
+    * @returns {String}
+    */
+   jsonBuildObject() {
+    const args = [];
+    for (const field of this.fields) {
+      if ( field.jsonBuildObjectOptions?.exclude ) continue;
+      const table = field.jsonBuildObjectOptions?.table || this.jsonBuildObjectTable;
+      if ( !table ) continue;
+      args.push(`'${field.jsonName}', ${table}.${field.dbName}`);
+    }
+    return `json_build_object(${args.join(', ')})`;
    }
 
    /**
