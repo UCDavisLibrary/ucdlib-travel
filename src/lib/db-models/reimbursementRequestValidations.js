@@ -51,20 +51,8 @@ export default class ReimbursementRequestValidations {
     let error;
     if ( !cache?.approvalRequest?.travelRequired ) return;
 
-    if ( typeof value !== 'string' ){
-      error = {errorType: 'invalid', message: 'Invalid date'};
-      this.model.entityFields.pushError(out, field, error);
-      return;
-    }
-
-    const [date, time] = value.split('T');
-    if ( !date.match(/^\d{4}-\d{2}-\d{2}$/) ){
-      error = {errorType: 'invalid', message: 'Invalid date'};
-      this.model.entityFields.pushError(out, field, error);
-      return;
-    }
-    if (!time || !time.match(/^\d{2}:\d{2}$/)){
-      error = {errorType: 'invalid', message: 'Invalid time'};
+    if ( !typeTransform.toDateFromISO(value) ){
+      error = {errorType: 'invalid', message: 'A valid date is required'};
       this.model.entityFields.pushError(out, field, error);
       return;
     }
@@ -173,9 +161,10 @@ export default class ReimbursementRequestValidations {
     const expenseField = field.jsonName;
     const category = reimbursmentExpenses.allCategories.find(c => c.value === subField);
     const subCategories = (category?.subCategories || []).map(c => c.value);
-    const subCategory = details?.subCategory;
+    const subCategoryValue = details?.subCategory;
+    const subCategory = (category?.subCategories || []).find(c => c?.value === subCategoryValue);
 
-    if ( subCategories.length && !subCategories.includes(subCategory) ){
+    if ( subCategories.length && !subCategories.includes(subCategoryValue) ){
       const error = {errorType: 'invalid', message: 'Invalid expense sub-category', subField, expenseField};
       this.model.expenseFields.pushError(out, field, error);
       return;
@@ -187,5 +176,14 @@ export default class ReimbursementRequestValidations {
         this.model.expenseFields.pushError(out, field, error);
       }
     }
+    if ( Array.isArray(subCategory?.requiredDetails)){
+      for (const detail of subCategory.requiredDetails){
+        if ( !details[detail.value] ){
+          const error = {errorType: 'required', message: `'${detail.label}' field is required.`, subField, expenseField};
+          this.model.expenseFields.pushError(out, field, error);
+        }
+      }
+    }
+
   }
 }

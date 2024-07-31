@@ -22,65 +22,37 @@ export function render() {
         <input
           id="${idPrefix}--employee-residence"
           type="text"
-          .value=${this.reimbursementRequest.employee_residence || ''}
+          .value=${this.reimbursementRequest.employeeResidence || ''}
           @input=${e => this._onInput('employeeResidence', e.target.value)} />
         <div>${this.validationHandler.renderErrorMessages('employeeResidence')}</div>
       </div>
 
       <fieldset ?hidden=${!this.hasTravel}>
         <legend>Dates *</legend>
-        <div class='${this.validationHandler.errorClass('travelStart')} u-space-mb'>
-          <div class='l-2col'>
-            <div class='l-first'>
-              <div class='field-container'>
-                <label for="${idPrefix}--departure-date">Departure Date</label>
-                <input
+        <div class='l-2col'>
+          <div class='l-first'>
+            <div class='field-container ${this.validationHandler.errorClass('travelStart')}'>
+              <label for="${idPrefix}--departure-date">Actual Departure Date</label>
+              <input
                   id="${idPrefix}--departure-date"
                   type="date"
-                  .value=${this.getDate('travelStart')}
-                  @input=${e => this._onDateInput('travelStart', e.target.value)} />
-              </div>
-            </div>
-            <div class='l-second'>
-              <div class='field-container'>
-                <label for="${idPrefix}--departure-time">Departure Time</label>
-                <input
-                  id="${idPrefix}--departure-time"
-                  type="time"
-                  .value=${this.getTime('travelStart')}
-                  @input=${e => this._onTimeInput('travelStart', e.target.value)} />
-              </div>
+                  .value=${this.reimbursementRequest.travelStart || ''}
+                  @input=${e => this._onInput('travelStart', e.target.value)} />
+              <div>${this.validationHandler.renderErrorMessages('travelStart')}</div>
             </div>
           </div>
-          <div>${this.validationHandler.renderErrorMessages('travelStart')}</div>
-        </div>
-
-        <div class='${this.validationHandler.errorClass('travelEnd')} u-space-mb'>
-          <div class='l-2col'>
-            <div class='l-first'>
-              <div class='field-container'>
-                <label for="${idPrefix}--return-date">Return Date</label>
-                <input
+          <div class='l-second'>
+            <div class='field-container ${this.validationHandler.errorClass('travelEnd')}'>
+              <label for="${idPrefix}--return-date">Actual Return Date</label>
+              <input
                   id="${idPrefix}--return-date"
                   type="date"
-                  .value=${this.getDate('travelEnd')}
-                  @input=${e => this._onDateInput('travelEnd', e.target.value)} />
-              </div>
-            </div>
-            <div class='l-second'>
-              <div class='field-container'>
-                <label for="${idPrefix}--return-time">Return Time</label>
-                <input
-                  id="${idPrefix}--return-time"
-                  type="time"
-                  .value=${this.getTime('travelEnd')}
-                  @input=${e => this._onTimeInput('travelEnd', e.target.value)} />
-              </div>
+                  .value=${this.reimbursementRequest.travelEnd || ''}
+                  @input=${e => this._onInput('travelEnd', e.target.value)} />
+              <div>${this.validationHandler.renderErrorMessages('travelEnd')}</div>
             </div>
           </div>
-          <div>${this.validationHandler.renderErrorMessages('travelEnd')}</div>
         </div>
-
         <div class='field-container ${this.validationHandler.errorClass('personalTime')}'>
           <label for="${idPrefix}--personal-time">Personal Time</label>
           <textarea
@@ -279,6 +251,37 @@ export function render() {
         </div>
       </fieldset>
 
+      <fieldset class='expense-comparison'>
+        <legend>Expense Comparison</legend>
+        <div class='l-2col l-2col--75-25 u-space-mb--small'>
+          <div class='l-second'>
+            <span>Approved Estimated Expenses</span>
+          </div>
+          <div class='l-first amount'><code>+ $${this.approvedExpenses}</code></div>
+        </div>
+        <div class='l-2col l-2col--75-25 u-space-mb--small'>
+          <div class='l-second'>
+            <span ?hidden=${!this.hasOtherTotalExpenses}>This Reimbursement Request</span>
+            <span ?hidden=${this.hasOtherTotalExpenses}>Reimbursement Requested</span>
+          </div>
+          <div class='l-first amount'><code>- $${this.totalExpenses}</code></div>
+        </div>
+        <div class='l-2col l-2col--75-25 u-space-mb--small' ?hidden=${!this.hasOtherTotalExpenses}>
+          <div class='l-second'>
+            <span>Previously Submitted Reimbursement Requests</span>
+          </div>
+          <div class='l-first amount'><code>- $${this.otherTotalExpenses}</code></div>
+        </div>
+        <div class='l-2col l-2col--75-25 u-space-mb--small total-row'>
+          <div class='l-second'>
+            <span class='primary'>Remaining Estimated Expenses</span>
+          </div>
+          <div class='l-first amount ${this.netExpensesNegative ? 'double-decker' : 'quad'}'>
+            <code>${this.netExpensesNegative ? '-' : '+'} $${this.netExpenses}</code>
+          </div>
+        </div>
+      </fieldset>
+
       <div class='form-buttons alignable-promo__buttons'>
         <button
           type="submit"
@@ -312,7 +315,7 @@ function renderReceiptForm(receipt){
           @input=${e => this._setObjectProperty(receipt, 'label', e.target.value)} />
       </div>
       <div class='field-container'>
-        <label for="${idPrefix}--description">Receipt Description</label>
+        <label for="${idPrefix}--description">Receipt Description (optional)</label>
         <textarea
           id="${idPrefix}--description"
           .value=${receipt.description || ''}
@@ -392,7 +395,7 @@ function renderRegistrationFeeForm(expense){
       </div>
       <div class='l-second'>
         <div class='field-container'>
-          <label for="${idPrefix}--name">Name *</label>
+          <label for="${idPrefix}--name">Fee Type *</label>
           <input
             id="${idPrefix}--name"
             type="text"
@@ -483,10 +486,36 @@ function renderTransportationExpenseForm(expense){
   `;
 
   if ( subCategory === 'private-car' ){
+    const milesId = `${idPrefix}--${subCategory}--estimated-miles`;
     return html`
       <div>
         ${roundTripRadioButtons}
         ${addressFields}
+        <div class='l-2col'>
+          <div class='l-first'>
+            <div class='field-container'>
+              <label for=${milesId}>Estimated Miles *</label>
+              <input
+                id=${milesId}
+                type="number"
+                .value=${expense.details?.estimatedMiles || ''}
+                @input=${e => this._onPersonalCarMileageInput(expense, e.target.value)} />
+            </div>
+          </div>
+          <div class='l-second'>
+            <div class='field-container'>
+              <label for="${idPrefix}--${subCategory}--amount">Estimated Amount</label>
+              <div class='amount input--dollar width-100'>
+                <input
+                  id="${idPrefix}--${subCategory}--amount"
+                  type="number"
+                  step="0.01"
+                  .value=${expense.amount}
+                  disabled />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     `;
   }
