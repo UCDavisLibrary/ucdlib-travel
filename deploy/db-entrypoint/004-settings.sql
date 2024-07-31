@@ -1,4 +1,4 @@
-INSERT INTO settings("key", "value", "label", "description", "input_type", "categories") VALUES ('mileage_rate', 3.50, 'Mileage Rate', 'The current mileage rate for personal car mileage reimbursement.', 'number', '{"approval-requests", "admin-settings"}');
+INSERT INTO settings("key", "value", "label", "description", "input_type", "categories") VALUES ('mileage_rate', .58, 'Mileage Rate', 'The current mileage rate for personal car mileage reimbursement.', 'number', '{"approval-requests", "reimbursement-requests", "admin-settings"}');
 
 -- approval requests
 INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")

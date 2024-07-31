@@ -27,6 +27,8 @@ class SettingsModel extends BaseModel {
         await this.service.getByCategory(category);
       }
     } catch(e) {}
+
+    this.store.emit(this.store.events.CATEGORY_REQUESTED, this.store.data.byCategory[category]);
     return this.store.data.byCategory[category];
   }
 
