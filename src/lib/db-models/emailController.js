@@ -21,7 +21,6 @@ class Email {
    async sendHelpEmail(sender, sub, body, url, payload) {
     let requests = payload.requests;
     let token = payload.token;
-    let notificationType = payload.notificationType;
 
     let emailSent;
     let details = {};
@@ -31,28 +30,33 @@ class Email {
     const to = await settings._getEmail(); //Do this
     const subject = sub;
     const text = body;
-  
-      //Initiate Hydration class
-    const emailMessage = {from, to, subject, text}
 
-    // Form, Curate, and Send Message with Nodemailer
-    let email = nodemailer.runEmail(emailMessage);
-    if (email.error) {
+    if ( text && subject && from && serverConfig.email.enabled ) {
+      //Initiate Hydration class
+      const emailMessage = {from, to, subject, text}
+
+      // Form, Curate, and Send Message with Nodemailer
+      let email = await nodemailer.runEmail(emailMessage);
+        if (email.error) {
+          emailSent = false;
+          details.error = email.error
+        }
+
+        emailSent = true;
+    } else {
       emailSent = false;
-      details.error = email.error
     }
 
-    emailSent = true;
 
     // //log it and send to database 
     let notification = {
-      approvalRequestRevisionId: requests.approvalRequest.approvalRequestRevisionId || null,
-      reimbursementRequestId: requests.reimbursementRequest.reimbursementRequestId || null,
-      employeeKerberos: token.preferred_username,
+      approvalRequestRevisionId: requests?.approvalRequest,
+      reimbursementRequestId: requests?.reimbursementRequest,
+      employeeKerberos: token?.preferred_username,
       subject: subject,
       emailSent: emailSent,
       details: details,
-      notificationType: notificationType
+      notificationType: null
     };
   
     let result = await logging.addNotificationLogging(notification);
@@ -69,14 +73,14 @@ class Email {
     let emailSent;
     let details = {};
     let token = payload.token;
-    
+
     //Go into the settings and get the template for the situation
     const [bodyTemplate, subjectTemplate] =  await settings._getTemplates(notificationType); 
 
     const hydration = new Hydration(approvalRequest, reimbursementRequest, notificationType);
 
     //Hydrate keywords
-    const from = serverConfig.email.systemEmailAddress;
+    const from = 'sabaggett@ucdavis.edu';//serverConfig.email.systemEmailAddress;
     const to = 'sabaggett@ucdavis.edu';//await hydration.getNotificationRecipient() //Do this
     const subject = hydration.hydrate(subjectTemplate);
     const text = hydration.hydrate(bodyTemplate);
@@ -86,7 +90,7 @@ class Email {
       const emailMessage = {from, to, subject, text}
 
     // Form, Curate, and Send Message with Nodemailer
-    let email = nodemailer.runEmail(emailMessage);
+    let email = await nodemailer.runEmail(emailMessage);
       if (email.error) {
         emailSent = false;
         details.error = email.error
@@ -121,9 +125,9 @@ class Email {
    * @returns
    */
   async getHistory(query={}){
-      //Format query if exists
-      //Use logger to run get on Notifications database
-      //Format for notification history
+    //Format query if exists
+    //Format for notification history
+
     let res = await logging.getNotificationLogging(query);
 
 
