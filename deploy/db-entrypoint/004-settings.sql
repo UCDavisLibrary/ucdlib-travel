@@ -28,11 +28,9 @@ VALUES ('approval_chain_intro', '', 'Approval Chain Introduction', 'Displayed ab
 INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
 VALUES ('approval_chain_intro_none', '', 'Approval Chain Introduction (no approval required)', 'Displayed above list of required approvers if no approval is required.', 'Based on the funding sources selected, approval is not required for this request.', '1', NULL, '10', 'textarea', '{approval-requests,admin-settings}', '0');
 
-INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
-VALUES ('approval_request_form_comments_max', '', 'Approval Request Comments Max', 'The maximum length of a comment field.', '', '0', NULL, '10', 'number', '{approval-requests,admin-settings}', '0');
+INSERT INTO settings("key", "value", "label", "description", "input_type", "categories") VALUES ('approval_request_form_comments_max', 125, 'Approval Request Comments Max', 'The maximum length of a comment field.', 'number', '{"approval-requests", "admin-settings"}');
 
-INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
-VALUES ('approval_request_form_comments_warning', '', 'Approval Request Comments Warning', 'Length of comment field before a warning is displayed.', '', '0', NULL, '10', 'number', '{approval-requests,admin-settings}', '0');
+INSERT INTO settings("key", "value", "label", "description", "input_type", "categories") VALUES ('approval_request_form_comments_warning', 30, 'Approval Request Comments Warning', 'Length of comment field before a warning is displayed.', 'number', '{"approval-requests", "admin-settings"}');
 
 -- admin line items page
 INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
