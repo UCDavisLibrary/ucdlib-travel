@@ -6,15 +6,10 @@ import { html } from 'lit';
  */
 export function render() {
   return html`
-    ${renderField('Comments', this.input, 'None')}
-  `;}
-
-function renderField(value,characterLimit=0,warningThreshold=0) {
-  return html`
     <div 
-      .value=${this.input} 
-      .characterLimit=500
-      .warningThreshold=90 <!-- If want custom threshold -->>
+      .value=${this.value} 
+      .characterLimit=${this.characterLimit || 500}
+      .warningThreshold=${this.warningThreshold || 100}
     ><span style="color: ${this.color}">${this.message}</span></div>
   `;
 }

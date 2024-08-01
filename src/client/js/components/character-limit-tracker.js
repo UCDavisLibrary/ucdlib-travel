@@ -4,7 +4,7 @@ import {render} from "./character-limit-tracker.tpl.js";
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 
 import { LitCorkUtils, Mixin } from "../../../lib/appGlobals.js";
-import typeTransform from '../../../lib/utils/typeTransform.js';
+
 
 /**
  * @class CharacterLimitTracker
@@ -16,10 +16,10 @@ export default class CharacterLimitTracker extends Mixin(LitElement)
 
   static get properties() {
     return {
-      input: {type: String},
-      defaultValue: {type: Integer},
-      characterLimit: {type: Integer},
-      warningThreshold: {type: Integer},
+      value: {type: String},
+      defaultValue: {type: Number},
+      characterLimit: {type: Number},
+      warningThreshold: {type: Number},
       message: {type: String}
     }
   }
@@ -28,7 +28,7 @@ export default class CharacterLimitTracker extends Mixin(LitElement)
     super();
     this.render = render.bind(this);
 
-    this.input = '';
+    this.value = '';
     this.characterLimit = 0;
     this.warningThreshold = 0;
     this.message = '';
@@ -40,37 +40,33 @@ export default class CharacterLimitTracker extends Mixin(LitElement)
      * @param {*} p - Changed properties
      */
   async willUpdate(p) {
-    if ( p.has('input')){
-      this._updateColor();
-      this.message = `${this.input.length}/${this.characterLimit} characters`;
+    if ( p.has('value')){
+      this.value !=undefined ? this._updateMessage() : this.message = '';
     }
-
-    this._setStatus(p);
-  }
-
-  /**
-   * @description Attached to input event on main search input field
-   * @param {Event} e - input event
-   */
-  _onInput(e) {
-    this.query = e.target.value;
-    this.selectedText = '';
-    this.selectedObject = {};
-    this.selectedValue = '';
   }
 
   /**
    * @description Update the color based on input length
    */
-  _updateColor() {
-    if (this.input.length > this.characterLimit) {
+  _updateMessage() {
+    this.message = `${this.value.length} / ${this.characterLimit} characters`;
+    if (this.value.length > this.characterLimit) {
       this.color = 'red';
-    } else if (this.input.length > this.warningThreshold) {
+      this.message = `${this.value.length} / ${this.characterLimit} characters (over limit)`;
+    } else if (this.value.length > this.characterLimit - this.warningThreshold) {
       this.color = 'yellow';
     } else {
       this.color = '';
     }
   }
+
+  /**
+   * @description calculate warning threshold
+   */
+  _calculateWarningThreshold() {
+    this.warningThreshold = this.characterLimit / 5;
+  }
+
 }
 
 customElements.define('character-limit-tracker', CharacterLimitTracker);
