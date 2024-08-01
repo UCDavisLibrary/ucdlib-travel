@@ -95,3 +95,8 @@ fieldset.field-error {
   }
 }
 
+input:disabled {
+  background-color: #f0f0f0;
+  opacity: .4;
+}
+

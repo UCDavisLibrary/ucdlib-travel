@@ -71,11 +71,13 @@ export default class AppPageAdminLineItems extends Mixin(LitElement)
   }
 
   /**
-   * @description bound to LineItemsModel ACTIVE_LINE_ITEMS_FETCHED event
-   * fires when active line items are fetched from the server
+   * @description bound to LineItemsModel ACTIVE_LINE_ITEMS_REQUESTED event
+   * fires when active line items are requested from server or cache
    */
-  _onActiveLineItemsFetched(e){
+  _onActiveLineItemsRequested(e){
     if ( e.state !== 'loaded' ) return;
+    if ( !this.AppStateModel.isActivePage(this) ) return;
+
     this.lineItems = e.payload.map(item => {
       item = {...item};
       item.editing = false;
