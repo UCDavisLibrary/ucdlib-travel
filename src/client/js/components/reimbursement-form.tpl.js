@@ -1,5 +1,6 @@
 import { html } from 'lit';
 import { ref } from 'lit/directives/ref.js';
+import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import reimbursmentExpenses from '../../../lib/utils/reimbursmentExpenses.js';
 
 export function render() {
@@ -278,6 +279,11 @@ export function render() {
           </div>
           <div class='l-first amount ${this.netExpensesNegative ? 'double-decker' : 'quad'}'>
             <code>${this.netExpensesNegative ? '-' : '+'} $${this.netExpenses}</code>
+          </div>
+        </div>
+        <div ?hidden=${!(this.netExpensesNegative && this.netExpensesNegativeWarningMessage)}>
+          <div class="brand-textbox category-brand__background category-brand--double-decker u-space-mt">
+            <span>${unsafeHTML(this.netExpensesNegativeWarningMessage)}</span>
           </div>
         </div>
       </fieldset>
