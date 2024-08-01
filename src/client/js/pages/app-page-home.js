@@ -43,7 +43,7 @@ export default class AppPageHome extends Mixin(LitElement)
 
     this.waitController = new WaitController(this);
 
-    this._injectModel('AppStateModel', 'ApprovalRequestModel', 'AuthModel', 'SettingsModel');
+    this._injectModel('AppStateModel', 'ApprovalRequestModel', 'AuthModel', 'SettingsModel', 'NotificationModel');
 
     // properties for approval requests submitted BY user
     this.ownTotalPages = 1;
@@ -98,12 +98,83 @@ export default class AppPageHome extends Mixin(LitElement)
    */
   async getPageData(){
     await this.waitController.waitForUpdate();
+
+
+
+
+    let ar = await this.ApprovalRequestModel.query({revisionIds:[1]});
+    let subject = `Sample Subject`;
+    let content = `Sample Question`;
+
+    const payloadSystem = {
+      "requests": {
+        approvalRequest: ar.payload.data[0],
+        reimbursementRequest: {},
+      }, //requests could be replaced with id
+      notificationType: 'request' //notification type
+    }
+
+    const payloadComments = {
+      "emailContent": {
+        subject: subject,
+        text: content
+      }, //email content 
+      "url": "approval-request/1", //url
+      "requests": {
+        approvalRequest: ar.payload.data[0].approvalRequestRevisionId,
+        reimbursementRequest: null, // rr.payload.data[0].reimbursementRequestId,
+      }, //requests could be replaced with id
+      // notificationType: 'request' //notification type
+    }
+
+    const query = {
+      "page": 2
+    }
+
+    
     const promises = [
       this.ApprovalRequestModel.query(this.ownQueryArgs),
       this.ApprovalRequestModel.query(this.approverQueryArgs),
+      // this.NotificationModel.createSystemNotification(payloadSystem),
+      // this.NotificationModel.createNotificationComments(payloadComments),
+      this.NotificationModel.getNotificationHistory(query)
     ]
     const resolvedPromises = await Promise.allSettled(promises);
     return promiseUtils.flattenAllSettledResults(resolvedPromises);
+  }
+
+  /*
+   * @description bound to NotificationModel notification-systems event
+   * @param {Object} e - cork-app-utils event
+   * @returns
+   */
+  _onNotificationSystems(e) {
+    if ( e.state !== 'loaded' ) return;
+
+    console.log("Created Notification System:", e);
+  }
+
+
+  /**
+   * @description bound to NotificationModel notification-comments event
+   * @param {Object} e - cork-app-utils event
+   * @returns
+   */
+  _onNotificationComments(e) {
+    if ( e.state !== 'loaded' ) return;
+
+    console.log("Created Notification Comments:", e);
+  }
+
+    /**
+   * @description bound to NotificationModel notification-history event
+   * @param {Object} e - cork-app-utils event
+   * @returns
+   */
+   _onNotificationHistory(e) {
+      if ( e.state !== 'loaded' ) return;
+  
+      console.log("Retrieved No:", e);
   }
 
   /**
