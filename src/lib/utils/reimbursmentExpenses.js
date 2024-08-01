@@ -10,6 +10,7 @@ class ReimbursementExpenses {
         {
           label: 'Private Car',
           value: 'private-car',
+          requiredDetails: this.getDetailsFields(['estimatedMiles']),
         },
         {
           label: 'Airfare/train',
@@ -92,12 +93,34 @@ class ReimbursementExpenses {
       { value: 'subCategory', label: 'SubCategory' },
       { value: 'from', label: 'From' },
       { value: 'to', label: 'To' },
-      { value: 'name', label: 'Name' }
+      { value: 'name', label: 'Name' },
+      { value: 'estimatedMiles', label: 'Estimated Miles' }
     ]
   }
 
   getDetailsFields(values){
     return this.detailsFields.filter(f => values.includes(f.value));
+  }
+
+  /**
+   * @description Add up the total expenses from the reimbursement request
+   * @param {Object} reimbursementRequest - The reimbursement request object
+   * @returns {Number} - The total expenses
+   */
+  addExpenses(reimbursementRequest){
+    let expenses = [];
+    if ( Array.isArray(reimbursementRequest) ){
+      expenses = reimbursementRequest;
+    } else {
+      expenses = Array.isArray(reimbursementRequest?.expenses) ? reimbursementRequest.expenses : [];
+    }
+
+    let totalExpenses = (expenses).reduce((total, expense) => {
+      let sum = parseFloat(expense?.amount || 0);
+      if ( isNaN(sum) ) sum = 0;
+      return total + parseFloat(sum);
+    }, 0);
+    return totalExpenses.toFixed(2);
   }
 }
 

@@ -17,6 +17,10 @@ return html`
         ${ref(this.form)}
         .approvalRequestId=${this.approvalRequestId}
         .parentPageId=${this.id}
+        .mileageRate=${this.mileageRate}
+        .approvedExpenses=${this.approvedExpenses}
+        .otherTotalExpenses=${this.otherTotalExpenses}
+        .netExpensesNegativeWarningMessage=${this.expenseWarning}
         .hasTravel=${this.approvalRequest?.travelRequired ? true : false}>
       </reimbursement-form>
     </div>

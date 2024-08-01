@@ -25,7 +25,8 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
       approvalRequest : {type: Object},
       queryObject: {type: Object},
       totalExpenditures: {type: Number},
-      activity: {type: Array}
+      activity: {type: Array},
+      _hideReimbursementSection: {state: true}
     }
   }
 
@@ -37,10 +38,11 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
     this.approvalRequest = {};
     this.activity = [];
     this.totalExpenditures = 0;
+    this._hideReimbursementSection = false;
 
     this.waitController = new WaitController(this);
 
-    this._injectModel('AppStateModel', 'ApprovalRequestModel');
+    this._injectModel('AppStateModel', 'ApprovalRequestModel', 'ReimbursementRequestModel');
   }
 
   /**
@@ -141,10 +143,25 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
     }
 
     this.approvalRequest = approvalRequest;
+    this._setReimbursementSectionVisibility();
     this._setActivity(e.payload.data);
     this._setTotalExpenditures();
 
     this.showLoaded = true;
+  }
+
+  _setReimbursementSectionVisibility(){
+    if ( this.approvalRequest.reimbursementStatus === 'not-required' ) {
+      this._hideReimbursementSection = true;
+      return;
+    }
+
+    if ( this.approvalRequest.approvalStatus !== 'approved' ) {
+      this._hideReimbursementSection = true;
+      return;
+    }
+
+    return false;
   }
 
   /**

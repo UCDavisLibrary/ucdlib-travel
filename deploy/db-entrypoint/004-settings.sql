@@ -1,4 +1,4 @@
-INSERT INTO settings("key", "value", "label", "description", "input_type", "categories") VALUES ('mileage_rate', 3.50, 'Mileage Rate', 'The current mileage rate for personal car mileage reimbursement.', 'number', '{"approval-requests", "admin-settings"}');
+INSERT INTO settings("key", "value", "label", "description", "input_type", "categories") VALUES ('mileage_rate', .58, 'Mileage Rate', 'The current mileage rate for personal car mileage reimbursement.', 'number', '{"approval-requests", "reimbursement-requests", "admin-settings"}');
 
 -- approval requests
 INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
@@ -98,3 +98,7 @@ VALUES ('admin_email_address','','Admin - Primary Email Address','Primary Email 
 -- site wide settings
 INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
 VALUES ('site_wide_banner', '', 'Site wide banner text', NULL, '', '0', NULL, '100', 'textarea', '{app-main,admin-settings}', '0');
+
+-- reimbursement requests
+INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
+VALUES ('reimbursement_form_exceed_message', '', 'Exceeded Approved Expenses Message', 'Displayed on reimbursement request form if expenses exceed approved dollar amount.', 'You have exceeded the approved dollar amount for this travel, training, or professional development event. <br /> <br />Please verify with initial approvers before submitting this request.', '1', NULL, '200', 'textarea', '{admin-settings,reimbursement-requests}', '1');

@@ -197,8 +197,8 @@ CREATE TABLE reimbursement_request (
     approval_request_id INTEGER,
     label VARCHAR(200) NOT NULL DEFAULT 'Reimbursement Request',
     employee_residence VARCHAR(100),
-    travel_start timestamp,
-    travel_end timestamp,
+    travel_start DATE,
+    travel_end DATE,
     personal_time VARCHAR(500),
     comments VARCHAR(500),
     status VARCHAR(100) NOT NULL DEFAULT 'submitted'

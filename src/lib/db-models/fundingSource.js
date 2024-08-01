@@ -85,25 +85,29 @@ class FundingSource {
     const whereClause = pg.toWhereClause(whereArgs);
     const query = `
       SELECT
-          fs.*,
-          json_agg(json_build_object(
-              'approverTypeId', at.approver_type_id,
-              'label', at.label,
-              'systemGenerated', at.system_generated,
-              'archived', at.archived,
-              'approvalOrder', fsa.approval_order,
-              'employees', (
-                  SELECT json_agg(json_build_object(
-                      'kerberos', e.kerberos,
-                      'firstName', e.first_name,
-                      'lastName', e.last_name,
-                      'approvalOrder', ata.approval_order
-                  ) ORDER BY ata.approval_order)
-                  FROM approver_type_employee ata
-                  JOIN employee e ON ata.employee_kerberos = e.kerberos
-                  WHERE ata.approver_type_id = at.approver_type_id
+        fs.*,
+        json_agg(json_build_object(
+          'approverTypeId', at.approver_type_id,
+          'label', at.label,
+          'systemGenerated', at.system_generated,
+          'archived', at.archived,
+          'approvalOrder', fsa.approval_order,
+          'employees', (
+            SELECT
+              json_agg(
+                json_build_object(
+                  'kerberos', e.kerberos,
+                  'firstName', e.first_name,
+                  'lastName', e.last_name,
+                  'approvalOrder', ata.approval_order
+                )
+                ORDER BY ata.approval_order
               )
-          ) ORDER BY fsa.approval_order) AS approver_types
+              FROM approver_type_employee ata
+              JOIN employee e ON ata.employee_kerberos = e.kerberos
+              WHERE ata.approver_type_id = at.approver_type_id
+          )
+        ) ORDER BY fsa.approval_order) AS approver_types
       FROM
           funding_source fs
       LEFT JOIN

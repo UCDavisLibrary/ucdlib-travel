@@ -7,6 +7,8 @@ import { WaitController } from "@ucd-lib/theme-elements/utils/controllers/wait.j
 
 import promiseUtils from '../../../../lib/utils/promiseUtils.js';
 import applicationOptions from '../../../../lib/utils/applicationOptions.js';
+import typeTransform from '../../../../lib/utils/typeTransform.js';
+import reimbursmentExpenses from '../../../../lib/utils/reimbursmentExpenses.js';
 
 export default class AppPageReimbursementNew extends Mixin(LitElement)
   .with(LitCorkUtils, MainDomElement) {
@@ -16,7 +18,11 @@ export default class AppPageReimbursementNew extends Mixin(LitElement)
       approvalRequestId : {type: Number},
       approvalRequest : {type: Object},
       approvalRequestQueryObject: {state: true},
-      showLoaded: {state: true}
+      showLoaded: {state: true},
+      mileageRate: {state: true},
+      expenseWarning: {state: true},
+      approvedExpenses: {state: true},
+      otherTotalExpenses: {state: true}
     }
   }
 
@@ -26,10 +32,14 @@ export default class AppPageReimbursementNew extends Mixin(LitElement)
     this.approvalRequestId = 0;
     this.approvalRequest = {};
     this.form = createRef();
+    this.mileageRate = 0;
+    this.approvedExpenses = '0.00';
+    this.otherTotalExpenses = '0.00';
+    this.expenseWarning = 'Hello World';
 
     this.waitController = new WaitController(this);
 
-    this._injectModel('AppStateModel', 'ApprovalRequestModel');
+    this._injectModel('AppStateModel', 'ApprovalRequestModel', 'SettingsModel', 'ReimbursementRequestModel');
   }
 
   /**
@@ -73,10 +83,35 @@ export default class AppPageReimbursementNew extends Mixin(LitElement)
   async getPageData(){
 
     const promises = [
-      this.ApprovalRequestModel.query(this.approvalRequestQueryObject)
+      this.ApprovalRequestModel.query(this.approvalRequestQueryObject),
+      this.SettingsModel.getByCategory('reimbursement-requests'),
+      this.ReimbursementRequestModel.query({approvalRequestIds: [this.approvalRequestId], isCurrent: true, pageSize: -1})
     ]
     const resolvedPromises = await Promise.allSettled(promises);
     return promiseUtils.flattenAllSettledResults(resolvedPromises);
+  }
+
+  /**
+   * @description bound to SettingsModel settings-category-requested event
+   * @param {Object} e - cork-app-utils event
+   * @returns
+   */
+  _onSettingsCategoryRequested(e){
+    if ( e.state !== 'loaded' ||  e.category !== 'reimbursement-requests' ) return;
+    const mileageRate = typeTransform.toPositiveNumber(this.SettingsModel.getByKey('mileage_rate'));
+    this.mileageRate = mileageRate ? mileageRate : 0;
+    this.expenseWarning = this.SettingsModel.getByKey('reimbursement_form_exceed_message');
+  }
+
+  _onReimbursementRequestRequested(e){
+    if ( e.state !== 'loaded' ) return;
+    if ( !this.AppStateModel.isActivePage(this) ) return;
+
+    let otherTotalExpenses = 0;
+    for (const r of e.payload.data) {
+      otherTotalExpenses += Number(reimbursmentExpenses.addExpenses(r.expenses));
+    }
+    this.otherTotalExpenses = otherTotalExpenses.toFixed(2);
   }
 
  /**
@@ -110,6 +145,7 @@ export default class AppPageReimbursementNew extends Mixin(LitElement)
   }
 
   this.approvalRequest = approvalRequest;
+  this.approvedExpenses = reimbursmentExpenses.addExpenses(approvalRequest.expenditures || []);
   this.form.value.resetForm();
   this.form.value.setDatesFromApprovalRequest(approvalRequest);
 
