@@ -13,6 +13,31 @@ export default class Hydration {
     this.approvalRequest = approvalRequest;
     this.reimbursementRequest = reimbursementRequest,
     this.type = notificationType;
+
+    this._variables = [
+      {name: 'requesterFirstName', cb: this._getRequesterFirstName},
+      {name: 'requesterLastName', cb: this._getRequesterLastName},
+      {name: 'requesterFullName', cb: this._getRequesterFullName},
+      {name: 'requesterKerberos', cb: this._getRequesterKerberos},
+      {name: 'requesterLabel', cb: this._getRequesterLabel},
+      {name: 'requesterOrganization', cb: this._getRequesterOrganization},
+      {name: 'requesterBuisnessPurpose', cb: this._getRequesterBuisnessPurpose},
+      {name: 'requesterLocation', cb: this._getRequesterLocation},
+      {name: 'requesterProgramDate', cb: this._getRequesterProgramDate},
+      {name: 'requesterTravelDate', cb: this._getRequesterTravelDate},
+      {name: 'requesterComments', cb: this._getRequesterComments},
+      {name: 'nextApproverFullName', cb: this._getNextApproverFullName},
+      {name: 'nextApproverFundChanges', cb: this._getNextApproverFundChanges},
+      {name: 'nextApproverKerberos', cb: this._getNextApproverKerberos},
+      {name: 'reimbursementLabel', cb: this._getReimbursementLabel},
+      {name: 'reimbursementEmployeeResidence', cb: this._getReimbursementEmployeeResidence},
+      {name: 'reimbursementTravelDate', cb: this._getReimbursementTravelDate},
+      {name: 'reimbursementPersonalTime', cb: this._getReimbursementPersonalTime},
+      {name: 'reimbursementComments', cb: this._getReimbursementComments},
+      {name: 'reimbursementStatus', cb: this._getReimbursementStatus},
+      {name: 'approvalRequestUrl', cb: this._getApprovalRequestUrl},
+      {name: 'reimbursementRequestUrl', cb: this._getReimbursementRequestUrl}
+    ];
   }
 
 approvers(){
@@ -125,6 +150,10 @@ async _getNextApproverEmail(){
   let approver = results[0].employeeKerberos;
 
   emp.emp = await employee.getIamRecordById(approver);
+  if ( emp.emp.error ) {
+    console.error('Error getting employee object in POST /comments-notification', emp.emp.error);
+    return res.status(500).json({error: true, message: 'Error retrieving next approver email.'});
+  }
 
   return emp.emp.res.email;
 }
@@ -143,7 +172,18 @@ async _getAllApprovedEmail(){
 }
 
 async _getHrEmail(){
-  return settings.getByKey("admin_email_address").default_value;
+  let hrEmailObject = await settings.getByKey("admin_email_address");
+
+  if ( hrEmailObject.error ) {
+    console.error('Error getting setting hrEmail object in POST /system-notification', emp.emp.error);
+    return res.status(500).json({error: true, message: 'Error retrieving HR email.'});
+  }
+
+  if (hrEmailObject.use_default_value) {
+    return hrEmailObject.defaultValue
+  } else {
+    return hrEmailObject.value;
+  }
 }
 
 
@@ -152,38 +192,12 @@ _getContext(content){
   // extract variables from content string
   const variables = content.split('${').slice(1).map(x => x.split('}')[0]);
 
-  this._variables = [
-    {name: 'requesterFirstName', cb: this._getRequesterFirstName()},
-    {name: 'requesterLastName', cb: this._getRequesterLastName()},
-    {name: 'requesterFullName', cb: this._getRequesterFullName()},
-    {name: 'requesterKerberos', cb: this._getRequesterKerberos()},
-    {name: 'requesterLabel', cb: this._getRequesterLabel()},
-    {name: 'requesterOrganization', cb: this._getRequesterOrganization()},
-    {name: 'requesterBuisnessPurpose', cb: this._getRequesterBuisnessPurpose()},
-    {name: 'requesterLocation', cb: this._getRequesterLocation()},
-    {name: 'requesterProgramDate', cb: this._getRequesterProgramDate()},
-    {name: 'requesterTravelDate', cb: this._getRequesterTravelDate()},
-    {name: 'requesterComments', cb: this._getRequesterComments()},
-    {name: 'nextApproverFullName', cb: this._getNextApproverFullName()},
-    {name: 'nextApproverFundChanges', cb: this._getNextApproverFundChanges()},
-    {name: 'nextApproverKerberos', cb: this._getNextApproverKerberos()},
-    {name: 'reimbursementLabel', cb: this._getReimbursementLabel()},
-    {name: 'reimbursementEmployeeResidence', cb: this._getReimbursementEmployeeResidence()},
-    {name: 'reimbursementTravelDate', cb: this._getReimbursementTravelDate()},
-    {name: 'reimbursementPersonalTime', cb: this._getReimbursementPersonalTime()},
-    {name: 'reimbursementComments', cb: this._getReimbursementComments()},
-    {name: 'reimbursementStatus', cb: this._getReimbursementStatus()},
-    {name: 'approvalRequestUrl', cb: this._getApprovalRequestUrl()},
-    {name: 'reimbursementRequestUrl', cb: this._getReimbursementRequestUrl()}
-  ];
   // get values from approvalRequest/reimbursmentRequest
   const context = {};
-  for (let v of variables) {
-    const found = this._variables.find((element) => element.name == v);
 
-    if(found) context[found.name] = found.cb;
+  for (let v of this._variables) {
+    if(content.includes(v.name)) context[v.name] = v.cb.call(this);
   }
-
 
   return context;
 }

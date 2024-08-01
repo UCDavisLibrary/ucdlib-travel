@@ -98,15 +98,13 @@ export default class AppPageHome extends Mixin(LitElement)
    */
   async getPageData(){
     await this.waitController.waitForUpdate();
-    
     const promises = [
       this.ApprovalRequestModel.query(this.ownQueryArgs),
-      this.ApprovalRequestModel.query(this.approverQueryArgs)
+      this.ApprovalRequestModel.query(this.approverQueryArgs),
     ]
     const resolvedPromises = await Promise.allSettled(promises);
     return promiseUtils.flattenAllSettledResults(resolvedPromises);
   }
-
 
   /**
    * @description bound to ApprovalRequestModel approval-requests-requested event

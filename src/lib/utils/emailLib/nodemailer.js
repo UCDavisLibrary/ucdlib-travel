@@ -20,17 +20,14 @@ class Nodemailer {
     });
   }
 
-  async runEmail(message){
-      await this.transporter.sendMail(message, (err, info) => {
-            if (err) {
-              console.log("E:", err)
-              return err;
-            }
-            console.log(info);
-            return info;
-
-      });
-    
+  async runEmail(message){ 
+    let out = {}; 
+    try { 
+      out.info = await this.transporter.sendMail(message); 
+    } catch (error) { 
+      out.error = error; 
+    } 
+    return out; 
   }
 
 

@@ -48,6 +48,7 @@ class NotificationModel extends BaseModel {
     /**
      * @description Create a system notification 
      * @param {Object} payload - comment information - see db-models/email/controller.js
+     * TODO: remove method when feature is complete
      */
     async createSystemNotification(payload) {
       let timestamp = Date.now();

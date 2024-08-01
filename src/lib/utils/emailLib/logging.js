@@ -9,26 +9,22 @@ import EntityFields from "../EntityFields.js";
  */
 class Logging {
 
-  constructor(payload = {}){
-    this.payload = payload;
+  constructor(){
 
     this.entityFields = new EntityFields([
       {
         dbName: 'notification_id',
         jsonName: 'notificationId',
-        validateType: 'integer'
       },
       {
         dbName: 'approval_request_revision_id',
         jsonName: 'approvalRequestRevisionId',
         label: 'Approval Request Revision Id',
-        validateType: 'integer'
       },
       {
         dbName: 'reimbursement_request_id',
         jsonName: 'reimbursementRequestId',
         label: 'Reimbursement Request Id',
-        validateType: 'integer'
       },
       {
         dbName: 'employee_kerberos',
@@ -42,12 +38,10 @@ class Logging {
       {
         dbName: 'subject',
         jsonName: 'subject',
-        validateType: 200
       },
       {
         dbName: 'email_sent',
         jsonName: 'emailSent',
-        validateType: 'boolean'
       },
       {
         dbName: 'details',
@@ -69,33 +63,29 @@ class Logging {
 
     // start transaction
     let notificationId;
-    const client = await pg.pool.connect();
-    try {
 
-      data = pg.prepareObjectForInsert(data);
-      const sql = `INSERT INTO notification (${data.keysString}) VALUES (${data.placeholdersString}) RETURNING notification_id`;
-      const res = await client.query(sql, data.values);
-      if( res.rowCount !== 1 ) {
-        throw new Error('Error creating notification');
-      }
-      notificationId = res.rows[0].notification_id;
+    data = pg.prepareObjectForInsert(data);
+    const sql = `INSERT INTO notification (${data.keysString}) VALUES (${data.placeholdersString}) RETURNING notification_id`;
+    const res = await pg.query(sql, data.values);
 
+    if( res.error ) return res;
 
-    } catch (e) {
-      return {error: e, message: 'Error creating notification'};
-    } finally {
-      client.release();
+    if( res.res.rowCount !== 1 ) {
+      throw new Error('Error creating notification');
     }
+    notificationId = res.res.rows[0].notification_id;
 
     return {success: true, notificationId};
   }
 
   async getNotificationLogging(kwargs={}){
+    const page = Number(kwargs.page) || 1;
+    const pageSize = kwargs.pageSize || 10;
 
     const whereArgs = {};
     if( kwargs.email_sent ) {
       whereArgs['n.email_sent'] = true;
-    } else if( kwargs.email_sent ) {
+    } else if( kwargs.email_sent === false ) {
       whereArgs['n.email_sent'] = false;
     }
     if( Array.isArray(kwargs.approval_request_ids) && kwargs.approval_request_ids.length) {
@@ -126,7 +116,8 @@ class Logging {
         approval_request ar ON n.approval_request_revision_id = ar.approval_request_revision_id
     LEFT JOIN
         reimbursement_request rr ON n.reimbursement_request_id = rr.reimbursement_request_id
-    ${whereClause.sql ? `WHERE ${whereClause.sql}` : ''};
+    ${whereClause.sql ? `WHERE ${whereClause.sql}` : ''}
+    LIMIT ${pageSize} OFFSET ${pageSize * (page - 1)};
     `;
 
 

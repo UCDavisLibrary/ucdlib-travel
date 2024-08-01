@@ -64,6 +64,7 @@ class NotificationStore extends BaseStore {
     this.emit(this.events.NOTIFICATION_COMMENTS, state);
   }
 
+  /* TODO: remove method when feature is complete */
   systemNotificationLoading(request, timestamp) {
     this._setSystemNotificationState({
       state : this.STATE.LOADING,

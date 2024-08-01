@@ -31,6 +31,7 @@ class NotificationService extends BaseService {
     });
   }
 
+  /* TODO: remove method when feature is complete */
   createSystemNotification(payload, timestamp) {
     return this.request({
       url : '/api/admin/system-notification',

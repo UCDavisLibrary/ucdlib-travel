@@ -1,5 +1,4 @@
 import email  from "../../lib/db-models/emailController.js"
-import apiUtils from "../../lib/utils/apiUtils.js";
 import protect from "../../lib/protect.js";
 
 export default (api) => {
@@ -13,6 +12,10 @@ export default (api) => {
       console.error('Error in GET /notification', data.error);
       return res.status(500).json({error: true, message: 'Error getting request history.'});
     }
+    if( !req.headers.authorization) {
+      console.error('Error in GET /notification', data.error);
+      return res.status(401).json({error: true, message: 'You must authenticate to access this resource.'});
+    }
     return res.json(data);
   });
 
@@ -20,11 +23,15 @@ export default (api) => {
    * @description Create a help comments
    * @param {Object} req.body - new line item data
    */
-  api.post('/comments-notification', protect('hasAdminAccess'), async (req, res) => {
+  api.post('/comments-notification', protect('hasBasicAccess'), async (req, res) => {
     const payload = (typeof req.body === 'object') && !Array.isArray(req.body) ? req.body : {};
     payload.token = req.auth.token;
     const sender = payload.token.token.email;
     const emailContent = payload.emailContent;
+
+    if ( !emailContent.subject || !emailContent.text ) {
+      return res.status(400).json({error: true, message: 'Error with payload section emailContent. Email Subject or Email Text can not be empty'});
+    }
 
     const data = await email.sendHelpEmail(sender, 
                                            emailContent.subject, 
@@ -33,19 +40,17 @@ export default (api) => {
                                            payload
                                           );
 
-    if ( data.error && data.is400 ) {
-      return res.status(400).json(data);
+    if ( data.error && data.is500 ) {
+      return res.status(500).json(data);
     }
-    if ( data.error ) {
-      console.error('Error in POST /notification', data.error);
-      return res.status(500).json({error: true, message: 'Error creating comment/question item.'});
-    }
+
     return res.json(data);
   });
 
   /**
-   * @description Create a help comments
+   * @description Create a system comments
    * @param {Object} req.body - new line item data
+   * TODO: remove method when feature is complete
    */
      api.post('/system-notification', protect('hasAdminAccess'), async (req, res) => {
       const payload = (typeof req.body === 'object') && !Array.isArray(req.body) ? req.body : {};
@@ -56,8 +61,8 @@ export default (api) => {
                                                       payload
                                                      );
 
-      if ( data.error && data.is400 ) {
-        return res.status(400).json(data);
+      if ( data.error && data.is500 ) {
+          return res.status(500).json(data);
       }
       if ( data.error ) {
         console.error('Error in POST /notification', data.error);
