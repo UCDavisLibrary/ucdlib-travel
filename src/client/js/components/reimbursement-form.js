@@ -25,6 +25,7 @@ export default class ReimbursementForm extends Mixin(LitElement)
       approvedExpenses: {type: String},
       otherTotalExpenses: {type: String},
       mileageRate: {type: Number},
+      netExpensesNegativeWarningMessage: {type: String},
       totalExpenses: {state: true},
       hasOtherTotalExpenses: {state: true},
       netExpenses: {state: true},
@@ -46,6 +47,7 @@ export default class ReimbursementForm extends Mixin(LitElement)
     this.otherTotalExpenses = '0.00';
     this.netExpenses = '0.00';
     this.netExpensesNegative = false;
+    this.netExpensesNegativeWarningMessage = '';
 
 
     this._injectModel('AppStateModel', 'ReimbursementRequestModel');
