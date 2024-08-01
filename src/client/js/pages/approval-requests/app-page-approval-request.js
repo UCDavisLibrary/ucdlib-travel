@@ -6,6 +6,7 @@ import { WaitController } from "@ucd-lib/theme-elements/utils/controllers/wait.j
 
 import promiseUtils from '../../../../lib/utils/promiseUtils.js';
 import applicationOptions from '../../../../lib/utils/applicationOptions.js';
+import reimbursmentExpenses from '../../../../lib/utils/reimbursmentExpenses.js';
 
 /**
  * @class AppPageApprovalRequest
@@ -13,7 +14,6 @@ import applicationOptions from '../../../../lib/utils/applicationOptions.js';
  * @property {Number} approvalRequestId - The id of the approval request to display - set from url
  * @property {Object} approvalRequest - The approval request to display - set from ApprovalRequestModel
  * @property {Object} queryObject - Query object for fetching approval request data
- * @property {Number} totalExpenditures - Total of all expenditures for the approval request
  * @property {Array} activity - Array of approvalStatusActivity objects for all of the revisions of this approval request
  */
 export default class AppPageApprovalRequest extends Mixin(LitElement)
@@ -24,8 +24,11 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
       approvalRequestId : {type: Number},
       approvalRequest : {type: Object},
       queryObject: {type: Object},
-      totalExpenditures: {type: Number},
+      totalReimbursementRequested: {type: Number},
       activity: {type: Array},
+      approvedExpenseTotal: {state: true},
+      hasApprovedExpenses: {state: true},
+      reimbursmentRequestTotal: {state: true},
       _hideReimbursementSection: {state: true}
     }
   }
@@ -37,12 +40,20 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
     this.approvalRequestId = 0;
     this.approvalRequest = {};
     this.activity = [];
-    this.totalExpenditures = 0;
     this._hideReimbursementSection = false;
+    this.approvedExpenseTotal = '0.00';
+    this.hasApprovedExpenses = false;
+    this.reimbursmentRequestTotal = '0.00';
 
     this.waitController = new WaitController(this);
 
     this._injectModel('AppStateModel', 'ApprovalRequestModel', 'ReimbursementRequestModel');
+  }
+
+  willUpdate(props){
+    if ( props.has('approvedExpenseTotal') ){
+      this.hasApprovedExpenses = Number(this.approvedExpenseTotal) > 0;
+    }
   }
 
   /**
@@ -86,10 +97,22 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
   async getPageData(){
 
     const promises = [
-      this.ApprovalRequestModel.query(this.queryObject)
+      this.ApprovalRequestModel.query(this.queryObject),
+      this.ReimbursementRequestModel.query({approvalRequestIds: [this.approvalRequestId], isCurrent: true, pageSize: -1})
     ]
     const resolvedPromises = await Promise.allSettled(promises);
     return promiseUtils.flattenAllSettledResults(resolvedPromises);
+  }
+
+  _onReimbursementRequestRequested(e){
+    if ( e.state !== 'loaded' ) return;
+    if ( !this.AppStateModel.isActivePage(this) ) return;
+
+    let reimbursmentRequestTotal = 0;
+    for (const r of e.payload.data) {
+      reimbursmentRequestTotal += Number(reimbursmentExpenses.addExpenses(r.expenses));
+    }
+    this.reimbursmentRequestTotal = reimbursmentRequestTotal.toFixed(2);
   }
 
   /**
@@ -143,9 +166,9 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
     }
 
     this.approvalRequest = approvalRequest;
+    this.approvedExpenseTotal = reimbursmentExpenses.addExpenses(approvalRequest.expenditures || []);
     this._setReimbursementSectionVisibility();
     this._setActivity(e.payload.data);
-    this._setTotalExpenditures();
 
     this.showLoaded = true;
   }
@@ -161,7 +184,7 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
       return;
     }
 
-    return false;
+    this._hideReimbursementSection = false;
   }
 
   /**
@@ -197,20 +220,6 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
     });
 
     this.activity = activity;
-  }
-
-  /**
-   * @description Set the totalExpenditures property based on the expenditures array from the current approval request
-   */
-  _setTotalExpenditures(){
-    let total = 0;
-    if ( this.approvalRequest.expenditures ){
-      this.approvalRequest.expenditures.forEach(e => {
-        if ( !e.amount ) return;
-        total += Number(e.amount);
-      });
-    }
-    this.totalExpenditures = total;
   }
 
   /**

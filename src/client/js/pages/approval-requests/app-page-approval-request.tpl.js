@@ -23,11 +23,23 @@ return html`
           </div>
         </div>
 
-        <div class='panel panel--icon panel--icon-custom'>
+        <div class='panel panel--icon panel--icon-custom' ?hidden=${this._hideReimbursementSection}>
           <h2 class="panel__title"><span class="panel__custom-icon fa-solid fa-money-bill-wave panel--icon-delta"></span>Reimbursement Status</h2>
           <div class='flex flex--align-center flex--wrap u-space-mb'>
             <div class='keep-together u-space-mr--small small grey'>Overall Status: </div>
             <div class='bold primary'>${applicationOptions.reimbursementStatusLabel(this.approvalRequest.reimbursementStatus)}</div>
+          </div>
+          <div>
+            <div class='u-space-mb--small flex flex--space-between flex--align-center small'>
+              <div class='u-space-mr--small'>Total Approved Projected Expenses</div>
+              <div class='monospace-number'>$${this.approvedExpenseTotal}</div>
+            </div>
+          </div>
+          <div>
+            <div class='u-space-mb--small flex flex--space-between flex--align-center small'>
+              <div class='u-space-mr--small'>Total Reimbursement Requested</div>
+              <div class='monospace-number'>$${this.reimbursmentRequestTotal}</div>
+            </div>
           </div>
         </div>
 
@@ -40,25 +52,25 @@ return html`
 
         <div>
           <h2 class="heading--underline">Estimated Expenses</h2>
-          <div ?hidden=${!this.totalExpenditures} class='u-space-mb'>
+          <div ?hidden=${!this.hasApprovedExpenses} class='u-space-mb'>
             <div class='primary bold u-space-mb'>Itemized Expenses</div>
             <div class='u-space-ml--small'>
               ${(this.approvalRequest.expenditures || []).map((expenditure) => html`
                 <div class='u-space-mb--small flex flex--space-between'>
                   <div>${expenditure.expenditureOptionLabel}</div>
-                  <div>$${expenditure.amount.toFixed(2)}</div>
+                  <div><span class='monospace-number'>$${expenditure.amount.toFixed(2)}</span></div>
                 </div>
               `)}
               <div class='flex flex--space-between bold u-space-py'>
                 <div>Total</div>
-                <div>$${this.totalExpenditures.toFixed(2)}</div>
+                <div><span class='monospace-number'>$${this.approvedExpenseTotal}</span></div>
               </div>
             </div>
           </div>
           <funding-source-select
             label='Funding Sources'
             indent-body
-            expenditure-total=${this.totalExpenditures}
+            expenditure-total=${this.approvedExpenseTotal}
             .data=${this.approvalRequest.fundingSources || []}>
           </funding-source-select>
         </div>
