@@ -27,7 +27,7 @@ class Email {
     body = body + `\n${serverConfig.appRoot}/${url}`
 
     const from = sender;
-    const to = await settings._getEmail(); //Do this
+    const to = await settings._getEmail(); // This is getting the email to send help too currently donotreply@lib.ucdavis.edu
     const subject = sub;
     const text = body;
 
@@ -37,6 +37,7 @@ class Email {
 
       // Form, Curate, and Send Message with Nodemailer
       let email = await nodemailer.runEmail(emailMessage);
+      console.log("E:", email);
         if (email.error) {
           emailSent = false;
           details.error = email.error
@@ -81,7 +82,7 @@ class Email {
 
     //Hydrate keywords
     const from = 'sabaggett@ucdavis.edu';//serverConfig.email.systemEmailAddress;
-    const to = 'sabaggett@ucdavis.edu';//await hydration.getNotificationRecipient() //Do this
+    const to = 'sabaggett@ucdavis.edu';//await hydration.getNotificationRecipient() 
     const subject = hydration.hydrate(subjectTemplate);
     const text = hydration.hydrate(bodyTemplate);
 

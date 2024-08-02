@@ -225,10 +225,10 @@ _getContext(content){
     */
       if(this.type == 'approver-change' ||
          this.type == 'chain-completed' ||
-         this.type == 'funded-hours' ||
-         this.type == 'enter-reimbursement' ||
-         this.type == 'reimbursement-refund' ||
-         this.type == 'reimbursement-completed' 
+         this.type == 'funded-hours'
+        //  this.type == 'enter-reimbursement' ||
+        //  this.type == 'reimbursement-refund' ||
+        //  this.type == 'reimbursement-completed' 
         ) recipient = this._getRequesterEmail();
    
       
@@ -244,7 +244,7 @@ _getContext(content){
     /* Many Approvers 
       - Requester recalls/cancels approval request
     */
-      if(this.type == 'request-cancel') recipient = this._getAllApprovedEmail();
+      // if(this.type == 'request-cancel') recipient = this._getAllApprovedEmail();
 
     /* Finance/HR  
       - Requester submits reimbursement
