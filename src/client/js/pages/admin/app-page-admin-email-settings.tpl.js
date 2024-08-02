@@ -46,8 +46,12 @@ function renderEmailSetting(setting) {
 
   return html`
     <email-template
+      @email-update=${this._onEmailUpdate}
+      .bodyTemplate=${body.value}
       .defaultBodyTemplate=${body.defaultValue}
       .defaultSubjectTemplate=${subject.defaultValue}
+      .subjectTemplate=${subject.value}
+      .disableNotification=${body.disable}
       .templateVariables=${vRes}
     ></email-template>
 `;}
