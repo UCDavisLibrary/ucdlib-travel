@@ -1,14 +1,9 @@
-import { html, css } from 'lit';
+import { html } from 'lit';
 
 export function render() {
   return html`
-    <style>
-      .character-limit-tracker {
-        color: ${this.color};
-      }
-    </style>
     <div 
-      class="character-limit-tracker"
+      class=${this.className}
       .value=${this.value} 
     >${this.message}</div>
   `;

@@ -5,7 +5,6 @@ import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-el
 
 import { LitCorkUtils, Mixin } from "../../../lib/appGlobals.js";
 
-
 /**
  * @class CharacterLimitTracker
  * @description Component that tracks and displays the characters and limit of preceding input or textarea
@@ -21,7 +20,7 @@ export default class CharacterLimitTracker extends Mixin(LitElement)
       characterLimit: {type: Number},
       warningThreshold: {type: Number},
       message: {type: String},
-      color: {type: String}
+      className: {type: String}
     }
   }
 
@@ -33,7 +32,7 @@ export default class CharacterLimitTracker extends Mixin(LitElement)
     this.characterLimit = 50;
     this.warningThreshold = .75; // percentage of character limit to trigger warning
     this.message = '';
-    this.color = '';
+    this.className = '';
   }
 
   /**
@@ -47,17 +46,17 @@ export default class CharacterLimitTracker extends Mixin(LitElement)
   }
 
   /**
-   * @description Update the color based on input length
+   * @description Update the className based on input length
    */
   _updateMessage() {
     this.message = `${this.value.length} / ${this.characterLimit} characters`;
     if (this.value.length > this.characterLimit) {
-      this.color = '#C10230' // red
+      this.className = 'double-decker' // red
       this.message = `${this.value.length} / ${this.characterLimit} characters (over limit)`;
     } else if (this.value.length > this.characterLimit * this.warningThreshold) {
-      this.color = '#FFDC00' // yellow
+      this.className = 'sunflower' // yellow
     } else {
-      this.color = '';
+      this.className = '';
     }
   }
 
