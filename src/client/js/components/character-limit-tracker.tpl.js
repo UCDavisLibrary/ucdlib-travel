@@ -1,15 +1,15 @@
-import { html } from 'lit';
+import { html, css } from 'lit';
 
-/**
- * @description Main render function for this component
- * @returns {TemplateResult}
- */
 export function render() {
   return html`
+    <style>
+      .character-limit-tracker {
+        color: ${this.color};
+      }
+    </style>
     <div 
+      class="character-limit-tracker"
       .value=${this.value} 
-      .characterLimit=${this.characterLimit || 500}
-      .warningThreshold=${this.warningThreshold || 100}
-    ><span style="color: ${this.color}">${this.message}</span></div>
+    >${this.message}</div>
   `;
 }
