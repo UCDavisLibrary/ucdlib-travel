@@ -308,8 +308,6 @@ export function renderForm() {
         <div>${this.validationHandler.renderErrorMessages('comments')}</div>
         <character-limit-tracker 
           .value=${this.approvalRequest.comments} 
-          .characterLimit=${this.SettingsModel.getByKey('approval_request_form_comments_max') || 100}
-          .warningThreshold=${this.SettingsModel.getByKey('approval_request_form_comments_warning') || this._calculateWarningThresold || 20}>
         </character-limit-tracker>
       </div>
 

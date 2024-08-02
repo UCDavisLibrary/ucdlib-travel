@@ -20,7 +20,8 @@ export default class CharacterLimitTracker extends Mixin(LitElement)
       defaultValue: {type: Number},
       characterLimit: {type: Number},
       warningThreshold: {type: Number},
-      message: {type: String}
+      message: {type: String},
+      color: {type: String}
     }
   }
 
@@ -29,8 +30,8 @@ export default class CharacterLimitTracker extends Mixin(LitElement)
     this.render = render.bind(this);
 
     this.value = '';
-    this.characterLimit = 0;
-    this.warningThreshold = 0;
+    this.characterLimit = 50;
+    this.warningThreshold = .75; // percentage of character limit to trigger warning
     this.message = '';
     this.color = '';
   }
@@ -51,20 +52,13 @@ export default class CharacterLimitTracker extends Mixin(LitElement)
   _updateMessage() {
     this.message = `${this.value.length} / ${this.characterLimit} characters`;
     if (this.value.length > this.characterLimit) {
-      this.color = 'red';
+      this.color = '#C10230' // red
       this.message = `${this.value.length} / ${this.characterLimit} characters (over limit)`;
-    } else if (this.value.length > this.characterLimit - this.warningThreshold) {
-      this.color = 'yellow';
+    } else if (this.value.length > this.characterLimit * this.warningThreshold) {
+      this.color = '#FFDC00' // yellow
     } else {
       this.color = '';
     }
-  }
-
-  /**
-   * @description calculate warning threshold
-   */
-  _calculateWarningThreshold() {
-    this.warningThreshold = this.characterLimit / 5;
   }
 
 }
