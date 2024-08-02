@@ -28,12 +28,27 @@ return html`
 `;}
 
 function renderEmailSetting(setting) {
-  //const variables = content.split('${').slice(1).map(x => x.split('}')[0]);
-  console.log("S:", setting);
+  let body = setting[0]; 
+  let subject = setting[1];
+
+  // const variablesBody = body.defaultValue.split('${').slice(1).map(x => x.split('}')[0]);
+  // const variablesSubject = body.defaultValue.split('${').slice(1).map(x => x.split('}')[0]);
+
+  // let v = variablesBody.concat(variablesSubject);
+  // const variables = [...new Set(v)];
+  
+  let vRes = [];
+  for (let v of this.variableList) {
+    const result = v.replace(/([A-Z])/g, " $1");
+    const finalResult = result.charAt(0).toUpperCase() + result.slice(1);
+    vRes.push({key: v, label: finalResult });
+  }
+
   return html`
     <email-template
-      .defaultBodyTemplate=${setting[0].defaultValue}
-      .defaultSubjectTemplate=${setting[1].defaultValue}
+      .defaultBodyTemplate=${body.defaultValue}
+      .defaultSubjectTemplate=${subject.defaultValue}
+      .templateVariables=${vRes}
     ></email-template>
 `;}
 

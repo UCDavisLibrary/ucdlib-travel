@@ -92,7 +92,7 @@ export default class EmailTemplate extends Mixin(LitElement)
 
   _onVariableSelect(e){
     if ( !e.target.value ) return;
-    const v = `{{${e.target.value}}}`;
+    const v = `\${${e.target.value}\}`;
     let position;
     if ( this._selectionPositionHistory.length ) {
       position = this._selectionPositionHistory[this._selectionPositionHistory.length-1];

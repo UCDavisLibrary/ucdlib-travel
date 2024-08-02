@@ -30,7 +30,30 @@ export default class AppPageAdminEmailSettings extends Mixin(LitElement)
     this.searchString = '';
     this.settingsHaveChanged = false;
     this.noSettings = false;
-
+    this.variableList = [
+      "requesterFirstName",
+      "requesterLastName",
+      "requesterFullName",
+      "requesterKerberos",
+      "requesterLabel",
+      "requesterOrganization",
+      "requesterBuisnessPurpose",
+      "requesterLocation",
+      "requesterProgramDate",
+      "requesterTravelDate",
+      "requesterComments",
+      "nextApproverFullName",
+      "nextApproverFundChanges",
+      "nextApproverKerberos",
+      "reimbursementLabel",
+      "reimbursementEmployeeResidence",
+      "reimbursementTravelDate",
+      "reimbursementPersonalTime",
+      "reimbursementComments",
+      "reimbursementStatus",
+      "approvalRequestUrl",
+      "reimbursementRequestUrl"
+    ];
     this.waitController = new WaitController(this);
 
     this._injectModel('AppStateModel', 'SettingsModel', 'NotificationModel');
