@@ -78,6 +78,19 @@ class TypeTransform {
   }
 
   /**
+   * @description Return a formatted date string
+   * @param {String} timestamp - ISO date string
+   * @returns {String}
+   */
+  toLocaleDateTimeString(timestamp){
+    if ( !timestamp ) return '';
+    let date = new Date(timestamp.endsWith('Z') ? timestamp : timestamp + 'Z');
+    let dateString = date.toLocaleDateString();
+    let timeString = date.toLocaleTimeString();
+    return `${dateString} ${timeString}`;
+  }
+
+  /**
    * @description Convert an array to key-value object
    * @param {Array} arr - array to convert
    * @param {Function} keyFunc - function to get key from array item, will be passed the item

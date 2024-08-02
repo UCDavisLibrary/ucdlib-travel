@@ -14,7 +14,9 @@ import reimbursmentExpenses from '../../../../lib/utils/reimbursmentExpenses.js'
  * @property {Number} approvalRequestId - The id of the approval request to display - set from url
  * @property {Object} approvalRequest - The approval request to display - set from ApprovalRequestModel
  * @property {Object} queryObject - Query object for fetching approval request data
+ * @property {Number} totalReimbursementRequested - Total amount of reimbursement requested for this approval request
  * @property {Array} activity - Array of approvalStatusActivity objects for all of the revisions of this approval request
+ * @property {Array} reimbursementRequests - Array of reimbursement requests for this approval request
  */
 export default class AppPageApprovalRequest extends Mixin(LitElement)
 .with(LitCorkUtils, MainDomElement) {
@@ -26,6 +28,7 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
       queryObject: {type: Object},
       totalReimbursementRequested: {type: Number},
       activity: {type: Array},
+      reimbursementRequests: {type: Array},
       approvedExpenseTotal: {state: true},
       hasApprovedExpenses: {state: true},
       reimbursmentRequestTotal: {state: true},
@@ -44,6 +47,7 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
     this.approvedExpenseTotal = '0.00';
     this.hasApprovedExpenses = false;
     this.reimbursmentRequestTotal = '0.00';
+    this.reimbursementRequests = [];
 
     this.waitController = new WaitController(this);
 
@@ -107,6 +111,8 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
   _onReimbursementRequestRequested(e){
     if ( e.state !== 'loaded' ) return;
     if ( !this.AppStateModel.isActivePage(this) ) return;
+
+    this.reimbursementRequests = e.payload.data;
 
     let reimbursmentRequestTotal = 0;
     for (const r of e.payload.data) {

@@ -233,10 +233,18 @@ class ApplicationOptions {
   /**
    * @description - Get the label for an reimbursement status
    * @param {String} status - The status keyword
+   * @param {String} entity - The entity type - 'approvalRequest' or 'reimbursementRequest'
    * @returns {String}
    */
-  reimbursementStatusLabel(status){
-    return this.reimbursementStatuses.find(s => s.value === status)?.label || '';
+  reimbursementStatusLabel(status, entity='approvalRequest'){
+    if ( entity === 'approvalRequest' ){
+      return this.reimbursementStatuses.find(s => s.value === status)?.label || '';
+    }
+    if ( entity === 'reimbursementRequest' ){
+      return this.reimbursementRequestStatuses.find(s => s.value === status)?.label || '';
+    }
+
+    return '';
   }
 
   /**

@@ -63,4 +63,50 @@ app-page-approval-request {
     }
   }
 
+  #approval-request--reimbursement-requests {
+
+    margin-bottom: 1rem;
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 120px 120px;
+      grid-gap: 1rem;
+      padding: 1rem 0;
+      border-bottom: 1px solid #b0d0ed;
+      overflow-y: scroll;
+
+      &.row--header {
+        font-weight: 700;
+        color: #022851;
+        border-bottom: 2px dotted #ffbf00;
+      }
+    }
+    .rr-field {
+      font-size: .875rem;
+
+      .colon {
+        display: none;
+      }
+
+      div:first-child {
+        font-weight: 700;
+        color: #022851;
+      }
+    }
+
+    @media (min-width: 768px) {
+      .rr-field {
+        display: flex;
+        align-items: center;
+
+        .colon {
+          display: inline;
+        }
+        div:first-child {
+          margin-right: .5rem;
+        }
+      }
+    }
+  }
+
 }
