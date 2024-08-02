@@ -55,6 +55,10 @@ class ReimbursementRequest {
         customValidation: this.validations.status.bind(this.validations)
       },
       {
+        dbName: 'submitted_at',
+        jsonName: 'submittedAt'
+      },
+      {
         dbName: 'expenses',
         jsonName: 'expenses',
         customValidationAsync: this.validations.expenses.bind(this.validations)
@@ -261,7 +265,8 @@ class ReimbursementRequest {
     data.receipts = this.receiptFields.toDbArray(Array.isArray(data.receipts) ?  data.receipts : []);
 
     // system fields
-    delete data.reimbursement_request_id
+    delete data.reimbursement_request_id;
+    delete data.submitted_at;
     data.status = 'submitted';
 
     const validation = await this.entityFields.validate(data, ['reimbursement_request_id']);

@@ -1,6 +1,8 @@
 import { html } from 'lit';
 import '../../components/approval-request-header.js';
 import applicationOptions from '../../../../lib/utils/applicationOptions.js';
+import typeTransform from '../../../../lib/utils/typeTransform.js';
+import reimbursmentExpenses from '../../../../lib/utils/reimbursmentExpenses.js';
 
 export function render() {
 return html`
@@ -34,12 +36,22 @@ return html`
               <div class='u-space-mr--small'>Total Approved Projected Expenses</div>
               <div class='monospace-number'>$${this.approvedExpenseTotal}</div>
             </div>
-          </div>
-          <div>
             <div class='u-space-mb--small flex flex--space-between flex--align-center small'>
               <div class='u-space-mr--small'>Total Reimbursement Requested</div>
               <div class='monospace-number'>$${this.reimbursmentRequestTotal}</div>
             </div>
+            <div class='u-space-mb--small flex flex--space-between flex--align-center small'>
+              <div class='u-space-mr--small'>TODO: Total Reimbursed</div>
+              <div class='monospace-number'>$0.00</div>
+            </div>
+          </div>
+          <div class='u-space-mt flex flex--align-center'>
+            <i class='fa-solid fa-circle-chevron-right delta u-space-mr--small'></i>
+            ${this.approvalRequest?.reimbursementStatus === 'not-submitted' ? html`
+              <a href='/approval-request/new-reimbursement/${this.approvalRequestId}'>Create Reimbursement Request</a>
+              ` : html`
+              <a class='pointer' @click=${() => this.AppStateModel.scrollToAnchor(`${this.id}--reimbursement-requests`)}>View Reimbursement Requests</a>
+              `}
           </div>
         </div>
 
@@ -73,6 +85,38 @@ return html`
             expenditure-total=${this.approvedExpenseTotal}
             .data=${this.approvalRequest.fundingSources || []}>
           </funding-source-select>
+        </div>
+
+        <div id='${this.id}--reimbursement-requests' ?hidden=${this._hideReimbursementSection}>
+          <h2 class="heading--underline">Reimbursement Requests</h2>
+          <div>
+            <div class='row row--header'>
+              <div>Request</div>
+              <div class='text-align--right'>Amount Requested</div>
+              <div class='text-align--right'>Amount Reimbursed</div>
+            </div>
+            ${this.reimbursementRequests.map((rr) => html`
+              <div class='row'>
+                <div>
+                  <div><a class='underline-hover primary bold' href='/reimbursement-request/${rr.reimbursementRequestId}'>${rr.label || 'Untitled Request'}</a></div>
+                  <div class='rr-field'>
+                    <div>Status<span class='colon'>:</span></div>
+                    <div>${applicationOptions.reimbursementStatusLabel(rr.status, 'reimbursementRequest')}</div>
+                  </div>
+                  <div class='rr-field'>
+                    <div>Submitted<span class='colon'>:</span></div>
+                    <div>${typeTransform.toLocaleDateTimeString(rr.submittedAt)}</div>
+                  </div>
+                </div>
+                <div>
+                  <div class='monospace-number text-align--right'>$${reimbursmentExpenses.addExpenses(rr)}</div>
+                </div>
+                <div>
+                  <div class='monospace-number text-align--right'>$0.00</div>
+                </div>
+              </div>
+              `)}
+          </div>
         </div>
 
         <div class='activity-history'>

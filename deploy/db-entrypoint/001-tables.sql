@@ -201,7 +201,8 @@ CREATE TABLE reimbursement_request (
     travel_end DATE,
     personal_time VARCHAR(500),
     comments VARCHAR(500),
-    status VARCHAR(100) NOT NULL DEFAULT 'submitted'
+    status VARCHAR(100) NOT NULL DEFAULT 'submitted',
+    submitted_at timestamp DEFAULT NOW()
 );
 COMMENT ON TABLE reimbursement_request IS 'Reimbursement requests for travel expenses.';
 
