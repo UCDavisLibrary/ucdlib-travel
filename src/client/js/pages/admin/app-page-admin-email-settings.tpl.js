@@ -28,7 +28,8 @@ return html`
 `;}
 
 function renderEmailSetting(setting) {
-  
+  //const variables = content.split('${').slice(1).map(x => x.split('}')[0]);
+  console.log("S:", setting);
   return html`
     <email-template
       .defaultBodyTemplate=${setting[0].defaultValue}
