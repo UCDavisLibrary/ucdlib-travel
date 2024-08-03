@@ -7,16 +7,27 @@ export default (api) => {
    * @description Get array of notifications
    */
   api.get('/comments-notification', protect('hasBasicAccess'), async (req, res) => {
+    const kerberos = req.auth.token.id;
+    // let isSingleNotifications;
     const data = await email.getHistory();
     if( data.error ) {
       console.error('Error in GET /notification', data.error);
       return res.status(500).json({error: true, message: 'Error getting request history.'});
     }
-    if( !req.headers.authorization) {
-      console.error('Error in GET /notification', data.error);
-      return res.status(401).json({error: true, message: 'You must authenticate to access this resource.'});
+    if( req.auth.token.hasAdminAccess) return res.json(data);
+
+    // if(data.data.length === 1) isSingleNotifications = true;
+
+
+    const usersNotifications = new Set();
+
+    for(let notice of data.data) {
+      const isOwnNotifications = notice.employeeKerberos === kerberos;
+      if ( !isOwnNotifications ) return apiUtils.do403(res);
     }
+
     return res.json(data);
+    
   });
 
   /**
@@ -40,7 +51,8 @@ export default (api) => {
                                            payload
                                           );
 
-    if ( data.error && data.is500 ) {
+
+    if ( !data ) {
       return res.status(500).json(data);
     }
 
