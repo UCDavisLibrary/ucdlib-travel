@@ -112,10 +112,6 @@ class Logging {
       ) AS employees
     FROM
         notification n
-    LEFT JOIN
-        approval_request ar ON n.approval_request_revision_id = ar.approval_request_revision_id
-    LEFT JOIN
-        reimbursement_request rr ON n.reimbursement_request_id = rr.reimbursement_request_id
     ${whereClause.sql ? `WHERE ${whereClause.sql}` : ''}
     LIMIT ${pageSize} OFFSET ${pageSize * (page - 1)};
     `;

@@ -33,13 +33,18 @@ class Settings {
 
   async _getEmail(){
 
-    // Quick fix
-    // const email = temp.filter((t) => t.key == "admin_email_address");
-
     /* This is real way to do it */
     let email = await dbSettings.getByKey("admin_email_address");
 
-    return email.defaultValue;
+    if(!email) return;
+    if ( email.error) {
+      console.error('Error getting email object', email.error);
+      return email.error;
+    }
+
+    if(email.useDefaultValue) return email.defaultValue;
+
+    return email.value;
   }
 
 

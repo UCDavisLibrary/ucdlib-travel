@@ -1,6 +1,6 @@
 import serverConfig from "../../serverConfig.js";
 import employee from "../../db-models/employee.js";
-import settings from "../../db-models/settings.js";
+import settings from "./settings.js";
 
 /**
  * @class Hydration
@@ -139,8 +139,16 @@ _getReimbursementRequestUrl(){
 
 async _getRequesterEmail(){
   let emp = {};
+
   emp.emp = await employee.getIamRecordById(this.approvalRequest.employeeKerberos);
-  return emp.emp.res.email;
+  if ( emp.emp.error || emp.emp.res) {
+    console.error('Error getting employee object', emp.emp.error);
+    return emp.emp.error;
+  }
+
+  let email = emp.emp.res.email || null;
+  return email;
+
 }
 
 async _getNextApproverEmail(){
@@ -150,12 +158,13 @@ async _getNextApproverEmail(){
   let approver = results[0].employeeKerberos;
 
   emp.emp = await employee.getIamRecordById(approver);
-  if ( emp.emp.error ) {
-    console.error('Error getting employee object in POST /comments-notification', emp.emp.error);
-    return res.status(500).json({error: true, message: 'Error retrieving next approver email.'});
+  if ( emp.emp.error || emp.emp.res) {
+    console.error('Error getting employee object', emp.emp.error);
+    return emp.emp.error;
   }
 
-  return emp.emp.res.email;
+  let email = emp.emp.res.email || null;
+  return email;
 }
 
 async _getAllApprovedEmail(){
@@ -165,14 +174,22 @@ async _getAllApprovedEmail(){
 
   for(let r of results) {
     emp.emp = await employee.getIamRecordById(r.employeeKerberos);
-    emps.push(emp.emp.res.email);
+
+    if ( emp.emp.error || emp.emp.res) {
+      console.error('Error getting employee object', emp.emp.error);
+      return emp.emp.error;
+    }
+
+    let email = emp.emp.res.email || null;
+
+    emps.push(email);
   }
 
   return emps;
 }
 
 async _getHrEmail(){
-  let hrEmailObject = await settings.getByKey("admin_email_address");
+  let hrEmailObject = await settings._getEmail();
 
   if ( hrEmailObject.error ) {
     console.error('Error getting setting hrEmail object in POST /system-notification', emp.emp.error);
@@ -189,9 +206,6 @@ async _getHrEmail(){
 
 
 _getContext(content){
-  // extract variables from content string
-  const variables = content.split('${').slice(1).map(x => x.split('}')[0]);
-
   // get values from approvalRequest/reimbursmentRequest
   const context = {};
 

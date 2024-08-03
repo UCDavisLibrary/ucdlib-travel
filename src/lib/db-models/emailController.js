@@ -31,7 +31,7 @@ class Email {
     const subject = sub;
     const text = body;
 
-    if ( text && subject && from && serverConfig.email.enabled ) {
+    if ( text && subject && from && to && serverConfig.email.enabled ) {
       //Initiate Hydration class
       const emailMessage = {from, to, subject, text}
 
@@ -62,7 +62,7 @@ class Email {
   
     let result = await logging.addNotificationLogging(notification);
 
-    return result;
+    return emailSent;
   }
 
   /**
@@ -86,7 +86,7 @@ class Email {
     const subject = hydration.hydrate(subjectTemplate);
     const text = hydration.hydrate(bodyTemplate);
 
-    if ( bodyTemplate && subjectTemplate && from && serverConfig.email.enabled ) {
+    if ( bodyTemplate && subjectTemplate && from  && to && serverConfig.email.enabled ) {
       //Initiate Hydration class
       const emailMessage = {from, to, subject, text}
 
@@ -101,6 +101,9 @@ class Email {
     } else {
       emailSent = false;
     }
+
+    details.to = to;
+    details.from = from;
 
 
     // Log it and send to database 
