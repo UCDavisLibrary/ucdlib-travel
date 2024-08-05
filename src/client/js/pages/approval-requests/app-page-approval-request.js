@@ -66,7 +66,7 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
    */
   async _onAppStateUpdate(state) {
     if ( this.id !== state.page ) return;
-    this.showLoaded = false;
+    this._showLoaded = false;
     this.AppStateModel.showLoading();
 
     this.AppStateModel.setTitle({show: false});
@@ -86,9 +86,8 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
     }
 
     // bail if a callback redirected us
-    await this.waitController.wait(50);
-    state = await this.AppStateModel.get();
-    if ( this.id !== state.page || !this.showLoaded ) return;
+    const _showLoaded = await this.waitController.waitForHostPropertyValue('_showLoaded', true, 2000);
+    if ( _showLoaded.wasTimeout ) return;
 
     this.AppStateModel.showLoaded(this.id);
 
@@ -176,7 +175,7 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
     this._setReimbursementSectionVisibility();
     this._setActivity(e.payload.data);
 
-    this.showLoaded = true;
+    this._showLoaded = true;
   }
 
   _setReimbursementSectionVisibility(){

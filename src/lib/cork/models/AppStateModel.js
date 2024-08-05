@@ -100,6 +100,12 @@ class AppStateModelImpl extends AppStateModel {
       }
     }
 
+    else if ( baseRoute === 'reimbursement-request' ){
+      if ( secondaryRoute ){
+        p = 'reimbursement';
+      }
+    }
+
     else if ( baseRoute === 'approve' ){
       p = 'approver-landing';
     }

@@ -91,9 +91,9 @@ return html`
           <h2 class="heading--underline">Reimbursement Requests</h2>
           <div>
             <div class='row row--header'>
-              <div>Request</div>
-              <div class='text-align--right'>Amount Requested</div>
-              <div class='text-align--right'>Amount Reimbursed</div>
+              <div class='flex flex--align-center'>Request</div>
+              <div class='flex flex--align-center text-align--right'>Amount Requested</div>
+              <div class='flex flex--align-center text-align--right'>Amount Reimbursed</div>
             </div>
             ${this.reimbursementRequests.map((rr) => html`
               <div class='row'>
@@ -109,10 +109,12 @@ return html`
                   </div>
                 </div>
                 <div>
-                  <div class='monospace-number text-align--right'>$${reimbursmentExpenses.addExpenses(rr)}</div>
+                  <div class='reimbursement-amount__label'>Amount Requested</div>
+                  <div class='monospace-number reimbursement-amount'>$${reimbursmentExpenses.addExpenses(rr)}</div>
                 </div>
                 <div>
-                  <div class='monospace-number text-align--right'>$0.00</div>
+                  <div class='reimbursement-amount__label'>Amount Reimbursed</div>
+                  <div class='monospace-number reimbursement-amount'>$0.00</div>
                 </div>
               </div>
               `)}
