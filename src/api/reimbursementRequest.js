@@ -37,8 +37,6 @@ export default (api) => {
     }
 
     // do auth - which is determined by associated approval request
-    // todo uncomment after testing
-    // if ( req.auth.token.hasAdminAccess ) return res.json(results);
     const approvalRequestIds = [...(new Set(results.data.map(rr => rr.approvalRequestId)))];
     let arQuery = {
       requestIds: approvalRequestIds,
@@ -50,6 +48,14 @@ export default (api) => {
       console.error('Error in GET /reimbursement-request', approvalRequests.error);
       return res.status(500).json({error: true, message: 'Error when authorizing access to reimbursement requests.'});
     }
+
+    if ( query.includeApprovalRequest ) {
+      results.data.forEach(rr => {
+        rr.approvalRequest = approvalRequests.data.find(ar => ar.approvalRequestId === rr.approvalRequestId);
+      });
+    }
+
+    if ( req.auth.token.hasAdminAccess ) return res.json(results);
 
     for (const ar of approvalRequests.data) {
       const isOwnRequest = ar.employeeKerberos === kerberos;

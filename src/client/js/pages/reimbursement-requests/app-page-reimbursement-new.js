@@ -68,9 +68,8 @@ export default class AppPageReimbursementNew extends Mixin(LitElement)
     }
 
     // bail if a callback redirected us
-    await this.waitController.wait(50);
-    state = await this.AppStateModel.get();
-    if ( this.id !== state.page || !this.showLoaded ) return;
+    const showLoaded = await this.waitController.waitForHostPropertyValue('showLoaded', true, 2000);
+    if ( showLoaded.wasTimeout ) return;
 
     this.AppStateModel.showLoaded(this.id);
 

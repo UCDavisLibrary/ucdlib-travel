@@ -21,7 +21,7 @@ import applicationOptions from '../../../../lib/utils/applicationOptions.js';
  * @property {Boolean} isFundingSourceChange - true if the approver has changed a funding source value
  * @property {Boolean} fundingSourceError - true if there is an error with a funding source value - aka the total amount does not match the total expenditures
  * @property {String} comments - the comments the approver has entered
- * @property {Boolean} showLoaded - true if the page has loaded
+ * @property {Boolean} _showLoaded - true if the page has loaded
  * @property {String} action - the action the approver has taken
  */
 export default class AppPageApprover extends Mixin(LitElement)
@@ -38,7 +38,7 @@ export default class AppPageApprover extends Mixin(LitElement)
       isFundingSourceChange: {type: Boolean},
       fundingSourceError: {type: Boolean},
       comments: {type: String},
-      showLoaded: {type: Boolean},
+      _showLoaded: {type: Boolean},
       action: {state: true},
     }
   }
@@ -81,7 +81,7 @@ export default class AppPageApprover extends Mixin(LitElement)
    */
   async _onAppStateUpdate(state) {
     if ( this.id !== state.page ) return;
-    this.showLoaded = false;
+    this._showLoaded = false;
     this.AppStateModel.showLoading();
 
     this.AppStateModel.setTitle('Approve Request');
@@ -100,9 +100,8 @@ export default class AppPageApprover extends Mixin(LitElement)
     }
 
     // bail if a callback redirected us
-    await this.waitController.wait(50);
-    state = await this.AppStateModel.get();
-    if ( this.id !== state.page || !this.showLoaded ) return;
+    const _showLoaded = await this.waitController.waitForHostPropertyValue('_showLoaded', true, 2000);
+    if ( _showLoaded.wasTimeout ) return;
 
     // reset form properties
     this.comments = '';
@@ -176,7 +175,7 @@ export default class AppPageApprover extends Mixin(LitElement)
         a.employeeKerberos !== this.AuthModel.getToken().id && a.approverOrder < userAction.approverOrder
       );
     this.approvalRequest = approvalRequest;
-    this.showLoaded = true;
+    this._showLoaded = true;
   }
 
   /**
