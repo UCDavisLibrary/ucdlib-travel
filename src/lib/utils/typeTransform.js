@@ -49,6 +49,9 @@ class TypeTransform {
   toDateFromISO(value) {
     if ( !value ) return null;
     value = value.toString();
+    if ( value.includes('T') ) {
+      value = value.split('T')[0];
+    }
     if ( !value.match(/^\d{4}-\d{2}-\d{2}$/) ) {
       return null;
     }
