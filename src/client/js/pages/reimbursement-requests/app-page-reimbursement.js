@@ -7,6 +7,7 @@ import { WaitController } from "@ucd-lib/theme-elements/utils/controllers/wait.j
 
 import typeTransform from '../../../../lib/utils/typeTransform.js';
 import promiseUtils from '../../../../lib/utils/promiseUtils.js';
+import reimbursmentExpenses from '../../../../lib/utils/reimbursmentExpenses.js';
 
 export default class AppPageReimbursement extends Mixin(LitElement)
 .with(LitCorkUtils, MainDomElement) {
@@ -16,6 +17,7 @@ export default class AppPageReimbursement extends Mixin(LitElement)
       reimbursementRequestId : {type: Number},
       reimbursementRequest : {type: Object},
       approvalRequest : {type: Object},
+      _transportationExpenses: {state: true},
       _reimbursementQueryObject: {state: true},
       _showLoaded: {state: true}
     }
@@ -29,6 +31,7 @@ export default class AppPageReimbursement extends Mixin(LitElement)
     this.reimbursementRequestId = 0;
     this.reimbursementRequest = {};
     this.approvalRequest = {};
+    this._transportationExpenses = reimbursmentExpenses.hydrateTransportationExpenses();
 
     this.waitController = new WaitController(this);
 
@@ -106,6 +109,7 @@ export default class AppPageReimbursement extends Mixin(LitElement)
 
     this.reimbursementRequest = e.payload.data[0];
     this.approvalRequest = this.reimbursementRequest?.approvalRequest || {};
+    this._transportationExpenses = reimbursmentExpenses.hydrateTransportationExpenses(this.reimbursementRequest.expenses);
 
     if ( !this.approvalRequest?.approvalRequestId ) {
       this.AppStateModel.showError('Associated approval request not found');

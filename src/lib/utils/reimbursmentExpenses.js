@@ -122,6 +122,39 @@ class ReimbursementExpenses {
     }, 0);
     return totalExpenses.toFixed(2);
   }
+
+  hydrateTransportationExpenses(expenses=[]){
+    const out = { total: 0, totalString: '0.00', expenses: [] };
+    if ( !Array.isArray(expenses) ) return out;
+
+    const subCategories = this.transportation.subCategories;
+
+    for (const expense of expenses.filter(e => e.category === 'transportation')) {
+      const e = {
+        reimbursementRequestExpenseId: expense.reimbursementRequestExpenseId,
+        category: expense?.details?.subCategory || '',
+      };
+      if ( !subCategories.find(s => s.value === e.category) ) continue;
+      e.categoryLabel = subCategories.find(s => s.value === e.category).label;
+
+      let amount = Number(expense.amount);
+      if ( isNaN(amount) ) continue;
+      e.amount = amount;
+      out.total += amount;
+      e.amountString = amount.toFixed(2);
+
+      e.from = expense?.details?.from || '';
+      e.to = expense?.details?.to || '';
+      e.oneWay = expense?.details?.oneWay ? true : false;
+      let estimatedMiles = Number(expense?.details?.estimatedMiles);
+      e.estimatedMiles = isNaN(estimatedMiles) ? 0 : estimatedMiles;
+
+      out.expenses.push(e);
+    }
+
+    out.totalString = out.total.toFixed(2);
+    return out;
+  }
 }
 
 export default new ReimbursementExpenses();
