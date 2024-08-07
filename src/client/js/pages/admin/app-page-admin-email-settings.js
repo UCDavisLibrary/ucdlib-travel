@@ -9,18 +9,25 @@ import ValidationHandler from "../../utils/ValidationHandler.js";
 import "../../components/email-template.js";
 
 /**
+ * @class AppPageAdminEmailSettings
  * @description Admin page for managing email settings
- * aka the default for the email sent out 
+ * @property {Array} settings - array of settings objects fetched from the settings model - must have the 'admin-settings' category
+ * @property {String} searchString - search string used to do a browser-side search of the settings array
+ * @property {Boolean} settingsHaveChanged - true if any settings have been updated by user
+ * @property {Boolean} noSettings - true if there are no settings to display due to search filtering
  */
 export default class AppPageAdminEmailSettings extends Mixin(LitElement)
 .with(LitCorkUtils, MainDomElement) {
 
   static get properties() {
     return {
-      
+      settings: {type: Array},
+      searchString: {type: String},
+      settingsHaveChanged: {type: Boolean},
+      noSettings: {type: Boolean}
     }
   }
-
+ 
   constructor() {
     super();
     this.render = render.bind(this);
@@ -28,8 +35,11 @@ export default class AppPageAdminEmailSettings extends Mixin(LitElement)
 
     this.settings = [];
     this.searchString = '';
+    this.emailForm = '';
     this.settingsHaveChanged = false;
     this.noSettings = false;
+    this.formProperty = {};
+    this.settingTypes = {};
     this.variableList = [
       "requesterFirstName",
       "requesterLastName",
@@ -76,14 +86,7 @@ export default class AppPageAdminEmailSettings extends Mixin(LitElement)
         this.AppStateModel.store.breadcrumbs[this.id]
       ];
       this.AppStateModel.setBreadcrumbs(breadcrumbs);
-  
-      // const d = await this.getPageData();
-      // const hasError =  d.some(e => e.status === 'rejected' || e.value.state === 'error');
-      // if( hasError ) {
-      //   this.AppStateModel.showError(d);
-      //   return;
-      // }
-      // this.AppStateModel.showLoaded(this.id);
+
     }
 
   /**
@@ -128,26 +131,6 @@ export default class AppPageAdminEmailSettings extends Mixin(LitElement)
     this.requestUpdate();
   }
 
-  sortSettings(){
-    let body = this.settings.filter(set => set.key.includes("admin_email_body"));
-    let subject = this.settings.filter(set => set.key.includes("admin_email_subject"));
-
-    body = this.sort(body);
-    subject = this.sort(subject);
-    let newArray= [];
-
-    if(body.length == subject.length) {
-      body.map((e, i) => {
-        let tempArray = []
-        tempArray.push(e)
-        tempArray.push(subject[i])
-        newArray.push(tempArray)
-      });
-    }
-
-    return newArray;
-  }
-
 
   /**
    * @description bound to "use default value" checkbox change event
@@ -173,24 +156,6 @@ export default class AppPageAdminEmailSettings extends Mixin(LitElement)
       }
     }
 
-  sort(item){
-    item.sort((a, b) => {
-      const A = a.key.toUpperCase(); // ignore upper and lowercase
-      const B = b.key.toUpperCase(); // ignore upper and lowercase
-
-      if (A < B) {
-        return -1;
-      }
-      if (A > B) {
-        return 1;
-      }
-    
-      // names must be equal
-      return 0;
-    });
-    return item;
-  }
-
       /**
    * @description bound to setting value input event
    */
@@ -212,6 +177,7 @@ export default class AppPageAdminEmailSettings extends Mixin(LitElement)
     this.SettingsModel.updateSettings(settings);
   }
 
+
   /**
    * @description bound to search form search event
    * does very basic 'includes' search on label, key, description, and keywords
@@ -229,21 +195,10 @@ export default class AppPageAdminEmailSettings extends Mixin(LitElement)
       setting.hidden = fields.every(f => !f || !f.toLowerCase().includes(s));
     }
     this.noSettings = this.settings.every(s => s.hidden);
+    this.requestUpdate();
+
   }
 
-  _onEmailUpdate(e){
-    const page = this.pages.find(p => p.value === this.page);
-    if ( !page ) return;
-    const data = this[page.formProperty] || {};
-  
-    const { emailPrefix, bodyTemplate, subjectTemplate, disableNotification } = e.detail;
-    data[`${emailPrefix}Body`] = bodyTemplate;
-    data[`${emailPrefix}Subject`] = subjectTemplate;
-    data[`${emailPrefix}Disable`] = disableNotification ? 'true' : '';
-  
-    this[page.formProperty] = {...data};
-  
-  }
 
   /**
    * @description clears search string and focuses search input
@@ -257,6 +212,138 @@ export default class AppPageAdminEmailSettings extends Mixin(LitElement)
     this.renderRoot.querySelector('ucd-theme-search-form').renderRoot.querySelector('input').value = '';
     this.renderRoot.querySelector('ucd-theme-search-form').renderRoot.querySelector('input').focus();
     this.noSettings = false;
+  }
+
+  sort(item){
+    item.sort((a, b) => {
+      const A = a.key.toUpperCase(); // ignore upper and lowercase
+      const B = b.key.toUpperCase(); // ignore upper and lowercase
+
+      if (A < B) {
+        return -1;
+      }
+      if (A > B) {
+        return 1;
+      }
+    
+      // names must be equal
+      return 0;
+    });
+    return item;
+  }
+
+  toCamelCase(s){
+    return s.replace(/([-_][a-z])/ig, ($1) => {
+        return $1.toUpperCase()
+          .replace('-', '')
+          .replace('_', '');
+    });
+
+  }
+
+  toKebabCase(s){
+    return s.replaceAll("_", '-');
+  }
+
+  toUpper(s){
+    let result = s.replace(/([A-Z])/g, " $1");
+    if(result.includes("_")) result = result.replace('_', ' ');
+
+
+    let arr = result.split(' ');
+    var newarr = [];
+
+    for (var x = 0; x < arr.length; x++) {
+      newarr.push(arr[x].charAt(0).toUpperCase() + arr[x].slice(1));
+    }
+      
+    let final = newarr.join(' ');
+
+    return final;
+  }
+
+  getTemplatesVariables(){
+    let vRes = []
+    for (let v of this.variableList) {
+      let finalResult = this.toUpper(v);
+      vRes.push({key: v, label: finalResult });
+    }
+
+    return vRes;
+  }
+
+  _onEmailUpdate(e){
+    const { emailPrefix, bodyTemplate, subjectTemplate, disableNotification } = e.detail;
+    const data = {page: this.settingTypes[emailPrefix]} || {};
+
+    let settingSubjectKey = "admin_email_subject_" + data.page;
+    let settingBodyKey = "admin_email_body_" + data.page;
+    let bodyIndex = this.settings.findIndex(obj => obj.key == settingBodyKey);
+    let subjectIndex = this.settings.findIndex(obj => obj.key == settingSubjectKey);
+
+    data[`body`] = bodyTemplate;
+    data[`subject`] = subjectTemplate;
+    data[`disable`] = disableNotification ? 'true' : '';
+
+
+    if(bodyTemplate != ''){
+      this.settings[bodyIndex].value = bodyTemplate;
+      this.settings[bodyIndex].updated = true;
+    } else {
+      this.settings[bodyIndex].useDefaultValue = true;
+      this.settings[bodyIndex].value = '';
+      this.settings[bodyIndex].updated = true;
+    }
+
+    if(subjectTemplate != ''){
+      this.settings[subjectIndex].value = subjectTemplate;
+      this.settings[subjectIndex].updated = true;
+    } else {
+      this.settings[subjectIndex].useDefaultValue = true;
+      this.settings[subjectIndex].value = '';
+      this.settings[subjectIndex].updated = true;
+    }
+
+    this.settingsHaveChanged = true;
+    this.requestUpdate();
+    // this.formProperty = {...data};  
+  }
+
+  sortSettings(){
+    let body = this.settings.filter(set => set.key.includes("admin_email_body"));
+    let subject = this.settings.filter(set => set.key.includes("admin_email_subject"));
+
+    body = this.sort(body);
+    subject = this.sort(subject);
+    let newArray= [];
+
+    if(body.length == subject.length) {
+      body.map((e, i) => {
+        let tempArray = []
+        tempArray.push(e)
+        tempArray.push(subject[i])
+        newArray.push(tempArray)
+      });
+    }
+
+    return newArray;
+  }e
+
+  async _onFormSubmit(e) {
+    e.preventDefault();
+    // if ( !this.formProperty.page ) return;
+    // const data = this.formProperty;
+    // this.errorMessages = [];
+    // this.errorFields = {};
+    
+    this.settings.map(settings => {
+      if(settings.updated) {
+        this.SettingsModel.updateSettings(settings);
+      }
+    });
+
+    this.requestUpdate();
+
   }
 
 

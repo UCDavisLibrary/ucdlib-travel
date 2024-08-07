@@ -18,7 +18,7 @@ export default class EmailTemplate extends Mixin(LitElement)
       defaultBodyTemplate: { type: String },
       subjectTemplate: { type: String },
       bodyTemplate: { type: String },
-      disableNotification: { type: Boolean },
+      // disableNotification: { type: Boolean },
       templateVariables: { type: Array },
       notAnAutomatedEmail: { type: Boolean },
       _subjectTemplate: { state: true },
@@ -37,7 +37,7 @@ export default class EmailTemplate extends Mixin(LitElement)
     this.defaultBodyTemplate = '';
     this.subjectTemplate = '';
     this.bodyTemplate = '';
-    this.disableNotification = false;
+    // this.disableNotification = false;
     this.templateVariables = [];
     this._subjectTemplate = '';
     this._bodyTemplate = '';
@@ -116,20 +116,21 @@ export default class EmailTemplate extends Mixin(LitElement)
 
   }
 
-  _onDisableToggle(){
-    this.disableNotification = !this.disableNotification;
-    this.dispatchUpdateEvent();
-  }
+  // _onDisableToggle(){
+  //   this.disableNotification = !this.disableNotification;
+  //   this.dispatchUpdateEvent();
+  // }
 
   dispatchUpdateEvent() {
-    this.dispatchEvent(new CustomEvent('notification-comments', {
+    this.dispatchEvent(new CustomEvent('email-update', {
       bubbles: true,
       composed: true,
       detail: {
         emailPrefix: this.emailPrefix,
         subjectTemplate: this.isDefaultSubjectTemplate ? '' : this._subjectTemplate,
         bodyTemplate: this.isDefaultBodyTemplate ? '' : this._bodyTemplate,
-        disableNotification: this.disableNotification
+        isSubjectDefault: this.isDefaultSubjectTemplate,
+        isBodyDefault: this.isDefaultBodyTemplate
       }
     }));
   }

@@ -1,68 +1,62 @@
 import { html } from 'lit';
-import { unsafeHTML } from 'lit/directives/unsafe-html.js';
+import '@ucd-lib/theme-elements/brand/ucd-theme-search-form/ucd-theme-search-form.js'
 
 
 export function render() { 
   const group = this.sortSettings()
 return html`
   <div class='l-gutter l-container--narrow u-space-mb--large'>
-    <ucd-theme-search-form
-      placeholder='Search settings'
-      class='u-space-mb'
-      .value=${this.searchString}
-      @search=${this._onSearch}>
-    </ucd-theme-search-form>
-    <div>
-      ${group.map((setting) => renderEmailSetting.call(this, setting))}
-    </div>
-    <div ?hidden=${!this.noSettings} class='u-space-mt--large'>
-      <p>No settings match your search. <a class='pointer' @click=${this.clearAndFocusSearch}>Try another search term.</a></p>
-    </div>
-    <div class='sticky-update-bar'>
-      <button
-        class='btn btn--primary'
-        ?disabled=${!this.settingsHaveChanged}
-        @click=${this._onSaveSettings}>Save</button>
-    </div>
+    <form @submit=${this._onFormSubmit}>
+      <ucd-theme-search-form
+        placeholder='Search settings'
+        class='u-space-mb'
+        .value=${this.searchString}
+        @search=${this._onSearch}>
+      </ucd-theme-search-form>
+      <div>
+        ${group.map((setting) => renderEmailSetting.call(this, setting))}
+      </div>
+      <div ?hidden=${!this.noSettings} class='u-space-mt--large'>
+        <p>No settings match your search. <a class='pointer' @click=${this.clearAndFocusSearch}>Try another search term.</a></p>
+      </div>
+      <div class='sticky-update-bar'>
+        <button
+          type='submit' 
+          class='btn btn--primary border-box u-space-mt'
+          ?disabled=${!this.settingsHaveChanged}>Save
+        </button>
+      </div>
+
+    </form>
   </div>
 `;}
 
 function renderEmailSetting(setting) {
   let body = setting[0]; 
   let subject = setting[1];
+  let key = setting[0].key.split("body_")[1];
+  let pageSlug = this.toKebabCase(key);
 
-  // const variablesBody = body.defaultValue.split('${').slice(1).map(x => x.split('}')[0]);
-  // const variablesSubject = body.defaultValue.split('${').slice(1).map(x => x.split('}')[0]);
+  this.settingTypes[this.toCamelCase(key)] = key
 
-  // let v = variablesBody.concat(variablesSubject);
-  // const variables = [...new Set(v)];
-  
-  let vRes = [];
-  for (let v of this.variableList) {
-    const result = v.replace(/([A-Z])/g, " $1");
-    const finalResult = result.charAt(0).toUpperCase() + result.slice(1);
-    vRes.push({key: v, label: finalResult });
-  }
+  let vRes = this.getTemplatesVariables();
+  let object = {label: this.toUpper(key), emailPrefix: this.toCamelCase(key)};
 
   return html`
-    <email-template
-      @email-update=${this._onEmailUpdate}
-      .bodyTemplate=${body.value}
-      .defaultBodyTemplate=${body.defaultValue}
-      .defaultSubjectTemplate=${subject.defaultValue}
-      .subjectTemplate=${subject.value}
-      .disableNotification=${body.disable}
-      .templateVariables=${vRes}
-    ></email-template>
+
+  <div class="field-container" id='email-${pageSlug}' ?hidden=${setting.hidden}>
+    <form @submit=${this._onFormSubmit}>
+      <h4>${object.label}</h4>
+          <email-template
+            @email-update=${this._onEmailUpdate}
+            .emailPrefix=${object.emailPrefix}
+            .bodyTemplate=${body.value}
+            .defaultBodyTemplate=${body.defaultValue}
+            .defaultSubjectTemplate=${subject.defaultValue}
+            .subjectTemplate=${subject.value}
+            .disableNotification=${body.disable}
+            .templateVariables=${vRes}
+          ></email-template>
+    </form>
+  </div>
 `;}
-
-
-
-// @email-update=${this._onEmailUpdate}
-// .emailPrefix=${setting.emailPrefix}
-// .bodyTemplate=${setting.body.value}
-// .defaultBodyTemplate=${setting.body.default}
-// .defaultSubjectTemplate=${setting.subject.default}
-// .subjectTemplate=${setting.subject.value}
-// .disableNotification=${setting.disable.value}
-// .templateVariables=${setting.body.templateVariables}
