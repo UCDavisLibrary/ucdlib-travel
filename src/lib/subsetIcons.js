@@ -41,6 +41,7 @@ class subsetIcons {
         'edit',
         'exclamation-circle',
         'file-import',
+        'file-lines',
         'gear',
         'list',
         'magnifying-glass',

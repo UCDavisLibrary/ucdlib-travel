@@ -18,6 +18,8 @@ export default class AppPageReimbursement extends Mixin(LitElement)
       reimbursementRequest : {type: Object},
       approvalRequest : {type: Object},
       _transportationExpenses: {state: true},
+      _registrationExpenses: {state: true},
+      _dailyExpenses: {state: true},
       _reimbursementQueryObject: {state: true},
       _showLoaded: {state: true}
     }
@@ -32,6 +34,8 @@ export default class AppPageReimbursement extends Mixin(LitElement)
     this.reimbursementRequest = {};
     this.approvalRequest = {};
     this._transportationExpenses = reimbursmentExpenses.hydrateTransportationExpenses();
+    this._registrationExpenses = reimbursmentExpenses.hydrateRegistrationFeeExpenses();
+    this._dailyExpenses = reimbursmentExpenses.hydrateDailyExpenses();
 
     this.waitController = new WaitController(this);
 
@@ -110,12 +114,21 @@ export default class AppPageReimbursement extends Mixin(LitElement)
     this.reimbursementRequest = e.payload.data[0];
     this.approvalRequest = this.reimbursementRequest?.approvalRequest || {};
     this._transportationExpenses = reimbursmentExpenses.hydrateTransportationExpenses(this.reimbursementRequest.expenses);
+    this._registrationExpenses = reimbursmentExpenses.hydrateRegistrationFeeExpenses(this.reimbursementRequest.expenses);
+    this._dailyExpenses = reimbursmentExpenses.hydrateDailyExpenses(this.reimbursementRequest.expenses);
 
     if ( !this.approvalRequest?.approvalRequestId ) {
       this.AppStateModel.showError('Associated approval request not found');
     }
 
     this._showLoaded = true;
+  }
+
+  _onDailyExpenseNotesClicked(dailyExpense){
+    this.AppStateModel.showDialogModal({
+      title: `Daily Expense Notes for ${dailyExpense.date}`,
+      content: dailyExpense.notes || 'No notes provided'
+    });
   }
 
 }
