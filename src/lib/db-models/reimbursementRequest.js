@@ -2,6 +2,7 @@ import pg from "./pg.js";
 
 import validations from "./reimbursementRequestValidations.js";
 import EntityFields from "../utils/EntityFields.js";
+import objectUtils from "../utils/objectUtils.js";
 
 class ReimbursementRequest {
   constructor(){
@@ -243,6 +244,9 @@ class ReimbursementRequest {
     for ( const row of data ){
       if ( !row.expenses?.[0]?.reimbursementRequestExpenseId ) row.expenses = [];
       if ( !row.receipts?.[0]?.reimbursementRequestReceiptId ) row.receipts = [];
+
+      row.expenses = objectUtils.uniqueArray(row.expenses, 'reimbursementRequestExpenseId');
+      row.receipts = objectUtils.uniqueArray(row.receipts, 'reimbursementRequestReceiptId');
     }
     const totalPages = noPaging ? 1 : Math.ceil(total / pageSize);
 
