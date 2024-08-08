@@ -11,6 +11,7 @@ class SettingsStore extends BaseStore {
     };
     this.events = {
       CATEGORY_FETCHED: 'settings-category-fetched',
+      CATEGORY_REQUESTED: 'settings-category-requested',
       SETTINGS_UPDATED: 'settings-updated'
     };
   }

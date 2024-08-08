@@ -49,6 +49,9 @@ class TypeTransform {
   toDateFromISO(value) {
     if ( !value ) return null;
     value = value.toString();
+    if ( value.includes('T') ) {
+      value = value.split('T')[0];
+    }
     if ( !value.match(/^\d{4}-\d{2}-\d{2}$/) ) {
       return null;
     }
@@ -75,6 +78,19 @@ class TypeTransform {
     const day = date.getUTCDate();
 
     return `${month} ${day}, ${year}`;
+  }
+
+  /**
+   * @description Return a formatted date string
+   * @param {String} timestamp - ISO date string
+   * @returns {String}
+   */
+  toLocaleDateTimeString(timestamp){
+    if ( !timestamp ) return '';
+    let date = new Date(timestamp.endsWith('Z') ? timestamp : timestamp + 'Z');
+    let dateString = date.toLocaleDateString();
+    let timeString = date.toLocaleTimeString();
+    return `${dateString} ${timeString}`;
   }
 
   /**

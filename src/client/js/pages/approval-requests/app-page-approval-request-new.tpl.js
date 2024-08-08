@@ -275,7 +275,7 @@ export function renderForm(){
             </div>
             <div class='expenditures-total'>
               <div class='text'>Total Estimated Expenses</div>
-              <div class='amount'>$${this.totalExpenditures.toFixed(2)}</div>
+              <div class='amount monospace-number'>$${this.totalExpenditures.toFixed(2)}</div>
             </div>
           </div>
         </div>
@@ -349,7 +349,7 @@ function renderExpenditureItem(expenditure){
           <div class='primary'>${expenditure.label}</div>
           <div class='small'>Amount is computed using mileage field above</div>
         </div>
-        <div class='amount'>$${value}</div>
+        <div class='amount monospace-number'>$${value}</div>
       </div>
     `;
   }
