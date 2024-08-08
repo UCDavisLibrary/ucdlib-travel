@@ -12,6 +12,7 @@ class LineItemsStore extends BaseStore {
     };
     this.events = {
       ACTIVE_LINE_ITEMS_FETCHED: 'active-line-items-fetched',
+      ACTIVE_LINE_ITEMS_REQUESTED: 'active-line-items-requested',
       LINE_ITEM_CREATED: 'line-item-created',
       LINE_ITEM_UPDATED: 'line-item-updated'
     };

@@ -21,6 +21,16 @@ class ReimbursementRequestService extends BaseService {
     });
   }
 
+  query(query) {
+    return this.request({
+      url : `/api/reimbursement-request${query ? '?' + query : ''}`,
+      checkCached: () => this.store.data.fetched[query],
+      onLoading : request => this.store.fetchedLoading(request, query),
+      onLoad : result => this.store.fetchedLoaded(result.body, query),
+      onError : e => this.store.fetchedError(e, query)
+    });
+  }
+
 }
 
 const service = new ReimbursementRequestService();

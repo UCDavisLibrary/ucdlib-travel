@@ -25,6 +25,8 @@ class LineItemsModel extends BaseModel {
         await this.service.getActiveLineItems();
       }
     } catch(e) {}
+
+    this.store.emit(this.store.events.ACTIVE_LINE_ITEMS_REQUESTED, this.store.data.activeLineItems);
     return this.store.data.activeLineItems;
   }
 

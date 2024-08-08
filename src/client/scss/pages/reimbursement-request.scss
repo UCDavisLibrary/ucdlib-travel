@@ -1,0 +1,19 @@
+app-page-reimbursement {
+
+  table.registration-fees {
+    max-width: 500px;
+  }
+
+  table.daily-expenses > thead > tr:first-child > th {
+    border-bottom: none;
+  }
+  table.daily-expenses tfoot th {
+    border-top: 1px solid #6fcfeb;
+  }
+  table.total-expenses {
+    max-width: 500px;
+    tfoot th {
+      border-top: 1px solid #6fcfeb;
+    }
+  }
+}

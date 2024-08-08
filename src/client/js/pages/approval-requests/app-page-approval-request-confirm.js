@@ -50,6 +50,7 @@ export default class AppPageApprovalRequestConfirm extends Mixin(LitElement)
    */
   async _onAppStateUpdate(state) {
     if ( this.id !== state.page ) return;
+    this._canShowPage = false;
     this.AppStateModel.showLoading();
 
     this.AppStateModel.setTitle('Submit Approval Request');
@@ -68,9 +69,8 @@ export default class AppPageApprovalRequestConfirm extends Mixin(LitElement)
     }
 
     // bail if a callback redirected us
-    await this.waitController.wait(50);
-    state = await this.AppStateModel.get();
-    if ( this.id !== state.page ) return;
+    const canShowPage = await this.waitController.waitForHostPropertyValue('_canShowPage', true, 2000);
+    if ( canShowPage.wasTimeout ) return;
 
     this.formLink = `${this.AppStateModel.store.breadcrumbs['approval-request-new'].link}/${this.approvalRequestId}`;
 
@@ -188,6 +188,7 @@ export default class AppPageApprovalRequestConfirm extends Mixin(LitElement)
     }
 
     this.approvalRequest = approvalRequest;
+    this._canShowPage = true;
   }
 
 
