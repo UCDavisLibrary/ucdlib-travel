@@ -5,15 +5,20 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
- * Subset font awesome icons
- * @description This script will take the font awesome all.js file and create a new file with a subset of icons
- * based on the icons object in the class. The new files will be saved in the same directory as the all.js file.
- * The key of the icons object will be the new file name and the value will be an array of icon names to include in the new file.
+ * @class subsetIcons
+ * @description Utility script that subsets font awesome icons in order to reduce bundle size.
+ * To use:
+ *  1. Add icons you want to include to this.icons object
+ *  2. Ensure that font awesome is installed in the client directory
+ *  3. Run the script
+ *  4. Restart watch process if running app in local development
  */
 class subsetIcons {
 
   constructor() {
 
+    // Add icon names to include in the subset
+    // file will be created for each key in this object
     this.icons = {
       'ucdlib-travel': [
         'arrow-down',
@@ -23,6 +28,8 @@ class subsetIcons {
         'building',
         'calendar',
         'chart-bar',
+        'circle-arrow-up',
+        'circle-arrow-down',
         'circle-chevron-right',
         'circle-exclamation',
         'circle-minus',
@@ -30,10 +37,11 @@ class subsetIcons {
         'circle-plus',
         'comment',
         'credit-card',
-        'diagram-projet',
+        'diagram-project',
         'edit',
         'exclamation-circle',
         'file-import',
+        'file-lines',
         'gear',
         'list',
         'magnifying-glass',
@@ -57,7 +65,6 @@ class subsetIcons {
       ]
     }
 
-
     this.fontAwesomeDir = path.join(__dirname, '../client/node_modules/@fortawesome/fontawesome-free/js');
     this.fontAwesomeFile = path.join(this.fontAwesomeDir, 'all.js');
 
@@ -65,7 +72,11 @@ class subsetIcons {
   }
 
 
-  init(){
+  /**
+   * @description Runs the subsetting process.
+   * Will create a new file for each key in this.icons object with the respective subset of icons.
+   */
+  run(){
     this._loadFileContent();
     if ( !this._fileContent ) return;
     for (const [fileName, icons] of Object.entries(this.icons)) {
@@ -74,8 +85,10 @@ class subsetIcons {
     }
   }
 
+  /**
+   * @description Load the font awesome icon file content
+   */
   _loadFileContent(){
-    // check if exists
     if ( !fs.existsSync(this.fontAwesomeFile) ) {
       console.error(`Font awesome icon file not found: ${this.fontAwesomeFile}`);
       return;
@@ -83,6 +96,11 @@ class subsetIcons {
     this._fileContent = fs.readFileSync(this.fontAwesomeFile, 'utf8');
   }
 
+  /**
+   * @description Write file to font awesome node module directory
+   * @param {String} fileName - Name of the new file
+   * @param {String} fileContent - File content
+   */
   _writeNewFileContent(fileName, fileContent){
     fileName = `${fileName}.js`;
     const newFile = path.join(this.fontAwesomeDir, fileName);
@@ -127,4 +145,4 @@ class subsetIcons {
   }
 }
 
-new subsetIcons().init();
+new subsetIcons().run();

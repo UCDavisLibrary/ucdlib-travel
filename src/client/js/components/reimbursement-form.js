@@ -1,6 +1,6 @@
 import { LitElement } from 'lit';
 import { createRef } from 'lit/directives/ref.js';
-import {render} from "./reimbursement-form.tpl.js";
+import { render } from "./reimbursement-form.tpl.js";
 
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 import { WaitController } from '@ucd-lib/theme-elements/utils/controllers/wait.js';
@@ -21,7 +21,15 @@ export default class ReimbursementForm extends Mixin(LitElement)
       validationHandler: {type: Object},
       showNewDate: {type: Boolean},
       uniqueDates: {type: Array},
-      dateComments: {type: Object}
+      dateComments: {type: Object},
+      approvedExpenses: {type: String},
+      otherTotalExpenses: {type: String},
+      mileageRate: {type: Number},
+      netExpensesNegativeWarningMessage: {type: String},
+      totalExpenses: {state: true},
+      hasOtherTotalExpenses: {state: true},
+      netExpenses: {state: true},
+      netExpensesNegative: {state: true}
     }
   }
 
@@ -34,9 +42,22 @@ export default class ReimbursementForm extends Mixin(LitElement)
     this.form = createRef();
     this.waitController = new WaitController(this);
     this.parentPageId = '';
+    this.mileageRate = 0;
+    this.approvedExpenses = '0.00';
+    this.otherTotalExpenses = '0.00';
+    this.netExpenses = '0.00';
+    this.netExpensesNegative = false;
+    this.netExpensesNegativeWarningMessage = '';
+
 
     this._injectModel('AppStateModel', 'ReimbursementRequestModel');
 
+  }
+
+  willUpdate(){
+    this.totalExpenses = reimbursmentExpenses.addExpenses(this.reimbursementRequest);
+    this.hasOtherTotalExpenses = this.otherTotalExpenses !== '0.00';
+    this._setNetExpenses();
   }
 
   setDatesFromApprovalRequest(approvalRequest){
@@ -55,6 +76,18 @@ export default class ReimbursementForm extends Mixin(LitElement)
     }
 
     this.requestUpdate();
+  }
+
+  _setNetExpenses(){
+    const credits = parseFloat(this.approvedExpenses);
+    const debits = parseFloat(this.totalExpenses) + parseFloat(this.otherTotalExpenses);
+    let net = credits - debits;
+    if ( net ) {
+      this.netExpensesNegative = net < 0;
+      net = Math.abs(net).toFixed(2);
+    }
+    this.netExpenses = net;
+
   }
 
   submit(){
@@ -90,10 +123,9 @@ export default class ReimbursementForm extends Mixin(LitElement)
     } else if ( e.state === 'loading') {
       this.AppStateModel.showLoading();
     } else if ( e.state === 'loaded' ) {
-      // todo update
       this.validationHandler = new ValidationHandler();
       this.requestUpdate();
-      this.AppStateModel.showLoaded(this.parentPageId);
+      this.AppStateModel.setLocation(`/approval-request/${this.approvalRequestId}`);
       this.AppStateModel.showToast({message: 'Reimbursement request submitted', type: 'success'});
     }
   }
@@ -105,30 +137,6 @@ export default class ReimbursementForm extends Mixin(LitElement)
    */
   _onInput(prop, value ){
     this.reimbursementRequest[prop] = value;
-    this.requestUpdate();
-  }
-
-  /**
-   * @description Handle the input event for a date property on the reimbursement request
-   * Used for departure and return dates
-   * @param {String} prop - a datetime property on the reimbursement request
-   * @param {String} value - the date value to set - format: YYYY-MM-DD
-   */
-  _onDateInput(prop, value){
-    const time = this.getTime(prop);
-    this.reimbursementRequest[prop] = `${value}${time ? 'T'+time : ''}`;
-    this.requestUpdate();
-  }
-
-  /**
-   * @description Handle the input event for a time property on the reimbursement request
-   * Used for departure and return times
-   * @param {String} prop - a datetime property on the reimbursement request
-   * @param {String} value - the time value to set - format: HH:MM
-   */
-  _onTimeInput(prop, value){
-    const date = this.getDate(prop);
-    this.reimbursementRequest[prop] = `${date}T${value}`;
     this.requestUpdate();
   }
 
@@ -149,29 +157,6 @@ export default class ReimbursementForm extends Mixin(LitElement)
     this.dateComments = {};
     this.hasTravel = false;
     this.requestUpdate();
-  }
-
-  /**
-   * @description Get the date from a date time iso string reimbursementRequest property
-   * @param {String} prop - the reimbursementRequest property to get date from
-   * @returns {String} date in YYYY-MM-DD format
-   */
-  getDate(prop){
-    const iso = this.reimbursementRequest[prop];
-    if ( !iso || iso.startsWith('T')) return '';
-    return iso.split('T')[0];
-  }
-
-  /**
-   * @description Get the time from a date time iso string reimbursementRequest property
-   * @param {String} prop - the reimbursementRequest property to get time from
-   * @returns {String} time in HH:MM format
-   */
-  getTime(prop){
-    const iso = this.reimbursementRequest[prop];
-    if ( !iso || !iso.includes('T')) return '';
-    let time = iso.split('T')[1];
-    return time.split(':').slice(0,2).join(':');
   }
 
   /**
@@ -288,6 +273,24 @@ export default class ReimbursementForm extends Mixin(LitElement)
   }
 
   /**
+   * @description Handle mileage input for a personal car expense
+   * @param {Object} expense - the expense object in reimbursementRequest.expenses
+   * @param {String} value - the value of the mileage input
+   */
+  _onPersonalCarMileageInput(expense, value){
+    if ( !expense.details ) expense.details = {};
+    value = parseFloat(value);
+    value = isNaN(value) ? 0 : value;
+    expense.details.estimatedMiles = value;
+    let amount = (value || 0) * this.mileageRate;
+    if ( amount ) {
+      amount = amount.toFixed(2);
+    }
+    expense.amount = amount;
+    this.requestUpdate();
+  }
+
+  /**
    * @description Handles the click event for when a new date for a daily expense is added or canceled
    * @param {String} action - 'add' or 'cancel'
    */
@@ -364,10 +367,6 @@ export default class ReimbursementForm extends Mixin(LitElement)
     this._setUniqueDates();
     this.requestUpdate();
   }
-
-
-
-
 
 }
 

@@ -100,6 +100,12 @@ class AppStateModelImpl extends AppStateModel {
       }
     }
 
+    else if ( baseRoute === 'reimbursement-request' ){
+      if ( secondaryRoute ){
+        p = 'reimbursement';
+      }
+    }
+
     else if ( baseRoute === 'approve' ){
       p = 'approver-landing';
     }
@@ -325,6 +331,28 @@ class AppStateModelImpl extends AppStateModel {
   isActivePage(page){
     page = typeof page === 'string' ? page : page.id;
     return this.store.data.page === page;
+  }
+
+  /**
+   * @description Scroll to an anchor on the page
+   * @param {String} id - The id of the element to scroll to.
+   * Note, shadowdom is disabled in most components, so make sure your id is unique to the application.
+   * @param {Number} pxOffset - Optional. The number of pixels to offset the scroll.
+   * Defaults to 65 (to account for the sticky header).
+   */
+  scrollToAnchor(id, pxOffset=65){
+    let ele = document.getElementById(id);
+    if ( ele ){
+      const rect = ele.getBoundingClientRect();
+      const scrollTop = window.scrollY || document.documentElement.scrollTop;
+      const top = rect.top + scrollTop - pxOffset;
+
+      window.scrollTo({
+        top,
+        behavior: 'smooth'
+      });
+    }
+
   }
 
 }
