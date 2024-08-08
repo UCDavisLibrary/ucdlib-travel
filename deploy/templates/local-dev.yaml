@@ -73,6 +73,8 @@ services:
     image: {{POSTGRES_IMAGE_NAME_TAG}}
     environment:
       POSTGRES_PASSWORD: localhost
+    ports:
+    - 5432:5432
     volumes:
       - db-data:/var/lib/postgresql/data
       - ../../deploy/db-entrypoint:/docker-entrypoint-initdb.d
