@@ -27,7 +27,7 @@ export function render() {
       </div>
       <div class='total-row'>
         <div>Total</div>
-        <div class='total-amount'>$${this.fundingSourceTotal.toFixed(2)}</div>
+        <div class='total-amount monospace-number'>$${this.fundingSourceTotal.toFixed(2)}</div>
       </div>
     </div>
   `;
@@ -108,7 +108,7 @@ function renderList(){
           <div>${fundingSource.fundingSourceLabel}</div>
           <div ?hidden=${!fundingSource.description} class='small grey'>${fundingSource.description}</div>
         </div>
-        <div class='amount'>$${fundingSource.amount.toFixed(2)}</div>
+        <div class='amount monospace-number'>$${fundingSource.amount.toFixed(2)}</div>
       </div>
     `)}
 

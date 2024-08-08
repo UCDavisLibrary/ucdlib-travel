@@ -69,6 +69,21 @@ class ObjectUtils {
     return Object.keys(obj).length === 0;
   }
 
+  /**
+   * @description Filter an array of objects to remove duplicates based on a key
+   * @param {Array} arr - array of objects
+   * @param {String} key - key to filter by
+   * @returns {Array}
+   */
+  uniqueArray(arr, key) {
+    arr = arr.filter((item) => item?.[key] !== undefined);
+    return arr.filter((item, index, self) =>
+      index === self.findIndex((t) => (
+        t[key] === item[key]
+      ))
+    );
+  }
+
 }
 
 export default new ObjectUtils();
