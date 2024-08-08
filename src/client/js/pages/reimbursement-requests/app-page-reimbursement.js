@@ -17,11 +17,13 @@ export default class AppPageReimbursement extends Mixin(LitElement)
       reimbursementRequestId : {type: Number},
       reimbursementRequest : {type: Object},
       approvalRequest : {type: Object},
+      statusFormData : {type: Object},
       _transportationExpenses: {state: true},
       _registrationExpenses: {state: true},
       _dailyExpenses: {state: true},
       _reimbursementQueryObject: {state: true},
-      _showLoaded: {state: true}
+      _showLoaded: {state: true},
+      _noFundTransactionsText: {state: true},
     }
   }
 
@@ -36,10 +38,12 @@ export default class AppPageReimbursement extends Mixin(LitElement)
     this._transportationExpenses = reimbursmentExpenses.hydrateTransportationExpenses();
     this._registrationExpenses = reimbursmentExpenses.hydrateRegistrationFeeExpenses();
     this._dailyExpenses = reimbursmentExpenses.hydrateDailyExpenses();
+    this._noFundTransactionsText = '';
+    this.statusFormData = {};
 
     this.waitController = new WaitController(this);
 
-    this._injectModel('AppStateModel', 'ReimbursementRequestModel');
+    this._injectModel('AppStateModel', 'ReimbursementRequestModel', 'SettingsModel', 'AuthModel');
   }
 
   /**
@@ -80,10 +84,29 @@ export default class AppPageReimbursement extends Mixin(LitElement)
   async getPageData(){
 
     const promises = [
-      this.ReimbursementRequestModel.query(this._reimbursementQueryObject)
+      this.ReimbursementRequestModel.query(this._reimbursementQueryObject),
+      this.SettingsModel.getByCategory('reimbursement-requests')
     ]
     const resolvedPromises = await Promise.allSettled(promises);
     return promiseUtils.flattenAllSettledResults(resolvedPromises);
+  }
+
+  _onEditFundTransactionClicked(transaction){
+    if ( !transaction ) {
+      this.statusFormData = {};
+    } else {
+      this.statusFormData = {...transaction};
+    }
+  }
+
+  /**
+   * @description bound to SettingsModel settings-category-requested event
+   * @param {Object} e - cork-app-utils event
+   * @returns
+   */
+  _onSettingsCategoryRequested(e){
+    if ( e.state !== 'loaded' ||  e.category !== 'reimbursement-requests' ) return;
+    this._noFundTransactionsText = this.SettingsModel.getByKey('reimbursement_no_fund_transactions_message');
   }
 
   /**

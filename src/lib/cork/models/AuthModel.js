@@ -83,6 +83,14 @@ class AuthModel extends BaseModel {
   }
 
   /**
+   * @description Returns true if logged in user is a site admin
+   * @returns {Boolean}
+   */
+  isSiteAdmin(){
+    return this.getToken().hasAdminAccess;
+  }
+
+  /**
    * @description Returns true if logged in user would like to log out
    * @param {Object} location - location object from AppStateStore
    * @returns {Boolean}
