@@ -165,6 +165,55 @@ class ReimbursementRequest {
         jsonName: 'deletedAt'
       }
     ], {jsonBuildObjectTable: 'rrr'});
+
+    this.fundFields = new EntityFields([
+      {
+        dbName: 'reimbursement_request_fund_id',
+        jsonName: 'reimbursementRequestFundId'
+      },
+      {
+        dbName: 'reimbursement_request_id',
+        jsonName: 'reimbursementRequestId'
+      },
+      {
+        dbName: 'approval_request_funding_source_id',
+        jsonName: 'approvalRequestFundingSourceId'
+      },
+      {
+        jsonName: 'fundingSourceId'
+      },
+      {
+        jsonName: 'fundingSourceLabel'
+      },
+      {
+        dbName: 'amount',
+        jsonName: 'amount'
+      },
+      {
+        dbName: 'accounting_code',
+        jsonName: 'accountingCode'
+      },
+      {
+        dbName: 'reimbursementStatus',
+        jsonName: 'reimbursementStatus'
+      },
+      {
+        dbName: 'added_by',
+        jsonName: 'addedBy'
+      },
+      {
+        dbName: 'added_at',
+        jsonName: 'addedAt'
+      },
+      {
+        dbName: 'modified_by',
+        jsonName: 'modifiedBy'
+      },
+      {
+        dbName: 'modified_at',
+        jsonName: 'modifiedAt'
+      }
+    ]);
   }
 
   /**
@@ -247,6 +296,9 @@ class ReimbursementRequest {
 
       row.expenses = objectUtils.uniqueArray(row.expenses, 'reimbursementRequestExpenseId');
       row.receipts = objectUtils.uniqueArray(row.receipts, 'reimbursementRequestReceiptId');
+
+      // todo - add funds
+      row.fundTransactions = [];
     }
     const totalPages = noPaging ? 1 : Math.ceil(total / pageSize);
 
