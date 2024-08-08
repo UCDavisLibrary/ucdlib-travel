@@ -2,6 +2,7 @@ import pg from "./pg.js";
 
 import validations from "./reimbursementRequestValidations.js";
 import EntityFields from "../utils/EntityFields.js";
+import objectUtils from "../utils/objectUtils.js";
 
 class ReimbursementRequest {
   constructor(){
@@ -53,6 +54,10 @@ class ReimbursementRequest {
         dbName: 'status',
         jsonName: 'status',
         customValidation: this.validations.status.bind(this.validations)
+      },
+      {
+        dbName: 'submitted_at',
+        jsonName: 'submittedAt'
       },
       {
         dbName: 'expenses',
@@ -239,6 +244,9 @@ class ReimbursementRequest {
     for ( const row of data ){
       if ( !row.expenses?.[0]?.reimbursementRequestExpenseId ) row.expenses = [];
       if ( !row.receipts?.[0]?.reimbursementRequestReceiptId ) row.receipts = [];
+
+      row.expenses = objectUtils.uniqueArray(row.expenses, 'reimbursementRequestExpenseId');
+      row.receipts = objectUtils.uniqueArray(row.receipts, 'reimbursementRequestReceiptId');
     }
     const totalPages = noPaging ? 1 : Math.ceil(total / pageSize);
 
@@ -261,7 +269,8 @@ class ReimbursementRequest {
     data.receipts = this.receiptFields.toDbArray(Array.isArray(data.receipts) ?  data.receipts : []);
 
     // system fields
-    delete data.reimbursement_request_id
+    delete data.reimbursement_request_id;
+    delete data.submitted_at;
     data.status = 'submitted';
 
     const validation = await this.entityFields.validate(data, ['reimbursement_request_id']);

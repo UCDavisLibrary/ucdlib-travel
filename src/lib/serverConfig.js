@@ -10,7 +10,7 @@ class ServerConfig {
 
     this.title = this.getEnv('APP_TITLE', 'Travel, Training, and Professional Development');
 
-    this.routes = ['approval-request', 'approve', 'reimbursement', 'reports', 'admin'];
+    this.routes = ['approval-request', 'approve', 'reimbursement-request', 'reports', 'admin'];
 
     this.apiRoot = this.getEnv('APP_API_ROOT', '/api');
     this.appRoot = process?.env?.APP_ROOT_URL;

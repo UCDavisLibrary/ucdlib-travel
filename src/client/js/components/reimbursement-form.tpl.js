@@ -256,29 +256,29 @@ export function render() {
         <legend>Expense Comparison</legend>
         <div class='l-2col l-2col--75-25 u-space-mb--small'>
           <div class='l-second'>
-            <span>Approved Estimated Expenses</span>
+            <span>Approved Projected Expenses</span>
           </div>
-          <div class='l-first amount'><code>+ $${this.approvedExpenses}</code></div>
+          <div class='l-first amount'><span class='monospace-number'>+ $${this.approvedExpenses}</span></div>
         </div>
         <div class='l-2col l-2col--75-25 u-space-mb--small'>
           <div class='l-second'>
             <span ?hidden=${!this.hasOtherTotalExpenses}>This Reimbursement Request</span>
             <span ?hidden=${this.hasOtherTotalExpenses}>Reimbursement Requested</span>
           </div>
-          <div class='l-first amount'><code>- $${this.totalExpenses}</code></div>
+          <div class='l-first amount'><span class='monospace-number'>- $${this.totalExpenses}</span></div>
         </div>
         <div class='l-2col l-2col--75-25 u-space-mb--small' ?hidden=${!this.hasOtherTotalExpenses}>
           <div class='l-second'>
             <span>Previously Submitted Reimbursement Requests</span>
           </div>
-          <div class='l-first amount'><code>- $${this.otherTotalExpenses}</code></div>
+          <div class='l-first amount'><span class='monospace-number'>- $${this.otherTotalExpenses}</span></div>
         </div>
         <div class='l-2col l-2col--75-25 u-space-mb--small total-row'>
           <div class='l-second'>
-            <span class='primary'>Remaining Estimated Expenses</span>
+            <span class='primary monospace-number'>Remaining Approved Projected Expenses</span>
           </div>
           <div class='l-first amount ${this.netExpensesNegative ? 'double-decker' : 'quad'}'>
-            <code>${this.netExpensesNegative ? '-' : '+'} $${this.netExpenses}</code>
+            <span class='monospace-number'>${this.netExpensesNegative ? '-' : '+'} $${this.netExpenses}</span>
           </div>
         </div>
         <div ?hidden=${!(this.netExpensesNegative && this.netExpensesNegativeWarningMessage)}>
