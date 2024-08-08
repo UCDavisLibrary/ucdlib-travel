@@ -59,6 +59,7 @@ export function renderForm() {
           @input=${e => this._onFormInput('label', e.target.value)}
           >
           <div>${this.validationHandler.renderErrorMessages('label')}</div>
+          <character-limit-tracker .value=${this.approvalRequest.label} character-limit=100></character-limit-tracker>
       </div>
 
       <div class="field-container ${this.validationHandler.errorClass('organization')}">
@@ -70,6 +71,7 @@ export function renderForm() {
           @input=${e => this._onFormInput('organization', e.target.value)}
           >
           <div>${this.validationHandler.renderErrorMessages('organization')}</div>
+          <character-limit-tracker .value=${this.approvalRequest.organization} character-limit=100></character-limit-tracker>
       </div>
 
       <div class="field-container ${this.validationHandler.errorClass('businessPurpose')}">
@@ -81,6 +83,7 @@ export function renderForm() {
           @input=${e => this._onFormInput('businessPurpose', e.target.value)}
           ></textarea>
           <div>${this.validationHandler.renderErrorMessages('businessPurpose')}</div>
+          <character-limit-tracker .value=${this.approvalRequest.businessPurpose} character-limit=500></character-limit-tracker>
       </div>
 
       <div class="field-container ${this.validationHandler.errorClass('location')}">
@@ -151,6 +154,7 @@ export function renderForm() {
           @input=${e => this._onFormInput('locationDetails', e.target.value)}
           >
         <div>${this.validationHandler.renderErrorMessages('locationDetails')}</div>
+        <character-limit-tracker .value=${this.approvalRequest.locationDetails} character-limit=100></character-limit-tracker>
       </div>
 
       <fieldset>
@@ -306,9 +310,7 @@ export function renderForm() {
           @input=${e => this._onFormInput('comments', e.target.value)}
         ></textarea>
         <div>${this.validationHandler.renderErrorMessages('comments')}</div>
-        <character-limit-tracker 
-          .value=${this.approvalRequest.comments} 
-        </character-limit-tracker>
+        <character-limit-tracker .value=${this.approvalRequest.comments} character-limit=2000></character-limit-tracker>
       </div>
 
       <div class='form-buttons alignable-promo__buttons'>

@@ -2,6 +2,7 @@ import { html } from 'lit';
 import { ref } from 'lit/directives/ref.js';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import reimbursmentExpenses from '../../../lib/utils/reimbursmentExpenses.js';
+import './character-limit-tracker.js';
 
 export function render() {
   const idPrefix = `reimbursement-form--${this.reimbursementRequest.approval_request_revision_id || 'new'}`;
@@ -16,6 +17,7 @@ export function render() {
           @input=${e => this._onInput('label', e.target.value)} />
         <div class='small u-space-mt--small'>Not required, but helpful if you need to submit mutiple reimbursement requests.</div>
         <div>${this.validationHandler.renderErrorMessages('label')}</div>
+        <character-limit-tracker .value=${this.reimbursementRequest.label} character-limit=100></character-limit-tracker>
       </div>
 
       <div class="field-container ${this.validationHandler.errorClass('employeeResidence')}">
@@ -26,6 +28,7 @@ export function render() {
           .value=${this.reimbursementRequest.employeeResidence || ''}
           @input=${e => this._onInput('employeeResidence', e.target.value)} />
         <div>${this.validationHandler.renderErrorMessages('employeeResidence')}</div>
+        <character-limit-tracker .value=${this.reimbursementRequest.employeeResidence} character-limit=100></character-limit-tracker>
       </div>
 
       <fieldset ?hidden=${!this.hasTravel}>
@@ -63,6 +66,7 @@ export function render() {
             @input=${e => this._onInput('personalTime', e.target.value)}></textarea>
           <div class='small u-space-mt--small'>Indicate dates/times (e.g. vacation before or after business travel)</div>
           <div>${this.validationHandler.renderErrorMessages('personalTime')}</div>
+          <character-limit-tracker .value=${this.reimbursementRequest.personalTime} character-limit=500></character-limit-tracker>
         </div>
       </fieldset>
 
@@ -195,6 +199,7 @@ export function render() {
                     .value=${this.dateComments[date] || ''}
                     rows="4"
                     @input=${e => this._setObjectProperty(this.dateComments, date, e.target.value)}></textarea>
+                  <character-limit-tracker .value=${this.dateComments[date] || ''} character-limit=500></character-limit-tracker>
                 </div>
               </div>
             </div>
@@ -288,6 +293,17 @@ export function render() {
         </div>
       </fieldset>
 
+      <div class='field-container ${this.validationHandler.errorClass('comments')}'>
+        <label for="${idPrefix}--comments">Comments</label>
+        <textarea
+          id="${idPrefix}--comments"
+          .value=${this.reimbursementRequest.comments || ''}
+          rows="4"
+          @input=${e => this._onInput('comments', e.target.value)}></textarea>
+        <div>${this.validationHandler.renderErrorMessages('comments')}</div>
+        <character-limit-tracker .value=${this.reimbursementRequest.comments} character-limit=500></character-limit-tracker>
+      </div>
+
       <div class='form-buttons alignable-promo__buttons'>
         <button
           type="submit"
@@ -319,6 +335,7 @@ function renderReceiptForm(receipt){
           type="text"
           .value=${receipt.label || ''}
           @input=${e => this._setObjectProperty(receipt, 'label', e.target.value)} />
+        <character-limit-tracker .value=${receipt.label} character-limit=200></character-limit-tracker>
       </div>
       <div class='field-container'>
         <label for="${idPrefix}--description">Receipt Description (optional)</label>
@@ -327,6 +344,7 @@ function renderReceiptForm(receipt){
           .value=${receipt.description || ''}
           rows="4"
           @input=${e => this._setObjectProperty(receipt, 'description', e.target.value)}></textarea>
+        <character-limit-tracker .value=${receipt.description} character-limit=500></character-limit-tracker>
       </div>
     </div>
   `;

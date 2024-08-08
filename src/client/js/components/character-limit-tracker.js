@@ -8,7 +8,6 @@ import { LitCorkUtils, Mixin } from "../../../lib/appGlobals.js";
 /**
  * @class CharacterLimitTracker
  * @description Component that tracks and displays the characters and limit of preceding input or textarea
- * @property {Object} approvalRequest - The approval request object
  */
 export default class CharacterLimitTracker extends Mixin(LitElement)
   .with(LitCorkUtils, MainDomElement) {
@@ -16,8 +15,7 @@ export default class CharacterLimitTracker extends Mixin(LitElement)
   static get properties() {
     return {
       value: {type: String},
-      defaultValue: {type: Number},
-      characterLimit: {type: Number},
+      characterLimit: {type: Number, attribute: 'character-limit'},
       warningThreshold: {type: Number},
       message: {type: String},
       className: {type: String}
@@ -49,12 +47,17 @@ export default class CharacterLimitTracker extends Mixin(LitElement)
    * @description Update the className based on input length
    */
   _updateMessage() {
+    if ( !this.value?.length) {
+      this.message = '';
+      this.className = '';
+      return;
+    }
     this.message = `${this.value.length} / ${this.characterLimit} characters`;
     if (this.value.length > this.characterLimit) {
-      this.className = 'double-decker' // red
+      this.className = 'double-decker'
       this.message = `${this.value.length} / ${this.characterLimit} characters (over limit)`;
     } else if (this.value.length > this.characterLimit * this.warningThreshold) {
-      this.className = 'sunflower' // yellow
+      this.className = 'redbud'
     } else {
       this.className = '';
     }
