@@ -1,6 +1,7 @@
 import pg from "./pg.js";
 
 import validations from "./reimbursementRequestValidations.js";
+import FundTransactionValidations from "./fundTransactionValidations.js";
 import EntityFields from "../utils/EntityFields.js";
 import objectUtils from "../utils/objectUtils.js";
 
@@ -8,6 +9,7 @@ class ReimbursementRequest {
   constructor(){
 
     this.validations = new validations(this);
+    this.fundTransactionValidations = new FundTransactionValidations(this);
 
     this.entityFields = new EntityFields([
       {
@@ -166,18 +168,21 @@ class ReimbursementRequest {
       }
     ], {jsonBuildObjectTable: 'rrr'});
 
-    this.fundFields = new EntityFields([
+    this.fundTransactionFields = new EntityFields([
       {
         dbName: 'reimbursement_request_fund_id',
-        jsonName: 'reimbursementRequestFundId'
+        jsonName: 'reimbursementRequestFundId',
+        customValidationAsync: this.fundTransactionValidations.reimbursementRequestFundId.bind(this.fundTransactionValidations)
       },
       {
         dbName: 'reimbursement_request_id',
-        jsonName: 'reimbursementRequestId'
+        jsonName: 'reimbursementRequestId',
+        customValidationAsync: this.fundTransactionValidations.reimbursementRequestId.bind(this.fundTransactionValidations)
       },
       {
         dbName: 'approval_request_funding_source_id',
-        jsonName: 'approvalRequestFundingSourceId'
+        jsonName: 'approvalRequestFundingSourceId',
+        customValidationAsync: this.fundTransactionValidations.approvalRequestFundingSourceId.bind(this.fundTransactionValidations)
       },
       {
         jsonName: 'fundingSourceId'
@@ -187,15 +192,18 @@ class ReimbursementRequest {
       },
       {
         dbName: 'amount',
-        jsonName: 'amount'
+        jsonName: 'amount',
+        customValidation: this.fundTransactionValidations.amount.bind(this.fundTransactionValidations)
       },
       {
         dbName: 'accounting_code',
-        jsonName: 'accountingCode'
+        jsonName: 'accountingCode',
+        charLimit: 200
       },
       {
-        dbName: 'reimbursementStatus',
-        jsonName: 'reimbursementStatus'
+        dbName: 'reimbursement_status',
+        jsonName: 'reimbursementStatus',
+        customValidation: this.fundTransactionValidations.reimbursementStatus.bind(this.fundTransactionValidations)
       },
       {
         dbName: 'added_by',
@@ -477,6 +485,15 @@ class ReimbursementRequest {
       out.push(receipt);
     }
     return out;
+  }
+
+  async createFundTransaction(data, submittedBy){
+    if ( submittedBy?.kerberos ) {
+
+    } else {
+
+    }
+    data = this.entityFields.toDbObj(data);
   }
 }
 

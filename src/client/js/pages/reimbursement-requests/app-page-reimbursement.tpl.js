@@ -1,9 +1,11 @@
 import { html } from 'lit';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
+import { ref } from 'lit/directives/ref.js';
 
 import '../../components/approval-request-header.js';
 import typeTransform from '../../../../lib/utils/typeTransform.js';
 import reimbursmentExpenses from '../../../../lib/utils/reimbursmentExpenses.js';
+import applicationOptions from '../../../../lib/utils/applicationOptions.js';
 
 export function render() {
 return html`
@@ -54,6 +56,10 @@ return html`
   </div>
 `;}
 
+/**
+ * @description Render the status section
+ * @returns {TemplateResult}
+ */
 function renderStatusSection() {
   return html`
     <div class='u-space-mb--large'>
@@ -67,7 +73,7 @@ function renderStatusSection() {
         <div ?hidden=${!this.reimbursementRequest?.fundTransactions?.length}>
           table of aggie expense transactions goes here
         </div>
-        
+
         <div ?hidden=${!this.AuthModel.isSiteAdmin}>
           <a class='icon-link' @click=${() => this._onEditFundTransactionClicked()}>
             <i class="fa-solid fa-circle-plus quad"></i>
@@ -75,6 +81,95 @@ function renderStatusSection() {
           </a>
         </div>
       </div>
+      <dialog ${ref(this.statusDialogRef)}>
+        <div class='u-space-mb'>
+          <h4 ?hidden=${this.statusFormData?.reimbursementRequestFundId}>New Aggie Expense Entry</h4>
+          <h4 ?hidden=${!this.statusFormData?.reimbursementRequestFundId}>Edit Aggie Expense Entry</h4>
+        </div>
+        <form @submit=${this._onStatusDialogFormSubmit}>
+          <div>
+            <div class='l-2col'>
+              <div class="l-first">
+                <div class='field-container ${this.statusFormValidation.errorClass('approvalRequestFundingSourceId')}'>
+                  <label>Funding Source</label>
+                  <select
+                    .value=${this.statusFormData?.approvalRequestFundingSourceId || ''}
+                    @input=${e => this._onStatusDialogFormInput('approvalRequestFundingSourceId', e.target.value, 'int')}>
+                    <option value='' disabled>Select a funding source</option>
+                    ${(this.approvalRequest?.fundingSources || []).map(source => html`
+                      <option
+                        .value=${source.fundingSourceId}
+                        ?selected=${this.statusFormData?.approvalRequestFundingSourceId === source.approvalRequestFundingSourceId}
+                        >${source.fundingSourceLabel}</option>
+                      `)}
+                  </select>
+                  ${this.statusFormValidation.renderErrorMessages('approvalRequestFundingSourceId')}
+                </div>
+              </div>
+              <div class='l-second'>
+                <div class='field-container ${this.statusFormValidation.errorClass('accountingCode')}'>
+                  <label>Accounting Code</label>
+                  <input
+                    type='text'
+                    .value=${this.statusFormData?.accountingCode || ''}
+                    @input=${e => this._onStatusDialogFormInput('accountingCode', e.target.value)}>
+                  ${this.statusFormValidation.renderErrorMessages('accountingCode')}
+                </div>
+              </div>
+            </div>
+            <div class='l-2col'>
+              <div class='l-first'>
+                <div class='field-container ${this.statusFormValidation.errorClass('amount')}'>
+                  <label>Amount</label>
+                  <div class='amount input--dollar width-100'>
+                    <input
+                      type='number'
+                      step="0.01"
+                      .value=${this.statusFormData?.amount || ''}
+                      @input=${e => this._onStatusDialogFormInput('amount', e.target.value, 'number')}>
+                  </div>
+                  ${this.statusFormValidation.renderErrorMessages('amount')}
+                </div>
+              </div>
+              <div class='l-second'>
+                <div class='field-container ${this.statusFormValidation.errorClass('status')}'>
+                  <label>Status</label>
+                  <select
+                    .value=${this.statusFormData?.reimbursementStatus || ''}
+                    @input=${e => this._onStatusDialogFormInput('reimbursementStatus', e.target.value)}>
+                    <option value='' disabled>Select a status</option>
+                    ${applicationOptions.reimbursementTransactionStatuses.map(option => html`
+                      <option
+                        .value=${option.value}
+                        ?selected=${this.statusFormData?.reimbursementStatus === option.value}
+                        >${option.labelShort}</option>
+                      `)}
+                  </select>
+                  ${this.statusFormValidation.renderErrorMessages('reimbursementStatus')}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class='alignable-promo__buttons u-space-mt flex'>
+            <div class='category-brand--secondary'>
+              <button
+                class='btn btn--primary'
+                type='submit'
+                @click=${() => this._onStatusDialogButtonClicked('submit')} >
+                ${this.statusFormData?.reimbursementRequestFundId ? 'Save' : 'Submit'}
+              </button>
+            </div>
+            <div class='category-brand--secondary'>
+              <button
+                class='btn btn--invert'
+                type='button'
+                @click=${() => this._onStatusDialogButtonClicked('cancel')} >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </form>
+      </dialog>
     </div>
   `;
 }

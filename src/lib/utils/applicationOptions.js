@@ -212,6 +212,31 @@ class ApplicationOptions {
     ]
   }
 
+  get reimbursementTransactionStatuses(){
+    return [
+      {
+        value: 'submitted',
+        labelShort: 'Submitted',
+        label: 'Submitted To Aggie Expense'
+      },
+      {
+        value: 'partial-reimbursement',
+        labelShort: 'Partial Reimbursement',
+        label: 'Transaction Partially Reimbursed'
+      },
+      {
+        value: 'fully-reimbursed',
+        labelShort: 'Fully Reimbursed',
+        label: 'Transaction Fully Reimbursed'
+      },
+      {
+        value: 'cancelled',
+        labelShort: 'Cancelled',
+        label: 'Transaction Cancelled'
+      }
+    ];
+  }
+
   /**
    * @description - Get the label for an approval status action
    * @param {String} action - The action keyword
