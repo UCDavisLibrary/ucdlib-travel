@@ -15,8 +15,12 @@ class Email {
 
   /**
    * @description run the questions/comments help email function
-   * @param {Object} payload - The object with email content and approval and reimbursement requests
-   * @returns {Object} status, id
+   * @param {Object} sender - The recipient of the email from system
+   * @param {Object} sub - Email Subject
+   * @param {Object} body - Email Body
+   * @param {Object} url - of request or reimbursement URL
+   * @param {Object} payload - The object with email content and comments
+  * @returns {Object} status, id
    */
    async sendHelpEmail(sender, sub, body, url, payload) {
     let requests = payload.requests;
@@ -51,8 +55,8 @@ class Email {
 
     // //log it and send to database 
     let notification = {
-      approvalRequestRevisionId: requests?.approvalRequest,
-      reimbursementRequestId: requests?.reimbursementRequest,
+      approvalRequestRevisionId: requests?.approvalRequestId,
+      reimbursementRequestId: requests?.reimbursementRequestId,
       employeeKerberos: token?.preferred_username,
       subject: subject,
       emailSent: emailSent,
@@ -66,8 +70,11 @@ class Email {
   }
 
   /**
-   * @description run the email function
-   * @param {Object} payload - The object with email content and approval and reimbursement requests
+   * @description run the system email function
+   * @param {Object} notificationType - The type of the notification
+   * @param {Object} approvalRequest - Approval Request
+   * @param {Object} reimbursementRequest - Reimbursement Request
+   * @param {Object} payload - The object with email content and approval and reimbursement requests    
    * @returns {Object} status, id
    */
   async sendSystemNotification(notificationType, approvalRequest, reimbursementRequest, payload){ 
@@ -81,17 +88,23 @@ class Email {
     const hydration = new Hydration(approvalRequest, reimbursementRequest, notificationType);
 
     //Hydrate keywords
-    const from = 'sabaggett@ucdavis.edu';//serverConfig.email.systemEmailAddress;
-    const to = 'sabaggett@ucdavis.edu';//await hydration.getNotificationRecipient() 
+    const from = serverConfig.email.systemEmailAddress;
+    const to = serverConfig.email.notificationRecipient || await hydration.getNotificationRecipient();
     const subject = hydration.hydrate(subjectTemplate);
     const text = hydration.hydrate(bodyTemplate);
+
+
+    details.to = to;
+    if ( to === serverConfig.email.notificationRecipient ){
+      details.overwrittenTo = await hydration.getNotificationRecipient();
+    }
 
     if ( bodyTemplate && subjectTemplate && from  && to && serverConfig.email.enabled ) {
       //Initiate Hydration class
       const emailMessage = {from, to, subject, text}
 
-    // Form, Curate, and Send Message with Nodemailer
-    let email = await nodemailer.runEmail(emailMessage);
+      // Form, Curate, and Send Message with Nodemailer
+      let email = await nodemailer.runEmail(emailMessage);
       if (email.error) {
         emailSent = false;
         details.error = email.error
@@ -119,6 +132,10 @@ class Email {
 
     let result = await logging.addNotificationLogging(notification);
 
+    if (result.error) {
+      console.error( 'error writing notification log', notification, error);
+    }
+
     return result;
   }
 
@@ -133,7 +150,6 @@ class Email {
     //Format for notification history
 
     let res = await logging.getNotificationLogging(query);
-
 
     return res;
   }

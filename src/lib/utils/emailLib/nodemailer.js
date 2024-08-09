@@ -3,7 +3,7 @@ import nodemailer from 'nodemailer';
 
 /**
  * @class Nodemailer
- * @description Utility class for querying the .
+ * @description Mailing class for sending notifications.
  * Does auth. 
  */
 class Nodemailer {
@@ -20,6 +20,11 @@ class Nodemailer {
     });
   }
 
+  /**
+   * @description run the email
+   * @param {String} message - email text
+   * @returns {Object} {info, error} email success status 
+   */
   async runEmail(message){ 
     let out = {}; 
     try { 

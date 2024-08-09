@@ -1,29 +1,32 @@
 import email  from "../../lib/db-models/emailController.js"
 import protect from "../../lib/protect.js";
+import urlUtils from "../../lib/utils/urlUtils.js";
+
 
 export default (api) => {
 
   /**
    * @description Get array of notifications
+   * @param {Object} req.body - new line item data
    */
   api.get('/comments-notification', protect('hasBasicAccess'), async (req, res) => {
     const kerberos = req.auth.token.id;
-    // let isSingleNotifications;
-    const data = await email.getHistory();
+    const query = urlUtils.queryToCamelCase(req.query);
+
+    const data = await email.getHistory(query);
     if( data.error ) {
       console.error('Error in GET /notification', data.error);
       return res.status(500).json({error: true, message: 'Error getting request history.'});
     }
     if( req.auth.token.hasAdminAccess) return res.json(data);
 
-    // if(data.data.length === 1) isSingleNotifications = true;
-
-
-    const usersNotifications = new Set();
-
     for(let notice of data.data) {
+      const approvalRequest = await approvalRequest.get({revisionIds: notice.approval_request_revision_id});
+
       const isOwnNotifications = notice.employeeKerberos === kerberos;
-      if ( !isOwnNotifications ) return apiUtils.do403(res);
+      const inApprovalChain = approvalRequest.approvalStatusActivity.some(a => a.employeeKerberos === kerberos);
+
+      if ( !isOwnNotifications && !inApprovalChain) return apiUtils.do403(res);
     }
 
     return res.json(data);
@@ -58,31 +61,5 @@ export default (api) => {
 
     return res.json(data);
   });
-
-  /**
-   * @description Create a system comments
-   * @param {Object} req.body - new line item data
-   * TODO: remove method when feature is complete
-   */
-     api.post('/system-notification', protect('hasAdminAccess'), async (req, res) => {
-      const payload = (typeof req.body === 'object') && !Array.isArray(req.body) ? req.body : {};
-      payload.token = req.auth.token;
-      const data = await email.sendSystemNotification(payload.notificationType, 
-                                                      payload.requests.approvalRequest, 
-                                                      payload.requests.reimbursementRequest, 
-                                                      payload
-                                                     );
-
-      if ( data.error && data.is500 ) {
-          return res.status(500).json(data);
-      }
-      if ( data.error ) {
-        console.error('Error in POST /notification', data.error);
-        return res.status(500).json({error: true, message: 'Error creating comment/question item.'});
-      }
-      return res.json(data);
-    });
-  
-  
 
 };

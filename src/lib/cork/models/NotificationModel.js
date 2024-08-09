@@ -2,6 +2,8 @@ import {BaseModel} from '@ucd-lib/cork-app-utils';
 import NotificationService from '../services/NotificationService.js';
 import NotificationStore from '../stores/NotificationStore.js';
 
+import urlUtils from '../../utils/urlUtils.js';
+
 class NotificationModel extends BaseModel {
 
   constructor() {
@@ -15,14 +17,17 @@ class NotificationModel extends BaseModel {
 
     /**
    * @description Get all history for the approval request
+   * @param {Object} query - query of email
    */
-     async getNotificationHistory(){
+     async getNotificationHistory(query={}){
+      const queryString = urlUtils.queryObjectToKebabString(query);
+
       let state = this.store.data.notificationHistory;
       try {
         if( state && state.state === 'loading' ) {
           await state.request;
         } else {
-          await this.service.getNotificationHistory();
+          await this.service.getNotificationHistory(queryString);
         }
       } catch(e) {}
       return this.store.data.notificationHistory;
@@ -41,24 +46,6 @@ class NotificationModel extends BaseModel {
       const state = this.store.data.notificationComments[timestamp];
       if ( state && state.state === 'loaded' ) {
         this.store.data.notificationComments = {};
-      }
-      return state;
-    }
-
-    /**
-     * @description Create a system notification 
-     * @param {Object} payload - comment information - see db-models/email/controller.js
-     * TODO: remove method when feature is complete
-     */
-    async createSystemNotification(payload) {
-      let timestamp = Date.now();
-
-      try {
-        await this.service.createSystemNotification(payload, timestamp);
-      } catch(e) {}
-      const state = this.store.data.notificationSystems[timestamp];
-      if ( state && state.state === 'loaded' ) {
-        this.store.data.notificationSystems = {};
       }
       return state;
     }
