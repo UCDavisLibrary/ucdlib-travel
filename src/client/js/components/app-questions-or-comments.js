@@ -49,21 +49,6 @@ export default class AppQuestionsOrComments extends Mixin(LitElement)
   }
 
   /**
-   * @description Get all data required for rendering this page
-   * @return {Promise}
-   */
-  //  async init(){
-  //   const promises = [
-  //     this.SettingsModel.getByCategory(this.settingsCategory),
-  //     this.ApprovalRequestModel.query({requestIds: this.approvalRequestId})
-  //   ];
-  //   const resolvedPromises = await Promise.allSettled(promises);
-  //   return resolvedPromises;
-  // }
-
-
-
-  /**
    * @description Bound to dialog button(s) click event
    * Will emit a dialog-action AppStateModel event with the action value and data
    */
@@ -97,7 +82,7 @@ export default class AppQuestionsOrComments extends Mixin(LitElement)
         this.approvalRequest = await this.ApprovalRequestModel.query({requestIds: this.approvalRequestId});
     }
     if(this.reimbursementRequestId) {
-        url = `approval-request/${this.reimbursementRequestId}`
+        url = `reimbursement/${this.reimbursementRequestId}`
         this.reimbursementRequest = await this.ReimbursementModel.query({requestIds: this.reimbursementRequestId});
     }
 
@@ -112,16 +97,26 @@ export default class AppQuestionsOrComments extends Mixin(LitElement)
         "url": url, //url
         "temp": emailCategory.payload, //temporary payload
         "requests": {
-          approvalRequest: ap,
-          reimbursementRequest: rb,
+          approvalRequestId: ap.approvalRequestRevisionId || null,
+          reimbursementRequestId: rr.reimbursementRequestId || null,
         }, //requests could be replaced with id
         notificationType: 'questions-comments' //notification type
     }
 
-    let result = await this.NotificationModel.createNotificationComments(this.data);
-    console.log("Result:", result);
-
+    await this.NotificationModel.createNotificationComments(this.data);
   }
+
+  /**
+   * @description bound to NotificationModel notification-comments event
+   * @param {Object} e - cork-app-utils event
+   * @returns
+   */
+     _onNotificationComments(e) {
+      if ( e.state !== 'loaded' ) return;
+  
+      console.log("Created Notification Comments:", e);
+    }
+  
 }
 
 customElements.define('app-questions-or-comments', AppQuestionsOrComments);
