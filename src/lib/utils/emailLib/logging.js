@@ -54,6 +54,11 @@ class Logging {
     ]);
   }
 
+  /**
+   * @description adds sent email notification to the notification table
+   * @param {Object} data - email notification object
+   * @returns {Object} {status, id}
+   */
   async addNotificationLogging(data){
     data = this.entityFields.toDbObj(data);
 
@@ -78,9 +83,15 @@ class Logging {
     return {success: true, notificationId};
   }
 
+  /**
+   * @description get sent email notification to the notification table
+   * @param {Object} kwargs - query
+   * @returns {Object} {data, total, page, pageSize, totalPages}
+   */
   async getNotificationLogging(kwargs={}){
     const page = Number(kwargs.page) || 1;
     const pageSize = kwargs.pageSize || 10;
+    const noPaging = pageSize === -1;
 
     const whereArgs = {};
     if( kwargs.email_sent ) {
@@ -94,10 +105,24 @@ class Logging {
     if( Array.isArray(kwargs.reimbursement_ids) && kwargs.reimbursement_ids ) {
       whereArgs['n.reimbursement_request_id'] = kwargs.reimbursement_ids;
     }
-
-
     const whereClause = pg.toWhereClause(whereArgs);
 
+
+    // get total count
+    const countSql = `
+      SELECT
+        COUNT(DISTINCT n.notification_id) as total
+      FROM
+        notification n
+      ${whereClause.sql ? `WHERE ${whereClause.sql}` : ''}
+      `;
+
+    const countRes = await pg.query(countSql, whereClause.values);
+
+    if( countRes.error ) return countRes;
+    const total = Number(countRes.res.rows[0].total);
+
+    //get data
     const query = `
     SELECT
       n.*,
@@ -108,18 +133,22 @@ class Logging {
               'lastName', emp.last_name
           ))
           FROM employee emp
-          WHERE ar.employee_kerberos = emp.kerberos
+          WHERE n.employee_kerberos = emp.kerberos
       ) AS employees
     FROM
         notification n
     ${whereClause.sql ? `WHERE ${whereClause.sql}` : ''}
-    LIMIT ${pageSize} OFFSET ${pageSize * (page - 1)};
+    ${noPaging ? '' : `LIMIT ${pageSize} OFFSET ${(page - 1) * pageSize}`}
     `;
 
 
     const res = await pg.query(query, whereClause.values);
     if( res.error ) return res;
-    return res.res.rows;
+
+    const data = this.entityFields.toJsonArray(res.res.rows);
+
+    const totalPages = noPaging ? 1 : Math.ceil(total / pageSize);
+    return {data, total, page, pageSize, totalPages};
   }
 
 }
