@@ -1,5 +1,6 @@
 import { LitElement } from 'lit';
-import {render} from "./app-page-reimbursement.tpl.js";
+import { render } from "./app-page-reimbursement.tpl.js";
+import { createRef } from 'lit/directives/ref.js';
 
 import { LitCorkUtils, Mixin } from "../../../../lib/appGlobals.js";
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
@@ -8,6 +9,7 @@ import { WaitController } from "@ucd-lib/theme-elements/utils/controllers/wait.j
 import typeTransform from '../../../../lib/utils/typeTransform.js';
 import promiseUtils from '../../../../lib/utils/promiseUtils.js';
 import reimbursmentExpenses from '../../../../lib/utils/reimbursmentExpenses.js';
+import ValidationHandler from '../../utils/ValidationHandler.js';
 
 export default class AppPageReimbursement extends Mixin(LitElement)
 .with(LitCorkUtils, MainDomElement) {
@@ -17,11 +19,13 @@ export default class AppPageReimbursement extends Mixin(LitElement)
       reimbursementRequestId : {type: Number},
       reimbursementRequest : {type: Object},
       approvalRequest : {type: Object},
+      statusFormData : {type: Object},
       _transportationExpenses: {state: true},
       _registrationExpenses: {state: true},
       _dailyExpenses: {state: true},
       _reimbursementQueryObject: {state: true},
-      _showLoaded: {state: true}
+      _showLoaded: {state: true},
+      _noFundTransactionsText: {state: true},
     }
   }
 
@@ -36,10 +40,14 @@ export default class AppPageReimbursement extends Mixin(LitElement)
     this._transportationExpenses = reimbursmentExpenses.hydrateTransportationExpenses();
     this._registrationExpenses = reimbursmentExpenses.hydrateRegistrationFeeExpenses();
     this._dailyExpenses = reimbursmentExpenses.hydrateDailyExpenses();
+    this._noFundTransactionsText = '';
+    this.statusFormData = {};
+    this.statusFormValidation = new ValidationHandler();
 
     this.waitController = new WaitController(this);
+    this.statusDialogRef = createRef();
 
-    this._injectModel('AppStateModel', 'ReimbursementRequestModel');
+    this._injectModel('AppStateModel', 'ReimbursementRequestModel', 'SettingsModel', 'AuthModel');
   }
 
   /**
@@ -80,10 +88,53 @@ export default class AppPageReimbursement extends Mixin(LitElement)
   async getPageData(){
 
     const promises = [
-      this.ReimbursementRequestModel.query(this._reimbursementQueryObject)
+      this.ReimbursementRequestModel.query(this._reimbursementQueryObject),
+      this.SettingsModel.getByCategory('reimbursement-requests')
     ]
     const resolvedPromises = await Promise.allSettled(promises);
     return promiseUtils.flattenAllSettledResults(resolvedPromises);
+  }
+
+  _onEditFundTransactionClicked(transaction){
+    if ( !transaction ) {
+      this.statusFormData = {};
+    } else {
+      this.statusFormData = {...transaction};
+    }
+    this.statusFormValidation = new ValidationHandler();
+    this.statusDialogRef.value.showModal();
+  }
+
+  _onStatusDialogButtonClicked(action){
+    if ( action === 'cancel' ) {
+      this.statusDialogRef.value.close();
+      return;
+    }
+  }
+
+  _onStatusDialogFormInput(prop, value, castAs){
+    if ( castAs === 'int' ) {
+      value = typeTransform.toPositiveInt(value);
+    } else if ( castAs === 'number' ) {
+      value = Number(value);
+    }
+    this.statusFormData[prop] = value;
+    this.requestUpdate();
+  }
+
+  _onStatusDialogFormSubmit(e){
+    e.preventDefault();
+    console.log('submit', this.statusFormData);
+  }
+
+  /**
+   * @description bound to SettingsModel settings-category-requested event
+   * @param {Object} e - cork-app-utils event
+   * @returns
+   */
+  _onSettingsCategoryRequested(e){
+    if ( e.state !== 'loaded' ||  e.category !== 'reimbursement-requests' ) return;
+    this._noFundTransactionsText = this.SettingsModel.getByKey('reimbursement_no_fund_transactions_message');
   }
 
   /**
