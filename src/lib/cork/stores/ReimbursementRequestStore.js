@@ -7,14 +7,77 @@ class ReimbursementRequestStore extends BaseStore {
 
     this.data = {
       created: {},
-      fetched: {}
+      fetched: {},
+      transactionCreated: {},
+      transactionsFetched: {}
     };
     this.events = {
       REIMBURSEMENT_REQUEST_CREATED: 'reimbursement-request-created',
       REIMBURSEMENT_REQUEST_FETCHED: 'reimbursement-request-fetched',
-      REIMBURSEMENT_REQUEST_REQUESTED: 'reimbursement-request-requested'
+      REIMBURSEMENT_REQUEST_REQUESTED: 'reimbursement-request-requested',
+      REIMBURSEMENT_TRANSACTION_CREATED: 'reimbursement-transaction-created',
+      REIMBURSEMENT_TRANSACTION_FETCHED: 'reimbursement-transaction-fetched',
+      REIMBURSEMENT_TRANSACTION_REQUESTED: 'reimbursement-transaction-requested'
     };
 
+  }
+
+  transactionsFetchedLoading(request, query){
+    this._setTransactionsFetchedState({
+      state: this.STATE.LOADING,
+      request,
+      query
+    });
+  }
+
+  transactionsFetchedLoaded(payload, query){
+    this._setTransactionsFetchedState({
+      state: this.STATE.LOADED,
+      payload,
+      query
+    });
+  }
+
+  transactionsFetchedError(error, query){
+    this._setTransactionsFetchedState({
+      state: this.STATE.ERROR,
+      error,
+      query
+    });
+  }
+
+  _setTransactionsFetchedState(state) {
+    this.data.transactionsFetched[state.query] = state;
+    this.emit(this.events.REIMBURSEMENT_TRANSACTION_FETCHED, state);
+  }
+
+  createdTransactionLoading(request, timestamp){
+    this._setTransactionCreatedState({
+      state: this.STATE.LOADING,
+      request,
+      timestamp
+    });
+  }
+
+  createdTransactionLoaded(payload, timestamp){
+    this._setTransactionCreatedState({
+      state: this.STATE.LOADED,
+      payload,
+      timestamp
+    });
+  }
+
+  createdTransactionError(error, timestamp){
+    this._setTransactionCreatedState({
+      state: this.STATE.ERROR,
+      error,
+      timestamp
+    });
+  }
+
+  _setTransactionCreatedState(state) {
+    this.data.transactionCreated[state.timestamp] = state;
+    this.emit(this.events.REIMBURSEMENT_TRANSACTION_CREATED, state);
   }
 
   fetchedLoading(request, query){

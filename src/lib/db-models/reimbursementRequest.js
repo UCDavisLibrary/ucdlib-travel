@@ -4,6 +4,8 @@ import validations from "./reimbursementRequestValidations.js";
 import FundTransactionValidations from "./fundTransactionValidations.js";
 import EntityFields from "../utils/EntityFields.js";
 import objectUtils from "../utils/objectUtils.js";
+import employeeModel from "./employee.js";
+import typeTransform from "../utils/typeTransform.js";
 
 class ReimbursementRequest {
   constructor(){
@@ -185,9 +187,11 @@ class ReimbursementRequest {
         customValidationAsync: this.fundTransactionValidations.approvalRequestFundingSourceId.bind(this.fundTransactionValidations)
       },
       {
+        dbName: 'funding_source_id',
         jsonName: 'fundingSourceId'
       },
       {
+        dbName: 'funding_source_label',
         jsonName: 'fundingSourceLabel'
       },
       {
@@ -479,21 +483,98 @@ class ReimbursementRequest {
     const out = [];
     for ( const row of res.res.rows ){
       const receipt = this.receiptFields.toJsonObj(row);
+      out.push(receipt);
       if ( returnReimbursementRequest ){
         receipt.reimbursementRequest = this.entityFields.toJsonObj(row);
       }
-      out.push(receipt);
     }
     return out;
   }
 
   async createFundTransaction(data, submittedBy){
     if ( submittedBy?.kerberos ) {
-
-    } else {
-
+      data.addedBy = submittedBy.kerberos;
     }
-    data = this.entityFields.toDbObj(data);
+    data = this.fundTransactionFields.toDbObj(data);
+
+    // delete system fields
+    delete data.added_at;
+    delete data.modified_by;
+    delete data.modified_at;
+    delete data.reimbursement_request_fund_id;
+    delete data.funding_source_label;
+    delete data.funding_source_id;
+
+    const validation = await this.fundTransactionFields.validate(data, ['reimbursement_request_fund_id']);
+    if ( !validation.valid ) {
+      return {error: true, message: 'Validation Error', is400: true, fieldsWithErrors: validation.fieldsWithErrors};
+    }
+
+    // start transaction
+    const client = await pg.pool.connect();
+    let reimbursementRequestFundId;
+    let out = {};
+    let res;
+    try {
+      await client.query('BEGIN');
+
+      if ( submittedBy?.kerberos ){
+        await employeeModel.upsertInTransaction(client, submittedBy);
+      }
+
+      // insert fund transaction
+      const d = pg.prepareObjectForInsert(data);
+      let sql = `INSERT INTO reimbursement_request_fund (${d.keysString}) VALUES (${d.placeholdersString}) RETURNING reimbursement_request_fund_id`;
+      res = await client.query(sql, d.values);
+      reimbursementRequestFundId = res.rows[0].reimbursement_request_fund_id;
+
+      // todo - update reimbursement request status
+
+      // todo - enter into approval request activity
+
+      await client.query('COMMIT');
+
+    } catch (e) {
+      console.log('Error in createFundTransaction', e);
+      await client.query('ROLLBACK');
+      out = {error: e};
+    } finally {
+      client.release();
+    }
+
+    if ( out.error ) return out;
+
+    return {success: true, reimbursementRequestFundId};
+  }
+
+  async getFundTransactions(reimbursementRequestIds=[]){
+    if ( !Array.isArray(reimbursementRequestIds) || !reimbursementRequestIds.length ) return {error: true, message: 'Invalid reimbursement request ids'};
+    const whereClause = pg.toWhereClause({reimbursement_request_id: reimbursementRequestIds});
+
+    const sql = `
+      SELECT rrf.*,
+      arfs.funding_source_id,
+      fs.label as funding_source_label
+      FROM
+        reimbursement_request_fund rrf
+      LEFT JOIN
+        approval_request_funding_source arfs ON rrf.approval_request_funding_source_id = arfs.approval_request_funding_source_id
+      LEFT JOIN
+        funding_source fs ON arfs.funding_source_id = fs.funding_source_id
+      WHERE
+        ${whereClause.sql}
+    `;
+
+    const res = await pg.query(sql, whereClause.values);
+    if ( res.error ) return res;
+
+    const out = [];
+    for ( const row of res.res.rows ){
+      const d = this.fundTransactionFields.toJsonObj(row);
+      d.amount = typeTransform.toPositiveNumber(d.amount) || 0;
+      out.push(d);
+    }
+    return out;
   }
 }
 

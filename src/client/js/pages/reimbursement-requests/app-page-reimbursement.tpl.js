@@ -66,11 +66,11 @@ function renderStatusSection() {
       <h3 class='u-space-mb--flush'>Reimbursement Status</h3>
       <div>
 
-        <div ?hidden=${this.reimbursementRequest?.fundTransactions?.length} class='u-space-mb'>
+        <div ?hidden=${this._fundTransactions.length} class='u-space-mb'>
           <div>${unsafeHTML(this._noFundTransactionsText)}</div>
         </div>
 
-        <div ?hidden=${!this.reimbursementRequest?.fundTransactions?.length}>
+        <div ?hidden=${!this._fundTransactions.length} class='u-space-mb'>
           table of aggie expense transactions goes here
         </div>
 
@@ -86,6 +86,7 @@ function renderStatusSection() {
           <h4 ?hidden=${this.statusFormData?.reimbursementRequestFundId}>New Aggie Expense Entry</h4>
           <h4 ?hidden=${!this.statusFormData?.reimbursementRequestFundId}>Edit Aggie Expense Entry</h4>
         </div>
+        <div ?hidden=${!this._fundTransactionError} class='u-space-mb double-decker'>${this._fundTransactionError}</div>
         <form @submit=${this._onStatusDialogFormSubmit}>
           <div>
             <div class='l-2col'>
@@ -132,7 +133,7 @@ function renderStatusSection() {
                 </div>
               </div>
               <div class='l-second'>
-                <div class='field-container ${this.statusFormValidation.errorClass('status')}'>
+                <div class='field-container ${this.statusFormValidation.errorClass('reimbursementStatus')}'>
                   <label>Status</label>
                   <select
                     .value=${this.statusFormData?.reimbursementStatus || ''}
@@ -150,20 +151,22 @@ function renderStatusSection() {
               </div>
             </div>
           </div>
-          <div class='alignable-promo__buttons u-space-mt flex'>
+          <div class='alignable-promo__buttons u-space-mt flex flex--wrap'>
             <div class='category-brand--secondary'>
               <button
                 class='btn btn--primary'
-                type='submit'
-                @click=${() => this._onStatusDialogButtonClicked('submit')} >
-                ${this.statusFormData?.reimbursementRequestFundId ? 'Save' : 'Submit'}
+                ?disabled=${this._fundTransactionInProgress}
+                type='submit'>
+                <span ?hidden=${!this._fundTransactionInProgress} class='u-space-mr--small'><i class='fas fa-circle-notch fa-spin'></i></span>
+                <span>${this.statusFormData?.reimbursementRequestFundId ? 'Save' : 'Submit'}</span>
               </button>
             </div>
             <div class='category-brand--secondary'>
               <button
                 class='btn btn--invert'
+                @disabled=${this._fundTransactionInProgress}
                 type='button'
-                @click=${() => this._onStatusDialogButtonClicked('cancel')} >
+                @click=${() => this.statusDialogRef.value.close()} >
                 Cancel
               </button>
             </div>

@@ -31,6 +31,30 @@ class ReimbursementRequestService extends BaseService {
     });
   }
 
+  createTransaction(payload, timestamp) {
+    return this.request({
+      url : '/api/reimbursement-transaction',
+      fetchOptions : {
+        method : 'POST',
+        body : payload
+      },
+      json: true,
+      onLoading : request => this.store.createdTransactionLoading(request, timestamp),
+      onLoad : result => this.store.createdTransactionLoaded(result.body, timestamp),
+      onError : e => this.store.createdTransactionError(e, timestamp)
+    });
+  }
+
+  getFundTransactions(query) {
+    return this.request({
+      url : `/api/reimbursement-transaction${query ? '?' + query : ''}`,
+      checkCached: () => this.store.data.transactionsFetched[query],
+      onLoading : request => this.store.transactionsFetchedLoading(request, query),
+      onLoad : result => this.store.transactionsFetchedLoaded(result.body, query),
+      onError : e => this.store.transactionsFetchedError(e, query)
+    });
+  }
+
 }
 
 const service = new ReimbursementRequestService();

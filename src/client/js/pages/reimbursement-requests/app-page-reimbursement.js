@@ -24,8 +24,11 @@ export default class AppPageReimbursement extends Mixin(LitElement)
       _registrationExpenses: {state: true},
       _dailyExpenses: {state: true},
       _reimbursementQueryObject: {state: true},
+      _fundTransactions: {state: true},
       _showLoaded: {state: true},
       _noFundTransactionsText: {state: true},
+      _fundTransactionInProgress: {state: true},
+      _fundTransactionError: {state: true}
     }
   }
 
@@ -43,6 +46,8 @@ export default class AppPageReimbursement extends Mixin(LitElement)
     this._noFundTransactionsText = '';
     this.statusFormData = {};
     this.statusFormValidation = new ValidationHandler();
+    this._fundTransactionError = '';
+    this._fundTransactions = [];
 
     this.waitController = new WaitController(this);
     this.statusDialogRef = createRef();
@@ -89,29 +94,42 @@ export default class AppPageReimbursement extends Mixin(LitElement)
 
     const promises = [
       this.ReimbursementRequestModel.query(this._reimbursementQueryObject),
+      this.ReimbursementRequestModel.getFundTransactions([this.reimbursementRequestId]),
       this.SettingsModel.getByCategory('reimbursement-requests')
     ]
     const resolvedPromises = await Promise.allSettled(promises);
     return promiseUtils.flattenAllSettledResults(resolvedPromises);
   }
 
+  _onReimbursementTransactionRequested(e){
+    if ( e.state !== 'loaded' ) return;
+    if ( !this.AppStateModel.isActivePage(this) ) return;
+
+    this._fundTransactions = e.payload;
+  }
+
+  /**
+   * @description Callback for when user clicks 'edit' or 'add' for a reimbursement fund transaction.
+   * Shows the dialog for editing or adding a new transaction
+   * @param {Object} transaction - The transaction to edit or null to add a new transaction
+   */
   _onEditFundTransactionClicked(transaction){
     if ( !transaction ) {
-      this.statusFormData = {};
+      this.statusFormData = {reimbursementRequestId: this.reimbursementRequestId};
     } else {
       this.statusFormData = {...transaction};
     }
     this.statusFormValidation = new ValidationHandler();
+    this._fundTransactionError = '';
     this.statusDialogRef.value.showModal();
   }
 
-  _onStatusDialogButtonClicked(action){
-    if ( action === 'cancel' ) {
-      this.statusDialogRef.value.close();
-      return;
-    }
-  }
-
+  /**
+   * @description Callback for input events on the status dialog form (add/edit fund transaction)
+   * @param {String} prop - The property being updated
+   * @param {*} value - The new value
+   * @param {String} castAs - The type to cast the value as (int, number, etc)
+   */
   _onStatusDialogFormInput(prop, value, castAs){
     if ( castAs === 'int' ) {
       value = typeTransform.toPositiveInt(value);
@@ -122,9 +140,39 @@ export default class AppPageReimbursement extends Mixin(LitElement)
     this.requestUpdate();
   }
 
+  /**
+   * @description Callback for when the status dialog form is submitted (add/edit fund transaction)
+   * @param {SubmitEvent} e - The submit event
+   */
   _onStatusDialogFormSubmit(e){
     e.preventDefault();
-    console.log('submit', this.statusFormData);
+    if ( this._fundTransactionInProgress ) return;
+
+    this.ReimbursementRequestModel.createTransaction(this.statusFormData);
+  }
+
+  _onReimbursementTransactionCreated(e){
+    if ( e.state === 'loading' ) {
+      this._fundTransactionInProgress = true;
+      return;
+    }
+
+    if ( e.state === 'error' ){
+      if ( e.error?.payload?.is400 ) {
+        this.statusFormValidation = new ValidationHandler(e);
+        this.requestUpdate();
+      } else {
+        this._fundTransactionError = 'An unknown error occurred when submitting reimbursement transaction.';
+      }
+    }
+
+    if ( e.state === 'loaded' ) {
+      this.statusDialogRef.value.close();
+      this.AppStateModel.refresh();
+      this.AppStateModel.showToast({message: 'Reimbursement transaction submitted successfully.', type: 'success'});
+    }
+
+    this._fundTransactionInProgress = false;
   }
 
   /**
