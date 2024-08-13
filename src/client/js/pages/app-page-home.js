@@ -10,6 +10,9 @@ import applicationOptions from '../../../lib/utils/applicationOptions.js';
 import typeTransform from "../../../lib/utils/typeTransform.js";
 import urlUtils from '../../../lib/utils/urlUtils.js';
 
+
+import dbSystem from '../../../lib/db-models/emailController.js';
+
 /**
  * @description Element for displaying the home page
  * @param {Object} ownQueryArgs - query arguments for approval requests submitted BY user
@@ -98,6 +101,23 @@ export default class AppPageHome extends Mixin(LitElement)
    */
   async getPageData(){
     await this.waitController.waitForUpdate();
+    let ar = await this.ApprovalRequestModel.query({revisionIds:[1]});
+
+    const payloadFundedHours= {
+      "requests": {
+        approvalRequest: ar.payload.data[0],
+        reimbursementRequest: {},
+      }, //requests could be replaced with id
+      token: 'sbagg',
+      notificationType: 'funded-hours' //notification type
+    } //Trip completed remember reimbursement
+
+    let test = await dbSystem.sendSystemNotification(payloadFundedHours.notificationType, 
+                                                     payloadFundedHours.requests.approvalRequest,
+                                                     payloadFundedHours.requests.reimbursementRequest, 
+                                                     payloadFundedHours);
+
+    console.log("test:", test);
     const promises = [
       this.ApprovalRequestModel.query(this.ownQueryArgs),
       this.ApprovalRequestModel.query(this.approverQueryArgs),

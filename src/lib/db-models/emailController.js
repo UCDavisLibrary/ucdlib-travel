@@ -1,7 +1,7 @@
 // import { appConfig } from "../appGlobals.js";
 import logging from "../utils/emailLib/logging.js"
 import nodemailer from "../utils/emailLib/nodemailer.js"
-
+// import cron from 'node-cron';
 import settings from "../utils/emailLib/settings.js"
 import Hydration from "../utils/emailLib/hydration.js"
 import serverConfig from "../serverConfig.js";
@@ -102,9 +102,28 @@ class Email {
     if ( bodyTemplate && subjectTemplate && from  && to && serverConfig.email.enabled ) {
       //Initiate Hydration class
       const emailMessage = {from, to, subject, text}
-
+      let email;
       // Form, Curate, and Send Message with Nodemailer
-      let email = await nodemailer.runEmail(emailMessage);
+
+      if(notificationType == 'funded-hours'){
+        let day;
+        if(approvalRequest.hasCustomTravelDates) { day = new Date(approvalRequest.travelEndDate) }
+        else { day = new Date(approvalRequest.programEndDate) }
+
+        const adjustedDatetime = day.setDate(day.getDate() + 1);
+        const eventDatetimeObject = new Date(adjustedDatetime);
+
+        const job = cron.schedule(eventDatetimeObject, async function(){
+          email = await nodemailer.runEmail(emailMessage);
+        });
+        
+        details.scheduled = job;
+       
+      }
+      else {
+        email = await nodemailer.runEmail(emailMessage);
+      }
+
       if (email.error) {
         emailSent = false;
         details.error = email.error
