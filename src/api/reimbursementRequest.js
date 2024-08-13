@@ -57,6 +57,29 @@ export default (api) => {
       });
     }
 
+    if ( query.includeReimbursedTotal ) {
+      const ids = results.data.map(rr => rr.reimbursementRequestId);
+      if ( ids.length ) {
+        const transactions = await reimbursementRequest.getFundTransactions(ids);
+        if ( transactions.error ) {
+          console.error('Error in GET /reimbursement-request', transactions.error);
+          return res.status(500).json({error: true, message: 'Error getting reimbursement transactions.'});
+        }
+        const reimbursedTotals = transactions.reduce((acc, t) => {
+          if ( !acc[t.reimbursementRequestId] ) acc[t.reimbursementRequestId] = 0;
+          if ( t.reimbursementStatus === 'fully-reimbursed' ) {
+            acc[t.reimbursementRequestId] += t.amount;
+          }
+          return acc;
+        }, {});
+
+        results.data.forEach(rr => {
+          rr.reimbursedTotal = reimbursedTotals[rr.reimbursementRequestId] || 0;
+        });
+      }
+
+    }
+
     if ( req.auth.token.hasAdminAccess ) return res.json(results);
 
     for (const ar of approvalRequests.data) {
@@ -98,7 +121,31 @@ export default (api) => {
     }
 
     res.json(result);
+  });
 
+  api.put('/reimbursement-transaction', protect('hasAdminAccess'), async (req, res) => {
+    const data = req.body || {};
+    const kerberos = req.auth.token.id;
+
+    // get full employee object (with department) for logged in user
+    let employeeObj = await employee.getIamRecordById(kerberos);
+    if ( employeeObj.error ) {
+      console.error('Error getting employee object in POST /approval-request', employeeObj.error);
+      return res.status(500).json({error: true, message: 'Error creating approval request.'});
+    }
+    employeeObj = (new IamEmployeeObjectAccessor(employeeObj.res)).travelAppObject;
+
+    const result = await reimbursementRequest.updateFundTransaction(data, employeeObj);
+    if ( result.error && result.is400 ) {
+      return res.status(400).json(result);
+    }
+
+    if ( result.error ) {
+      console.error('Error in PUT /reimbursement-transaction', result.error);
+      return res.status(500).json({error: true, message: 'Error updating reimbursement transaction.'});
+    }
+
+    res.json(result);
   });
 
   api.get('/reimbursement-transaction', protect('hasBasicAccess'), async (req, res) => {
@@ -148,9 +195,6 @@ export default (api) => {
     }
 
     return res.json(results);
-
-
-
 
   });
 };

@@ -9,7 +9,8 @@ class ReimbursementRequestStore extends BaseStore {
       created: {},
       fetched: {},
       transactionCreated: {},
-      transactionsFetched: {}
+      transactionsFetched: {},
+      transactionUpdated: {}
     };
     this.events = {
       REIMBURSEMENT_REQUEST_CREATED: 'reimbursement-request-created',
@@ -17,7 +18,8 @@ class ReimbursementRequestStore extends BaseStore {
       REIMBURSEMENT_REQUEST_REQUESTED: 'reimbursement-request-requested',
       REIMBURSEMENT_TRANSACTION_CREATED: 'reimbursement-transaction-created',
       REIMBURSEMENT_TRANSACTION_FETCHED: 'reimbursement-transaction-fetched',
-      REIMBURSEMENT_TRANSACTION_REQUESTED: 'reimbursement-transaction-requested'
+      REIMBURSEMENT_TRANSACTION_REQUESTED: 'reimbursement-transaction-requested',
+      REIMBURSEMENT_TRANSACTION_UPDATED: 'reimbursement-transaction-updated'
     };
 
   }
@@ -49,6 +51,35 @@ class ReimbursementRequestStore extends BaseStore {
   _setTransactionsFetchedState(state) {
     this.data.transactionsFetched[state.query] = state;
     this.emit(this.events.REIMBURSEMENT_TRANSACTION_FETCHED, state);
+  }
+
+  updatedTransactionLoading(request, timestamp){
+    this._setTransactionUpdatedState({
+      state: this.STATE.LOADING,
+      request,
+      timestamp
+    });
+  }
+
+  updatedTransactionLoaded(payload, timestamp){
+    this._setTransactionUpdatedState({
+      state: this.STATE.LOADED,
+      payload,
+      timestamp
+    });
+  }
+
+  updatedTransactionError(error, timestamp){
+    this._setTransactionUpdatedState({
+      state: this.STATE.ERROR,
+      error,
+      timestamp
+    });
+  }
+
+  _setTransactionUpdatedState(state) {
+    this.data.transactionUpdated[state.timestamp] = state;
+    this.emit(this.events.REIMBURSEMENT_TRANSACTION_UPDATED, state);
   }
 
   createdTransactionLoading(request, timestamp){
