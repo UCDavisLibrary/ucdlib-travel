@@ -4,6 +4,9 @@ import ReimbursementRequestStore from '../stores/ReimbursementRequestStore.js';
 
 import urlUtils from '../../utils/urlUtils.js';
 
+/**
+ * @description Model for managing reimbursement requests
+ */
 class ReimbursementRequestModel extends BaseModel {
 
   constructor() {
@@ -16,6 +19,10 @@ class ReimbursementRequestModel extends BaseModel {
     this.inject('ApprovalRequestModel');
   }
 
+  /**
+   * @description create a new reimbursement request
+   * @param {Object} payload - the reimbursement request data - see db-models/reimbursementRequest.js
+   */
   async create(payload){
     let timestamp = Date.now();
     try {
@@ -29,6 +36,11 @@ class ReimbursementRequestModel extends BaseModel {
     return state;
   }
 
+  /**
+   * @description Query for reimbursement requests
+   * @param {Object} query - query object. See get method in db-models/reimbursementRequest.js for query params
+   * @returns
+   */
   async query(query={}){
 
     const queryString = urlUtils.queryObjectToKebabString(query);
@@ -47,6 +59,11 @@ class ReimbursementRequestModel extends BaseModel {
     return this.store.data.fetched[queryString];
   }
 
+  /**
+   * @description Create a new reimbursement transaction
+   * @param {Object} payload - transaction data - see db-models/reimbursementRequest.js
+   * @returns
+   */
   async createTransaction(payload){
     let timestamp = Date.now();
     try {
@@ -59,6 +76,28 @@ class ReimbursementRequestModel extends BaseModel {
     return state;
   }
 
+  /**
+   * @description Update an existing reimbursement transaction
+   * @param {Object} payload - transaction data - see db-models/reimbursementRequest.js
+   * @returns
+   */
+  async updateTransaction(payload){
+    let timestamp = Date.now();
+    try {
+      await this.service.updateTransaction(payload, timestamp);
+    } catch(e) {}
+    const state = this.store.data.transactionUpdated[timestamp];
+    if ( state && state.state === 'loaded' ) {
+      this.store.data.transactionsFetched = {};
+    }
+    return state;
+  }
+
+  /**
+   * @description Get fund reimbursement transactions for a list of reimbursement request ids
+   * @param {Array} reimbursementRequestIds - array of reimbursement request ids
+   * @returns
+   */
   async getFundTransactions(reimbursementRequestIds=[]){
     const queryString = urlUtils.queryObjectToKebabString({reimbursementRequestIds});
     let state = this.store.data.transactionsFetched[queryString];

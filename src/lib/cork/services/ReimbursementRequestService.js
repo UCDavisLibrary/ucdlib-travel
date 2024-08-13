@@ -45,6 +45,20 @@ class ReimbursementRequestService extends BaseService {
     });
   }
 
+  updateTransaction(payload, timestamp) {
+    return this.request({
+      url : '/api/reimbursement-transaction',
+      fetchOptions : {
+        method : 'PUT',
+        body : payload
+      },
+      json: true,
+      onLoading : request => this.store.updatedTransactionLoading(request, timestamp),
+      onLoad : result => this.store.updatedTransactionLoaded(result.body, timestamp),
+      onError : e => this.store.updatedTransactionError(e, timestamp)
+    });
+  }
+
   getFundTransactions(query) {
     return this.request({
       url : `/api/reimbursement-transaction${query ? '?' + query : ''}`,

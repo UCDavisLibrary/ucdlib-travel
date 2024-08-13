@@ -28,6 +28,17 @@ return html`
       </div>
       <div class='l-sidebar-second'>
         <a
+          @click=${() => this.AppStateModel.scrollToAnchor(`${this.id}--reimbursement-status`)}
+          class="focal-link u-space-mb category-brand--${this._reimbursementStatus?.brandColor || ''} pointer">
+          <div class="focal-link__figure focal-link__icon">
+            ${this._reimbursementStatus?.iconClass ? html`<i class="${this._reimbursementStatus?.iconClass || ''} fa-2x"></i>` : ''}
+          </div>
+          <div class="focal-link__body">
+            <div>Status</div>
+            <strong>${this._reimbursementStatus?.label || ''}</strong>
+          </div>
+        </a>
+        <a
           href='${this.AppStateModel.store.breadcrumbs['approval-requests'].link}/${this.approvalRequest?.approvalRequestId}'
           class="focal-link u-space-mb category-brand--tahoe">
           <div class="focal-link__figure focal-link__icon">
@@ -62,7 +73,7 @@ return html`
  */
 function renderStatusSection() {
   return html`
-    <div class='u-space-mb--large'>
+    <section class='u-space-mb--large' id="${this.id}--reimbursement-status">
       <h3 class='u-space-mb--flush'>Reimbursement Status</h3>
       <div>
 
@@ -71,7 +82,43 @@ function renderStatusSection() {
         </div>
 
         <div ?hidden=${!this._fundTransactions.length} class='u-space-mb'>
-          table of aggie expense transactions goes here
+          <div class="responsive-table">
+            <table class="table--bordered fund-transactions">
+              <thead>
+                <tr>
+                  <th>Funding Source</th>
+                  <th>Status</th>
+                  <th class='text-align--right'>Amount</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                ${this._fundTransactions.map(transaction => html`
+                  <tr>
+                    <td>
+                      <div>${transaction.fundingSourceLabel}</div>
+                      <div class='small grey'>${transaction.accountingCode}</div>
+                    </td>
+                    <td>${applicationOptions.reimbursementTransactionStatuses.find(s => s.value === transaction.reimbursementStatus)?.label}</td>
+                    <td class='text-align--right'><span class='monospace-number'>$${typeTransform.toDollarString(transaction.amount)}</span></td>
+                    <td class='text-align--right'>
+                      <a class='icon-link' title='Edit transaction' ?hidden=${!this.AuthModel.isSiteAdmin} @click=${() => this._onEditFundTransactionClicked(transaction)}>
+                        <i class='fas fa-pen'></i>
+                      </a>
+                    </td>
+                  </tr>
+                  `)}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <th>Total</th>
+                  <td></td>
+                  <td class='text-align--right'><span class='monospace-number'>$${reimbursmentExpenses.addExpenses(this._fundTransactions)}</span></td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
         </div>
 
         <div ?hidden=${!this.AuthModel.isSiteAdmin}>
@@ -173,7 +220,7 @@ function renderStatusSection() {
           </div>
         </form>
       </dialog>
-    </div>
+    </section>
   `;
 }
 

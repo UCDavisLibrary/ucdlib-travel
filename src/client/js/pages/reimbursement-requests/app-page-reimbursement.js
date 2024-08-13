@@ -7,6 +7,7 @@ import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-el
 import { WaitController } from "@ucd-lib/theme-elements/utils/controllers/wait.js";
 
 import typeTransform from '../../../../lib/utils/typeTransform.js';
+import applicationOptions from '../../../../lib/utils/applicationOptions.js';
 import promiseUtils from '../../../../lib/utils/promiseUtils.js';
 import reimbursmentExpenses from '../../../../lib/utils/reimbursmentExpenses.js';
 import ValidationHandler from '../../utils/ValidationHandler.js';
@@ -28,7 +29,8 @@ export default class AppPageReimbursement extends Mixin(LitElement)
       _showLoaded: {state: true},
       _noFundTransactionsText: {state: true},
       _fundTransactionInProgress: {state: true},
-      _fundTransactionError: {state: true}
+      _fundTransactionError: {state: true},
+      _reimbursementStatus: {state: true}
     }
   }
 
@@ -92,6 +94,9 @@ export default class AppPageReimbursement extends Mixin(LitElement)
    */
   async getPageData(){
 
+    // hack for font awesome not updating status icon
+    this._reimbursementStatus = {};
+
     const promises = [
       this.ReimbursementRequestModel.query(this._reimbursementQueryObject),
       this.ReimbursementRequestModel.getFundTransactions([this.reimbursementRequestId]),
@@ -148,7 +153,36 @@ export default class AppPageReimbursement extends Mixin(LitElement)
     e.preventDefault();
     if ( this._fundTransactionInProgress ) return;
 
-    this.ReimbursementRequestModel.createTransaction(this.statusFormData);
+    if ( this.statusFormData.reimbursementRequestFundId ) {
+      this.ReimbursementRequestModel.updateTransaction(this.statusFormData);
+    } else {
+      this.ReimbursementRequestModel.createTransaction(this.statusFormData);
+    }
+
+  }
+
+  _onReimbursementTransactionUpdated(e){
+    if ( e.state === 'loading' ) {
+      this._fundTransactionInProgress = true;
+      return;
+    }
+
+    if ( e.state === 'error' ){
+      if ( e.error?.payload?.is400 ) {
+        this.statusFormValidation = new ValidationHandler(e);
+        this.requestUpdate();
+      } else {
+        this._fundTransactionError = 'An unknown error occurred when updating reimbursement transaction.';
+      }
+    }
+
+    if ( e.state === 'loaded' ) {
+      this.statusDialogRef.value.close();
+      this.AppStateModel.refresh();
+      this.AppStateModel.showToast({message: 'Reimbursement transaction updated successfully.', type: 'success'});
+    }
+
+    this._fundTransactionInProgress = false;
   }
 
   _onReimbursementTransactionCreated(e){
@@ -215,6 +249,7 @@ export default class AppPageReimbursement extends Mixin(LitElement)
     this._transportationExpenses = reimbursmentExpenses.hydrateTransportationExpenses(this.reimbursementRequest.expenses);
     this._registrationExpenses = reimbursmentExpenses.hydrateRegistrationFeeExpenses(this.reimbursementRequest.expenses);
     this._dailyExpenses = reimbursmentExpenses.hydrateDailyExpenses(this.reimbursementRequest.expenses);
+    this._reimbursementStatus = applicationOptions.reimbursementRequestStatuses.find(s => s.value === this.reimbursementRequest.status);
 
     if ( !this.approvalRequest?.approvalRequestId ) {
       this.AppStateModel.showError('Associated approval request not found');

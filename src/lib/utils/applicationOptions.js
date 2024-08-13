@@ -68,26 +68,43 @@ class ApplicationOptions {
     return [
       {
         value: 'not-required',
-        label: 'Not Required'
+        label: 'Reimbursement Not Required',
+        iconClass: 'fa-solid fa-ban',
+        brandColor: 'pinot'
       },
       {
         value: 'not-submitted',
         label: 'Reimbursement Not Submitted',
-        isActive: true
+        isActive: true,
+        iconClass: 'fa-solid fa-ban',
+        brandColor: 'pinot'
       },
       {
-        value: 'reimbursment-pending',
+        value: 'submitted',
+        label: 'Reimbursement Request Submitted',
+        isActive: true,
+        iconClass: 'fa-solid fa-upload',
+        brandColor: 'putah-creek'
+      },
+      {
+        value: 'reimbursement-pending',
         label: 'Reimbursement Pending',
-        isActive: true
+        isActive: true,
+        iconClass: 'fa-solid fa-circle-half-stroke',
+        brandColor: 'secondary'
       },
       {
         value: 'partially-reimbursed',
         label: 'Partially Reimbursed',
-        isActive: true
+        isActive: true,
+        iconClass: 'fa-solid fa-circle-half-stroke',
+        brandColor: 'secondary'
       },
       {
         value: 'fully-reimbursed',
-        label: 'Fully Reimbursed'
+        label: 'Fully Reimbursed',
+        iconClass: 'fa-solid fa-check',
+        brandColor: 'redwood'
       }
     ];
   }
@@ -97,12 +114,8 @@ class ApplicationOptions {
    * @returns {Array} - Array of objects containing the options for the status column in the reimbursement_request table
    */
   get reimbursementRequestStatuses(){
-    return [
-      {
-        value: 'submitted',
-        label: 'Submitted'
-      }
-    ]
+    const exclude = ['not-required', 'not-submitted'];
+    return this.reimbursementStatuses.filter(s => !exclude.includes(s.value));
   }
 
   /**
@@ -220,7 +233,7 @@ class ApplicationOptions {
         label: 'Submitted To Aggie Expense'
       },
       {
-        value: 'partial-reimbursement',
+        value: 'partially-reimbursed',
         labelShort: 'Partial Reimbursement',
         label: 'Transaction Partially Reimbursed'
       },

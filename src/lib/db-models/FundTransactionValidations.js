@@ -21,7 +21,7 @@ export default class FundTransactionValidations {
       return;
     }
 
-    if ( !res.rowCount ){
+    if ( !res.res.rowCount ){
       this.model.fundTransactionFields.pushError(out, field, {errorType: 'notFound', message: 'Reimbursement transaction not found'});
       return;
     }
