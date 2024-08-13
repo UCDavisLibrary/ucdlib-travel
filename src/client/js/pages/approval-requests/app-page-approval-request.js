@@ -98,10 +98,16 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
    * @description Get all data required for rendering this page
    */
   async getPageData(){
+    const reimbursementQuery = {
+      approvalRequestIds: [this.approvalRequestId],
+      isCurrent: true,
+      pageSize: -1,
+      includeReimbursedTotal: true
+    };
 
     const promises = [
       this.ApprovalRequestModel.query(this.queryObject),
-      this.ReimbursementRequestModel.query({approvalRequestIds: [this.approvalRequestId], isCurrent: true, pageSize: -1})
+      this.ReimbursementRequestModel.query(reimbursementQuery)
     ]
     const resolvedPromises = await Promise.allSettled(promises);
     return promiseUtils.flattenAllSettledResults(resolvedPromises);

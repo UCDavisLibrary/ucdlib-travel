@@ -1,6 +1,7 @@
 import { html } from 'lit';
 import '../../components/approval-request-header.js';
 import applicationOptions from '../../../../lib/utils/applicationOptions.js';
+import objectUtils from '../../../../lib/utils/objectUtils.js';
 import typeTransform from '../../../../lib/utils/typeTransform.js';
 import reimbursmentExpenses from '../../../../lib/utils/reimbursmentExpenses.js';
 
@@ -41,8 +42,8 @@ return html`
               <div class='monospace-number'>$${this.reimbursmentRequestTotal}</div>
             </div>
             <div class='u-space-mb--small flex flex--space-between flex--align-center small'>
-              <div class='u-space-mr--small'>TODO: Total Reimbursed</div>
-              <div class='monospace-number'>$0.00</div>
+              <div class='u-space-mr--small'>Total Reimbursed</div>
+              <div class='monospace-number'>$${typeTransform.toDollarString(objectUtils.sumArray(this.reimbursementRequests || [], 'reimbursedTotal'))}</div>
             </div>
           </div>
           <div class='u-space-mt flex flex--align-center'>
@@ -114,7 +115,7 @@ return html`
                 </div>
                 <div>
                   <div class='reimbursement-amount__label'>Amount Reimbursed</div>
-                  <div class='monospace-number reimbursement-amount'>$0.00</div>
+                  <div class='monospace-number reimbursement-amount'>$${typeTransform.toDollarString(rr.reimbursedTotal)}</div>
                 </div>
               </div>
               `)}

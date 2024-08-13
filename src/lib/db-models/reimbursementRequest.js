@@ -4,6 +4,8 @@ import validations from "./reimbursementRequestValidations.js";
 import FundTransactionValidations from "./fundTransactionValidations.js";
 import EntityFields from "../utils/EntityFields.js";
 import objectUtils from "../utils/objectUtils.js";
+import employeeModel from "./employee.js";
+import typeTransform from "../utils/typeTransform.js";
 
 class ReimbursementRequest {
   constructor(){
@@ -185,9 +187,11 @@ class ReimbursementRequest {
         customValidationAsync: this.fundTransactionValidations.approvalRequestFundingSourceId.bind(this.fundTransactionValidations)
       },
       {
+        dbName: 'funding_source_id',
         jsonName: 'fundingSourceId'
       },
       {
+        dbName: 'funding_source_label',
         jsonName: 'fundingSourceLabel'
       },
       {
@@ -304,9 +308,6 @@ class ReimbursementRequest {
 
       row.expenses = objectUtils.uniqueArray(row.expenses, 'reimbursementRequestExpenseId');
       row.receipts = objectUtils.uniqueArray(row.receipts, 'reimbursementRequestReceiptId');
-
-      // todo - add funds
-      row.fundTransactions = [];
     }
     const totalPages = noPaging ? 1 : Math.ceil(total / pageSize);
 
@@ -356,7 +357,7 @@ class ReimbursementRequest {
       approvalRequestData = approvalRequestData.rows[0];
       const approvalRequestRevisionId = approvalRequestData.approval_request_revision_id;
 
-      // insert approval request revision
+      // insert reimbursement request
       const d = pg.prepareObjectForInsert(data);
       let sql = `INSERT INTO reimbursement_request (${d.keysString}) VALUES (${d.placeholdersString}) RETURNING reimbursement_request_id`;
       const res = await client.query(sql, d.values);
@@ -380,14 +381,8 @@ class ReimbursementRequest {
         await client.query(sql, receiptData.values);
       }
 
-      // set reimbursement status on approval request
-      let currentReimbursementStatus = await client.query('SELECT reimbursement_status FROM approval_request WHERE approval_request_revision_id = $1', [approvalRequestRevisionId]);
-      currentReimbursementStatus = currentReimbursementStatus.rows[0].reimbursement_status;
-      let newReimbursementStatus = 'reimbursment-pending';
-      if ( ['partially-reimbursed', 'fully-reimbursed'].includes(currentReimbursementStatus) ){
-        newReimbursementStatus = 'reimbursment-pending';
-      }
-      await client.query('UPDATE approval_request SET reimbursement_status = $1 WHERE approval_request_revision_id = $2', [newReimbursementStatus, approvalRequestRevisionId]);
+      // set overall reimbursement status on approval request
+      await this._updateApprovalRequestReimbursementStatus(client, reimbursementRequestId);
 
       // insert into approval request activity
       sql = `SELECT MAX(approver_order) as max_order FROM approval_request_approval_chain_link WHERE approval_request_revision_id = $1`;
@@ -479,21 +474,246 @@ class ReimbursementRequest {
     const out = [];
     for ( const row of res.res.rows ){
       const receipt = this.receiptFields.toJsonObj(row);
+      out.push(receipt);
       if ( returnReimbursementRequest ){
         receipt.reimbursementRequest = this.entityFields.toJsonObj(row);
       }
-      out.push(receipt);
     }
     return out;
   }
 
+  /**
+   * @description Create a reimbursement request fund transaction
+   * @param {Object} data - fund transaction data. See this.fundTransactionFields for field names
+   * @param {Object} submittedBy - employee object of the person submitting the transaction
+   * @returns
+   */
   async createFundTransaction(data, submittedBy){
     if ( submittedBy?.kerberos ) {
-
-    } else {
-
+      data.addedBy = submittedBy.kerberos;
     }
-    data = this.entityFields.toDbObj(data);
+    data = this.fundTransactionFields.toDbObj(data);
+
+    // delete system fields
+    delete data.added_at;
+    delete data.modified_by;
+    delete data.modified_at;
+    delete data.reimbursement_request_fund_id;
+    delete data.funding_source_label;
+    delete data.funding_source_id;
+
+    const validation = await this.fundTransactionFields.validate(data, ['reimbursement_request_fund_id']);
+    if ( !validation.valid ) {
+      return {error: true, message: 'Validation Error', is400: true, fieldsWithErrors: validation.fieldsWithErrors};
+    }
+
+    // start transaction
+    const client = await pg.pool.connect();
+    let reimbursementRequestFundId;
+    let out = {};
+    let sql;
+    let res;
+    try {
+      await client.query('BEGIN');
+
+      if ( submittedBy?.kerberos ){
+        await employeeModel.upsertInTransaction(client, submittedBy);
+      }
+
+      // insert fund transaction
+      const d = pg.prepareObjectForInsert(data);
+      sql = `INSERT INTO reimbursement_request_fund (${d.keysString}) VALUES (${d.placeholdersString}) RETURNING reimbursement_request_fund_id`;
+      res = await client.query(sql, d.values);
+      reimbursementRequestFundId = res.rows[0].reimbursement_request_fund_id;
+
+      await this._updateReimbursementRequestStatus(client, data.reimbursement_request_id);
+      await this._updateApprovalRequestReimbursementStatus(client, data.reimbursement_request_id);
+
+      // todo - enter into approval request activity
+
+      await client.query('COMMIT');
+
+    } catch (e) {
+      console.log('Error in createFundTransaction', e);
+      await client.query('ROLLBACK');
+      out = {error: e};
+    } finally {
+      client.release();
+    }
+
+    if ( out.error ) return out;
+
+    return {success: true, reimbursementRequestFundId};
+  }
+
+  /**
+   * @description Update the overall reimbursement request status of an approval request based on its individual reimbursement requests
+   * @param {*} client - pg client
+   * @param {Number} reimbursementRequestId - the id of the reimbursement request
+   */
+  async _updateApprovalRequestReimbursementStatus(client, reimbursementRequestId){
+    let sql = `SELECT approval_request_id FROM reimbursement_request WHERE reimbursement_request_id = $1`;
+    let res = await client.query(sql, [reimbursementRequestId]);
+    const approvalRequestId = res.rows[0].approval_request_id;
+
+    sql = `SELECT status FROM reimbursement_request WHERE approval_request_id = $1`;
+    res = await client.query(sql, [approvalRequestId]);
+
+    const statuses = res.rows.map(r => r.status);
+    let overallStatus;
+    if ( statuses.includes('partially-reimbursed') ){
+      overallStatus = 'partially-reimbursed';
+    } else if ( statuses.every(s => s === 'fully-reimbursed') ){
+      overallStatus = 'fully-reimbursed';
+    } else if ( statuses.includes('fully-reimbursed') ){
+      overallStatus = 'partially-reimbursed';
+    } else if(statuses.every(s => s === 'submitted')){
+      overallStatus = 'submitted';
+    } else if( !statuses.length ){
+      overallStatus = 'not-submitted';
+    } else {
+      overallStatus = 'reimbursment-pending';
+    }
+
+    sql = `UPDATE approval_request SET reimbursement_status = $1 WHERE approval_request_id = $2 AND is_current = true`;
+    await client.query(sql, [overallStatus, approvalRequestId]);
+  }
+
+  /**
+   * @description Update the overall status of a reimbursement request based on its individual fund transactions
+   * @param {*} client - pg client
+   * @param {Number} reimbursementRequestId - the id of the reimbursement request
+   */
+  async _updateReimbursementRequestStatus(client, reimbursementRequestId){
+    let sql = `SELECT reimbursement_status FROM reimbursement_request_fund WHERE reimbursement_request_id = $1`;
+    let res = await client.query(sql, [reimbursementRequestId]);
+
+
+    const statuses = res.rows.map(r => r.reimbursement_status);
+    let overallStatus;
+    if ( statuses.includes('partially-reimbursed') ){
+      overallStatus = 'partially-reimbursed';
+    } else if ( statuses.every(s => s === 'fully-reimbursed') ){
+      overallStatus = 'fully-reimbursed';
+    } else if ( statuses.includes('fully-reimbursed') ){
+      overallStatus = 'partially-reimbursed';
+    } else if(statuses.every(s => s === 'cancelled')){
+      overallStatus = 'submitted';
+    } else {
+      overallStatus = 'reimbursment-pending';
+    }
+
+    sql = `UPDATE reimbursement_request SET status = $1 WHERE reimbursement_request_id = $2`;
+    await client.query(sql, [overallStatus, reimbursementRequestId]);
+  }
+
+  /**
+   * @description Update a reimbursement request fund transaction
+   * @param {Object} data - fund transaction data. See this.fundTransactionFields for field names
+   * @param {Object} submittedBy - employee object of the person submitting the transaction
+   * @returns
+   */
+  async updateFundTransaction(data, submittedBy){
+    if ( submittedBy?.kerberos ) {
+      data.modifiedBy = submittedBy.kerberos;
+    }
+    data.modifiedAt = new Date();
+    data = this.fundTransactionFields.toDbObj(data);
+
+    // delete system fields
+    delete data.added_at;
+    delete data.added_by;
+    delete data.funding_source_label;
+    delete data.funding_source_id;
+
+    const validation = await this.fundTransactionFields.validate(data);
+    if ( !validation.valid ) {
+      return {error: true, message: 'Validation Error', is400: true, fieldsWithErrors: validation.fieldsWithErrors};
+    }
+
+    const reimbursementRequestFundId = data.reimbursement_request_fund_id;
+    delete data.reimbursement_request_fund_id;
+
+    // start transaction
+    const client = await pg.pool.connect();
+    let out = {};
+    let sql;
+    let res;
+
+    try {
+      await client.query('BEGIN');
+
+      if ( submittedBy?.kerberos ){
+        await employeeModel.upsertInTransaction(client, submittedBy);
+      }
+
+      // update fund transaction
+      const updateClause = pg.toUpdateClause(data);
+      sql = `
+        UPDATE reimbursement_request_fund
+        SET ${updateClause.sql}
+        WHERE reimbursement_request_fund_id = $${updateClause.values.length + 1}
+        RETURNING reimbursement_request_fund_id
+      `
+      res = await client.query(sql, [...updateClause.values, reimbursementRequestFundId]);
+      if ( res.rowCount !== 1 ) {
+        throw new Error('Error updating funding source transaction');
+      }
+
+      await this._updateReimbursementRequestStatus(client, data.reimbursement_request_id);
+      await this._updateApprovalRequestReimbursementStatus(client, data.reimbursement_request_id);
+
+      // todo - enter into approval request activity
+
+      await client.query('COMMIT');
+
+    } catch (e) {
+      console.log('Error in updateFundTransaction', e);
+      await client.query('ROLLBACK');
+      out = {error: e};
+
+    } finally {
+      client.release();
+    }
+
+    if ( out.error ) return out;
+
+    return {success: true, reimbursementRequestFundId};
+  }
+
+  /**
+   * @description Get fund reimbursement transactions for a list of reimbursement request ids
+   * @param {Array} reimbursementRequestIds - array of reimbursement request ids
+   * @returns
+   */
+  async getFundTransactions(reimbursementRequestIds=[]){
+    if ( !Array.isArray(reimbursementRequestIds) || !reimbursementRequestIds.length ) return {error: true, message: 'Invalid reimbursement request ids'};
+    const whereClause = pg.toWhereClause({reimbursement_request_id: reimbursementRequestIds});
+
+    const sql = `
+      SELECT rrf.*,
+      arfs.funding_source_id,
+      fs.label as funding_source_label
+      FROM
+        reimbursement_request_fund rrf
+      LEFT JOIN
+        approval_request_funding_source arfs ON rrf.approval_request_funding_source_id = arfs.approval_request_funding_source_id
+      LEFT JOIN
+        funding_source fs ON arfs.funding_source_id = fs.funding_source_id
+      WHERE
+        ${whereClause.sql}
+    `;
+
+    const res = await pg.query(sql, whereClause.values);
+    if ( res.error ) return res;
+
+    const out = [];
+    for ( const row of res.res.rows ){
+      const d = this.fundTransactionFields.toJsonObj(row);
+      d.amount = typeTransform.toPositiveNumber(d.amount) || 0;
+      out.push(d);
+    }
+    return out;
   }
 }
 
