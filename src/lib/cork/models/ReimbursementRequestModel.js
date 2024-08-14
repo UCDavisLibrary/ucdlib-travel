@@ -72,6 +72,8 @@ class ReimbursementRequestModel extends BaseModel {
     const state = this.store.data.transactionCreated[timestamp];
     if ( state && state.state === 'loaded' ) {
       this.store.data.transactionsFetched = {};
+      this.store.data.fetched = {};
+      this.ApprovalRequestModel.clearCache();
     }
     return state;
   }
@@ -89,6 +91,8 @@ class ReimbursementRequestModel extends BaseModel {
     const state = this.store.data.transactionUpdated[timestamp];
     if ( state && state.state === 'loaded' ) {
       this.store.data.transactionsFetched = {};
+      this.store.data.fetched = {};
+      this.ApprovalRequestModel.clearCache();
     }
     return state;
   }
