@@ -9,7 +9,7 @@ import { WaitController } from "@ucd-lib/theme-elements/utils/controllers/wait.j
 import typeTransform from '../../../../lib/utils/typeTransform.js';
 import applicationOptions from '../../../../lib/utils/applicationOptions.js';
 import promiseUtils from '../../../../lib/utils/promiseUtils.js';
-import reimbursmentExpenses from '../../../../lib/utils/reimbursmentExpenses.js';
+import reimbursementExpenses from '../../../../lib/utils/reimbursementExpenses.js';
 import ValidationHandler from '../../utils/ValidationHandler.js';
 
 export default class AppPageReimbursement extends Mixin(LitElement)
@@ -42,9 +42,9 @@ export default class AppPageReimbursement extends Mixin(LitElement)
     this.reimbursementRequestId = 0;
     this.reimbursementRequest = {};
     this.approvalRequest = {};
-    this._transportationExpenses = reimbursmentExpenses.hydrateTransportationExpenses();
-    this._registrationExpenses = reimbursmentExpenses.hydrateRegistrationFeeExpenses();
-    this._dailyExpenses = reimbursmentExpenses.hydrateDailyExpenses();
+    this._transportationExpenses = reimbursementExpenses.hydrateTransportationExpenses();
+    this._registrationExpenses = reimbursementExpenses.hydrateRegistrationFeeExpenses();
+    this._dailyExpenses = reimbursementExpenses.hydrateDailyExpenses();
     this._noFundTransactionsText = '';
     this.statusFormData = {};
     this.statusFormValidation = new ValidationHandler();
@@ -246,9 +246,9 @@ export default class AppPageReimbursement extends Mixin(LitElement)
 
     this.reimbursementRequest = e.payload.data[0];
     this.approvalRequest = this.reimbursementRequest?.approvalRequest || {};
-    this._transportationExpenses = reimbursmentExpenses.hydrateTransportationExpenses(this.reimbursementRequest.expenses);
-    this._registrationExpenses = reimbursmentExpenses.hydrateRegistrationFeeExpenses(this.reimbursementRequest.expenses);
-    this._dailyExpenses = reimbursmentExpenses.hydrateDailyExpenses(this.reimbursementRequest.expenses);
+    this._transportationExpenses = reimbursementExpenses.hydrateTransportationExpenses(this.reimbursementRequest.expenses);
+    this._registrationExpenses = reimbursementExpenses.hydrateRegistrationFeeExpenses(this.reimbursementRequest.expenses);
+    this._dailyExpenses = reimbursementExpenses.hydrateDailyExpenses(this.reimbursementRequest.expenses);
     this._reimbursementStatus = applicationOptions.reimbursementRequestStatuses.find(s => s.value === this.reimbursementRequest.status);
 
     if ( !this.approvalRequest?.approvalRequestId ) {

@@ -6,7 +6,7 @@ import { WaitController } from "@ucd-lib/theme-elements/utils/controllers/wait.j
 
 import promiseUtils from '../../../../lib/utils/promiseUtils.js';
 import applicationOptions from '../../../../lib/utils/applicationOptions.js';
-import reimbursmentExpenses from '../../../../lib/utils/reimbursmentExpenses.js';
+import reimbursementExpenses from '../../../../lib/utils/reimbursementExpenses.js';
 
 /**
  * @class AppPageApprovalRequest
@@ -31,7 +31,7 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
       reimbursementRequests: {type: Array},
       approvedExpenseTotal: {state: true},
       hasApprovedExpenses: {state: true},
-      reimbursmentRequestTotal: {state: true},
+      reimbursementRequestTotal: {state: true},
       _hideReimbursementSection: {state: true}
     }
   }
@@ -46,7 +46,7 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
     this._hideReimbursementSection = false;
     this.approvedExpenseTotal = '0.00';
     this.hasApprovedExpenses = false;
-    this.reimbursmentRequestTotal = '0.00';
+    this.reimbursementRequestTotal = '0.00';
     this.reimbursementRequests = [];
 
     this.waitController = new WaitController(this);
@@ -119,11 +119,11 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
 
     this.reimbursementRequests = e.payload.data;
 
-    let reimbursmentRequestTotal = 0;
+    let reimbursementRequestTotal = 0;
     for (const r of e.payload.data) {
-      reimbursmentRequestTotal += Number(reimbursmentExpenses.addExpenses(r.expenses));
+      reimbursementRequestTotal += Number(reimbursementExpenses.addExpenses(r.expenses));
     }
-    this.reimbursmentRequestTotal = reimbursmentRequestTotal.toFixed(2);
+    this.reimbursementRequestTotal = reimbursementRequestTotal.toFixed(2);
   }
 
   /**
@@ -177,7 +177,7 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
     }
 
     this.approvalRequest = approvalRequest;
-    this.approvedExpenseTotal = reimbursmentExpenses.addExpenses(approvalRequest.expenditures || []);
+    this.approvedExpenseTotal = reimbursementExpenses.addExpenses(approvalRequest.expenditures || []);
     this._setReimbursementSectionVisibility();
     this._setActivity(e.payload.data);
 

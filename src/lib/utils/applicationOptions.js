@@ -222,6 +222,22 @@ class ApplicationOptions {
         iconClass: 'fa-solid fa-money-bill-wave',
         brandColor: 'putah-creek'
       },
+      {
+        value: 'reimbursement-transaction-added',
+        label: 'Reimbursement Transaction Added',
+        actionTakenText: 'Reimbursement transaction added.',
+        byLine: 'Added By:',
+        iconClass: 'fa-solid fa-money-bill-transfer',
+        brandColor: 'pinot'
+      },
+      {
+        value: 'reimbursement-transaction-updated',
+        label: 'Reimbursement Transaction Updated',
+        actionTakenText: 'Reimbursement transaction updated.',
+        byLine: 'Updated By:',
+        iconClass: 'fa-solid fa-money-bill-transfer',
+        brandColor: 'pinot'
+      }
     ]
   }
 
@@ -311,7 +327,7 @@ class ApplicationOptions {
 
     if ( isSubmitter ){
 
-      const noReimbursmentActivity = ['not-required', 'not-submitted'].includes(approvalRequest.reimbursementStatus)
+      const noReimbursementActivity = ['not-required', 'not-submitted'].includes(approvalRequest.reimbursementStatus)
 
       if ( approvalRequest.approvalStatus === 'draft' ){
         this._pushAction(actions, 'submit');
@@ -322,12 +338,12 @@ class ApplicationOptions {
         const submitAction = this.approvalStatusActions.find(a => a.value === 'submit');
         submitAction.label = 'Edit and Resubmit';
         actions.push(submitAction);
-      } else if ( noReimbursmentActivity && !['canceled', 'recalled'].includes(approvalRequest.approvalStatus) ){
+      } else if ( noReimbursementActivity && !['canceled', 'recalled'].includes(approvalRequest.approvalStatus) ){
         this._pushAction(actions, 'recall');
       }
 
 
-      if ( noReimbursmentActivity && approvalRequest.approvalStatus !== 'canceled'){
+      if ( noReimbursementActivity && approvalRequest.approvalStatus !== 'canceled'){
         this._pushAction(actions, 'cancel');
       }
 
