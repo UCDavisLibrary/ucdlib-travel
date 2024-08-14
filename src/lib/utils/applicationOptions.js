@@ -69,12 +69,14 @@ class ApplicationOptions {
       {
         value: 'not-required',
         label: 'Reimbursement Not Required',
+        labelShort: 'Not Required',
         iconClass: 'fa-solid fa-ban',
         brandColor: 'pinot'
       },
       {
         value: 'not-submitted',
         label: 'Reimbursement Not Submitted',
+        labelShort: 'Not Submitted',
         isActive: true,
         iconClass: 'fa-solid fa-ban',
         brandColor: 'pinot'
@@ -82,6 +84,7 @@ class ApplicationOptions {
       {
         value: 'submitted',
         label: 'Reimbursement Request Submitted',
+        labelShort: 'Submitted',
         isActive: true,
         iconClass: 'fa-solid fa-upload',
         brandColor: 'putah-creek'
@@ -89,6 +92,7 @@ class ApplicationOptions {
       {
         value: 'reimbursement-pending',
         label: 'Reimbursement Pending',
+        labelShort: 'Pending',
         isActive: true,
         iconClass: 'fa-solid fa-circle-half-stroke',
         brandColor: 'secondary'
@@ -288,17 +292,24 @@ class ApplicationOptions {
    * @description - Get the label for an reimbursement status
    * @param {String} status - The status keyword
    * @param {String} entity - The entity type - 'approvalRequest' or 'reimbursementRequest'
+   * @param {Boolean} useShortLabel - Use the short label if available
    * @returns {String}
    */
-  reimbursementStatusLabel(status, entity='approvalRequest'){
+  reimbursementStatusLabel(status, entity='approvalRequest', useShortLabel=false){
+    let statusObj;
     if ( entity === 'approvalRequest' ){
-      return this.reimbursementStatuses.find(s => s.value === status)?.label || '';
+      statusObj = this.reimbursementStatuses.find(s => s.value === status);
     }
     if ( entity === 'reimbursementRequest' ){
-      return this.reimbursementRequestStatuses.find(s => s.value === status)?.label || '';
+      statusObj = this.reimbursementRequestStatuses.find(s => s.value === status);
     }
 
-    return '';
+    if ( !statusObj ) return '';
+    if ( useShortLabel ) {
+      return statusObj.labelShort || statusObj.label || '';
+    }
+
+    return statusObj.label || '';
   }
 
   /**

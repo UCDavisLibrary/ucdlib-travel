@@ -25,6 +25,7 @@ class subsetIcons {
         'arrow-left',
         'arrow-up',
         'ban',
+        'briefcase',
         'building',
         'calendar',
         'chart-bar',

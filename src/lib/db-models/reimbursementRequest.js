@@ -262,6 +262,10 @@ class ReimbursementRequest {
     if ( Array.isArray(query.reimbursementRequestIds) && query.reimbursementRequestIds.length ) {
       whereArgs["rr.reimbursement_request_id"] = query.reimbursementRequestIds;
     }
+
+    if ( Array.isArray(query.status) && query.status.length ) {
+      whereArgs["rr.status"] = query.status;
+    }
     const whereClause = pg.toWhereClause(whereArgs);
 
     // get total count
