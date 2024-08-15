@@ -1,6 +1,6 @@
 import { LitElement } from 'lit';
 import {render } from "./app-page-approval-request-confirm.tpl.js";
-import { LitCorkUtils, Mixin } from "../../../../lib/appGlobals.js";
+import { LitCorkUtils, Mixin } from '@ucd-lib/cork-app-utils';
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 import { WaitController } from "@ucd-lib/theme-elements/utils/controllers/wait.js";
 
@@ -64,7 +64,7 @@ export default class AppPageApprovalRequestConfirm extends Mixin(LitElement)
     const d = await this.getPageData();
     const hasError = d.some(e => e.status === 'rejected' || e.value.state === 'error');
     if ( hasError ) {
-      this.AppStateModel.showError(d);
+      this.AppStateModel.showError(d, {ele: this});
       return;
     }
 
@@ -142,7 +142,7 @@ export default class AppPageApprovalRequestConfirm extends Mixin(LitElement)
     if ( e.action?.action !== 'submit' ) return;
 
     if ( e.state === 'error' ) {
-      this.AppStateModel.showError('Error submitting approval request.');
+      this.AppStateModel.showError(e, {ele: this});
       return;
     }
 
