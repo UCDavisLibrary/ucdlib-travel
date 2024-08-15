@@ -2,7 +2,7 @@ import { LitElement } from 'lit';
 import {render} from "./app-page-approval-requests.tpl.js";
 import { createRef } from 'lit/directives/ref.js';
 
-import { LitCorkUtils, Mixin } from "../../../../lib/appGlobals.js";
+import { LitCorkUtils, Mixin } from '@ucd-lib/cork-app-utils';
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 import { WaitController } from "@ucd-lib/theme-elements/utils/controllers/wait.js";
 
@@ -63,7 +63,7 @@ export default class AppPageApprovalRequests extends Mixin(LitElement)
     const d = await this.getPageData();
     const hasError = d.some(e => e.status === 'rejected' || e.value.state === 'error');
     if ( hasError ) {
-      this.AppStateModel.showError(d);
+      this.AppStateModel.showError(d, {ele: this});
       return;
     }
     await this.waitController.waitForFrames(5);

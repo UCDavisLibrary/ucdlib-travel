@@ -13,10 +13,10 @@ import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-el
 import '@fortawesome/fontawesome-free/js/ucdlib-travel.js';
 
 // global event bus and model registry
-import { Registry } from '@ucd-lib/cork-app-utils';
+import { Registry, LitCorkUtils, Mixin } from '@ucd-lib/cork-app-utils';
 
-// app globals - should be loaded after cork-app-utils
-import { appConfig, LitCorkUtils, Mixin } from "../../lib/appGlobals.js";
+// app globals
+import { appConfig } from "../../lib/appGlobals.js";
 
 // init app state model
 import AppStateModel from "../../lib/cork/models/AppStateModel.js";
@@ -121,6 +121,7 @@ export default class AppMain extends Mixin(LitElement)
     super.connectedCallback();
     this.style.display = 'block';
     document.querySelector('#whole-screen-load').style.display = 'none';
+    this.logger.info('Main app element connected');
   }
 
   /**
@@ -216,8 +217,7 @@ export default class AppMain extends Mixin(LitElement)
     const d = await Promise.allSettled(promises);
     const hasError = d.some(e => e.status === 'rejected' || e.value.state === 'error');
     if ( hasError ) {
-      this.AppStateModel.showError(d);
-      console.error('AppMain: error loading page data', d);
+      this.AppStateModel.showError(d, {ele: this});
       return;
     }
 
