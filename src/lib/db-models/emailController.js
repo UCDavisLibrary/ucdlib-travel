@@ -1,17 +1,46 @@
 // import { appConfig } from "../appGlobals.js";
 import logging from "../utils/emailLib/logging.js"
 import nodemailer from "../utils/emailLib/nodemailer.js"
-// import cron from 'node-cron';
 import settings from "../utils/emailLib/settings.js"
 import Hydration from "../utils/emailLib/hydration.js"
 import serverConfig from "../serverConfig.js";
-
+import cron from 'node-cron';
+import ApprovalRequest from './approvalRequest.js';
 
 /**
  * @description Class for accessing properties of an access token for this client
  */
 class Email {
   constructor(){}
+
+
+  async emailScheduler(token){
+    cron.schedule("0 8 * * *", async function(){
+      let approvalRequests = ApprovalRequest.get();
+
+      const ar = approvalRequests.filter((ap) => {
+         if(ap.travelEndDate){
+           if(ap.travelEndDate == this.formatDate()) return true;
+         } else {
+           if(ap.programEndDate == this.formatDate()) return true;
+         }
+       });
+
+      const payloadFundedHours= {
+        "requests": {
+          approvalRequest: ar,
+          reimbursementRequest: {},
+        },
+        token: token,
+        notificationType: 'funded-hours' //notification type
+       }
+    
+      this.sendSystemNotification(payloadFundedHours.notificationType, 
+                                      payloadFundedHours.requests.approvalRequest,
+                                      payloadFundedHours.requests.reimbursementRequest, 
+                                      payloadFundedHours);
+    });
+  }
 
   /**
    * @description run the questions/comments help email function
@@ -41,7 +70,6 @@ class Email {
 
       // Form, Curate, and Send Message with Nodemailer
       let email = await nodemailer.runEmail(emailMessage);
-      console.log("E:", email);
         if (email.error) {
           emailSent = false;
           details.error = email.error
@@ -88,8 +116,8 @@ class Email {
     const hydration = new Hydration(approvalRequest, reimbursementRequest, notificationType);
 
     //Hydrate keywords
-    const from = serverConfig.email.systemEmailAddress;
-    const to = serverConfig.email.notificationRecipient || await hydration.getNotificationRecipient();
+    const from = 'sabaggett@ucdavis.edu';//serverConfig.email.systemEmailAddress;
+    const to = 'sabaggett@ucdavis.edu';//serverConfig.email.notificationRecipient || await hydration.getNotificationRecipient();
     const subject = hydration.hydrate(subjectTemplate);
     const text = hydration.hydrate(bodyTemplate);
 
@@ -103,26 +131,10 @@ class Email {
       //Initiate Hydration class
       const emailMessage = {from, to, subject, text}
       let email;
+
       // Form, Curate, and Send Message with Nodemailer
+      email = await nodemailer.runEmail(emailMessage);
 
-      if(notificationType == 'funded-hours'){
-        let day;
-        if(approvalRequest.hasCustomTravelDates) { day = new Date(approvalRequest.travelEndDate) }
-        else { day = new Date(approvalRequest.programEndDate) }
-
-        const adjustedDatetime = day.setDate(day.getDate() + 1);
-        const eventDatetimeObject = new Date(adjustedDatetime);
-
-        const job = cron.schedule(eventDatetimeObject, async function(){
-          email = await nodemailer.runEmail(emailMessage);
-        });
-        
-        details.scheduled = job;
-       
-      }
-      else {
-        email = await nodemailer.runEmail(emailMessage);
-      }
 
       if (email.error) {
         emailSent = false;
@@ -157,6 +169,21 @@ class Email {
 
     return result;
   }
+
+  formatDate(date = '') {
+    
+    let d = (date == '') ? new Date() : new Date(date);
+
+    let month = '' + (d.getMonth() + 1);
+    let day = '' + d.getDate();
+    let year = d.getFullYear();
+    
+    if (month.length < 2) month = '0' + month;
+    if (day.length < 2) day = '0' + day;
+    
+    return [year, day, month].join('-');
+  }
+    
 
   /**
    * @description get the email function
