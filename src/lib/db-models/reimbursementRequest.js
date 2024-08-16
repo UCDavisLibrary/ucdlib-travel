@@ -262,6 +262,10 @@ class ReimbursementRequest {
     if ( Array.isArray(query.reimbursementRequestIds) && query.reimbursementRequestIds.length ) {
       whereArgs["rr.reimbursement_request_id"] = query.reimbursementRequestIds;
     }
+
+    if ( Array.isArray(query.status) && query.status.length ) {
+      whereArgs["rr.status"] = query.status;
+    }
     const whereClause = pg.toWhereClause(whereArgs);
 
     // get total count
@@ -387,7 +391,7 @@ class ReimbursementRequest {
       // insert into approval request activity
       sql = `SELECT MAX(approver_order) as max_order FROM approval_request_approval_chain_link WHERE approval_request_revision_id = $1`;
       const maxOrderRes = await client.query(sql, [approvalRequestRevisionId]);
-      const maxOrder = maxOrderRes.rows[0].max_order || 0;
+      const maxOrder = maxOrderRes.rows?.[0]?.max_order || 0;
 
       let activityData = {
         approval_request_revision_id: approvalRequestRevisionId,
@@ -528,8 +532,7 @@ class ReimbursementRequest {
 
       await this._updateReimbursementRequestStatus(client, data.reimbursement_request_id);
       await this._updateApprovalRequestReimbursementStatus(client, data.reimbursement_request_id);
-
-      // todo - enter into approval request activity
+      await this._addTransactionToApprovalRequestHistory(client, reimbursementRequestFundId);
 
       await client.query('COMMIT');
 
@@ -544,6 +547,73 @@ class ReimbursementRequest {
     if ( out.error ) return out;
 
     return {success: true, reimbursementRequestFundId};
+  }
+
+  /**
+   * @description Add record of a transaction to the approval request history
+   * @param {*} client - pg client
+   * @param {Number} transactionId - the id of the transaction
+   */
+  async _addTransactionToApprovalRequestHistory(client, transactionId){
+    let sql;
+    let res;
+
+    // get transaction data
+    sql = `
+      SELECT
+        t.*,
+        rr.approval_request_id,
+        ar.approval_request_revision_id
+      FROM
+        reimbursement_request_fund t
+      INNER JOIN
+        reimbursement_request rr ON t.reimbursement_request_id = rr.reimbursement_request_id
+      INNER JOIN
+        approval_request ar ON rr.approval_request_id = ar.approval_request_id
+      WHERE
+        reimbursement_request_fund_id = $1
+        AND ar.is_current = true
+      `;
+    res = await client.query(sql, [transactionId]);
+    if ( !res.rows.length ) {
+      throw new Error('Transaction not found');
+    }
+    const transaction = res.rows[0];
+
+    // get max approver order - not sure this actually matters
+    sql = `SELECT MAX(approver_order) as max_order FROM approval_request_approval_chain_link WHERE approval_request_revision_id = $1`;
+    const maxOrderRes = await client.query(sql, [transaction.approval_request_revision_id]);
+    const approver_order = (maxOrderRes.rows?.[0]?.max_order || 0) + 1;
+
+    const historyData = {
+      approval_request_revision_id: transaction.approval_request_revision_id,
+      approver_order,
+      action: transaction.modified_at ? 'reimbursement-transaction-updated' : 'reimbursement-transaction-added',
+      employee_kerberos: transaction.modified_by ? transaction.modified_by : transaction.added_by,
+      reimbursement_request_id: transaction.reimbursement_request_id,
+      occurred: transaction.modified_at ? transaction.modified_at : transaction.added_at
+    };
+
+    const d = pg.prepareObjectForInsert(historyData);
+    sql = `
+      INSERT INTO approval_request_approval_chain_link (${d.keysString})
+      VALUES (${d.placeholdersString})
+      RETURNING approval_request_approval_chain_link_id
+    `;
+    res = await client.query(sql, d.values);
+    const historyId = res.rows[0].approval_request_approval_chain_link_id;
+
+    // insert approver type
+    const approverTypeData = {
+      approval_request_approval_chain_link_id: historyId,
+      approver_type_id: 5 // application admin
+    };
+    const approverTypeInsert = pg.prepareObjectForInsert(approverTypeData);
+    sql = `
+      INSERT INTO link_approver_type (${approverTypeInsert.keysString})
+      VALUES (${approverTypeInsert.placeholdersString})
+    `;
+    await client.query(sql, approverTypeInsert.values);
   }
 
   /**
@@ -572,7 +642,7 @@ class ReimbursementRequest {
     } else if( !statuses.length ){
       overallStatus = 'not-submitted';
     } else {
-      overallStatus = 'reimbursment-pending';
+      overallStatus = 'reimbursement-pending';
     }
 
     sql = `UPDATE approval_request SET reimbursement_status = $1 WHERE approval_request_id = $2 AND is_current = true`;
@@ -600,7 +670,7 @@ class ReimbursementRequest {
     } else if(statuses.every(s => s === 'cancelled')){
       overallStatus = 'submitted';
     } else {
-      overallStatus = 'reimbursment-pending';
+      overallStatus = 'reimbursement-pending';
     }
 
     sql = `UPDATE reimbursement_request SET status = $1 WHERE reimbursement_request_id = $2`;
@@ -662,8 +732,7 @@ class ReimbursementRequest {
 
       await this._updateReimbursementRequestStatus(client, data.reimbursement_request_id);
       await this._updateApprovalRequestReimbursementStatus(client, data.reimbursement_request_id);
-
-      // todo - enter into approval request activity
+      await this._addTransactionToApprovalRequestHistory(client, reimbursementRequestFundId);
 
       await client.query('COMMIT');
 
