@@ -18,6 +18,9 @@ a.underline-hover {
   &:hover {
     text-decoration: underline;
   }
+  &.inherit-color {
+    color: inherit;
+  }
 }
 
 .size-h4 {

@@ -4,7 +4,7 @@ import { ref } from 'lit/directives/ref.js';
 
 import '../../components/approval-request-header.js';
 import typeTransform from '../../../../lib/utils/typeTransform.js';
-import reimbursmentExpenses from '../../../../lib/utils/reimbursmentExpenses.js';
+import reimbursementExpenses from '../../../../lib/utils/reimbursementExpenses.js';
 import applicationOptions from '../../../../lib/utils/applicationOptions.js';
 
 export function render() {
@@ -113,7 +113,7 @@ function renderStatusSection() {
                 <tr>
                   <th>Total</th>
                   <td></td>
-                  <td class='text-align--right'><span class='monospace-number'>$${reimbursmentExpenses.addExpenses(this._fundTransactions)}</span></td>
+                  <td class='text-align--right'><span class='monospace-number'>$${reimbursementExpenses.addExpenses(this._fundTransactions)}</span></td>
                   <td></td>
                 </tr>
               </tfoot>
@@ -400,7 +400,7 @@ function renderTotalExpenses(){
           <tfoot>
             <tr>
               <th>Total</th>
-              <th class='text-align--right monospace-number'>$${reimbursmentExpenses.addExpenses(this.reimbursementRequest?.expenses || [])}</th>
+              <th class='text-align--right monospace-number'>$${reimbursementExpenses.addExpenses(this.reimbursementRequest?.expenses || [])}</th>
             </tr>
           </tfoot>
         </table>

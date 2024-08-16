@@ -5,7 +5,7 @@ import { createRef } from 'lit/directives/ref.js';
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 import { WaitController } from "@ucd-lib/theme-elements/utils/controllers/wait.js";
 
-import { LitCorkUtils, Mixin } from "../../../../lib/appGlobals.js";
+import { LitCorkUtils, Mixin } from '@ucd-lib/cork-app-utils';
 import IamEmployeeObjectAccessor from '../../../../lib/utils/iamEmployeeObjectAccessor.js';
 import promiseUtils from '../../../../lib/utils/promiseUtils.js';
 import ValidationHandler from "../../utils/ValidationHandler.js";
@@ -81,7 +81,7 @@ export default class AppPageAdminAllocationsNew extends Mixin(LitElement)
     const d = await this.getPageData();
     const hasError = promiseUtils.hasError(d);
     if( hasError ) {
-      this.AppStateModel.showError(d);
+      this.AppStateModel.showError(d, {ele: this});
       return;
     }
     this.AppStateModel.showLoaded(this.id);

@@ -1,6 +1,6 @@
 import { LitElement } from 'lit';
 import {render} from "./approval-request-header.tpl.js";
-import { LitCorkUtils, Mixin } from "../../../lib/appGlobals.js";
+import { LitCorkUtils, Mixin } from '@ucd-lib/cork-app-utils';
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 
 import typeTransform from '../../../lib/utils/typeTransform.js';
@@ -119,7 +119,7 @@ export default class ApprovalRequestHeader extends Mixin(LitElement)
 
     if ( e.state === 'error' ) {
       this.action = '';
-      this.AppStateModel.showError('Error when performing action. Please try again.');
+      this.AppStateModel.showError(e, {ele: this});
       return;
     }
 

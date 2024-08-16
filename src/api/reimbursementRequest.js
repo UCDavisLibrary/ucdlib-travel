@@ -21,6 +21,7 @@ export default (api) => {
     // query args that need to be arrays
     query.approvalRequestIds = apiUtils.explode(query.approvalRequestIds, true);
     query.reimbursementRequestIds = apiUtils.explode(query.reimbursementRequestIds, true);
+    query.status = apiUtils.explode(query.status);
 
     // pagination
     query.page = apiUtils.getPageNumber(req);
