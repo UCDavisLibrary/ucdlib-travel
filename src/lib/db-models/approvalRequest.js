@@ -9,6 +9,7 @@ import typeTransform from "../utils/typeTransform.js";
 import IamEmployeeObjectAccessor from "../utils/iamEmployeeObjectAccessor.js";
 import applicationOptions from "../utils/applicationOptions.js";
 import objectUtils from "../utils/objectUtils.js";
+import emailController from "./emailController.js";
 
 class ApprovalRequest {
 
