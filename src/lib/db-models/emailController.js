@@ -14,7 +14,7 @@ class Email {
   constructor(){}
 
 
-  async emailScheduler(token){
+  async emailScheduler(){
     cron.schedule("0 8 * * *", async function(){
       let approvalRequests = ApprovalRequest.get();
 
@@ -31,7 +31,7 @@ class Email {
           approvalRequest: ar,
           reimbursementRequest: {},
         },
-        token: token,
+        token: null,
         notificationType: 'funded-hours' //notification type
        }
     
