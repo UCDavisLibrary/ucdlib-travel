@@ -6,6 +6,7 @@ import EntityFields from "../utils/EntityFields.js";
 import objectUtils from "../utils/objectUtils.js";
 import employeeModel from "./employee.js";
 import typeTransform from "../utils/typeTransform.js";
+import emailController from "./emailController.js";
 
 class ReimbursementRequest {
   constructor(){
@@ -426,6 +427,23 @@ class ReimbursementRequest {
     }
 
     if ( out.error ) return out;
+
+    let rr = this.get({reimbursementRequestIds: [reimbursementRequestId]});
+
+    const payloadSubmitReimbursement = {
+      "requests": {
+        approvalRequest: approvalRequestData,
+        reimbursementRequest: rr.data[0],
+      },
+      token: approverKerberos,
+      notificationType: 'submit-reimbursement'
+    }
+
+    emailController.sendSystemNotification( payloadSubmitReimbursement.notificationType, 
+      payloadSubmitReimbursement.approvalRequest, 
+      payloadSubmitReimbursement.reimbursementRequest, 
+      payloadSubmitReimbursement
+    );
 
     return {success: true, reimbursementRequestId};
 
