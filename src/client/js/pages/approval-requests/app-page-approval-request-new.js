@@ -50,6 +50,7 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
     this.expenditureOptions = [];
     this.fundingSourceSelectRef = createRef();
     this.draftListSelectRef = createRef();
+    this.allocationSummaryRef = createRef();
     this.waitController = new WaitController(this);
 
     this._injectModel(
