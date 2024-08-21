@@ -65,6 +65,7 @@ class EmployeeAllocationModel extends BaseModel {
     const state = this.store.data.employeeAllocationsCreated[timestamp];
     if ( state && state.state === 'loaded' ) {
       this.store.data.fetched = {};
+      this.store.data.filters = {};
     }
     return state;
   }
@@ -81,6 +82,7 @@ class EmployeeAllocationModel extends BaseModel {
     const state = this.store.data.deleted[timestamp];
     if ( state && state.state === 'loaded' ) {
       this.store.data.fetched = {};
+      this.store.data.filters = {};
     }
     return state;
   }
