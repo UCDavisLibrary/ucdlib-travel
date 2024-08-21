@@ -1,6 +1,7 @@
 import employeeAllocation from "../../lib/db-models/employeeAllocation.js";
 import apiUtils from "../../lib/utils/apiUtils.js";
 import protect from "../../lib/protect.js";
+import fiscalYearUtils from "../../lib/utils/fiscalYearUtils.js";
 
 export default (api) => {
 
@@ -38,7 +39,7 @@ export default (api) => {
    * @description Get a list of employee allocations
    * @param {String} req.query.employees - comma-separated list of kerberos ids or 'self' to get current user's records
    * @param {String} req.query.funding-sources - comma-separated list of funding source ids
-   * @param {String} req.query.date-ranges - comma-separated list of date range keywords: current, future, past
+   * @param {String} req.query.fiscal-years - comma-separated list of fiscal years
    * @param {Number} req.query.page - page number for pagination
    */
   api.get('/employee-allocation', protect('hasBasicAccess'), async (req, res) => {
@@ -51,20 +52,14 @@ export default (api) => {
     kwargs.fundingSources = apiUtils.explode(req.query['funding-sources'], true);
     kwargs.page = apiUtils.getPageNumber(req);
 
-    const dateRanges = apiUtils.explode(req.query['date-ranges']).filter(range => ['current', 'future', 'past'].includes(range));
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    if ( dateRanges.length == 1 && dateRanges.includes('current') ){
-      kwargs.startDate = {value: today, operator: '<='};
-      kwargs.endDate = {value: today, operator: '>='};
-    } else if ( dateRanges.length == 1 && dateRanges.includes('future') ){
-      kwargs.startDate = {value: today, operator: '>'};
-    } else if ( dateRanges.length == 1 && dateRanges.includes('past') ){
-      kwargs.endDate = {value: today, operator: '<'};
-    } else if ( dateRanges.length == 2 && dateRanges.includes('current') && dateRanges.includes('future') ){
-      kwargs.endDate = {value: today, operator: '>='};
-    } else if ( dateRanges.length == 2 && dateRanges.includes('current') && dateRanges.includes('past') ){
-      kwargs.startDate = {value: today, operator: '<='};
+    const startDates =
+      apiUtils.explode(req.query['fiscal-years'], true)
+      .map(year => fiscalYearUtils.fromStartYear(year, true))
+      .filter(fy => fy !== null)
+      .map(fy => fy.startDate({isoDate: true}));
+
+    if ( startDates.length > 0 ) {
+      kwargs.startDate = startDates;
     }
 
     const data = await employeeAllocation.get(kwargs);
@@ -79,14 +74,17 @@ export default (api) => {
    * @description Get options for filtering employee allocations
    */
   api.get('/employee-allocation/filters', protect('hasAdminAccess'), async (req, res) => {
-    const data = await employeeAllocation.getTotalByUser();
+    const out = {
+      employees: [],
+      fundingSources: [],
+      fiscalYears: []
+    };
+
+    // employee and funding source filters
+    let data = await employeeAllocation.getTotalByUser();
     if ( data.error ) {
       console.error('Error in GET /employee-allocation/filters', data.error);
       return res.status(500).json({error: true, message: 'Error getting employee allocation filters.'});
-    }
-    const out = {
-      employees: [],
-      fundingSources: []
     }
     for (const employee of data) {
       out.employees.push({kerberos: employee.kerberos, firstName: employee.firstName, lastName: employee.lastName});
@@ -97,6 +95,17 @@ export default (api) => {
       }
     }
     out.employees.sort((a, b) => a.lastName.localeCompare(b.lastName));
+
+    // fiscal year filters
+    data = await employeeAllocation.getTotalByStartDate();
+    if ( data.error ) {
+      console.error('Error in GET /employee-allocation/filters', data.error);
+      return res.status(500).json({error: true, message: 'Error getting employee allocation filters.'});
+    }
+    for (const fy of data) {
+      out.fiscalYears.push(fiscalYearUtils.fromDate(fy.startDate).startYear);
+    }
+
     return res.json(out);
   });
 };

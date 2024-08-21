@@ -1,4 +1,4 @@
-const fiscalYearStartMonth = 6;
+const fiscalYearStartMonth = 6; // July
 
 /**
  * @description Utility class for working with academic fiscal years
@@ -30,6 +30,37 @@ class FiscalYearUtils {
     }
 
     return new FiscalYear(year);
+  }
+
+  /**
+   * @description Get the fiscal year from a start year
+   * @param {Number} startYear - The start year of the fiscal year
+   * @param {Boolean} suppressError - If true, return null instead of throwing an error
+   * @returns
+   */
+  fromStartYear(startYear, suppressError=false){
+    startYear = Number(startYear);
+    if (isNaN(startYear) || startYear < 0) {
+      if (suppressError) return null;
+      throw new Error('Invalid start year');
+    }
+
+    return new FiscalYear(startYear);
+  }
+
+  /**
+   * @description Get a list of fiscal years from a list
+   * @param {Array} startYears - An array of start years
+   * @param {String} order - The order of the fiscal years - 'asc' or 'desc'
+   * @returns {Array} - An array of fiscal year objects
+   */
+  fromStartYears(startYears, order='asc'){
+    const out = [];
+    if ( !Array.isArray(startYears) ) return out;
+    startYears = startYears.map(Number).filter(year => !isNaN(year) && year >= 0);
+    startYears = [...new Set(startYears)].sort((a, b) => order === 'asc' ? a - b : b - a);
+    startYears.forEach(year => out.push(new FiscalYear(year)));
+    return out;
   }
 
   /**

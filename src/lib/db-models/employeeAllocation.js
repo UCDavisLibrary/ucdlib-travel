@@ -355,6 +355,41 @@ class EmployeeAllocation {
   }
 
   /**
+   * @description Get total allocations by start date
+   * @param {Object} kwargs - optional arguments including:
+   * - orderDirection: string - 'asc' or 'desc' (optional) - default 'desc'
+   * @returns {Array|Object} Object with error property if error, otherwise array of objects with the following properties:
+   * - startDate: string - start date in format YYYY-MM-DD
+   * - totalAllocation: number - total allocation for the start date
+   */
+  async getTotalByStartDate(kwargs={}){
+    const orderDirection = kwargs.orderDirection === 'asc' ? 'ASC' : 'DESC';
+    const whereArgs = {'ea.deleted': false};
+    const whereClause = pg.toWhereClause(whereArgs);
+    const query = `
+      SELECT
+        ea.start_date,
+        SUM(ea.amount) AS total_allocation
+      FROM
+        employee_allocation ea
+      WHERE ${whereClause.sql}
+      GROUP BY
+        ea.start_date
+      ORDER BY
+        ea.start_date ${orderDirection};
+    `;
+    const res = await pg.query(query, whereClause.values);
+    if( res.error ) return res;
+
+    const fields = new EntityFields([
+      {dbName: 'start_date', jsonName: 'startDate'},
+      {dbName: 'total_allocation', jsonName: 'totalAllocation'}
+    ]);
+    return fields.toJsonArray(res.res.rows);
+
+  }
+
+  /**
    * @description Get list of employees with their total allocations
    * @param {Object} kwargs - optional arguments including:
    * - startDate: object - {value: string, operator: string} - start date in format YYYY-MM-DD (optional)
