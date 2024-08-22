@@ -33,6 +33,14 @@ class FiscalYearUtils {
   }
 
   /**
+   * @description Get the current fiscal year
+   * @returns {FiscalYear} - The current fiscal year
+   */
+  current(){
+    return this.fromDate();
+  }
+
+  /**
    * @description Get the fiscal year from a start year
    * @param {Number} startYear - The start year of the fiscal year
    * @param {Boolean} suppressError - If true, return null instead of throwing an error
@@ -64,7 +72,7 @@ class FiscalYearUtils {
   }
 
   /**
-   * @description
+   * @description Get a range of fiscal years relative to a date
    * @param {Date|String} date - Date object or iso string. If empty, uses today's date
    * @param {Number} yearsAhead - Number of years ahead of date's FY to include in the range
    * @param {Number} yearsBefore - Number of years before date's FY to include in the range
