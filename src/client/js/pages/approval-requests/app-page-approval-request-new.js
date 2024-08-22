@@ -142,7 +142,8 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
       this.SettingsModel.getByCategory(this.settingsCategory),
       this.LineItemsModel.getActiveLineItems(),
       this.fundingSourceSelectRef.value.init(),
-      this.draftListSelectRef.value.init()
+      this.draftListSelectRef.value.init(),
+      this.allocationSummaryRef.value.init()
     ];
     if ( this.approvalFormId ) {
       promises.push(this.ApprovalRequestModel.query({requestIds: this.approvalFormId}));
