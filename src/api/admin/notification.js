@@ -7,7 +7,7 @@ export default (api) => {
 
   /**
    * @description Get array of notifications
-   * @param {Object} req.body - new line item data
+   * @param {Object} req.body - new notification data
    */
   api.get('/comments-notification', protect('hasBasicAccess'), async (req, res) => {
     const kerberos = req.auth.token.id;
@@ -20,9 +20,11 @@ export default (api) => {
     }
     if( req.auth.token.hasAdminAccess) return res.json(data);
 
-    for(let notice of data.data) {
-      const approvalRequest = await approvalRequest.get({revisionIds: notice.approval_request_revision_id});
 
+    let ids = data.data.map((n) => n.approval_request_revision_id)
+    const approvalRequest = await approvalRequest.get({revisionIds: ids})
+
+    for(let notice of approvalRequest) {
       const isOwnNotifications = notice.employeeKerberos === kerberos;
       const inApprovalChain = approvalRequest.approvalStatusActivity.some(a => a.employeeKerberos === kerberos);
 
@@ -35,7 +37,7 @@ export default (api) => {
 
   /**
    * @description Create a help comments
-   * @param {Object} req.body - new line item data
+   * @param {Object} req.body - new notification data
    */
   api.post('/comments-notification', protect('hasBasicAccess'), async (req, res) => {
     const payload = (typeof req.body === 'object') && !Array.isArray(req.body) ? req.body : {};

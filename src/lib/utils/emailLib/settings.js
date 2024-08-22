@@ -1,11 +1,8 @@
-import emailController from "../../db-models/emailController.js";
-import pg from "../../db-models/pg.js";
 import dbSettings from "../../db-models/settings.js";
 
 /**
- * @class Nodemailer
- * @description Utility class for querying the Settings based on notification type.
- * Does auth. 
+ * @class Settings
+ * @description Get data for email from settings database
  */
 class Settings {
 

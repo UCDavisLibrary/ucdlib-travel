@@ -1,4 +1,3 @@
-// import { appConfig } from "../appGlobals.js";
 import logging from "../utils/emailLib/logging.js"
 import nodemailer from "../utils/emailLib/nodemailer.js"
 import settings from "../utils/emailLib/settings.js"
@@ -8,39 +7,11 @@ import cron from 'node-cron';
 import ApprovalRequest from './approvalRequest.js';
 
 /**
+ * @class Email
  * @description Class for accessing properties of an access token for this client
  */
 class Email {
   constructor(){}
-
-
-  async emailScheduler(){
-    cron.schedule("0 8 * * *", async function(){
-      let approvalRequests = ApprovalRequest.get();
-
-      const ar = approvalRequests.filter((ap) => {
-         if(ap.travelEndDate){
-           if(ap.travelEndDate == this.formatDate()) return true;
-         } else {
-           if(ap.programEndDate == this.formatDate()) return true;
-         }
-       });
-
-      const payloadFundedHours= {
-        "requests": {
-          approvalRequest: ar,
-          reimbursementRequest: {},
-        },
-        token: null,
-        notificationType: 'funded-hours' //notification type
-       }
-    
-      this.sendSystemNotification(payloadFundedHours.notificationType, 
-                                      payloadFundedHours.requests.approvalRequest,
-                                      payloadFundedHours.requests.reimbursementRequest, 
-                                      payloadFundedHours);
-    });
-  }
 
   /**
    * @description run the questions/comments help email function
@@ -49,7 +20,7 @@ class Email {
    * @param {Object} body - Email Body
    * @param {Object} url - of request or reimbursement URL
    * @param {Object} payload - The object with email content and comments
-  * @returns {Object} status, id
+   * @returns {Object} status, id
    */
    async sendHelpEmail(sender, sub, body, url, payload) {
     let requests = payload.requests;
@@ -93,6 +64,8 @@ class Email {
     };
   
     let result = await logging.addNotificationLogging(notification);
+
+    if (result.error){ console.error('error logging notification', result) }
 
     return emailSent;
   }
@@ -170,6 +143,11 @@ class Email {
     return result;
   }
 
+  /**
+   * @description formats the date either given or automatically the day
+   * @param {String} date - date given
+   * @returns {Array} year, day, month
+   */
   formatDate(date = '') {
     
     let d = (date == '') ? new Date() : new Date(date);
@@ -188,8 +166,7 @@ class Email {
   /**
    * @description get the email function
    * @param {String} query - The role to check for
-   * @param {Array|String} accessType - The role location. Can be 'realm', 'resource', or both.
-   * @returns
+   * @returns {Object} res
    */
   async getHistory(query={}){
     //Format query if exists
@@ -198,6 +175,34 @@ class Email {
     let res = await logging.getNotificationLogging(query);
 
     return res;
+  }
+
+  /**
+   * @description schedule emails on a day
+   */
+  async emailScheduler(){
+    if(serverConfig.email.enableCron) {
+      let approvalRequests = await ApprovalRequest.get({programEndDate: this.formatDate(), pageSize: -1});
+       
+      for(let ar of approvalRequests.data) {
+          const payloadFundedHours= {
+            "requests": {
+              approvalRequest: ar,
+              reimbursementRequest: {},
+            },
+            token: null,
+            notificationType: 'funded-hours' //notification type
+          }
+          
+          cron.schedule("0 8 * * *", async () => {   
+            await this.sendSystemNotification(payloadFundedHours.notificationType, 
+              payloadFundedHours.requests.approvalRequest, 
+              payloadFundedHours.requests.reimbursementRequest, 
+              payloadFundedHours);
+          });
+      }  
+
+    }
   }
   
 }

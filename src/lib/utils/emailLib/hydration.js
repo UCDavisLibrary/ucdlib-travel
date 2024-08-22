@@ -4,8 +4,7 @@ import settings from "./settings.js";
 
 /**
  * @class Hydration
- * @description Utility class for querying the .
- * Does auth.
+ * @description Utility class for hydrating the email text based on type.
  */
 export default class Hydration {
 

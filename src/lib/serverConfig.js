@@ -59,7 +59,8 @@ class ServerConfig {
       secure: this.getEnv('APP_SMTP_SECURE', false),
       enabled: this.getEnv('APP_SEND_EMAIL_NOTIFICATIONS', false),
       systemEmailAddress: this.getEnv('APP_SMTP_SYSTEM_EMAIL_ADDRESS', ''),
-      notificationRecipient: this.getEnv('APP_SMTP_NOTIFICATION_EMAIL_ADDRESS', '')
+      notificationRecipient: this.getEnv('APP_SMTP_NOTIFICATION_EMAIL_ADDRESS', ''),
+      enableCron: this.getEnv('APP_SMTP_ENABLE_CRON', false)
     }
     
     this.logger = {

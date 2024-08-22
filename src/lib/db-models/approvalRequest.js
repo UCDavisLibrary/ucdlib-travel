@@ -237,6 +237,22 @@ class ApprovalRequest {
       whereArgs['ar.approval_status'] = kwargs.approvalStatus;
     }
 
+    if ( kwargs.programEndDate ){
+      whereArgs['ar.program_end_date'] = kwargs.programEndDate;
+    }
+
+    if ( kwargs.programStartDate ){
+      whereArgs['ar.program_start_date'] = kwargs.programStartDate;
+    }
+
+    if ( kwargs.travelEndDate ){
+      whereArgs['ar.travel_end_date'] = kwargs.travelEndDate;
+    }
+
+    if ( kwargs.travelStartDate ){
+      whereArgs['ar.travel_start_date'] = kwargs.travelStartDate;
+    }
+
     if ( kwargs.isCurrent ){
       whereArgs['ar.is_current'] = true;
     } else if ( kwargs.isNotCurrent ){
@@ -567,19 +583,41 @@ class ApprovalRequest {
     }
     out = out.data[0];
 
-    const payloadRequest = {
-      "requests": {
-        approvalRequest: out.data[0],
-        reimbursementRequest: {},
-      },
-      notificationType: 'request'
+    if(out.approvalStatus !== 'draft') {
+
+      //Email request
+      const payloadRequest = {
+        "requests": {
+          approvalRequest: out,
+          reimbursementRequest: {},
+        },
+        notificationType: 'request'
+      }
+
+      await emailController.sendSystemNotification( 
+        payloadRequest.notificationType, 
+        payloadRequest.approvalRequest, 
+        payloadRequest.reimbursementRequest, 
+        payloadRequest
+      );
+
+
+      //Email first approver
+      const payloadNextApprover = {
+        "requests": {
+          approvalRequest: out.data[0],
+          reimbursementRequest: {},
+        },
+        notificationType: 'next-approver'
+      }
+      
+      await emailController.sendSystemNotification( 
+        payloadNextApprover.notificationType, 
+        payloadNextApprover.approvalRequest, 
+        payloadNextApprover.reimbursementRequest, 
+        payloadNextApprover
+      );
     }
-    
-    emailController.sendSystemNotification( payloadRequest.notificationType, 
-                                            payloadRequest.approvalRequest, 
-                                            payloadRequest.reimbursementRequest, 
-                                            payloadRequest
-                                          );
 
     return out;
 
@@ -889,19 +927,44 @@ class ApprovalRequest {
       client.release();
     }
 
+    // get and return full record that was just created
+    out = await this.get({revisionIds: [approvalRequestRevisionId]});
+    if ( out.error ) {
+      return out;
+    }
+    out = out.data[0];
+
     const payloadRequest = {
       "requests": {
-        approvalRequest: approvalRequest,
+        approvalRequest: out,
         reimbursementRequest: {},
       },
       notificationType: 'request'
     }
+
+    await emailController.sendSystemNotification( 
+      payloadRequest.notificationType, 
+      payloadRequest.approvalRequest, 
+      payloadRequest.reimbursementRequest, 
+      payloadRequest
+    );
+
+
+    //Email first approver
+    const payloadNextApprover = {
+      "requests": {
+        approvalRequest: out.data[0],
+        reimbursementRequest: {},
+      },
+      notificationType: 'next-approver'
+    }
     
-    emailController.sendSystemNotification( payloadRequest.notificationType, 
-                                            payloadRequest.approvalRequest, 
-                                            payloadRequest.reimbursementRequest, 
-                                            payloadRequest
-                                          );
+    await emailController.sendSystemNotification( 
+      payloadNextApprover.notificationType, 
+      payloadNextApprover.approvalRequest, 
+      payloadNextApprover.reimbursementRequest, 
+      payloadNextApprover
+    );
 
     return {success: true, approvalRequestId, approvalRequestRevisionId};
   }
@@ -1093,33 +1156,52 @@ class ApprovalRequest {
       client.release();
     }
 
-
-    let lastApprover = approvalRequest.approvalStatusActivity.pop();
-
-    if(action.value == 'approve'){
-      if(lastApprover.employeeKerberos === approverKerberos){
-        notification = 'chain-completed';
-      } else {
-        notification = 'next-approver';
-      }
-    } else if (action.value == 'approve-with-changes' || action.value == 'deny' || action.value == 'request-revision') {
-      notification = 'approver-change';
+    out = await this.get({revisionIds: [approvalRequestRevisionId]});
+    if ( out.error ) {
+      return out;
     }
+
+    out = out.data[0];    
     
+    let lastApprover = out.approvalStatusActivity.filter(a => a.action === 'approval-needed').pop();
+
+
     const payloadApprover = {
       "requests": {
         approvalRequest: approvalRequest,
         reimbursementRequest: {},
       },
       token: approverKerberos,
-      notificationType: notification
     }
 
-    emailController.sendSystemNotification( payloadApprover.notificationType, 
-      payloadApprover.approvalRequest, 
-      payloadApprover.reimbursementRequest, 
-      payloadApprover
-    );
+    if(action.value == 'approve' || action.value == 'approve-with-changes'){
+      if(lastApprover.employeeKerberos === approverKerberos){
+        notification = 'chain-completed';
+      } else {
+        notification = 'next-approver';
+      }
+
+      payloadApprover.notificationType = notification
+  
+      await emailController.sendSystemNotification( payloadApprover.notificationType, 
+        payloadApprover.approvalRequest, 
+        payloadApprover.reimbursementRequest, 
+        payloadApprover
+      );
+
+    } 
+    
+    if (action.value == 'approve-with-changes' || action.value == 'deny' || action.value == 'request-revision') {
+      notification = 'approver-change';
+
+      payloadApprover.notificationType = notification
+
+      await emailController.sendSystemNotification( payloadApprover.notificationType, 
+        payloadApprover.approvalRequest, 
+        payloadApprover.reimbursementRequest, 
+        payloadApprover
+      );
+    }
 
     return {success: true, approvalRequestId, approvalRequestRevisionId};
 

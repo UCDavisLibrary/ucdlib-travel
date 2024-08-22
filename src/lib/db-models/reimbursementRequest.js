@@ -428,7 +428,10 @@ class ReimbursementRequest {
 
     if ( out.error ) return out;
 
-    let rr = this.get({reimbursementRequestIds: [reimbursementRequestId]});
+    let rr = await this.get({reimbursementRequestIds: [reimbursementRequestId]});
+
+    if (rr.error){ console.error('error retrieving reimbursement', rr) }
+
 
     const payloadSubmitReimbursement = {
       "requests": {
@@ -439,7 +442,7 @@ class ReimbursementRequest {
       notificationType: 'submit-reimbursement'
     }
 
-    emailController.sendSystemNotification( payloadSubmitReimbursement.notificationType, 
+    await emailController.sendSystemNotification( payloadSubmitReimbursement.notificationType, 
       payloadSubmitReimbursement.approvalRequest, 
       payloadSubmitReimbursement.reimbursementRequest, 
       payloadSubmitReimbursement
