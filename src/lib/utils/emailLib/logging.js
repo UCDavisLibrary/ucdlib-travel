@@ -1,11 +1,9 @@
-import serverConfig from "../../serverConfig.js";
 import pg from "../../db-models/pg.js";
 import EntityFields from "../EntityFields.js";
 
 /**
  * @class Logging
- * @description Utility class for querying the library IAM API.
- * Does auth.
+ * @description Accessing the notification database and log to the notification database
  */
 class Logging {
 
