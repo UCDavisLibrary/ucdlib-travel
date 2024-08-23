@@ -474,7 +474,6 @@ class ApprovalRequest {
    * @returns {Object}
    */
   async createRevision(data, submittedBy, forceValidation){
-
     // if submittedBy is provided, assign approval request revision to that employee
     if ( submittedBy ){
       data.employee = submittedBy;
@@ -582,42 +581,6 @@ class ApprovalRequest {
       return out;
     }
     out = out.data[0];
-
-    if(out.approvalStatus !== 'draft') {
-
-      //Email request
-      const payloadRequest = {
-        "requests": {
-          approvalRequest: out,
-          reimbursementRequest: {},
-        },
-        notificationType: 'request'
-      }
-
-      await emailController.sendSystemNotification( 
-        payloadRequest.notificationType, 
-        payloadRequest.approvalRequest, 
-        payloadRequest.reimbursementRequest, 
-        payloadRequest
-      );
-
-
-      //Email first approver
-      const payloadNextApprover = {
-        "requests": {
-          approvalRequest: out.data[0],
-          reimbursementRequest: {},
-        },
-        notificationType: 'next-approver'
-      }
-      
-      await emailController.sendSystemNotification( 
-        payloadNextApprover.notificationType, 
-        payloadNextApprover.approvalRequest, 
-        payloadNextApprover.reimbursementRequest, 
-        payloadNextApprover
-      );
-    }
 
     return out;
 
@@ -928,6 +891,30 @@ class ApprovalRequest {
     }
 
     // get and return full record that was just created
+    let out = await this.get({revisionIds: [approvalRequestRevisionId]});
+    if ( out.error ) {
+      return out;
+    }
+    out = out.data[0];
+
+    // get max approver order
+    let sql = `SELECT MAX(approver_order) as max_order FROM approval_request_approval_chain_link WHERE approval_request_revision_id = $1`;
+    const maxOrderRes = await client.query(sql, [approvalRequestRevisionId]);
+    const maxOrder = maxOrderRes.rows[0].max_order || 0;
+
+    // insert submission to approval status activity table
+    let dataNotification = {
+      approval_request_revision_id: approvalRequestRevisionId,
+      approver_order: maxOrder + 1,
+      action: "notification",
+      employee_kerberos: out.employeeKerberos
+    }
+    dataNotification = pg.prepareObjectForInsert(dataNotification);
+    sql = `INSERT INTO approval_request_approval_chain_link (${dataNotification.keysString}) VALUES (${dataNotification.placeholdersString}) RETURNING approval_request_approval_chain_link_id`;
+    await client.query(sql, dataNotification.values);
+    //const approvalRequestApprovalChainLinkId = chainRes.rows[0].approval_request_approval_chain_link_id;
+    
+
     out = await this.get({revisionIds: [approvalRequestRevisionId]});
     if ( out.error ) {
       return out;
@@ -935,25 +922,23 @@ class ApprovalRequest {
     out = out.data[0];
 
     const payloadRequest = {
-      "requests": {
+      requests: {
         approvalRequest: out,
         reimbursementRequest: {},
       },
       notificationType: 'request'
     }
 
-    await emailController.sendSystemNotification( 
-      payloadRequest.notificationType, 
-      payloadRequest.approvalRequest, 
-      payloadRequest.reimbursementRequest, 
-      payloadRequest
-    );
+    await emailController.sendSystemNotification(payloadRequest.notificationType, 
+                                                 payloadRequest.requests.approvalRequest, 
+                                                 payloadRequest.requests.reimbursementRequest, 
+                                                 payloadRequest);
 
 
     //Email first approver
     const payloadNextApprover = {
-      "requests": {
-        approvalRequest: out.data[0],
+      requests: {
+        approvalRequest: out,
         reimbursementRequest: {},
       },
       notificationType: 'next-approver'
@@ -961,8 +946,8 @@ class ApprovalRequest {
     
     await emailController.sendSystemNotification( 
       payloadNextApprover.notificationType, 
-      payloadNextApprover.approvalRequest, 
-      payloadNextApprover.reimbursementRequest, 
+      payloadNextApprover.requests.approvalRequest, 
+      payloadNextApprover.requests.reimbursementRequest, 
       payloadNextApprover
     );
 
@@ -1161,7 +1146,29 @@ class ApprovalRequest {
       return out;
     }
 
-    out = out.data[0];    
+    out = out.data[0]; 
+    
+    // get max approver order
+    let sql = `SELECT MAX(approver_order) as max_order FROM approval_request_approval_chain_link WHERE approval_request_revision_id = $1`;
+    const maxOrderRes = await client.query(sql, [approvalRequestRevisionId]);
+    const maxOrder = maxOrderRes.rows[0].max_order || 0;
+
+    // insert submission to approval status activity table
+    let dataNotification = {
+      approval_request_revision_id: approvalRequestRevisionId,
+      approver_order: maxOrder + 1,
+      action: "notification",
+      employee_kerberos: out.employeeKerberos
+    }
+    dataNotification = pg.prepareObjectForInsert(dataNotification);
+    sql = `INSERT INTO approval_request_approval_chain_link (${dataNotification.keysString}) VALUES (${dataNotification.placeholdersString}) RETURNING approval_request_approval_chain_link_id`;
+    await client.query(sql, dataNotification.values);
+
+    out = await this.get({revisionIds: [approvalRequestRevisionId]});
+    if ( out.error ) {
+      return out;
+    }
+    out = out.data[0];
     
     let lastApprover = out.approvalStatusActivity.filter(a => a.action === 'approval-needed').pop();
 
@@ -1184,8 +1191,8 @@ class ApprovalRequest {
       payloadApprover.notificationType = notification
   
       await emailController.sendSystemNotification( payloadApprover.notificationType, 
-        payloadApprover.approvalRequest, 
-        payloadApprover.reimbursementRequest, 
+        payloadApprover.requests.approvalRequest, 
+        payloadApprover.requests.reimbursementRequest, 
         payloadApprover
       );
 
@@ -1197,8 +1204,8 @@ class ApprovalRequest {
       payloadApprover.notificationType = notification
 
       await emailController.sendSystemNotification( payloadApprover.notificationType, 
-        payloadApprover.approvalRequest, 
-        payloadApprover.reimbursementRequest, 
+        payloadApprover.requests.approvalRequest, 
+        payloadApprover.requests.reimbursementRequest, 
         payloadApprover
       );
     }
