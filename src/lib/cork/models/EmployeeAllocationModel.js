@@ -65,6 +65,7 @@ class EmployeeAllocationModel extends BaseModel {
     const state = this.store.data.employeeAllocationsCreated[timestamp];
     if ( state && state.state === 'loaded' ) {
       this.store.data.fetched = {};
+      this.store.data.filters = {};
     }
     return state;
   }
@@ -81,6 +82,7 @@ class EmployeeAllocationModel extends BaseModel {
     const state = this.store.data.deleted[timestamp];
     if ( state && state.state === 'loaded' ) {
       this.store.data.fetched = {};
+      this.store.data.filters = {};
     }
     return state;
   }
@@ -98,6 +100,23 @@ class EmployeeAllocationModel extends BaseModel {
       }
     } catch(e) {}
     return this.store.data.filters;
+  }
+
+  async getUserAllocationsSummary(query={}) {
+    const queryString = urlUtils.queryObjectToKebabString(query);
+
+    let state = this.store.data.userSummary[queryString];
+    try {
+      if( state && state.state === 'loading' ) {
+        await state.request;
+      } else {
+        await this.service.userSummary(queryString);
+      }
+    } catch(e) {}
+
+    this.store.emit(this.store.events.USER_ALLOCATIONS_SUMMARY_REQUESTED, this.store.data.userSummary[queryString]);
+
+    return this.store.data.userSummary[queryString];
   }
 
 }

@@ -50,6 +50,7 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
     this.expenditureOptions = [];
     this.fundingSourceSelectRef = createRef();
     this.draftListSelectRef = createRef();
+    this.allocationSummaryRef = createRef();
     this.waitController = new WaitController(this);
 
     this._injectModel(
@@ -141,7 +142,8 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
       this.SettingsModel.getByCategory(this.settingsCategory),
       this.LineItemsModel.getActiveLineItems(),
       this.fundingSourceSelectRef.value.init(),
-      this.draftListSelectRef.value.init()
+      this.draftListSelectRef.value.init(),
+      this.allocationSummaryRef.value.init()
     ];
     if ( this.approvalFormId ) {
       promises.push(this.ApprovalRequestModel.query({requestIds: this.approvalFormId}));
