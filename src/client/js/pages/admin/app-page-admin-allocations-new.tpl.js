@@ -43,7 +43,20 @@ export function render() {
     <form @submit=${this._onFormSubmit}>
       <fieldset>
         <legend>Allocation</legend>
-        <div class="l-2col">
+        <div class="field-container ${this.validationHandler.errorClass('startDate')}">
+          <label for="${page}--from">Fiscal Year <abbr title="Required">*</abbr></label>
+          <select @input=${(e) => this._setFiscalYear(e.target.value)} .value=${this._selectedFiscalYear.startYear}>
+            ${this._fiscalYears.map(fiscalYear => html`
+              <option
+                value=${fiscalYear.startYear}
+                ?selected=${this._selectedFiscalYear.startYear === fiscalYear.startYear}
+                >
+                ${fiscalYear.label}
+              </option>
+              `)}
+          </select>
+        </div>
+        <div class="l-2col" hidden>
           <div class="l-first">
             <div class="field-container ${this.validationHandler.errorClass('startDate')}">
               <label for="${page}--from">From <abbr title="Required">*</abbr></label>

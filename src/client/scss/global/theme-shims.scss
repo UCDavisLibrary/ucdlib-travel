@@ -20,3 +20,17 @@
     width: 100%;
   }
 }
+
+.tabs {
+
+  .tabs__item {
+    background-color: transparent;
+  }
+
+  .tabs__item--active {
+    background-color: #13639e;
+    color: #fff;
+  }
+
+}
+

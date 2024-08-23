@@ -9,15 +9,47 @@ class EmployeeAllocationStore extends BaseStore {
       employeeAllocationsCreated: {},
       filters: {},
       fetched: {},
-      deleted: {}
+      deleted: {},
+      userSummary: {}
     };
     this.events = {
       EMPLOYEE_ALLOCATIONS_CREATED: 'employee-allocations-created',
       EMPLOYEE_ALLOCATIONS_FILTERS_FETCHED: 'employee-allocations-filters-fetched',
       EMPLOYEE_ALLOCATIONS_FETCHED: 'employee-allocations-fetched',
       EMPLOYEE_ALLOCATIONS_REQUESTED: 'employee-allocations-requested',
-      EMPLOYEE_ALLOCATIONS_DELETED: 'employee-allocations-deleted'
+      EMPLOYEE_ALLOCATIONS_DELETED: 'employee-allocations-deleted',
+      USER_ALLOCATIONS_SUMMARY_FETCHED: 'user-allocations-summary-fetched',
+      USER_ALLOCATIONS_SUMMARY_REQUESTED: 'user-allocations-summary-requested'
     };
+  }
+
+  userAllocationsSummaryRequestedLoading(request, query) {
+    this._setUserAllocationsSummaryRequestedState({
+      state : this.STATE.LOADING,
+      request,
+      query
+    });
+  }
+
+  userAllocationsSummaryRequestedLoaded(payload, query) {
+    this._setUserAllocationsSummaryRequestedState({
+      state : this.STATE.LOADED,
+      payload,
+      query
+    });
+  }
+
+  userAllocationsSummaryRequestedError(error, query) {
+    this._setUserAllocationsSummaryRequestedState({
+      state : this.STATE.ERROR,
+      error,
+      query
+    });
+  }
+
+  _setUserAllocationsSummaryRequestedState(state) {
+    this.data.userSummary[state.query] = state;
+    this.emit(this.events.USER_ALLOCATIONS_SUMMARY_REQUESTED, state);
   }
 
   employeeAllocationsDeletedLoading(request, timestamp) {
