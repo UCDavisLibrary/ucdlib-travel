@@ -212,6 +212,16 @@ class ApplicationOptions {
         iconClass: 'fa-solid fa-rotate-left',
         brandColor: 'secondary',
         warningText: `Recalling this request will revoke all approvals, return the request to 'draft' status, and require you to resubmit.`
+      },
+      {
+        value: 'notification',
+        label: 'Notification',
+        actor: 'submitter',
+        resultingStatus: 'notified',
+        actionTakenText: 'System has sent a notification.',
+        byLine: 'Notification Sent By:',
+        iconClass: 'fa fa-envelope',
+        brandColor: 'quad',
       }
     ];
   }
@@ -241,6 +251,14 @@ class ApplicationOptions {
         byLine: 'Updated By:',
         iconClass: 'fa-solid fa-money-bill-transfer',
         brandColor: 'pinot'
+      },
+      {
+        value: 'notification',
+        label: 'Notification',
+        actionTakenText: 'System has sent a notification.',
+        byLine: 'Notification Sent By:',
+        iconClass: 'fa fa-envelope',
+        brandColor: 'quad',
       }
     ]
   }

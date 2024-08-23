@@ -20,7 +20,7 @@ setUpStaticRoutes(app);
 // setup uploads routes
 uploads.setUpRoutes(app);
 
-emailController.emailScheduler();
+emailController.emailDailyRunner();
 
 const port = serverConfig.port.container;
 app.listen(port, () => {

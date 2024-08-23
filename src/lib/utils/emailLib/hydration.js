@@ -44,6 +44,7 @@ export default class Hydration {
   * @returns approver list
 */
 approvers(){
+  //if(Object.keys(this.approvalRequest).length === 0) return; 
   if(this.type == "request" || this.type == "next-approver") return this.approvalRequest.approvalStatusActivity.filter(x => x.action == 'approval-needed');
   if(this.type == "request-cancel") return this.approvalRequest.approvalStatusActivity.filter(x => (x.action == 'approved') || (x.action == 'approved-with-changes'));
 
