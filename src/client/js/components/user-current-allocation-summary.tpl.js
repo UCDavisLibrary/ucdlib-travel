@@ -1,10 +1,18 @@
 import { html } from 'lit';
 import typeTransform from '../../../lib/utils/typeTransform.js';
 
+/**
+ * @description main render function for the component
+ * @returns {TemplateResult}
+ */
 export function render() {
 return html`
   <div class="panel panel--icon panel--icon-custom panel--icon-tahoe">
-    <h2 class="panel__title"><i class="panel__custom-icon fas fa-money-bill-wave tahoe"></i>Your Allocations</h2>
+    <h2 class="panel__title">
+      <i class="panel__custom-icon fas fa-money-bill-wave tahoe"></i>
+      <span ?hidden=${this.forAnother}>Your Allocations</span>
+      <span ?hidden=${!this.forAnother}>Employee Allocations</span>
+    </h2>
     <div class='u-space-mb'>${this.introText}</div>
     <div>
       <ul class='tabs tabs--secondary'>
@@ -23,17 +31,24 @@ return html`
             <div>
               <div class='flex flex--space-between flex--align-center small'>
                 <div>Allocated</div>
-                <div class='monospace-number'>$${typeTransform.toDollarString(fund.employeeAllocation)}</div>
+                <div class='monospace-number'>+ $${typeTransform.toDollarString(fund.employeeAllocation)}</div>
               </div>
               <div class='flex flex--space-between flex--align-center small'>
-                <div>Spent/Requested</div>
-                <div class='monospace-number'>$${typeTransform.toDollarString(fund.employeeProjected + fund.employeeReimbursed)}</div>
+                <div>Reimbursed</div>
+                <div class='monospace-number'>- $${typeTransform.toDollarString(fund.employeeReimbursed)}</div>
               </div>
               <div class='flex flex--space-between flex--align-center small'>
+                <div>Projected</div>
+                <div class='monospace-number'>- $${typeTransform.toDollarString(fund.employeeProjected)}</div>
+              </div>
+              <div class='flex flex--space-between flex--align-center small' ?hidden=${!fund.approvalRequestTotal}>
+                <div>This Request</div>
+                <div class='monospace-number'>- $${typeTransform.toDollarString(fund.approvalRequestTotal)}</div>
+              </div>
+              <div class='flex flex--space-between flex--align-center small bold'>
                 <div>Remaining</div>
-                <div class='monospace-number'>$${typeTransform.toDollarString(fund.employeeAllocation - (fund.employeeProjected + fund.employeeReimbursed))}</div>
+                <div class='monospace-number ${fund.employeeRemainingIsNegative ? 'double-decker' : 'quad'}'>${fund.employeeRemainingIsNegative ? '-' : '+'} $${typeTransform.toDollarString(fund.employeeRemainingAbs)}</div>
               </div>
-
             </div>
           </div>
           `)}

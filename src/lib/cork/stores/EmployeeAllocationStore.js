@@ -5,13 +5,8 @@ class EmployeeAllocationStore extends BaseStore {
   constructor() {
     super();
 
-    this.data = {
-      employeeAllocationsCreated: {},
-      filters: {},
-      fetched: {},
-      deleted: {},
-      userSummary: {}
-    };
+    this.clearCache();
+    
     this.events = {
       EMPLOYEE_ALLOCATIONS_CREATED: 'employee-allocations-created',
       EMPLOYEE_ALLOCATIONS_FILTERS_FETCHED: 'employee-allocations-filters-fetched',
@@ -20,6 +15,16 @@ class EmployeeAllocationStore extends BaseStore {
       EMPLOYEE_ALLOCATIONS_DELETED: 'employee-allocations-deleted',
       USER_ALLOCATIONS_SUMMARY_FETCHED: 'user-allocations-summary-fetched',
       USER_ALLOCATIONS_SUMMARY_REQUESTED: 'user-allocations-summary-requested'
+    };
+  }
+
+  clearCache(){
+    this.data = {
+      employeeAllocationsCreated: {},
+      filters: {},
+      fetched: {},
+      deleted: {},
+      userSummary: {}
     };
   }
 

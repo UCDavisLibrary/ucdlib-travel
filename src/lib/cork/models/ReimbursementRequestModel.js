@@ -16,7 +16,7 @@ class ReimbursementRequestModel extends BaseModel {
     this.service = ReimbursementRequestService;
 
     this.register('ReimbursementRequestModel');
-    this.inject('ApprovalRequestModel');
+    this.inject('ApprovalRequestModel', 'EmployeeAllocationModel');
   }
 
   /**
@@ -32,6 +32,7 @@ class ReimbursementRequestModel extends BaseModel {
     if ( state && state.state === 'loaded' ) {
       this.store.data.fetched = {};
       this.ApprovalRequestModel.clearCache();
+      this.EmployeeAllocationModel.store.clearCache();
     }
     return state;
   }
@@ -74,6 +75,7 @@ class ReimbursementRequestModel extends BaseModel {
       this.store.data.transactionsFetched = {};
       this.store.data.fetched = {};
       this.ApprovalRequestModel.clearCache();
+      this.EmployeeAllocationModel.store.clearCache();
     }
     return state;
   }
@@ -93,6 +95,7 @@ class ReimbursementRequestModel extends BaseModel {
       this.store.data.transactionsFetched = {};
       this.store.data.fetched = {};
       this.ApprovalRequestModel.clearCache();
+      this.EmployeeAllocationModel.store.clearCache();
     }
     return state;
   }
