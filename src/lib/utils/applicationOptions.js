@@ -214,14 +214,24 @@ class ApplicationOptions {
         warningText: `Recalling this request will revoke all approvals, return the request to 'draft' status, and require you to resubmit.`
       },
       {
-        value: 'notification',
-        label: 'Notification',
+        value: 'request-notification',
+        label: 'Requester Notification',
         actor: 'submitter',
-        resultingStatus: 'notified',
-        actionTakenText: 'System has sent a notification.',
-        byLine: 'Notification Sent By:',
-        iconClass: 'fa fa-envelope',
+        resultingStatus: 'requester-notified',
+        actionTakenText: 'System has sent a notification about request.',
+        byLine: 'Requester Notification Sent By:',
+        iconClass: 'fa-solid fa-envelope',
         brandColor: 'quad',
+      },
+      {
+        value: 'approver-notification',
+        label: 'Approver Notification',
+        actor: 'approver',
+        resultingStatus: 'approver-notified',
+        actionTakenText: 'System has sent a notification to an approver.',
+        byLine: 'Approver Notification Sent By:',
+        iconClass: 'fa-solid fa-rotate-left',
+        brandColor: 'cabernet',
       }
     ];
   }
@@ -253,12 +263,12 @@ class ApplicationOptions {
         brandColor: 'pinot'
       },
       {
-        value: 'notification',
-        label: 'Notification',
-        actionTakenText: 'System has sent a notification.',
-        byLine: 'Notification Sent By:',
-        iconClass: 'fa fa-envelope',
-        brandColor: 'quad',
+        value: 'reimbursement-notification',
+        label: 'Reimbursement Notification',
+        actionTakenText: 'System has sent a notification to reimbursement requester.',
+        byLine: 'Reimbursement Notification Sent By:',
+        iconClass: 'fa-solid fa-rotate-left',
+        brandColor: 'poppy',
       }
     ]
   }
