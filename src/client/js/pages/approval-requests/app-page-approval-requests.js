@@ -30,6 +30,7 @@ export default class AppPageApprovalRequests extends Mixin(LitElement)
     this.page = 1;
     this.approvalRequests = [];
     this.draftListSelectRef = createRef();
+    this.allocationSummaryRef = createRef();
     this.waitController = new WaitController(this);
 
     this._injectModel('AppStateModel', 'ApprovalRequestModel', 'AuthModel');
@@ -79,6 +80,7 @@ export default class AppPageApprovalRequests extends Mixin(LitElement)
 
     const promises = [
       this.ApprovalRequestModel.query(this.queryArgs),
+      this.allocationSummaryRef.value.init(),
       this.draftListSelectRef.value.init()
     ]
     const resolvedPromises = await Promise.allSettled(promises);

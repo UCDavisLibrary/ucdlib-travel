@@ -6,6 +6,7 @@ import EntityFields from "../utils/EntityFields.js";
 import objectUtils from "../utils/objectUtils.js";
 import employeeModel from "./employee.js";
 import typeTransform from "../utils/typeTransform.js";
+import fiscalYearUtils from "../utils/fiscalYearUtils.js";
 
 class ReimbursementRequest {
   constructor(){
@@ -783,6 +784,76 @@ class ReimbursementRequest {
       out.push(d);
     }
     return out;
+  }
+
+  /**
+   * @description Get total reimbursement request reimbursement amount grouped by funding source and employee
+   * @param {*} query 
+   */
+  async getTotalFundingSourceExpendituresByEmployee(query={}){
+    const whereArgs = {'1': '1'};
+
+    if ( query.employees ){
+      whereArgs['ar.employee_kerberos'] = query.employees;
+    }
+
+    const fiscalYear = fiscalYearUtils.fromStartYear(query.fiscalYear, true);
+    if ( fiscalYear ){
+      whereArgs['fy_start'] = {relation: 'AND', 'ar.program_start_date' : {operator: '>=', value: fiscalYear.startDate({isoDate: true})}};
+      whereArgs['fy_end'] = {relation: 'AND', 'ar.program_start_date' : {operator: '<=', value: fiscalYear.endDate({isoDate: true})}};
+    }
+
+    if ( query.approvalRequestReimbursementStatus ){
+      whereArgs['ar.reimbursement_status'] = query.approvalRequestReimbursementStatus;
+    }
+
+    if ( query.reimbursementRequestStatus ){
+      whereArgs['rr.status'] = query.reimbursementRequestStatus;
+    }
+
+    const whereClause = pg.toWhereClause(whereArgs);
+    const sql = `
+      SELECT
+        ar.employee_kerberos,
+        arfs.funding_source_id,
+        SUM(rrf.amount) as total_expenditures
+      FROM
+        reimbursement_request_fund rrf
+      LEFT JOIN
+        reimbursement_request rr ON rrf.reimbursement_request_id = rr.reimbursement_request_id
+      LEFT JOIN
+        approval_request ar ON rr.approval_request_id = ar.approval_request_id
+      LEFT JOIN
+        approval_request_funding_source arfs ON rrf.approval_request_funding_source_id = arfs.approval_request_funding_source_id
+      WHERE
+        ${whereClause.sql}
+      GROUP BY
+        ar.employee_kerberos,
+        arfs.funding_source_id
+    `;
+    const res = await pg.query(sql, whereClause.values);
+    if ( res.error ) return res;
+
+    const fields = new EntityFields([
+      {
+        dbName: 'employee_kerberos',
+        jsonName: 'employeeKerberos'
+      },
+      {
+        dbName: 'funding_source_id',
+        jsonName: 'fundingSourceId'
+      },
+      {
+        dbName: 'total_expenditures',
+        jsonName: 'totalExpenditures'
+      }
+    ]);
+
+    return fields.toJsonArray(res.res.rows).map(row => {
+      row.totalExpenditures = typeTransform.toPositiveNumber(row.totalExpenditures) || 0;
+      return row;
+    });
+
   }
 }
 
