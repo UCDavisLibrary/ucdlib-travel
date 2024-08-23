@@ -102,6 +102,14 @@ class EmployeeAllocationModel extends BaseModel {
     return this.store.data.filters;
   }
 
+  /**
+   * @description Get user allocations summary by fiscal year
+   * @param {Object} query - query object with the following properties:
+   * - fiscalYears {Array} - array of fiscal years. at least one is required
+   * - approvalRequestId {String} - id of approval request to add to the summary. optional.
+   *    If submitter of approval request does not match the token-holder, then summary will be for approval request submitter.
+   *    Current user must be authorized to view the approval request.
+   */
   async getUserAllocationsSummary(query={}) {
     const queryString = urlUtils.queryObjectToKebabString(query);
 

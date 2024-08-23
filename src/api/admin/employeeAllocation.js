@@ -1,8 +1,11 @@
 import employeeAllocation from "../../lib/db-models/employeeAllocation.js";
 import approvalRequest from "../../lib/db-models/approvalRequest.js";
+import reimbursementRequest from "../../lib/db-models/reimbursementRequest.js";
 import apiUtils from "../../lib/utils/apiUtils.js";
+import urlUtils from "../../lib/utils/urlUtils.js";
 import protect from "../../lib/protect.js";
 import fiscalYearUtils from "../../lib/utils/fiscalYearUtils.js";
+import typeTransform from "../../lib/utils/typeTransform.js";
 
 export default (api) => {
 
@@ -36,10 +39,19 @@ export default (api) => {
     return res.json(data);
   });
 
+  /**
+   * @description Get a summary of employee allocations for a user by fiscal year
+   * @param {String} req.query.fiscalYears - comma-separated list of fiscal years. at least one is required.
+   * @param {Number} req.query.approvalRequestId - optional approval request id to include in the summary. Must not be in 'approved' state.
+   * @returns {Object} - A summary of the user's allocations by fiscal year
+   */
   api.get('/employee-allocation/user-summary', protect('hasBasicAccess'), async (req, res) => {
-    const kerberos = req.auth.token.id;
+    let employeeKerberos = req.auth.token.id;
+    let forAnotherUser = false;
+
+    const reqQuery = urlUtils.queryToCamelCase(req.query);
     
-    const fiscalYears = apiUtils.explode(req.query['fiscal-years'], true)
+    const fiscalYears = apiUtils.explode(reqQuery.fiscalYears, true)
       .map(year => fiscalYearUtils.fromStartYear(year, true))
       .filter(fy => fy !== null);
 
@@ -48,12 +60,44 @@ export default (api) => {
     }
     const startYears = fiscalYears.map(fy => fy.startYear);
 
+    // get approval request data if an approval request id is provided
+    let approvalRequestFundingSources = [];
+    let approvalRequestFiscalYear;
+    const approvalRequestId = typeTransform.toPositiveInt(reqQuery.approvalRequestId);
+    if ( approvalRequestId ) {
+      let ap = await approvalRequest.get({isCurrent: true, requestIds: [approvalRequestId]});
+      if ( ap.error ) {
+        console.error('Error in GET /employee-allocation/user-summary', ap.error);
+        return res.status(500).json({error: true, message: 'Error getting user allocation summary.'});
+      }
+      if ( !ap.total ){
+        return res.status(400).json({error: true, message: 'Invalid approval request id'});
+      }
+      ap = ap.data[0];
+      if ( ap.employeeKerberos !== req.auth.token.id ) {
+        employeeKerberos = ap.employeeKerberos;
+        forAnotherUser = true;
+      }
+
+      if ( forAnotherUser && !(req.auth.token.hasAdminAccess || ap.approvalStatusActivity.some(a => a.employeeKerberos === req.auth.token.id))){
+        return apiUtils.do403(res);
+      }
+
+      if ( ap.approvalStatus === 'approved' ) {
+        return res.status(400).json({error: true, message: 'Approval request has already been approved, so it will be double-counted in the user summary'});
+      }
+
+      approvalRequestFundingSources = ap.fundingSources;
+      approvalRequestFiscalYear = fiscalYearUtils.fromDate(ap.programStartDate).startYear;
+
+    } 
+
     const fundTotals = await employeeAllocation.getTotalByFundFy({fiscalYears: startYears});
     if ( fundTotals.error ) {
       console.error('Error in GET /employee-allocation/user-summary', fundTotals.error);
       return res.status(500).json({error: true, message: 'Error getting user allocation summary.'});
     }
-    const userTotals = await employeeAllocation.getTotalByFundFy({fiscalYears: startYears, employees: [kerberos]});
+    const userTotals = await employeeAllocation.getTotalByFundFy({fiscalYears: startYears, employees: [employeeKerberos]});
     if ( userTotals.error ) {
       console.error('Error in GET /employee-allocation/user-summary', userTotals.error);
       return res.status(500).json({error: true, message: 'Error getting user allocation summary.'});
@@ -63,25 +107,53 @@ export default (api) => {
     for (const fy of fiscalYears) {
       const data = {fiscalYear: fy.startYear, funds: []};
 
-      let args = {employees: [kerberos], fiscalYear: fy.startYear, excludeReimbursed: true, approvalStatus: 'approved'};
+      // get approved total (projected - what has not already been reimbursed) for the user
+      let args = {employees: [employeeKerberos], fiscalYear: fy.startYear, excludeReimbursed: true, approvalStatus: 'approved'};
       const approvedTotal = await approvalRequest.getTotalFundingSourceExpendituresByEmployee(args);
       if ( approvedTotal.error ) {
         console.error('Error in GET /employee-allocation/user-summary', approvedTotal.error);
         return res.status(500).json({error: true, message: 'Error getting user allocation summary.'});
       }
+      
+      // get reimbursed total for the user
+      args = {
+        employees: [employeeKerberos], 
+        fiscalYear: fy.startYear, 
+        approvalRequestReimbursementStatus: 'fully-reimbursed',
+        reimbursementRequestStatus: 'fully-reimbursed'
+      };
+      const reimbursedTotal = await reimbursementRequest.getTotalFundingSourceExpendituresByEmployee(args);
+      if ( reimbursedTotal.error ) {
+        console.error('Error in GET /employee-allocation/user-summary', reimbursedTotal.error);
+        return res.status(500).json({error: true, message: 'Error getting user allocation summary.'});
+      }
 
       fundTotals.filter(fundTotal => fundTotal.fiscalYear == fy.startYear).forEach( fundTotal => {
 
+        const employeeAllocation = userTotals.find(ut => ut.fundingSourceId === fundTotal.fundingSourceId && ut.fiscalYear == fy.startYear)?.totalAllocation || 0;
         const employeeProjected = approvedTotal.find(at => at.fundingSourceId === fundTotal.fundingSourceId)?.totalExpenditures || 0;
-        const employeeReimbursed = 0; // todo: get reimbursed amount
+        const employeeReimbursed = reimbursedTotal.find(rt => rt.fundingSourceId === fundTotal.fundingSourceId)?.totalExpenditures || 0;
+
+        let approvalRequestTotal = 0;
+        if ( approvalRequestFiscalYear === fy.startYear ) {
+          approvalRequestTotal = approvalRequestFundingSources.filter(fs => fs.fundingSourceId === fundTotal.fundingSourceId).reduce((acc, fs) => acc + fs.amount, 0);
+        }
+
+        const employeeRemaining = employeeAllocation - (employeeProjected + employeeReimbursed + approvalRequestTotal);
+        const employeeRemainingIsNegative = employeeRemaining < 0;
+        const employeeRemainingAbs = Math.abs(employeeRemaining);
 
         data.funds.push({
           fundingSourceId: fundTotal.fundingSourceId,
           label: fundTotal.fundingSourceLabel,
           totalAllocation: fundTotal.totalAllocation,
-          employeeAllocation: userTotals.find(ut => ut.fundingSourceId === fundTotal.fundingSourceId && ut.fiscalYear == fy.startYear)?.totalAllocation || 0,
+          employeeAllocation,
           employeeProjected,
-          employeeReimbursed
+          employeeReimbursed,
+          employeeRemaining,
+          employeeRemainingAbs,
+          employeeRemainingIsNegative,
+          approvalRequestTotal
         });
       });
 

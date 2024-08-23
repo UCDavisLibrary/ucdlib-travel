@@ -51,6 +51,7 @@ export default class AppPageApprover extends Mixin(LitElement)
     this.approvalRequestLink = '';
     this.totalExpenditures = 0;
     this.fundingSourceSelectRef = createRef();
+    this.allocationSummaryRef = createRef();
     this.fundingSources = [];
     this.isFundingSourceChange = false;
     this.fundingSourceError = false;
@@ -129,6 +130,7 @@ export default class AppPageApprover extends Mixin(LitElement)
       this.ApprovalRequestModel.query(this.queryObject),
       this.SettingsModel.getByCategory(this.settingsCategory),
       this.fundingSourceSelectRef.value.init(),
+      this.allocationSummaryRef.value.init()
     ]
     const resolvedPromises = await Promise.allSettled(promises);
     return promiseUtils.flattenAllSettledResults(resolvedPromises);
