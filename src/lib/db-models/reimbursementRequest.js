@@ -7,6 +7,7 @@ import objectUtils from "../utils/objectUtils.js";
 import employeeModel from "./employee.js";
 import typeTransform from "../utils/typeTransform.js";
 import emailController from "./emailController.js";
+import fiscalYearUtils from "../utils/fiscalYearUtils.js";
 
 class ReimbursementRequest {
   constructor(){
@@ -425,11 +426,40 @@ class ReimbursementRequest {
     } finally {
       client.release();
     }
+    console.log("R:", out.data[0]);
+
+    reimbursementRequestId = out.data[0].reimbursementRequestId;
 
     if ( out.error ) return out;
-
     let rr = await this.get({reimbursementRequestIds: [reimbursementRequestId]});
+    if (rr.error){ console.error('error retrieving reimbursement', rr) }
 
+
+    let approvalRequestData = await client.query('SELECT * FROM approval_request WHERE approval_request_id = $1 AND is_current = true', [data.approval_request_id]);
+    approvalRequestData = approvalRequestData.rows[0];
+    const approvalRequestRevisionId = approvalRequestData.approval_request_revision_id;
+
+
+
+ // get max approver order
+    let sql = `SELECT MAX(approver_order) as max_order FROM approval_request_approval_chain_link WHERE approval_request_revision_id = $1`;
+    const maxOrderRes = await client.query(sql, [approvalRequestRevisionId]);
+    const maxOrder = maxOrderRes.rows[0].max_order || 0;
+
+    // insert submission to approval status activity table
+    let dataNotification = {
+      approval_request_revision_id: approvalRequestRevisionId,
+      approver_order: maxOrder + 1,
+      action: "notification",
+      employee_kerberos: approvalRequestData.employee_kerberos,
+      reimbursement_request_id: reimbursementRequestId
+    }
+    dataNotification = pg.prepareObjectForInsert(dataNotification);
+    sql = `INSERT INTO approval_request_approval_chain_link (${dataNotification.keysString}) VALUES (${dataNotification.placeholdersString}) RETURNING approval_request_approval_chain_link_id`;
+    await client.query(sql, dataNotification.values);
+    //const approvalRequestApprovalChainLinkId = chainRes.rows[0].approval_request_approval_chain_link_id;
+    
+    let rr = await this.get({reimbursementRequestIds: [reimbursementRequestId]});
     if (rr.error){ console.error('error retrieving reimbursement', rr) }
 
 
@@ -804,6 +834,76 @@ class ReimbursementRequest {
       out.push(d);
     }
     return out;
+  }
+
+  /**
+   * @description Get total reimbursement request reimbursement amount grouped by funding source and employee
+   * @param {*} query 
+   */
+  async getTotalFundingSourceExpendituresByEmployee(query={}){
+    const whereArgs = {'1': '1'};
+
+    if ( query.employees ){
+      whereArgs['ar.employee_kerberos'] = query.employees;
+    }
+
+    const fiscalYear = fiscalYearUtils.fromStartYear(query.fiscalYear, true);
+    if ( fiscalYear ){
+      whereArgs['fy_start'] = {relation: 'AND', 'ar.program_start_date' : {operator: '>=', value: fiscalYear.startDate({isoDate: true})}};
+      whereArgs['fy_end'] = {relation: 'AND', 'ar.program_start_date' : {operator: '<=', value: fiscalYear.endDate({isoDate: true})}};
+    }
+
+    if ( query.approvalRequestReimbursementStatus ){
+      whereArgs['ar.reimbursement_status'] = query.approvalRequestReimbursementStatus;
+    }
+
+    if ( query.reimbursementRequestStatus ){
+      whereArgs['rr.status'] = query.reimbursementRequestStatus;
+    }
+
+    const whereClause = pg.toWhereClause(whereArgs);
+    const sql = `
+      SELECT
+        ar.employee_kerberos,
+        arfs.funding_source_id,
+        SUM(rrf.amount) as total_expenditures
+      FROM
+        reimbursement_request_fund rrf
+      LEFT JOIN
+        reimbursement_request rr ON rrf.reimbursement_request_id = rr.reimbursement_request_id
+      LEFT JOIN
+        approval_request ar ON rr.approval_request_id = ar.approval_request_id
+      LEFT JOIN
+        approval_request_funding_source arfs ON rrf.approval_request_funding_source_id = arfs.approval_request_funding_source_id
+      WHERE
+        ${whereClause.sql}
+      GROUP BY
+        ar.employee_kerberos,
+        arfs.funding_source_id
+    `;
+    const res = await pg.query(sql, whereClause.values);
+    if ( res.error ) return res;
+
+    const fields = new EntityFields([
+      {
+        dbName: 'employee_kerberos',
+        jsonName: 'employeeKerberos'
+      },
+      {
+        dbName: 'funding_source_id',
+        jsonName: 'fundingSourceId'
+      },
+      {
+        dbName: 'total_expenditures',
+        jsonName: 'totalExpenditures'
+      }
+    ]);
+
+    return fields.toJsonArray(res.res.rows).map(row => {
+      row.totalExpenditures = typeTransform.toPositiveNumber(row.totalExpenditures) || 0;
+      return row;
+    });
+
   }
 }
 
