@@ -447,19 +447,19 @@ class ReimbursementRequest {
     const maxOrder = maxOrderRes.rows[0].max_order || 0;
 
     // insert submission to approval status activity table
-    let dataNotification = {
+    let reimbursementNotification = {
       approval_request_revision_id: approvalRequestRevisionId,
       approver_order: maxOrder + 1,
-      action: "notification",
+      action: "reimbursement-notifications",
       employee_kerberos: approvalRequestData.employee_kerberos,
       reimbursement_request_id: reimbursementRequestId
     }
-    dataNotification = pg.prepareObjectForInsert(dataNotification);
-    sql = `INSERT INTO approval_request_approval_chain_link (${dataNotification.keysString}) VALUES (${dataNotification.placeholdersString}) RETURNING approval_request_approval_chain_link_id`;
-    await client.query(sql, dataNotification.values);
+    reimbursementNotification = pg.prepareObjectForInsert(reimbursementNotification);
+    sql = `INSERT INTO approval_request_approval_chain_link (${reimbursementNotification.keysString}) VALUES (${reimbursementNotification.placeholdersString}) RETURNING approval_request_approval_chain_link_id`;
+    await client.query(sql, reimbursementNotification.values);
     //const approvalRequestApprovalChainLinkId = chainRes.rows[0].approval_request_approval_chain_link_id;
     
-    let rr = await this.get({reimbursementRequestIds: [reimbursementRequestId]});
+    rr = await this.get({reimbursementRequestIds: [reimbursementRequestId]});
     if (rr.error){ console.error('error retrieving reimbursement', rr) }
 
 

@@ -900,21 +900,40 @@ class ApprovalRequest {
 
     // get max approver order
     let sql = `SELECT MAX(approver_order) as max_order FROM approval_request_approval_chain_link WHERE approval_request_revision_id = $1`;
-    const maxOrderRes = await client.query(sql, [approvalRequestRevisionId]);
-    const maxOrder = maxOrderRes.rows[0].max_order || 0;
+    const maxOrderResRequester = await client.query(sql, [approvalRequestRevisionId]);
+    const maxOrderRequester = maxOrderResRequester.rows[0].max_order || 0;
 
     // insert submission to approval status activity table
-    let dataNotification = {
+    let requesterNotification = {
       approval_request_revision_id: approvalRequestRevisionId,
-      approver_order: maxOrder + 1,
-      action: "notification",
+      approver_order: maxOrderRequester + 1,
+      action: "request-notification",
       employee_kerberos: out.employeeKerberos
     }
-    dataNotification = pg.prepareObjectForInsert(dataNotification);
-    sql = `INSERT INTO approval_request_approval_chain_link (${dataNotification.keysString}) VALUES (${dataNotification.placeholdersString}) RETURNING approval_request_approval_chain_link_id`;
-    await client.query(sql, dataNotification.values);
+    requesterNotification = pg.prepareObjectForInsert(requesterNotification);
+    sql = `INSERT INTO approval_request_approval_chain_link (${requesterNotification.keysString}) VALUES (${requesterNotification.placeholdersString}) RETURNING approval_request_approval_chain_link_id`;
+    await client.query(sql, requesterNotification.values);
     //const approvalRequestApprovalChainLinkId = chainRes.rows[0].approval_request_approval_chain_link_id;
     
+
+    // get max approver order
+    sql = `SELECT MAX(approver_order) as max_order FROM approval_request_approval_chain_link WHERE approval_request_revision_id = $1`;
+    const maxOrderResApprover = await client.query(sql, [approvalRequestRevisionId]);
+    const maxOrderApprover = maxOrderResApprover.rows[0].max_order || 0;
+
+    // insert submission to approval status activity table
+    let approverNotification = {
+      approval_request_revision_id: approvalRequestRevisionId,
+      approver_order: maxOrderApprover + 1,
+      action: "approver-notification",
+      employee_kerberos: out.employeeKerberos
+    }
+    approverNotification = pg.prepareObjectForInsert(approverNotification);
+    sql = `INSERT INTO approval_request_approval_chain_link (${approverNotification.keysString}) VALUES (${approverNotification.placeholdersString}) RETURNING approval_request_approval_chain_link_id`;
+    await client.query(sql, approverNotification.values);
+    //const approvalRequestApprovalChainLinkId = chainRes.rows[0].approval_request_approval_chain_link_id;
+    
+
 
     out = await this.get({revisionIds: [approvalRequestRevisionId]});
     if ( out.error ) {
@@ -1155,15 +1174,16 @@ class ApprovalRequest {
     const maxOrder = maxOrderRes.rows[0].max_order || 0;
 
     // insert submission to approval status activity table
-    let dataNotification = {
+    let approverNotification = {
       approval_request_revision_id: approvalRequestRevisionId,
       approver_order: maxOrder + 1,
-      action: "notification",
+      action: "approver-notification",
       employee_kerberos: out.employeeKerberos
     }
-    dataNotification = pg.prepareObjectForInsert(dataNotification);
-    sql = `INSERT INTO approval_request_approval_chain_link (${dataNotification.keysString}) VALUES (${dataNotification.placeholdersString}) RETURNING approval_request_approval_chain_link_id`;
-    await client.query(sql, dataNotification.values);
+
+    approverNotification = pg.prepareObjectForInsert(approverNotification);
+    sql = `INSERT INTO approval_request_approval_chain_link (${approverNotification.keysString}) VALUES (${approverNotification.placeholdersString}) RETURNING approval_request_approval_chain_link_id`;
+    await client.query(sql, approverNotification.values);
 
     out = await this.get({revisionIds: [approvalRequestRevisionId]});
     if ( out.error ) {
