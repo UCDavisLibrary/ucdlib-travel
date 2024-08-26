@@ -88,9 +88,6 @@ class Email {
 
     const hydration = new Hydration(approvalRequest, reimbursementRequest, notificationType);
 
-    console.log("from:", serverConfig.email.systemEmailAddress);
-    console.log("to:", serverConfig.email.notificationRecipient || await hydration.getNotificationRecipient());
-
     //Hydrate keywords
     const from = 'sabaggett@ucdavis.edu';//serverConfig.email.systemEmailAddress;
     const to = 'sabaggett@ucdavis.edu';//serverConfig.email.notificationRecipient || await hydration.getNotificationRecipient();

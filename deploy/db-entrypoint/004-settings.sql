@@ -119,7 +119,7 @@ INSERT INTO "settings" ("key", "value", "label", "description", "default_value",
 INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html") VALUES
 ('admin_email_address',	'',	'Admin - Primary Email Address',	'Primary Email Address for sending notifications to the admin inside the approval chain',	'donotreply@lib.ucdavis.edu',	'1',	NULL,	10,	'textarea',	'{admin-email-settings,admin-settings}',	'1');
 INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html") VALUES
-('admin_email_subject_submit_reimbursement',	'',	'Admin - Email Subject Reimbursement Submitted',	'Primary Email Subject for sending notifications to the admin within the approval chain - "Requester submits reimbursement"',	'Travel Expense submission by ${requesterFullName}',	'1',	'',	10,	'textarea',	'{admin-email-settings,admin-settings,admin-email-submit-reimbursement}',	'1');
+('admin_email_subject_submit_reimbursement',	'',	'Admin - Email Subject Reimbursement Submitted',	'Primary Email Subject for sending notifications to the admin within the approval chain - "Requester submits reimbursement"',	'Travel Expense Has Been Submitted',	'1',	'',	10,	'textarea',	'{admin-email-settings,admin-settings,admin-email-submit-reimbursement}',	'1');
 INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html") VALUES
 ('admin_email_body_funded_hours',	'',	'Admin - Email Body Funded Hours',	'Primary Email Body for sending notifications to the admin within the approval chain - "hours completed of funded trip"',	'Dear ${requesterFullName}, 
 
@@ -146,11 +146,10 @@ Travel Request: ${approvalRequestUrl}
 INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html") VALUES
 ('admin_email_body_submit_reimbursement',	'',	'Admin - Email Body Reimbursement Submitted',	'Primary Email Body for sending notifications to the admin within the approval chain - "Requester submits reimbursement"',	'Dear Travel Processor:  
 
-${requesterFullName} has submitted their expenses for:  
-    
-Event: ${requesterLabel}
-Location: ${requesterLocation}
-Dates: ${requesterProgramDate}
+A requester has submitted their expenses for:  
+        
+Event: ${reimbursementLabel}
+Dates: ${reimbursementTravelDate}
 Reimbursement Request: ${reimbursementRequestUrl}',	'1',	'',	10,	'textarea',	'{admin-email-settings,admin-settings,admin-email-submit-reimbursement}',	'1');
 -- INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
 -- VALUES ('admin_email_settings_description', '', 'Admin - Email Settings Description', NULL, 'Maintain Email Default verbage and ability to disable emails being sent as Notification.', '1', NULL, '100', 'textarea', '{admin-email-settings,admin-settings}', '0');

@@ -220,7 +220,7 @@ class ApplicationOptions {
         resultingStatus: 'requester-notified',
         actionTakenText: 'System has sent a notification about request.',
         byLine: 'Requester Notification Sent By:',
-        iconClass: 'fa-solid fa-envelope',
+        iconClass: 'fas fa-comment',
         brandColor: 'quad',
       },
       {
@@ -230,7 +230,7 @@ class ApplicationOptions {
         resultingStatus: 'approver-notified',
         actionTakenText: 'System has sent a notification to an approver.',
         byLine: 'Approver Notification Sent By:',
-        iconClass: 'fa-solid fa-rotate-left',
+        iconClass: 'fas fa-comment',
         brandColor: 'cabernet',
       }
     ];
@@ -265,9 +265,9 @@ class ApplicationOptions {
       {
         value: 'reimbursement-notification',
         label: 'Reimbursement Notification',
-        actionTakenText: 'System has sent a notification to reimbursement requester.',
+        actionTakenText: 'System has sent a notification to admin about reimbursement.',
         byLine: 'Reimbursement Notification Sent By:',
-        iconClass: 'fa-solid fa-rotate-left',
+        iconClass: 'fas fa-comment',
         brandColor: 'poppy',
       }
     ]

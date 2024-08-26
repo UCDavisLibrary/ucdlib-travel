@@ -913,7 +913,6 @@ class ApprovalRequest {
     requesterNotification = pg.prepareObjectForInsert(requesterNotification);
     sql = `INSERT INTO approval_request_approval_chain_link (${requesterNotification.keysString}) VALUES (${requesterNotification.placeholdersString}) RETURNING approval_request_approval_chain_link_id`;
     await client.query(sql, requesterNotification.values);
-    //const approvalRequestApprovalChainLinkId = chainRes.rows[0].approval_request_approval_chain_link_id;
     
 
     // get max approver order
@@ -931,9 +930,6 @@ class ApprovalRequest {
     approverNotification = pg.prepareObjectForInsert(approverNotification);
     sql = `INSERT INTO approval_request_approval_chain_link (${approverNotification.keysString}) VALUES (${approverNotification.placeholdersString}) RETURNING approval_request_approval_chain_link_id`;
     await client.query(sql, approverNotification.values);
-    //const approvalRequestApprovalChainLinkId = chainRes.rows[0].approval_request_approval_chain_link_id;
-    
-
 
     out = await this.get({revisionIds: [approvalRequestRevisionId]});
     if ( out.error ) {
@@ -1161,7 +1157,7 @@ class ApprovalRequest {
       client.release();
     }
 
-    out = await this.get({revisionIds: [approvalRequestRevisionId]});
+    let out = await this.get({revisionIds: [approvalRequestRevisionId]});
     if ( out.error ) {
       return out;
     }
@@ -1191,8 +1187,11 @@ class ApprovalRequest {
     }
     out = out.data[0];
     
-    let lastApprover = out.approvalStatusActivity.filter(a => a.action === 'approval-needed').pop();
-
+    let lastApprover = out.approvalStatusActivity.filter(a => a.action === 'approve' ||
+                                                              a.action === 'approve-with-changes' ||
+                                                              a.action === 'deny' ||
+                                                              a.action === 'request-revision'
+                                                        ).pop();
 
     const payloadApprover = {
       "requests": {
