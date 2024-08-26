@@ -426,11 +426,8 @@ class ReimbursementRequest {
     } finally {
       client.release();
     }
-    console.log("R:", out.data[0]);
 
-    reimbursementRequestId = out.data[0].reimbursementRequestId;
 
-    if ( out.error ) return out;
     let rr = await this.get({reimbursementRequestIds: [reimbursementRequestId]});
     if (rr.error){ console.error('error retrieving reimbursement', rr) }
 
@@ -438,8 +435,6 @@ class ReimbursementRequest {
     let approvalRequestData = await client.query('SELECT * FROM approval_request WHERE approval_request_id = $1 AND is_current = true', [data.approval_request_id]);
     approvalRequestData = approvalRequestData.rows[0];
     const approvalRequestRevisionId = approvalRequestData.approval_request_revision_id;
-
-
 
  // get max approver order
     let sql = `SELECT MAX(approver_order) as max_order FROM approval_request_approval_chain_link WHERE approval_request_revision_id = $1`;
@@ -450,31 +445,30 @@ class ReimbursementRequest {
     let reimbursementNotification = {
       approval_request_revision_id: approvalRequestRevisionId,
       approver_order: maxOrder + 1,
-      action: "reimbursement-notifications",
+      action: "reimbursement-notification",
       employee_kerberos: approvalRequestData.employee_kerberos,
       reimbursement_request_id: reimbursementRequestId
     }
     reimbursementNotification = pg.prepareObjectForInsert(reimbursementNotification);
     sql = `INSERT INTO approval_request_approval_chain_link (${reimbursementNotification.keysString}) VALUES (${reimbursementNotification.placeholdersString}) RETURNING approval_request_approval_chain_link_id`;
     await client.query(sql, reimbursementNotification.values);
-    //const approvalRequestApprovalChainLinkId = chainRes.rows[0].approval_request_approval_chain_link_id;
     
     rr = await this.get({reimbursementRequestIds: [reimbursementRequestId]});
     if (rr.error){ console.error('error retrieving reimbursement', rr) }
 
 
     const payloadSubmitReimbursement = {
-      "requests": {
+      requests: {
         approvalRequest: approvalRequestData,
         reimbursementRequest: rr.data[0],
       },
-      token: approverKerberos,
+      token: approvalRequestData.employee_kerberos,
       notificationType: 'submit-reimbursement'
     }
 
     await emailController.sendSystemNotification( payloadSubmitReimbursement.notificationType, 
-      payloadSubmitReimbursement.approvalRequest, 
-      payloadSubmitReimbursement.reimbursementRequest, 
+      payloadSubmitReimbursement.requests.approvalRequest, 
+      payloadSubmitReimbursement.requests.reimbursementRequest, 
       payloadSubmitReimbursement
     );
 
