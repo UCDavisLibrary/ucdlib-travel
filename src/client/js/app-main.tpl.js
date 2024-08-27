@@ -23,6 +23,7 @@ return html`
       ?hidden=${!this.AuthModel.getToken().hasAdminAccess}
       >
       <a href="/admin/approvers">Approvers and Funding Sources</a>
+      <a href="/admin/approval-requests">Approval Requests</a>
       <a href="/admin/reimbursement">Reimbursement Requests</a>
       <a href="/admin/allocations">Employee Allocations</a>
       <a href="/admin/settings">General Settings</a>

@@ -1,6 +1,5 @@
 import { LitElement } from 'lit';
 import {render} from "./app-page-admin-approval-requests.tpl.js";
-import { createRef } from 'lit/directives/ref.js';
 
 import { LitCorkUtils, Mixin } from '@ucd-lib/cork-app-utils';
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
@@ -29,15 +28,14 @@ export default class AppPageAdminApprovalRequests extends Mixin(LitElement)
     this.totalPages = 1;
     this.page = 1;
     this.approvalRequests = [];
-    this.draftListSelectRef = createRef();
     this.waitController = new WaitController(this);
 
     this._injectModel('AppStateModel', 'ApprovalRequestModel', 'AuthModel');
 
     this.queryArgs = {
       isCurrent: true,
-      employees: this.AuthModel.getToken().id,
-      approvalStatus: applicationOptions.approvalStatuses.filter(s => s.value != 'draft').map(s => s.value),
+      // employees: this.AuthModel.getToken().id,
+      approvalStatus: applicationOptions.approvalStatuses.map(s => s.value),
       page: this.page
     };
   }
@@ -52,7 +50,7 @@ export default class AppPageAdminApprovalRequests extends Mixin(LitElement)
     this._setPage(state);
     this.queryArgs.page = this.page;
 
-    this.AppStateModel.setTitle('Your Approval Requests');
+    this.AppStateModel.setTitle('All Approval Requests');
 
     const breadcrumbs = [
       this.AppStateModel.store.breadcrumbs.home,
@@ -79,7 +77,6 @@ export default class AppPageAdminApprovalRequests extends Mixin(LitElement)
 
     const promises = [
       this.ApprovalRequestModel.query(this.queryArgs),
-      this.draftListSelectRef.value.init()
     ]
     const resolvedPromises = await Promise.allSettled(promises);
     return promiseUtils.flattenAllSettledResults(resolvedPromises);
