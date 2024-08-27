@@ -43,7 +43,7 @@ export default class AppPageHome extends Mixin(LitElement)
 
     this.waitController = new WaitController(this);
 
-    this._injectModel('AppStateModel', 'ApprovalRequestModel', 'AuthModel', 'SettingsModel', 'NotificationModel');
+    this._injectModel('AppStateModel', 'ApprovalRequestModel', 'AuthModel', 'SettingsModel');
 
     // properties for approval requests submitted BY user
     this.ownTotalPages = 1;
@@ -101,23 +101,10 @@ export default class AppPageHome extends Mixin(LitElement)
     const promises = [
       this.ApprovalRequestModel.query(this.ownQueryArgs),
       this.ApprovalRequestModel.query(this.approverQueryArgs),
-      this.NotificationModel.getNotificationHistory()
     ]
     const resolvedPromises = await Promise.allSettled(promises);
     return promiseUtils.flattenAllSettledResults(resolvedPromises);
   }
-
-  /**
-   * @description bound to NotificationModel notification-history event
-   * @param {Object} e - cork-app-utils event
-   * @returns
-   */
-       _onNotificationHistory(e) {
-        if ( e.state !== 'loaded' ) return;
-    
-        console.log("Retrieved No:", e);
-    }
-  
 
   /**
    * @description bound to ApprovalRequestModel approval-requests-requested event
