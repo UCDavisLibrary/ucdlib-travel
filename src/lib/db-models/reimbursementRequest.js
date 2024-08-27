@@ -322,6 +322,35 @@ class ReimbursementRequest {
   }
 
   /**
+   * @description add the notification to the notification table
+   * @param {Number} approvalRequestRevisionId - approval request ID
+   * @param {Number} reimbursementRequestId - reimbursement request ID
+   * @param {String} kerb - kerberos
+   * @param {String} action - action object
+   * @returns
+   */
+   async addNotification(approvalRequestRevisionId, reimbursementRequestId, kerb, action){
+    // get max approver order
+    let sql = `SELECT MAX(approver_order) as max_order FROM approval_request_approval_chain_link WHERE approval_request_revision_id = $1`;
+    const maxOrderResApprover = await pg.query(sql, [approvalRequestRevisionId]);
+    const maxOrderApprover = maxOrderResApprover.res.rows[0].max_order || 0;
+
+
+    // insert submission to approval status activity table
+    let notification = {
+      approval_request_revision_id: approvalRequestRevisionId,
+      approver_order: maxOrderApprover + 1,
+      action: action,
+      employee_kerberos: kerb,
+      reimbursement_request_id: reimbursementRequestId
+    }
+    notification = pg.prepareObjectForInsert(notification);
+    sql = `INSERT INTO approval_request_approval_chain_link (${notification.keysString}) VALUES (${notification.placeholdersString}) RETURNING approval_request_approval_chain_link_id`;
+    await pg.query(sql, notification.values);
+  }
+
+
+  /**
    * @description Create a reimbursement request
    * @param {Object} data - reimbursement request data. See this.entityFields for field names
    * @returns {Object} - returns an object with the following properties:
@@ -432,37 +461,23 @@ class ReimbursementRequest {
     if (rr.error){ console.error('error retrieving reimbursement', rr) }
 
 
-    let approvalRequestData = await client.query('SELECT * FROM approval_request WHERE approval_request_id = $1 AND is_current = true', [data.approval_request_id]);
-    approvalRequestData = approvalRequestData.rows[0];
+    let approvalRequestData = await pg.query('SELECT * FROM approval_request WHERE approval_request_id = $1 AND is_current = true', [data.approval_request_id]);
+    approvalRequestData = approvalRequestData.res.rows[0];
     const approvalRequestRevisionId = approvalRequestData.approval_request_revision_id;
 
- // get max approver order
-    let sql = `SELECT MAX(approver_order) as max_order FROM approval_request_approval_chain_link WHERE approval_request_revision_id = $1`;
-    const maxOrderRes = await client.query(sql, [approvalRequestRevisionId]);
-    const maxOrder = maxOrderRes.rows[0].max_order || 0;
+    this.addNotification(approvalRequestRevisionId, reimbursementRequestId, approvalRequestData.employee_kerberos, "reimbursement-notification");
 
-    // insert submission to approval status activity table
-    let reimbursementNotification = {
-      approval_request_revision_id: approvalRequestRevisionId,
-      approver_order: maxOrder + 1,
-      action: "reimbursement-notification",
-      employee_kerberos: approvalRequestData.employee_kerberos,
-      reimbursement_request_id: reimbursementRequestId
-    }
-    reimbursementNotification = pg.prepareObjectForInsert(reimbursementNotification);
-    sql = `INSERT INTO approval_request_approval_chain_link (${reimbursementNotification.keysString}) VALUES (${reimbursementNotification.placeholdersString}) RETURNING approval_request_approval_chain_link_id`;
-    await client.query(sql, reimbursementNotification.values);
-    
     rr = await this.get({reimbursementRequestIds: [reimbursementRequestId]});
     if (rr.error){ console.error('error retrieving reimbursement', rr) }
 
+    let token = {preferred_username: approvalRequestData.employee_kerberos}
 
     const payloadSubmitReimbursement = {
       requests: {
         approvalRequest: approvalRequestData,
         reimbursementRequest: rr.data[0],
       },
-      token: approvalRequestData.employee_kerberos,
+      token: token,
       notificationType: 'submit-reimbursement'
     }
 
