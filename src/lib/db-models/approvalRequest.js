@@ -1180,8 +1180,6 @@ class ApprovalRequest {
                                                            a.action === 'request-revision'
                                                       );
 
-    this.addNotification(approvalRequestRevisionId, approverKerberos, "approver-notification");
-
     out = await this.get({revisionIds: [approvalRequestRevisionId]});
     if ( out.error ) {
       return out;
@@ -1202,11 +1200,16 @@ class ApprovalRequest {
     }
 
     if(action.value == 'approve' || action.value == 'approve-with-changes'){
+      let notified;
       if(lastApprover.employeeKerberos === approverKerberos){
+        notified = "request-notification";
         notification = 'chain-completed';
       } else {
+        notified = "approver-notification";
         notification = 'next-approver';
       }
+
+      this.addNotification(approvalRequestRevisionId, approverKerberos, notified);
 
       payloadApprover.notificationType = notification;
   
@@ -1220,6 +1223,7 @@ class ApprovalRequest {
     
     if (action.value == 'deny' || action.value == 'request-revision') {
       notification = 'approver-change';
+      this.addNotification(approvalRequestRevisionId, approverKerberos, "request-notification");
 
       payloadApprover.notificationType = notification;
 
