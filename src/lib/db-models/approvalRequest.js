@@ -794,6 +794,32 @@ class ApprovalRequest {
   }
 
   /**
+   * @description add the notification to the notification table
+   * @param {Number} approvalRequestRevisionId - approval request ID
+   * @param {String} kerb - kerberos
+   * @param {String} action - action object
+   * @returns
+   */
+  async addNotification(approvalRequestRevisionId, kerb, action){
+    // get max approver order
+    let sql = `SELECT MAX(approver_order) as max_order FROM approval_request_approval_chain_link WHERE approval_request_revision_id = $1`;
+    const maxOrderResApprover = await pg.query(sql, [approvalRequestRevisionId]);
+    const maxOrderApprover = maxOrderResApprover.res.rows[0].max_order || 0;
+
+
+    // insert submission to approval status activity table
+    let notification = {
+      approval_request_revision_id: approvalRequestRevisionId,
+      approver_order: maxOrderApprover + 1,
+      action: action,
+      employee_kerberos: kerb
+    }
+    notification = pg.prepareObjectForInsert(notification);
+    sql = `INSERT INTO approval_request_approval_chain_link (${notification.keysString}) VALUES (${notification.placeholdersString}) RETURNING approval_request_approval_chain_link_id`;
+    await pg.query(sql, notification.values);
+  }
+
+  /**
    * @description Submit an existing approval request draft for approval
    * @param {Object|Number} approvalRequestObjectOrId - approval request object or approval request ID
    * @returns {Object} - {success: true} or {error: true}
@@ -897,39 +923,10 @@ class ApprovalRequest {
       return out;
     }
     out = out.data[0];
-
-    // get max approver order
-    let sql = `SELECT MAX(approver_order) as max_order FROM approval_request_approval_chain_link WHERE approval_request_revision_id = $1`;
-    const maxOrderResRequester = await client.query(sql, [approvalRequestRevisionId]);
-    const maxOrderRequester = maxOrderResRequester.rows[0].max_order || 0;
-
-    // insert submission to approval status activity table
-    let requesterNotification = {
-      approval_request_revision_id: approvalRequestRevisionId,
-      approver_order: maxOrderRequester + 1,
-      action: "request-notification",
-      employee_kerberos: out.employeeKerberos
-    }
-    requesterNotification = pg.prepareObjectForInsert(requesterNotification);
-    sql = `INSERT INTO approval_request_approval_chain_link (${requesterNotification.keysString}) VALUES (${requesterNotification.placeholdersString}) RETURNING approval_request_approval_chain_link_id`;
-    await client.query(sql, requesterNotification.values);
+    this.addNotification(approvalRequestRevisionId, out.employeeKerberos, "request-notification");
     
-
-    // get max approver order
-    sql = `SELECT MAX(approver_order) as max_order FROM approval_request_approval_chain_link WHERE approval_request_revision_id = $1`;
-    const maxOrderResApprover = await client.query(sql, [approvalRequestRevisionId]);
-    const maxOrderApprover = maxOrderResApprover.rows[0].max_order || 0;
-
-    // insert submission to approval status activity table
-    let approverNotification = {
-      approval_request_revision_id: approvalRequestRevisionId,
-      approver_order: maxOrderApprover + 1,
-      action: "approver-notification",
-      employee_kerberos: out.employeeKerberos
-    }
-    approverNotification = pg.prepareObjectForInsert(approverNotification);
-    sql = `INSERT INTO approval_request_approval_chain_link (${approverNotification.keysString}) VALUES (${approverNotification.placeholdersString}) RETURNING approval_request_approval_chain_link_id`;
-    await client.query(sql, approverNotification.values);
+    const approverEmployee = out.approvalStatusActivity.filter((o) => o.action == 'approval-needed');
+    this.addNotification(approvalRequestRevisionId, approverEmployee[0].employeeKerberos, "approver-notification");
 
     out = await this.get({revisionIds: [approvalRequestRevisionId]});
     if ( out.error ) {
@@ -937,11 +934,14 @@ class ApprovalRequest {
     }
     out = out.data[0];
 
+    let tokenRequest = {preferred_username: out.employeeKerberos}
+
     const payloadRequest = {
       requests: {
         approvalRequest: out,
         reimbursementRequest: {},
       },
+      token: tokenRequest,
       notificationType: 'request'
     }
 
@@ -950,6 +950,7 @@ class ApprovalRequest {
                                                  payloadRequest.requests.reimbursementRequest, 
                                                  payloadRequest);
 
+    let tokenApprover = {preferred_username: approverEmployee[0].employeeKerberos}
 
     //Email first approver
     const payloadNextApprover = {
@@ -957,19 +958,28 @@ class ApprovalRequest {
         approvalRequest: out,
         reimbursementRequest: {},
       },
+      token: tokenApprover,
       notificationType: 'next-approver'
     }
     
-    await emailController.sendSystemNotification( 
-      payloadNextApprover.notificationType, 
-      payloadNextApprover.requests.approvalRequest, 
-      payloadNextApprover.requests.reimbursementRequest, 
-      payloadNextApprover
-    );
+    await emailController.sendSystemNotification(payloadNextApprover.notificationType, 
+                                                  payloadNextApprover.requests.approvalRequest, 
+                                                  payloadNextApprover.requests.reimbursementRequest, 
+                                                  payloadNextApprover
+                                                );
 
     return {success: true, approvalRequestId, approvalRequestRevisionId};
   }
 
+  /**
+   * @description Update requester status to a new status for an requester
+   * @param {Object|Number} approvalRequestObjectOrId - approval request object or approval request ID
+   * @param {Object} actionPayload - object with properties:
+   * - action {String} - new action status
+   * - comments {String} OPTIONAL - comments for the action
+   * - fundingSources {Array} OPTIONAL - Array of funding source objects with updated amounts
+   * @returns {Object} - {success: true} or {error: true}
+   */
   async doRequesterAction(approvalRequestObjectOrId, actionPayload){
 
     // get approval request
@@ -1163,23 +1173,14 @@ class ApprovalRequest {
     }
 
     out = out.data[0]; 
-    
-    // get max approver order
-    let sql = `SELECT MAX(approver_order) as max_order FROM approval_request_approval_chain_link WHERE approval_request_revision_id = $1`;
-    const maxOrderRes = await client.query(sql, [approvalRequestRevisionId]);
-    const maxOrder = maxOrderRes.rows[0].max_order || 0;
 
-    // insert submission to approval status activity table
-    let approverNotification = {
-      approval_request_revision_id: approvalRequestRevisionId,
-      approver_order: maxOrder + 1,
-      action: "approver-notification",
-      employee_kerberos: out.employeeKerberos
-    }
+    let aKerberos = out.approvalStatusActivity.filter(a => a.action === 'approve' ||
+                                                           a.action === 'approve-with-changes' ||
+                                                           a.action === 'deny' ||
+                                                           a.action === 'request-revision'
+                                                      );
 
-    approverNotification = pg.prepareObjectForInsert(approverNotification);
-    sql = `INSERT INTO approval_request_approval_chain_link (${approverNotification.keysString}) VALUES (${approverNotification.placeholdersString}) RETURNING approval_request_approval_chain_link_id`;
-    await client.query(sql, approverNotification.values);
+    this.addNotification(approvalRequestRevisionId, approverKerberos, "approver-notification");
 
     out = await this.get({revisionIds: [approvalRequestRevisionId]});
     if ( out.error ) {
@@ -1187,18 +1188,17 @@ class ApprovalRequest {
     }
     out = out.data[0];
     
-    let lastApprover = out.approvalStatusActivity.filter(a => a.action === 'approve' ||
-                                                              a.action === 'approve-with-changes' ||
-                                                              a.action === 'deny' ||
-                                                              a.action === 'request-revision'
-                                                        ).pop();
+    let lastApprover = aKerberos.pop();
+
+    let token = {preferred_username: approverKerberos}
+
 
     const payloadApprover = {
       "requests": {
         approvalRequest: approvalRequest,
         reimbursementRequest: {},
       },
-      token: approverKerberos,
+      token: token,
     }
 
     if(action.value == 'approve' || action.value == 'approve-with-changes'){
@@ -1208,7 +1208,7 @@ class ApprovalRequest {
         notification = 'next-approver';
       }
 
-      payloadApprover.notificationType = notification
+      payloadApprover.notificationType = notification;
   
       await emailController.sendSystemNotification( payloadApprover.notificationType, 
         payloadApprover.requests.approvalRequest, 
@@ -1218,10 +1218,10 @@ class ApprovalRequest {
 
     } 
     
-    if (action.value == 'approve-with-changes' || action.value == 'deny' || action.value == 'request-revision') {
+    if (action.value == 'deny' || action.value == 'request-revision') {
       notification = 'approver-change';
 
-      payloadApprover.notificationType = notification
+      payloadApprover.notificationType = notification;
 
       await emailController.sendSystemNotification( payloadApprover.notificationType, 
         payloadApprover.requests.approvalRequest, 

@@ -109,6 +109,7 @@ _getRequesterBuisnessPurpose(){
   * @returns requester location
 */
 _getRequesterLocation(){
+  if(this.approvalRequest.location == 'virtual') return "Virtual"
   return this.approvalRequest.locationDetails;
 }
 
@@ -255,7 +256,7 @@ async _getNextApproverEmail(){
 
   let approver = results[0].employeeKerberos;
 
-  if(!approver) return;
+  if(approver === undefined || approver.length == 0) return;
 
   emp.emp = await employee.getIamRecordById(approver);
   if ( emp.emp.error) {
@@ -375,7 +376,10 @@ _getContext(content){
     */
       if(this.type == 'request' ||
          this.type == 'next-approver'
-        ) recipient = this._getNextApproverEmail();
+        ) {
+          recipient = this._getNextApproverEmail();
+        }
+
 
     /* Many Approvers 
       - Requester recalls/cancels approval request

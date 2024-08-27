@@ -212,7 +212,12 @@ class ApplicationOptions {
         iconClass: 'fa-solid fa-rotate-left',
         brandColor: 'secondary',
         warningText: `Recalling this request will revoke all approvals, return the request to 'draft' status, and require you to resubmit.`
-      },
+      }
+    ];
+  }
+
+  get approvalRequestActivity(){
+    return [
       {
         value: 'request-notification',
         label: 'Requester Notification',
@@ -233,7 +238,7 @@ class ApplicationOptions {
         iconClass: 'fas fa-comment',
         brandColor: 'cabernet',
       }
-    ];
+    ]
   }
 
   get approvalRequestReimbursementActivity(){

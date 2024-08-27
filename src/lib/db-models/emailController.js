@@ -8,7 +8,7 @@ import ApprovalRequest from './approvalRequest.js';
 
 /**
  * @class Email
- * @description Class for accessing properties of an access token for this client
+ * @description Controller for hydrating and sending emails from approval chain
  */
 class Email {
   constructor(){}
@@ -89,8 +89,8 @@ class Email {
     const hydration = new Hydration(approvalRequest, reimbursementRequest, notificationType);
 
     //Hydrate keywords
-    const from = serverConfig.email.systemEmailAddress;
-    const to = serverConfig.email.notificationRecipient || await hydration.getNotificationRecipient();
+    const from = 'sabaggett@ucdavis.edu';//serverConfig.email.systemEmailAddress;
+    const to = 'sabaggett@ucdavis.edu';//serverConfig.email.notificationRecipient || await hydration.getNotificationRecipient();
     const subject = hydration.hydrate(subjectTemplate);
     const text = hydration.hydrate(bodyTemplate);
 
@@ -163,7 +163,7 @@ class Email {
     
 
   /**
-   * @description get the email function
+   * @description get the notification history that is logged
    * @param {String} query - The role to check for
    * @returns {Object} res
    */
@@ -181,9 +181,10 @@ class Email {
    */
   async emailScheduler(){
       let approvalRequests = await ApprovalRequest.get({programEndDate: this.formatDate(), pageSize: -1});
+      approvalRequests = approvalRequests.data.filter(a => a.approvalStatus === "approved");
 
-      if(approvalRequests.data.length == 0){
-        for(let ar of approvalRequests.data) {
+      if(approvalRequests.length !== 0){
+        for(let ar of approvalRequests) {
             const payloadFundedHours= {
               "requests": {
                 approvalRequest: ar,
@@ -196,7 +197,7 @@ class Email {
             await this.sendSystemNotification(payloadFundedHours.notificationType, 
               payloadFundedHours.requests.approvalRequest, 
               payloadFundedHours.requests.reimbursementRequest, 
-              payloadFundedHours);
+              payloadFundedHours);   
         }  
       }
 
