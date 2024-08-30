@@ -53,6 +53,148 @@ VALUES ('admin_allocations_general_settings_page_description', '', 'Admin - Empl
 INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
 VALUES ('admin_allocations_line_items_page_description', '', 'Admin - Employee Allocations Line Items Page Description', NULL, 'Manage expenditure line item options when submitting an approval request.', '1', NULL, '100', 'textarea', '{admin-page,admin-settings}', '0');
 
+-- admin email settings
+INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html") VALUES
+('admin_email_settings_description',	'',	'Admin - Email Settings Description',	NULL,	'Maintain Email Default verbage and ability to disable emails being sent as Notification.',	'1',	NULL,	100,	'textarea',	'{admin-email-settings,admin-settings}',	'0');
+INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html") VALUES
+('admin_email_body_request',	'',	'Admin - Email Body Request Submitted',	'Primary Email Body for sending notifications to the admin within the approval chain - "Requester submits/resubmits approval request"',	'Hi ${requesterFirstName},
+    
+Your travel, training, or professional development request has been successfully submitted. It has been sent to ${nextApproverFullName} for approval.
+      
+You may cancel, resubmit, or view the status of this request by clicking on the travel request. 
+
+Summary of your travel request:
+
+Event Name: ${requesterLabel}
+Location: ${requesterLocation}
+Dates: ${requesterProgramDate}
+Travel Request: ${approvalRequestUrl}',	'1',	NULL,	10,	'textarea',	'{admin-email-settings,admin-settings,admin-email-request}',	'1');
+INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html") VALUES
+('admin_email_subject_request',	'',	'Admin - Email Subject Request Submitted',	'Primary Email Subject for sending notifications to the admin within the approval chain - "Requester submits/resubmits approval request"',	'Your Travel Request Has Been Submitted',	'1',	NULL,	10,	'textarea',	'{admin-email-settings,admin-settings,admin-email-request}',	'1');
+INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html") VALUES
+('admin_email_body_approver_change',	'',	'Admin - Email Body Request Changed',	'Primary Email Body for sending notifications to the admin within the approval chain - "Approver denies, changes requested, or approves but modifies request"',	'Dear, ${requesterFullName}, 
+
+Your request has been returned for correction or not approved. Please read the comments and, if applicable, make changes and resubmit.
+
+Summary of your travel request:
+
+Event Name: ${requesterLabel}
+Location: ${requesterLocation}
+Dates: ${requesterProgramDate}
+Travel Request: ${approvalRequestUrl}
+',	'1',	NULL,	10,	'textarea',	'{admin-email-settings,admin-settings,admin-email-approver-change}',	'1');
+INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html") VALUES
+('admin_email_subject_approver_change',	'',	'Admin - Email Subject Request Changed',	'Primary Email Subject for sending notifications to the admin within the approval chain - "Approver denies, changes requested, or approves but modifies request"',	'A Status Change Has Been Made To Your Travel Request',	'1',	NULL,	10,	'textarea',	'{admin-email-settings,admin-settings,admin-email-approver-change}',	'1');
+INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html") VALUES
+('admin_email_subject_chain_completed',	'',	'Admin - Email Subject Request Approved',	'Primary Email Subject for sending notifications to the admin within the approval chain - "All approvers in chain have approved request"',	'Your Travel Request Has Been Approved',	'1',	NULL,	10,	'textarea',	'{admin-email-settings,admin-settings,admin-email-chain-completed}',	'1');
+INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html") VALUES
+('admin_email_subject_next_approver',	'',	'Admin - Email Subject Approver Next',	'Primary Email Subject for sending notifications to the admin within the approval chain - "An approver approves approval request"',	'Travel Request for ${requesterFullName} Needs Approval ',	'1',	NULL,	10,	'textarea',	'{admin-email-settings,admin-settings,admin-email-next-approver}',	'1');
+INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html") VALUES
+('admin_email_subject_funded_hours',	'',	'Admin - Email Subject Funded Hours',	'Primary Email Subject for sending notifications to the admin within the approval chain - "hours completed of funded trip"',	'Reminder To Submit Your Expenses',	'1',	NULL,	10,	'textarea',	'{admin-email-settings,admin-settings,admin-email-funded-hours}',	'1');
+INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html") VALUES
+('admin_email_body_next_approver',	'',	'Admin - Email Body Approver Next',	'Primary Email Body for sending notifications to the admin within the approval chain - "An approver approves approval request"',	'Dear, ${nextApproverFullName}, 
+
+${requesterFullName} has submitted a travel request.  Please review this request that needs your approval. 
+
+Summary of your travel request:
+
+Event Name: ${requesterLabel}
+Location: ${requesterLocation}
+Dates: ${requesterProgramDate}
+Travel Request: ${approvalRequestUrl}',	'1',	NULL,	10,	'textarea',	'{admin-email-settings,admin-settings,admin-email-next-approver}',	'1');
+INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html") VALUES
+('admin_email_body_request_cancel',	'',	'Admin - Email Body Request Canceled',	'Primary Email Body for sending notifications to the admin within the approval chain - "Requester recalls/cancels approval request"',	'Dear, ${requesterFullName}, 
+
+Your request has been returned for correction or not approved. Please read the comments and, if applicable, make changes and resubmit.
+
+Summary of your travel request:
+
+Event Name: ${requesterLabel}
+Location: ${requesterLocation}
+Dates: ${requesterProgramDate}
+Travel Request: ${approvalRequestUrl}
+',	'1',	NULL,	10,	'textarea',	'{admin-email-settings,admin-settings,admin-email-request-cancel}',	'1');
+INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html") VALUES
+('admin_email_subject_request_cancel',	'',	'Admin - Email Subject Request Canceled',	'Primary Email Subject for sending notifications to the admin within the approval chain - "Requester recalls/cancels approval request"',	'A Status Change Has Been Made To Your Travel Request',	'1',	NULL,	10,	'textarea',	'{admin-email-settings,admin-settings,admin-email-request-cancel}',	'1');
+INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html") VALUES
+('admin_email_address',	'',	'Admin - Primary Email Address',	'Primary Email Address for sending notifications to the admin inside the approval chain',	'donotreply@lib.ucdavis.edu',	'1',	NULL,	10,	'textarea',	'{admin-email-settings,admin-settings}',	'1');
+INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html") VALUES
+('admin_email_subject_submit_reimbursement',	'',	'Admin - Email Subject Reimbursement Submitted',	'Primary Email Subject for sending notifications to the admin within the approval chain - "Requester submits reimbursement"',	'Travel Expense Has Been Submitted',	'1',	'',	10,	'textarea',	'{admin-email-settings,admin-settings,admin-email-submit-reimbursement}',	'1');
+INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html") VALUES
+('admin_email_body_funded_hours',	'',	'Admin - Email Body Funded Hours',	'Primary Email Body for sending notifications to the admin within the approval chain - "hours completed of funded trip"',	'Dear ${requesterFullName}, 
+
+For your recent travel or professional development/training expense, please submit an expense submission form with receipts to Library Administration within 5 days. Expenses not submitted in a timely fashion are subject to being reported as taxable income. If you have no expenses to claim, or have already submitted your expenses for processing, please disregard this message. Please contact your travel processor if you have any questions
+
+Summary of your travel request:
+
+Event Name: ${requesterLabel}
+Location: ${requesterLocation}
+Dates: ${requesterProgramDate}
+Travel Request: ${approvalRequestUrl}',	'1',	NULL,	10,	'textarea',	'{admin-email-settings,admin-settings,admin-email-funded-hours}',	'1');
+INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html") VALUES
+('admin_email_body_chain_completed',	'',	'Admin - Email Body Request Approved',	'Primary Email Body for sending notifications to the admin within the approval chain - "All approvers in chain have approved request"',	'Dear, ${requesterFullName},
+
+We are happy to inform you that your request has been APPROVED. 
+
+Summary of your travel request:
+
+Event Name: ${requesterLabel}
+Location: ${requesterLocation}
+Dates: ${requesterProgramDate}
+Travel Request: ${approvalRequestUrl}
+',	'1',	NULL,	10,	'textarea',	'{admin-email-settings,admin-settings,admin-email-chain-completed}',	'1');
+INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html") VALUES
+('admin_email_body_submit_reimbursement',	'',	'Admin - Email Body Reimbursement Submitted',	'Primary Email Body for sending notifications to the admin within the approval chain - "Requester submits reimbursement"',	'Dear Travel Processor:  
+
+A requester has submitted their expenses for:  
+        
+Event: ${reimbursementLabel}
+Dates: ${reimbursementTravelDate}
+Reimbursement Request: ${reimbursementRequestUrl}',	'1',	'',	10,	'textarea',	'{admin-email-settings,admin-settings,admin-email-submit-reimbursement}',	'1');
+-- INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
+-- VALUES ('admin_email_settings_description', '', 'Admin - Email Settings Description', NULL, 'Maintain Email Default verbage and ability to disable emails being sent as Notification.', '1', NULL, '100', 'textarea', '{admin-email-settings,admin-settings}', '0');
+-- INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
+-- VALUES ('admin_email_body_chain_completed','','Admin - Email Body Request Approved','Primary Email Body for sending notifications to the admin within the approval chain - "All approvers in chain have approved request"','Template Body','1', NULL, '10','textarea','{admin-email-settings,admin-settings}','1');
+-- INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
+-- VALUES ('admin_email_body_funded_hours','','Admin - Email Body Funded Hours','Primary Email Body for sending notifications to the admin within the approval chain - "hours completed of funded trip"','Template Body','1', NULL, '10','textarea','{admin-email-settings,admin-settings}','1');
+-- INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
+-- VALUES ('admin_email_body_submit_reimbursement','','Admin - Email Body Reimbursement Submitted','Primary Email Body for sending notifications to the admin within the approval chain - "Requester submits reimbursement"','Template Body','1', NULL, '10','textarea','{admin-email-settings,admin-settings}','1');
+-- INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
+-- VALUES ('admin_email_body_reimbursement_completed','','Admin - Email Body Reimbursement Completed','Primary Email Body for sending notifications to the admin within the approval chain - "Finance/HR states all reimbursement refunds are complete"','Template Body','1', NULL, '10','textarea','{admin-email-settings,admin-settings}','1');
+-- INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
+-- VALUES ('admin_email_body_enter_reimbursement','','Admin - Email Body Reimbursement Recorded','Primary Email Body for sending notifications to the admin within the approval chain - "Finance/HR enters reimbursement into Aggie Expense"','Template Body','1', NULL, '10','textarea','{admin-email-settings,admin-settings}','1');
+-- INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
+-- VALUES ('admin_email_body_reimbursement_refund','','Admin - Email Body Reimbursement Refund','Primary Email Body for sending notifications to the admin within the approval chain - "Finance/HR states one of the reimbursement refund goes through"','Template Body','1', NULL, '10','textarea','{admin-email-settings,admin-settings}','1');
+-- INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
+-- VALUES ('admin_email_body_request','','Admin - Email Body Request Submitted','Primary Email Body for sending notifications to the admin within the approval chain - "Requester submits/resubmits approval request"','Template Body','1', NULL, '10','textarea','{admin-email-settings,admin-settings}','1');
+-- INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
+-- VALUES ('admin_email_body_request_cancel','','Admin - Email Body Request Canceled','Primary Email Body for sending notifications to the admin within the approval chain - "Requester recalls/cancels approval request"','Template Body','1', NULL, '10','textarea','{admin-email-settings,admin-settings}','1');
+-- INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
+-- VALUES ('admin_email_body_next_approver','','Admin - Email Body Approver Next','Primary Email Body for sending notifications to the admin within the approval chain - "An approver approves approval request"','Template Body','1', NULL, '10','textarea','{admin-email-settings,admin-settings}','1');
+-- INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
+-- VALUES ('admin_email_body_approver_change','','Admin - Email Body Request Changed','Primary Email Body for sending notifications to the admin within the approval chain - "Approver denies, changes requested, or approves but modifies request"','Template Body','1', NULL, '10','textarea','{admin-email-settings,admin-settings}','1');
+-- INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
+-- VALUES ('admin_email_subject_reimbursement_completed','','Admin - Email Subject Reimbursement Completed','Primary Email Subject for sending notifications to the admin within the approval chain - "Finance/HR states all reimbursement refunds are complete"','Your reimbursement refund has been completed','1', NULL, '10','textarea','{admin-email-settings,admin-settings}','1');
+-- INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
+-- VALUES ('admin_email_subject_reimbursement_refund','','Admin - Email Subject Reimbursement Refund','Primary Email Subject for sending notifications to the admin within the approval chain - "Finance/HR states one of the reimbursement refund goes through"','One of your reimbursement refunds has gone through','1', NULL, '10','textarea','{admin-email-settings,admin-settings}','1');
+-- INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
+-- VALUES ('admin_email_subject_enter_reimbursement','','Admin - Email Subject Reimbursement Recorded','Primary Email Subject for sending notifications to the admin within the approval chain - "Finance/HR enters reimbursement into Aggie Expense"','Your reimbursement request has been entered into Aggie Expense','1', NULL, '10','textarea','{admin-email-settings,admin-settings}','1');
+-- INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
+-- VALUES ('admin_email_subject_submit_reimbursement','','Admin - Email Subject Reimbursement Submitted','Primary Email Subject for sending notifications to the admin within the approval chain - "Requester submits reimbursement"','A requester has submitted a reimbursement request','1', NULL, '10','textarea','{admin-email-settings,admin-settings}','1');
+-- INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
+-- VALUES ('admin_email_subject_funded_hours','','Admin - Email Subject Funded Hours','Primary Email Subject for sending notifications to the admin within the approval chain - "hours completed of funded trip"','Reported hours of your completed trip','1', NULL, '10','textarea','{admin-email-settings,admin-settings}','1');
+-- INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
+-- VALUES ('admin_email_subject_chain_completed','','Admin - Email Subject Request Approved','Primary Email Subject for sending notifications to the admin within the approval chain - "All approvers in chain have approved request"','Your Request is Approved','1', NULL, '10','textarea','{admin-email-settings,admin-settings}','1');
+-- INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
+-- VALUES ('admin_email_subject_approver_change','','Admin - Email Subject Request Changed','Primary Email Subject for sending notifications to the admin within the approval chain - "Approver denies, changes requested, or approves but modifies request"','A change to a travel request has been made','1', NULL, '10','textarea','{admin-email-settings,admin-settings}','1');
+-- INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
+-- VALUES ('admin_email_subject_next_approver','','Admin - Email Subject Approver Next','Primary Email Subject for sending notifications to the admin within the approval chain - "An approver approves approval request"','A travel request is needing your approval','1', NULL, '10','textarea','{admin-email-settings,admin-settings}','1');
+-- INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
+-- VALUES ('admin_email_subject_request_cancel','','Admin - Email Subject Request Canceled','Primary Email Subject for sending notifications to the admin within the approval chain - "Requester recalls/cancels approval request"','A Requester has Recalled their Travel Request','1', NULL, '10','textarea','{admin-email-settings,admin-settings}','1');
+-- INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
+-- VALUES ('admin_email_subject_request','','Admin - Email Subject Request Submitted','Primary Email Subject for sending notifications to the admin within the approval chain - "Requester submits/resubmits approval request"','A Requester has Submitted a Travel Request','1', NULL, '10','textarea','{admin-email-settings,admin-settings}','1');
+-- INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
+-- VALUES ('admin_email_address','','Admin - Primary Email Address','Primary Email Address for sending notifications to the admin inside the approval chain','admin-libtravel@ucdavis.edu','1', NULL, '10','textarea','{admin-email-settings,admin-settings}','1');
 -- site wide settings
 INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
 VALUES ('site_wide_banner', '', 'Site wide banner text', NULL, '', '0', NULL, '100', 'textarea', '{app-main,admin-settings}', '0');

@@ -9,6 +9,7 @@ services:
     depends_on:
       - db
     environment:
+      APP_ROOT_URL: ${APP_ROOT_URL:-http://localhost:{{APP_CONTAINER_PORT}}}
       APP_ENV: ${APP_ENV:-dev}
       PGUSER: 'postgres'
       PGHOST: 'db'

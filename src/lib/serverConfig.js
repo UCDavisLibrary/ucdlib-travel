@@ -13,6 +13,7 @@ class ServerConfig {
     this.routes = ['approval-request', 'approve', 'reimbursement-request', 'reports', 'admin'];
 
     this.apiRoot = this.getEnv('APP_API_ROOT', '/api');
+    this.appRoot = process?.env?.APP_ROOT_URL;
 
     this.uploadsRoot = this.getEnv('APP_UPLOADS_ROOT', '/uploads');
     this.uploadsDir = this.getEnv('APP_UPLOADS_DIR', '/uploads');
@@ -51,7 +52,17 @@ class ServerConfig {
       key: this.getEnv('UCDLIB_PERSONNEL_API_KEY', ''),
       serverCacheExpiration: this.getEnv('UCDLIB_PERSONNEL_API_CACHE_EXPIRATION', '24 hours')
     }
-
+    
+    this.email = {
+      host: this.getEnv('APP_SMTP_HOST', 'smtp.lib.ucdavis.edu'),
+      port: this.getEnv('APP_SMTP_PORT', '25'),
+      secure: this.getEnv('APP_SMTP_SECURE', false),
+      enabled: this.getEnv('APP_SEND_EMAIL_NOTIFICATIONS', false),
+      systemEmailAddress: this.getEnv('APP_SMTP_SYSTEM_EMAIL_ADDRESS', ''),
+      notificationRecipient: this.getEnv('APP_SMTP_NOTIFICATION_EMAIL_ADDRESS', ''),
+      enableCron: this.getEnv('APP_SMTP_ENABLE_CRON', false)
+    }
+    
     this.logger = {
       logLevel: this.getEnv('APP_LOGGER_LOG_LEVEL', 'info'),
       logLevels: {},
