@@ -1,6 +1,6 @@
 import { LitElement } from 'lit';
 import { render } from "./app-dialog-modal.tpl.js";
-import { LitCorkUtils, Mixin } from "../../../lib/appGlobals.js";
+import { LitCorkUtils, Mixin } from '@ucd-lib/cork-app-utils';
 import { createRef } from 'lit/directives/ref.js';
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 
@@ -56,7 +56,7 @@ export default class AppDialogModal extends Mixin(LitElement)
   _onButtonClick(action){
     this.dialogRef.value.close();
     this.AppStateModel.emit('dialog-action', {action, data: this.data});
-  
+
   }
 
 }

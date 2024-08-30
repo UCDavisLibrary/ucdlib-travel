@@ -4,16 +4,43 @@ app-page-reimbursement {
     max-width: 500px;
   }
 
+  table tfoot th {
+    border-top: 1px solid #6fcfeb;
+  }
+  table tfoot td {
+    border-top: 1px solid #6fcfeb;
+    font-weight: 700;
+  }
+
+  table.fund-transactions {
+    max-width: 900px;
+  }
+
   table.daily-expenses > thead > tr:first-child > th {
     border-bottom: none;
   }
-  table.daily-expenses tfoot th {
-    border-top: 1px solid #6fcfeb;
-  }
   table.total-expenses {
     max-width: 500px;
-    tfoot th {
-      border-top: 1px solid #6fcfeb;
+  }
+  .l-2col {
+    --l-gap: 1rem;
+  }
+  .l-second {
+    margin-top: 0 !important;
+  }
+
+  dialog {
+    width: 95%;
+    padding: 2rem;
+    border: none;
+  }
+  dialog::backdrop {
+    background-color: black;
+    opacity: 0.5;
+  }
+  @media (min-width: 480px) {
+    dialog {
+      width: 65%;
     }
   }
 }

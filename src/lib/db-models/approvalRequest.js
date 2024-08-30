@@ -9,6 +9,7 @@ import typeTransform from "../utils/typeTransform.js";
 import IamEmployeeObjectAccessor from "../utils/iamEmployeeObjectAccessor.js";
 import applicationOptions from "../utils/applicationOptions.js";
 import objectUtils from "../utils/objectUtils.js";
+import fiscalYearUtils from "../utils/fiscalYearUtils.js";
 
 class ApprovalRequest {
 
@@ -1064,6 +1065,74 @@ class ApprovalRequest {
     }
 
     return {success: true, approvalRequestId, approvalRequestRevisionId};
+
+  }
+
+  /**
+   * @description Get total approval request expenditures grouped by funding source and employee
+   * @param {Object} query - optional query object with properties:
+   * - fiscalYear {String} - fiscal year string (YYYY)
+   * - employees {Array} - array of employee kerberos
+   * - excludeReimbursed {Boolean} - exclude approval requests that have been fully reimbursed
+   * - approvalStatus {String} - approval status to filter by
+   * @returns {Object} - {error: true, message: 'error message'} or array of objects with properties:
+   * - employeeKerberos {String} - kerberos of employee
+   * - fundingSourceId {Number} - funding source ID
+   * - totalExpenditures {Number} - total expenditures for employee and funding source
+   */
+  async getTotalFundingSourceExpendituresByEmployee(query={}){
+
+    const whereArgs = {
+      'ar.is_current': true
+    };
+
+    if ( query.employees ){
+      whereArgs['ar.employee_kerberos'] = query.employees;
+    }
+
+    const fiscalYear = fiscalYearUtils.fromStartYear(query.fiscalYear, true);
+    if ( fiscalYear ){
+      whereArgs['fy_start'] = {relation: 'AND', 'ar.program_start_date' : {operator: '>=', value: fiscalYear.startDate({isoDate: true})}};
+      whereArgs['fy_end'] = {relation: 'AND', 'ar.program_start_date' : {operator: '<=', value: fiscalYear.endDate({isoDate: true})}};
+    }
+
+    if ( query.excludeReimbursed ){
+      whereArgs['ar.reimbursement_status'] = {operator: '!=', value: 'fully-reimbursed'};
+    }
+
+    if ( query.approvalStatus ){
+      whereArgs['ar.approval_status'] = query.approvalStatus;
+    }
+
+    const whereClause = pg.toWhereClause(whereArgs);
+    const sql = `
+      SELECT
+        ar.employee_kerberos,
+        arfs.funding_source_id,
+        SUM(arfs.amount) AS total_expenditures
+      FROM
+        approval_request ar
+      JOIN
+        approval_request_funding_source arfs ON ar.approval_request_revision_id = arfs.approval_request_revision_id
+      WHERE
+        ${whereClause.sql}
+      GROUP BY
+        ar.employee_kerberos, arfs.funding_source_id
+    `
+
+    const res = await pg.query(sql, whereClause.values);
+    if ( res.error ) return res;
+
+    const fields = new EntityFields([
+      {dbName: 'employee_kerberos', jsonName: 'employeeKerberos'},
+      {dbName: 'funding_source_id', jsonName: 'fundingSourceId'},
+      {dbName: 'total_expenditures', jsonName: 'totalExpenditures'}
+    ]);
+
+    return fields.toJsonArray(res.res.rows).map(r => {
+      r.totalExpenditures = Number(r.totalExpenditures);
+      return r;
+    });
 
   }
 

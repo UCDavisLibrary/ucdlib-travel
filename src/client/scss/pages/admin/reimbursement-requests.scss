@@ -1,0 +1,66 @@
+app-page-admin-reimbursement {
+  ucd-theme-slim-select {
+    max-width: 300px;
+  }
+  .filters {
+    border-bottom: 2px dotted #ffbf00;
+    padding-bottom: 1rem;
+  }
+
+  .results {
+    padding-top: 1rem;
+  }
+
+  .reimbursement-request {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-left: 1px solid #ffbf00;
+    box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+
+    svg {
+      color: #73abdd;
+    }
+
+    .badge {
+      font-size: 0.875rem;
+      margin-right: 0.5rem;
+      margin-bottom: 0.5rem;
+      padding: 0.1rem 0.5rem;
+      background-color: #FFF4D2;
+      border-radius: 0.5rem;
+      color: #022851;
+    }
+
+    .teaser-body {
+      container-type: inline-size;
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .teaser-info {
+      flex: 60%;
+    }
+
+    .teaser-expenses {
+      font-size: 0.875rem;
+      flex: 40%;
+      border-left: 1px solid #B0D0ED;
+      padding: 0rem 0rem 0.675rem 0.675rem;
+      align-content: center;
+    }
+
+    @container (width < 550px) {
+      .teaser-info {
+        flex: 100%;
+        margin-bottom: 0.625rem;
+      }
+      .teaser-expenses {
+        border-left:0;
+        padding: 0px;
+        flex: 100%;
+      }
+    }
+  }
+
+
+}

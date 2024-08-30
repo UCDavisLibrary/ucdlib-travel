@@ -7,6 +7,7 @@
 @use './pages/admin/settings.scss' as adminSettings;
 @use './pages//admin/line-items.scss' as adminLineItems;
 @use './pages/admin/allocations.scss' as adminAllocations;
+@use './pages//admin/reimbursement-requests.scss' as adminReimbursementRequests;
 
 // pages
 @use './pages/approval-request-new.scss' as approvalRequestNew;
@@ -28,3 +29,4 @@
 @use './components/funding-source-select.scss' as fundingSourceSelect;
 @use './components/approval-request-teaser.scss' as approvelRequestTeaser;
 @use './components/approval-request-draft-list.scss' as approvalRequestDraftList;
+@use './components/user-current-allocation-summary.scss' as userCurrentAllocationSummary;

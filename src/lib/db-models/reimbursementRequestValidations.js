@@ -1,7 +1,7 @@
 import typeTransform from "../utils/typeTransform.js";
 import approvalRequestModel from "./approvalRequest.js";
 import applicationOptions from "../utils/applicationOptions.js";
-import reimbursmentExpenses from "../utils/reimbursmentExpenses.js";
+import reimbursementExpenses from "../utils/reimbursementExpenses.js";
 
 export default class ReimbursementRequestValidations {
 
@@ -147,7 +147,7 @@ export default class ReimbursementRequestValidations {
     const subField = payload.category;
     const expenseField = field.jsonName;
 
-    const validCategories = reimbursmentExpenses.allCategories.map(c => c.value);
+    const validCategories = reimbursementExpenses.allCategories.map(c => c.value);
     if ( !validCategories.includes(value) ){
       const error = {errorType: 'invalid', message: 'Invalid category', subField, expenseField};
       this.model.expenseFields.pushError(out, field, error);
@@ -159,7 +159,7 @@ export default class ReimbursementRequestValidations {
     const details = value;
     const subField = payload.category;
     const expenseField = field.jsonName;
-    const category = reimbursmentExpenses.allCategories.find(c => c.value === subField);
+    const category = reimbursementExpenses.allCategories.find(c => c.value === subField);
     const subCategories = (category?.subCategories || []).map(c => c.value);
     const subCategoryValue = details?.subCategory;
     const subCategory = (category?.subCategories || []).find(c => c?.value === subCategoryValue);

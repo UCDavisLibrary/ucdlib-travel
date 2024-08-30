@@ -144,6 +144,17 @@ class TypeTransform {
     return parsedData;
   }
 
+  /**
+   * @description Convert a number to a dollar string in the format '0.00'
+   * @param {Number} num - number to convert
+   * @returns {String}
+   */
+  toDollarString(num){
+    num = Number(num);
+    if ( isNaN(num) ) return '0.00';
+    return num.toFixed(2);
+  }
+
 }
 
 export default new TypeTransform();

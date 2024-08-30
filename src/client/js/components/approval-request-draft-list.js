@@ -1,7 +1,7 @@
 import { LitElement } from 'lit';
 import {render} from "./approval-request-draft-list.tpl.js";
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
-import { LitCorkUtils, Mixin } from "../../../lib/appGlobals.js";
+import { LitCorkUtils, Mixin } from '@ucd-lib/cork-app-utils';
 import urlUtils from '../../../lib/utils/urlUtils.js';
 
 /**

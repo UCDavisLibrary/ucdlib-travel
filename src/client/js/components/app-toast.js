@@ -1,6 +1,6 @@
 import { html, LitElement } from 'lit';
 import {render, styles} from "./app-toast.tpl.js";
-import { LitCorkUtils, Mixin } from "../../../lib/appGlobals.js";
+import { LitCorkUtils, Mixin } from '@ucd-lib/cork-app-utils';
 
 
 /**

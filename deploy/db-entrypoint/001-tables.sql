@@ -211,11 +211,12 @@ CREATE TABLE reimbursement_request_fund (
     reimbursement_request_id INTEGER REFERENCES reimbursement_request(reimbursement_request_id),
     approval_request_funding_source_id INTEGER REFERENCES approval_request_funding_source(approval_request_funding_source_id),
     amount NUMERIC NOT NULL,
+    accounting_code VARCHAR(200),
+    reimbursement_status VARCHAR(100) NOT NULL DEFAULT 'submitted',
     added_by VARCHAR(100) REFERENCES employee(kerberos),
     added_at timestamp DEFAULT NOW(),
-    deleted BOOLEAN DEFAULT FALSE,
-    deleted_by VARCHAR(100) REFERENCES employee(kerberos),
-    deleted_at timestamp
+    modified_by VARCHAR(100) REFERENCES employee(kerberos),
+    modified_at timestamp
 );
 COMMENT ON TABLE reimbursement_request_fund IS 'Funding source reimbursements entered by Finance from Aggie Expense.';
 

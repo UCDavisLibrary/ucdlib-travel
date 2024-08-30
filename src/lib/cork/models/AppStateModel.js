@@ -248,7 +248,9 @@ class AppStateModelImpl extends AppStateModel {
    * @description Show the app's error page
    * @param {String|Object} msg Error message to show or cork-app-utils response object
    */
-  showError(msg='', fallbackMessage=''){
+  showError(msg='', kwargs={}){
+    let fallbackMessage = kwargs.fallbackMessage || '';
+    let ele = kwargs.ele;
     let errorMessage = '';
 
     // if array, find and use first error
@@ -258,7 +260,6 @@ class AppStateModelImpl extends AppStateModel {
     }
 
     if ( typeof msg === 'object' ) {
-      console.error(msg);
 
       // is object from Promise.allSettled
       if ( msg.status === 'fulfilled' ){
@@ -276,6 +277,16 @@ class AppStateModelImpl extends AppStateModel {
         errorMessage = msg?.error?.message;
       } else {
         errorMessage = fallbackMessage;
+      }
+
+      if ( msg?.error?.response?.status >= 500 && ele ){
+        const e = JSON.parse(JSON.stringify(msg));
+        e.response = {
+          status: msg?.error?.response?.status,
+          statusText: msg?.error?.response?.statusText,
+          url: msg?.error?.response?.url
+        };
+        ele.logger.error('network', e);
       }
     } else {
       errorMessage = msg;

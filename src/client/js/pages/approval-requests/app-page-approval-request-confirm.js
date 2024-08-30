@@ -1,6 +1,7 @@
 import { LitElement } from 'lit';
 import {render } from "./app-page-approval-request-confirm.tpl.js";
-import { LitCorkUtils, Mixin } from "../../../../lib/appGlobals.js";
+import { createRef } from 'lit/directives/ref.js';
+import { LitCorkUtils, Mixin } from '@ucd-lib/cork-app-utils';
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 import { WaitController } from "@ucd-lib/theme-elements/utils/controllers/wait.js";
 
@@ -38,6 +39,7 @@ export default class AppPageApprovalRequestConfirm extends Mixin(LitElement)
     this.approvalRequest = {};
     this.approvalChain = [];
     this.settingsCategory = 'approval-requests';
+    this.allocationSummaryRef = createRef();
     this.formLink = '';
 
     this._injectModel('AppStateModel', 'ApprovalRequestModel', 'SettingsModel');
@@ -64,7 +66,7 @@ export default class AppPageApprovalRequestConfirm extends Mixin(LitElement)
     const d = await this.getPageData();
     const hasError = d.some(e => e.status === 'rejected' || e.value.state === 'error');
     if ( hasError ) {
-      this.AppStateModel.showError(d);
+      this.AppStateModel.showError(d, {ele: this});
       return;
     }
 
@@ -93,10 +95,13 @@ export default class AppPageApprovalRequestConfirm extends Mixin(LitElement)
    */
   async getPageData(){
 
+    await this.waitController.waitForUpdate();
+
     const promises = [
       this.ApprovalRequestModel.query(this.queryObject),
       this.ApprovalRequestModel.getApprovalChain(this.approvalRequestId),
-      this.SettingsModel.getByCategory(this.settingsCategory)
+      this.SettingsModel.getByCategory(this.settingsCategory),
+      this.allocationSummaryRef.value.init()
     ]
     const resolvedPromises = await Promise.allSettled(promises);
     return promiseUtils.flattenAllSettledResults(resolvedPromises);
@@ -142,7 +147,7 @@ export default class AppPageApprovalRequestConfirm extends Mixin(LitElement)
     if ( e.action?.action !== 'submit' ) return;
 
     if ( e.state === 'error' ) {
-      this.AppStateModel.showError('Error submitting approval request.');
+      this.AppStateModel.showError(e, {ele: this});
       return;
     }
 

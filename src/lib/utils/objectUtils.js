@@ -84,6 +84,21 @@ class ObjectUtils {
     );
   }
 
+  /**
+   * @description Sum the values of an array of objects based on a key
+   * @param {Array} arr - array of objects
+   * @param {String} key - key to sum by
+   * @returns {Number}
+   */
+  sumArray(arr, key){
+    return arr.reduce((acc, item) => {
+      let n = Number(item[key]);
+      if (isNaN(n)) return acc;
+      acc += item[key];
+      return acc;
+    }, 0);
+  }
+
 }
 
 export default new ObjectUtils();

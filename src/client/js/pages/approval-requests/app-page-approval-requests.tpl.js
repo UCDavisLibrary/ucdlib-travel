@@ -4,6 +4,7 @@ import { ref } from 'lit/directives/ref.js';
 import '@ucd-lib/theme-elements/brand/ucd-theme-pagination/ucd-theme-pagination.js'
 import "../../components/approval-request-teaser.js";
 import "../../components/approval-request-draft-list.js";
+import "../../components/user-current-allocation-summary.js";
 
 export function render() {
 return html`
@@ -33,9 +34,14 @@ return html`
       </div>
     </div>
     <div class='l-sidebar-first'>
-    <approval-request-draft-list
-      ${ref(this.draftListSelectRef)}
-    ></approval-request-draft-list>
+      <user-current-allocation-summary
+        page-id=${this.id}
+        ${ref(this.allocationSummaryRef)}
+        >
+      </user-current-allocation-summary>
+      <approval-request-draft-list
+        ${ref(this.draftListSelectRef)}
+      ></approval-request-draft-list>
 
     </div>
 

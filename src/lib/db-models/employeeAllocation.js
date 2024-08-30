@@ -1,6 +1,7 @@
 import pg from "./pg.js";
 import EntityFields from "../utils/EntityFields.js";
 import employeeModel from "./employee.js";
+import fiscalYearUtils from "../utils/fiscalYearUtils.js";
 
 class EmployeeAllocation {
 
@@ -352,6 +353,98 @@ class EmployeeAllocation {
     // return updated records
     return await this.get({ids});
 
+  }
+
+  /**
+   * @description Get total allocations by start date
+   * @param {Object} kwargs - optional arguments including:
+   * - orderDirection: string - 'asc' or 'desc' (optional) - default 'desc'
+   * @returns {Array|Object} Object with error property if error, otherwise array of objects with the following properties:
+   * - startDate: string - start date in format YYYY-MM-DD
+   * - totalAllocation: number - total allocation for the start date
+   */
+  async getTotalByStartDate(kwargs={}){
+    const orderDirection = kwargs.orderDirection === 'asc' ? 'ASC' : 'DESC';
+    const whereArgs = {'ea.deleted': false};
+    const whereClause = pg.toWhereClause(whereArgs);
+    const query = `
+      SELECT
+        ea.start_date,
+        SUM(ea.amount) AS total_allocation
+      FROM
+        employee_allocation ea
+      WHERE ${whereClause.sql}
+      GROUP BY
+        ea.start_date
+      ORDER BY
+        ea.start_date ${orderDirection};
+    `;
+    const res = await pg.query(query, whereClause.values);
+    if( res.error ) return res;
+
+    const fields = new EntityFields([
+      {dbName: 'start_date', jsonName: 'startDate'},
+      {dbName: 'total_allocation', jsonName: 'totalAllocation'}
+    ]);
+    return fields.toJsonArray(res.res.rows);
+
+  }
+
+  /**
+   * @description Get total allocations by funding source and fiscal year
+   * @param {Object} query - optional query arguments including:
+   * - fiscalYears: array - array of fiscal start years
+   * - employees: array - array of employee kerberos ids
+   * @returns {Array|Object} Object with error property if error, otherwise array of objects with the following properties:
+   * - fiscalYear: number - fiscal year start year
+   * - fundingSourceId: number - funding source id
+   * - fundingSourceLabel: string - funding source label
+   * - totalAllocation: number - total allocation for the fiscal year and funding source
+   */
+  async getTotalByFundFy(query={}){
+    const fiscalYears = (query.fiscalYears || []).map(fy => fiscalYearUtils.fromStartYear(fy, true)).filter(fy => fy !== null);
+    const employees = Array.isArray(query.employees) ? query.employees : [];
+    
+    const whereArgs = {};
+    whereArgs['ea.deleted'] = false;
+    if ( fiscalYears.length ){
+      whereArgs['ea.start_date'] = fiscalYears.map(fy => fy.startDate({isoDate: true}));
+    }
+    if ( employees.length ) {
+      whereArgs['ea.employee_kerberos'] = employees;
+    }
+    const whereClause = pg.toWhereClause(whereArgs);
+    const sql = `
+    SELECT
+      fs.label AS funding_source_label,
+      fs.funding_source_id,
+      ea.start_date AS allocation_start,
+      SUM(ea.amount) AS total_allocation
+    FROM
+      employee_allocation ea
+    JOIN
+      funding_source fs ON fs.funding_source_id = ea.funding_source_id
+    WHERE ${whereClause.sql}
+    GROUP BY
+      fs.label, fs.funding_source_id, ea.start_date
+    ORDER BY
+      fs.label, ea.start_date;
+    `;
+    const res = await pg.query(sql, whereClause.values);
+    if( res.error ) return res;
+
+    const fields = new EntityFields([
+      {dbName: 'funding_source_label', jsonName: 'fundingSourceLabel'},
+      {dbName: 'funding_source_id', jsonName: 'fundingSourceId'},
+      {dbName: 'allocation_start', jsonName: 'allocationStart'},
+      {dbName: 'total_allocation', jsonName: 'totalAllocation'}
+    ]);
+    return fields.toJsonArray(res.res.rows).map(row => {
+      row.fiscalYear = fiscalYearUtils.fromDate(row.allocationStart).startYear;
+      delete row.allocationStart;
+      row.totalAllocation = Number(row.totalAllocation);
+      return row;
+    });
   }
 
   /**

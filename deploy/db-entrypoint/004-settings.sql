@@ -28,6 +28,9 @@ VALUES ('approval_chain_intro', '', 'Approval Chain Introduction', 'Displayed ab
 INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
 VALUES ('approval_chain_intro_none', '', 'Approval Chain Introduction (no approval required)', 'Displayed above list of required approvers if no approval is required.', 'Based on the funding sources selected, approval is not required for this request.', '1', NULL, '10', 'textarea', '{approval-requests,admin-settings}', '0');
 
+INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
+VALUES ('allocation_summary_description', '', 'Allocation Summary Description', 'Displays below the title of the "Your Allocations" widget', 'The following funding sources are subject to an allocation cap:', '1', NULL, '10', 'textarea', '{approval-requests,admin-settings}', '1');
+
 -- admin line items page
 INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
 VALUES ('admin_line_items_description', '', 'Admin - Line Items Description', 'Displays on top of line item admin settings page', 'Requesters will be able to select and assign monetary values to the following line items when submitting an approval form', '1', NULL, '100', 'textarea', '{admin-line-items,admin-settings}', '1');
@@ -57,3 +60,5 @@ VALUES ('site_wide_banner', '', 'Site wide banner text', NULL, '', '0', NULL, '1
 -- reimbursement requests
 INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
 VALUES ('reimbursement_form_exceed_message', '', 'Exceeded Approved Expenses Message', 'Displayed on reimbursement request form if expenses exceed approved dollar amount.', 'You have exceeded the approved dollar amount for this travel, training, or professional development event. <br /> <br />Please verify with initial approvers before submitting this request.', '1', NULL, '200', 'textarea', '{admin-settings,reimbursement-requests}', '1');
+INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
+VALUES ('reimbursement_no_fund_transactions_message', '', 'No Fund Transactions Message', 'Displays in "Reimbursement Status" section of reimbursement request if there has been nothing entered into Aggie Expense.', 'No reimbursements have been entered into Aggie Expense yet. Please check back later.', '1', NULL, '200', 'textarea', '{admin-settings,reimbursement-requests}', '1');

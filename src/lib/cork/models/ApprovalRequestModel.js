@@ -12,7 +12,7 @@ class ApprovalRequestModel extends BaseModel {
     this.store = ApprovalRequestStore;
     this.service = ApprovalRequestService;
 
-    this.register('ApprovalRequestModel');
+    this.register('ApprovalRequestModel', 'EmployeeAllocationModel');
   }
 
   async query(query={}) {
@@ -64,6 +64,7 @@ class ApprovalRequestModel extends BaseModel {
     const state = this.store.data.deleted[timestamp];
     if ( state && state.state === 'loaded' ) {
       this.store.data.fetched = {};
+      this.EmployeeAllocationModel.store.clearCache();
     }
     return state;
   }
@@ -83,6 +84,7 @@ class ApprovalRequestModel extends BaseModel {
     const state = this.store.data.created[timestamp];
     if ( state && state.state === 'loaded' ) {
       this.clearCache();
+      this.EmployeeAllocationModel.store.clearCache();
     }
     return state;
   }

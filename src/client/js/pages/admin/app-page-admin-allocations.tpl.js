@@ -2,6 +2,8 @@ import { html } from 'lit';
 import '@ucd-lib/theme-elements/brand/ucd-theme-slim-select/ucd-theme-slim-select.js'
 import '@ucd-lib/theme-elements/brand/ucd-theme-pagination/ucd-theme-pagination.js'
 
+import fiscalYearUtils from '../../../../lib/utils/fiscalYearUtils.js';
+
 /**
  * @description Main render function for this element
  */
@@ -49,12 +51,16 @@ function renderFilters() {
     <div class='allocations-filters l-3col'>
       <div class='l-first'>
         <div class='field-container'>
-          <label>Date Range</label>
-          <ucd-theme-slim-select @change=${e => this._onFilterChange(e.detail, 'selectedDateRangeFilters')}>
+          <label>Fiscal Year</label>
+          <ucd-theme-slim-select @change=${e => this._onFilterChange(e.detail, 'selectedFiscalYearFilters', true)}>
             <select multiple>
-              <option value='current' ?selected=${this.selectedDateRangeFilters.includes('current')}>Current</option>
-              <option value='future' ?selected=${this.selectedDateRangeFilters.includes('future')}>Future</option>
-              <option value='past' ?selected=${this.selectedDateRangeFilters.includes('past')}>Past</option>
+              ${this.fiscalYearFilters.map(fy => html`
+                <option
+                  value=${fy.startYear}
+                  ?selected=${this.selectedFiscalYearFilters.includes(fy.startYear)}
+                  >${fy.label}
+                </option>
+              `)}
             </select>
           </ucd-theme-slim-select>
         </div>
@@ -112,8 +118,9 @@ function renderAllocationItem(allocation) {
       <div class='allocation-details'>
         <h5>${allocation.employee.firstName} ${allocation.employee.lastName}</h5>
         <div class='primary bold'>${allocation.fundingSourceLabel}</div>
-        <div>From: ${allocation.startDate}</div>
-        <div>To: ${allocation.endDate}</div>
+        <div hidden>From: ${allocation.startDate}</div>
+        <div hidden>To: ${allocation.endDate}</div>
+        <div>Fiscal Year: ${fiscalYearUtils.fromDate(allocation.startDate)}</div>
         <div class='allocation-amount__mobile'>Amount: $${allocation.amount}</div>
       </div>
       <div class='allocation-amount__desktop u-space-ml'>$${allocation.amount}</div>

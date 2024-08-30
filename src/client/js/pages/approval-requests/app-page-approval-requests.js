@@ -2,7 +2,7 @@ import { LitElement } from 'lit';
 import {render} from "./app-page-approval-requests.tpl.js";
 import { createRef } from 'lit/directives/ref.js';
 
-import { LitCorkUtils, Mixin } from "../../../../lib/appGlobals.js";
+import { LitCorkUtils, Mixin } from '@ucd-lib/cork-app-utils';
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 import { WaitController } from "@ucd-lib/theme-elements/utils/controllers/wait.js";
 
@@ -30,6 +30,7 @@ export default class AppPageApprovalRequests extends Mixin(LitElement)
     this.page = 1;
     this.approvalRequests = [];
     this.draftListSelectRef = createRef();
+    this.allocationSummaryRef = createRef();
     this.waitController = new WaitController(this);
 
     this._injectModel('AppStateModel', 'ApprovalRequestModel', 'AuthModel');
@@ -63,7 +64,7 @@ export default class AppPageApprovalRequests extends Mixin(LitElement)
     const d = await this.getPageData();
     const hasError = d.some(e => e.status === 'rejected' || e.value.state === 'error');
     if ( hasError ) {
-      this.AppStateModel.showError(d);
+      this.AppStateModel.showError(d, {ele: this});
       return;
     }
     await this.waitController.waitForFrames(5);
@@ -79,6 +80,7 @@ export default class AppPageApprovalRequests extends Mixin(LitElement)
 
     const promises = [
       this.ApprovalRequestModel.query(this.queryArgs),
+      this.allocationSummaryRef.value.init(),
       this.draftListSelectRef.value.init()
     ]
     const resolvedPromises = await Promise.allSettled(promises);

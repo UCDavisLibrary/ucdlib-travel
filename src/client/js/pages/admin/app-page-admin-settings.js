@@ -1,6 +1,6 @@
 import { LitElement } from 'lit';
 import {render} from "./app-page-admin-settings.tpl.js";
-import { LitCorkUtils, Mixin } from "../../../../lib/appGlobals.js";
+import { LitCorkUtils, Mixin } from '@ucd-lib/cork-app-utils';
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 
 /**
@@ -65,7 +65,7 @@ export default class AppPageAdminSettings extends Mixin(LitElement)
       this._setSettingsProperty(e.payload);
       this.AppStateModel.showLoaded(this.id)
     } else if ( e.state === 'error' ) {
-      this.AppStateModel.showError(e, 'Unable to load settings.');
+      this.AppStateModel.showError(e, {ele: this, fallbackMessage: 'Unable to load settings.'});
     } else if ( e.state === 'loading' ) {
       this.AppStateModel.showLoading();
     }

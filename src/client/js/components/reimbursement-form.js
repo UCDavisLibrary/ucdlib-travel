@@ -5,9 +5,9 @@ import { render } from "./reimbursement-form.tpl.js";
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 import { WaitController } from '@ucd-lib/theme-elements/utils/controllers/wait.js';
 
-import { LitCorkUtils, Mixin } from "../../../lib/appGlobals.js";
+import { LitCorkUtils, Mixin } from '@ucd-lib/cork-app-utils';
 import ValidationHandler from "../utils/ValidationHandler.js";
-import reimbursmentExpenses from '../../../lib/utils/reimbursmentExpenses.js';
+import reimbursementExpenses from '../../../lib/utils/reimbursementExpenses.js';
 
 export default class ReimbursementForm extends Mixin(LitElement)
   .with(LitCorkUtils, MainDomElement) {
@@ -55,7 +55,7 @@ export default class ReimbursementForm extends Mixin(LitElement)
   }
 
   willUpdate(){
-    this.totalExpenses = reimbursmentExpenses.addExpenses(this.reimbursementRequest);
+    this.totalExpenses = reimbursementExpenses.addExpenses(this.reimbursementRequest);
     this.hasOtherTotalExpenses = this.otherTotalExpenses !== '0.00';
     this._setNetExpenses();
   }
@@ -323,7 +323,7 @@ export default class ReimbursementForm extends Mixin(LitElement)
       return;
     }
 
-    this.addBlankExpense(reimbursmentExpenses.dailyExpense.value, null, value);
+    this.addBlankExpense(reimbursementExpenses.dailyExpense.value, null, value);
     this._setUniqueDates();
     this._resetNewDateInput();
     this.showNewDate = false;
@@ -340,7 +340,7 @@ export default class ReimbursementForm extends Mixin(LitElement)
    * @description Set the unique dates for daily expenses in the reimbursement request from the expenses array
    */
   _setUniqueDates(){
-    const dates = this.reimbursementRequest.expenses.filter(e => e.category === reimbursmentExpenses.dailyExpense.value).map(e => e.date);
+    const dates = this.reimbursementRequest.expenses.filter(e => e.category === reimbursementExpenses.dailyExpense.value).map(e => e.date);
     this.uniqueDates = [...new Set(dates)];
   }
 
