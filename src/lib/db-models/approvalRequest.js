@@ -9,6 +9,7 @@ import typeTransform from "../utils/typeTransform.js";
 import IamEmployeeObjectAccessor from "../utils/iamEmployeeObjectAccessor.js";
 import applicationOptions from "../utils/applicationOptions.js";
 import objectUtils from "../utils/objectUtils.js";
+import emailController from "./emailController.js";
 import fiscalYearUtils from "../utils/fiscalYearUtils.js";
 
 class ApprovalRequest {
@@ -237,6 +238,22 @@ class ApprovalRequest {
       whereArgs['ar.approval_status'] = kwargs.approvalStatus;
     }
 
+    if ( kwargs.programEndDate ){
+      whereArgs['ar.program_end_date'] = kwargs.programEndDate;
+    }
+
+    if ( kwargs.programStartDate ){
+      whereArgs['ar.program_start_date'] = kwargs.programStartDate;
+    }
+
+    if ( kwargs.travelEndDate ){
+      whereArgs['ar.travel_end_date'] = kwargs.travelEndDate;
+    }
+
+    if ( kwargs.travelStartDate ){
+      whereArgs['ar.travel_start_date'] = kwargs.travelStartDate;
+    }
+
     if ( kwargs.isCurrent ){
       whereArgs['ar.is_current'] = true;
     } else if ( kwargs.isNotCurrent ){
@@ -458,7 +475,6 @@ class ApprovalRequest {
    * @returns {Object}
    */
   async createRevision(data, submittedBy, forceValidation){
-
     // if submittedBy is provided, assign approval request revision to that employee
     if ( submittedBy ){
       data.employee = submittedBy;
@@ -778,6 +794,32 @@ class ApprovalRequest {
   }
 
   /**
+   * @description add the notification to the notification table
+   * @param {Number} approvalRequestRevisionId - approval request ID
+   * @param {String} kerb - kerberos
+   * @param {String} action - action object
+   * @returns
+   */
+  async addNotification(approvalRequestRevisionId, kerb, action){
+    // get max approver order
+    let sql = `SELECT MAX(approver_order) as max_order FROM approval_request_approval_chain_link WHERE approval_request_revision_id = $1`;
+    const maxOrderResApprover = await pg.query(sql, [approvalRequestRevisionId]);
+    const maxOrderApprover = maxOrderResApprover.res.rows[0].max_order || 0;
+
+
+    // insert submission to approval status activity table
+    let notification = {
+      approval_request_revision_id: approvalRequestRevisionId,
+      approver_order: maxOrderApprover + 1,
+      action: action,
+      employee_kerberos: kerb
+    }
+    notification = pg.prepareObjectForInsert(notification);
+    sql = `INSERT INTO approval_request_approval_chain_link (${notification.keysString}) VALUES (${notification.placeholdersString}) RETURNING approval_request_approval_chain_link_id`;
+    await pg.query(sql, notification.values);
+  }
+
+  /**
    * @description Submit an existing approval request draft for approval
    * @param {Object|Number} approvalRequestObjectOrId - approval request object or approval request ID
    * @returns {Object} - {success: true} or {error: true}
@@ -875,9 +917,69 @@ class ApprovalRequest {
       client.release();
     }
 
+    // get and return full record that was just created
+    let out = await this.get({revisionIds: [approvalRequestRevisionId]});
+    if ( out.error ) {
+      return out;
+    }
+    out = out.data[0];
+    this.addNotification(approvalRequestRevisionId, out.employeeKerberos, "request-notification");
+    
+    const approverEmployee = out.approvalStatusActivity.filter((o) => o.action == 'approval-needed');
+    this.addNotification(approvalRequestRevisionId, approverEmployee[0].employeeKerberos, "approver-notification");
+
+    out = await this.get({revisionIds: [approvalRequestRevisionId]});
+    if ( out.error ) {
+      return out;
+    }
+    out = out.data[0];
+
+    let tokenRequest = {preferred_username: out.employeeKerberos}
+
+    const payloadRequest = {
+      requests: {
+        approvalRequest: out,
+        reimbursementRequest: {},
+      },
+      token: tokenRequest,
+      notificationType: 'request'
+    }
+
+    await emailController.sendSystemNotification(payloadRequest.notificationType, 
+                                                 payloadRequest.requests.approvalRequest, 
+                                                 payloadRequest.requests.reimbursementRequest, 
+                                                 payloadRequest);
+
+    let tokenApprover = {preferred_username: approverEmployee[0].employeeKerberos}
+
+    //Email first approver
+    const payloadNextApprover = {
+      requests: {
+        approvalRequest: out,
+        reimbursementRequest: {},
+      },
+      token: tokenApprover,
+      notificationType: 'next-approver'
+    }
+    
+    await emailController.sendSystemNotification(payloadNextApprover.notificationType, 
+                                                  payloadNextApprover.requests.approvalRequest, 
+                                                  payloadNextApprover.requests.reimbursementRequest, 
+                                                  payloadNextApprover
+                                                );
+
     return {success: true, approvalRequestId, approvalRequestRevisionId};
   }
 
+  /**
+   * @description Update requester status to a new status for an requester
+   * @param {Object|Number} approvalRequestObjectOrId - approval request object or approval request ID
+   * @param {Object} actionPayload - object with properties:
+   * - action {String} - new action status
+   * - comments {String} OPTIONAL - comments for the action
+   * - fundingSources {Array} OPTIONAL - Array of funding source objects with updated amounts
+   * @returns {Object} - {success: true} or {error: true}
+   */
   async doRequesterAction(approvalRequestObjectOrId, actionPayload){
 
     // get approval request
@@ -960,6 +1062,7 @@ class ApprovalRequest {
    * @returns {Object} - {success: true} or {error: true}
    */
   async doApproverAction(approvalRequestObjectOrId, actionPayload, approverKerberos){
+    let notification;
 
     // get approval request
     const { approvalRequest, approvalRequestError, approvalRequestId } = await this._getApprovalRequest(approvalRequestObjectOrId);
@@ -1062,6 +1165,73 @@ class ApprovalRequest {
       return {error: e};
     } finally {
       client.release();
+    }
+
+    let out = await this.get({revisionIds: [approvalRequestRevisionId]});
+    if ( out.error ) {
+      return out;
+    }
+
+    out = out.data[0]; 
+
+    let aKerberos = out.approvalStatusActivity.filter(a => a.action === 'approve' ||
+                                                           a.action === 'approve-with-changes' ||
+                                                           a.action === 'deny' ||
+                                                           a.action === 'request-revision'
+                                                      );
+
+    out = await this.get({revisionIds: [approvalRequestRevisionId]});
+    if ( out.error ) {
+      return out;
+    }
+    out = out.data[0];
+    
+    let lastApprover = aKerberos.pop();
+
+    let token = {preferred_username: approverKerberos}
+
+
+    const payloadApprover = {
+      "requests": {
+        approvalRequest: approvalRequest,
+        reimbursementRequest: {},
+      },
+      token: token,
+    }
+
+    if(action.value == 'approve' || action.value == 'approve-with-changes'){
+      let notified;
+      if(lastApprover.employeeKerberos === approverKerberos){
+        notified = "request-notification";
+        notification = 'chain-completed';
+      } else {
+        notified = "approver-notification";
+        notification = 'next-approver';
+      }
+
+      this.addNotification(approvalRequestRevisionId, approverKerberos, notified);
+
+      payloadApprover.notificationType = notification;
+  
+      await emailController.sendSystemNotification( payloadApprover.notificationType, 
+        payloadApprover.requests.approvalRequest, 
+        payloadApprover.requests.reimbursementRequest, 
+        payloadApprover
+      );
+
+    } 
+    
+    if (action.value == 'deny' || action.value == 'request-revision') {
+      notification = 'approver-change';
+      this.addNotification(approvalRequestRevisionId, approverKerberos, "request-notification");
+
+      payloadApprover.notificationType = notification;
+
+      await emailController.sendSystemNotification( payloadApprover.notificationType, 
+        payloadApprover.requests.approvalRequest, 
+        payloadApprover.requests.reimbursementRequest, 
+        payloadApprover
+      );
     }
 
     return {success: true, approvalRequestId, approvalRequestRevisionId};
