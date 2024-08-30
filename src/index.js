@@ -22,6 +22,8 @@ uploads.setUpRoutes(app);
 
 emailController.emailDailyRunner();
 
+serverConfig.printStatus();
+
 const port = serverConfig.port.container;
 app.listen(port, () => {
   console.log(`Server listening on port ${port}`);

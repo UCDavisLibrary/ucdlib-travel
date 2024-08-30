@@ -39,6 +39,8 @@ export default (api) => {
       return res.status(500).json({error: true, message: 'Error getting reimbursement requests.'});
     }
 
+    if ( !results.total ) return res.json(results);
+
     // do auth - which is determined by associated approval request
     const approvalRequestIds = [...(new Set(results.data.map(rr => rr.approvalRequestId)))];
     let arQuery = {

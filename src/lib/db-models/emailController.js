@@ -52,7 +52,7 @@ class Email {
     }
 
 
-    // //log it and send to database 
+    // //log it and send to database
     let notification = {
       approvalRequestRevisionId: requests?.approvalRequestId || null,
       reimbursementRequestId: requests?.reimbursementRequestId || null,
@@ -62,7 +62,7 @@ class Email {
       details: details,
       notificationType: null
     };
-  
+
     let result = await logging.addNotificationLogging(notification);
 
     if (result.error){ console.error('error logging notification', result) }
@@ -75,16 +75,16 @@ class Email {
    * @param {Object} notificationType - The type of the notification
    * @param {Object} approvalRequest - Approval Request
    * @param {Object} reimbursementRequest - Reimbursement Request
-   * @param {Object} payload - The object with email content and approval and reimbursement requests    
+   * @param {Object} payload - The object with email content and approval and reimbursement requests
    * @returns {Object} status, id
    */
-  async sendSystemNotification(notificationType, approvalRequest, reimbursementRequest, payload){ 
+  async sendSystemNotification(notificationType, approvalRequest, reimbursementRequest, payload){
     let emailSent;
     let details = {};
-    let token = payload.token;
+    let token = payload?.token;
 
     //Go into the settings and get the template for the situation
-    const [bodyTemplate, subjectTemplate] =  await settings._getTemplates(notificationType); 
+    const [bodyTemplate, subjectTemplate] =  await settings._getTemplates(notificationType);
 
     const hydration = new Hydration(approvalRequest, reimbursementRequest, notificationType);
 
@@ -120,9 +120,12 @@ class Email {
 
     details.to = to;
     details.from = from;
+    details.hasBodyTemplate = bodyTemplate ? true : false;
+    details.hasSubjectTemplate = subjectTemplate ? true : false;
+    details.body = text;
+    details.emailEnabled = serverConfig.email.enabled;
 
-
-    // Log it and send to database 
+    // Log it and send to database
     let notification = {
       approvalRequestRevisionId: approvalRequest?.approvalRequestRevisionId || null,
       reimbursementRequestId: reimbursementRequest?.reimbursementRequestId || null,
@@ -139,7 +142,7 @@ class Email {
       console.error( 'error writing notification log', notification, error);
     }
 
-    return result;
+    return emailSent;
   }
 
   /**
@@ -148,19 +151,19 @@ class Email {
    * @returns {Array} year, day, month
    */
   formatDate(date = '') {
-    
+
     let d = (date == '') ? new Date() : new Date(date);
 
     let month = '' + (d.getMonth() + 1);
     let day = '' + d.getDate();
     let year = d.getFullYear();
-    
+
     if (month.length < 2) month = '0' + month;
     if (day.length < 2) day = '0' + day;
-    
+
     return [year, month, day].join('-');
   }
-    
+
 
   /**
    * @description get the notification history that is logged
@@ -179,39 +182,55 @@ class Email {
   /**
    * @description schedule emails on a day
    */
-  async emailScheduler(){
+  async emailScheduler(suppressLogs = false){
       let approvalRequests = await ApprovalRequest.get({programEndDate: this.formatDate(), pageSize: -1});
+      if (approvalRequests.error) {
+        console.error('error getting approval requests', approvalRequests);
+        return;
+      }
       approvalRequests = approvalRequests.data.filter(a => a.approvalStatus === "approved");
 
       if(approvalRequests.length !== 0){
         for(let ar of approvalRequests) {
-            const payloadFundedHours= {
-              "requests": {
-                approvalRequest: ar,
-                reimbursementRequest: {},
-              },
-              token: null,
-              notificationType: 'funded-hours' //notification type
+          const payloadFundedHours= {
+            "requests": {
+              approvalRequest: ar,
+              reimbursementRequest: {},
+            },
+            token: null,
+            notificationType: 'funded-hours' //notification type
+          }
+
+          const notificantionSent = await this.sendSystemNotification(
+            payloadFundedHours.notificationType,
+            payloadFundedHours.requests.approvalRequest,
+            payloadFundedHours.requests.reimbursementRequest,
+            payloadFundedHours
+          );
+          if ( !suppressLogs ){
+            if ( notificantionSent ){
+              console.log('Funded hours email sent for approval request', ar.label, ar.approvalRequestRevisionId);
+            } else {
+              console.log('Funded hours email failed for approval request', ar.label, ar.approvalRequestRevisionId);
             }
-            
-            await this.sendSystemNotification(payloadFundedHours.notificationType, 
-              payloadFundedHours.requests.approvalRequest, 
-              payloadFundedHours.requests.reimbursementRequest, 
-              payloadFundedHours);   
-        }  
+          }
+        }
+      } else {
+        if ( !suppressLogs ){
+          console.log('No funded hours emails to send');
+        }
       }
 
   }
 
   async emailDailyRunner(){
     if(serverConfig.email.enableCron) {
-      cron.schedule("0 8 * * *", async () => {   
+      cron.schedule("0 8 * * *", async () => {
         this.emailScheduler();
       });
     }
-
   }
-  
+
 }
 
 export default new Email();

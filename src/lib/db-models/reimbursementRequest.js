@@ -455,39 +455,43 @@ class ReimbursementRequest {
     } finally {
       client.release();
     }
+    if ( out.error ) return out;
+    out = {success: true, reimbursementRequestId};
 
+    // send notification and add to approval request activity table
+    // fail silently if there is an error
+    const notificationErrorMessage = 'Error sending notification';
 
     let rr = await this.get({reimbursementRequestIds: [reimbursementRequestId]});
-    if (rr.error){ console.error('error retrieving reimbursement', rr) }
-
+    if (rr.error){
+      console.error(notificationErrorMessage, rr);
+      return out;
+    }
 
     let approvalRequestData = await pg.query('SELECT * FROM approval_request WHERE approval_request_id = $1 AND is_current = true', [data.approval_request_id]);
+    if (approvalRequestData.error || !approvalRequestData.res.rows.length){
+      console.error(notificationErrorMessage, approvalRequestData);
+      return out;
+    }
     approvalRequestData = approvalRequestData.res.rows[0];
     const approvalRequestRevisionId = approvalRequestData.approval_request_revision_id;
-
-    this.addNotification(approvalRequestRevisionId, reimbursementRequestId, approvalRequestData.employee_kerberos, "reimbursement-notification");
-
-    rr = await this.get({reimbursementRequestIds: [reimbursementRequestId]});
-    if (rr.error){ console.error('error retrieving reimbursement', rr) }
-
-    let token = {preferred_username: approvalRequestData.employee_kerberos}
 
     const payloadSubmitReimbursement = {
       requests: {
         approvalRequest: approvalRequestData,
         reimbursementRequest: rr.data[0],
       },
-      token: token,
       notificationType: 'submit-reimbursement'
     }
 
-    await emailController.sendSystemNotification( payloadSubmitReimbursement.notificationType, 
-      payloadSubmitReimbursement.requests.approvalRequest, 
-      payloadSubmitReimbursement.requests.reimbursementRequest, 
+    const notificationSent = await emailController.sendSystemNotification(
+      payloadSubmitReimbursement.notificationType,
+      payloadSubmitReimbursement.requests.approvalRequest,
+      payloadSubmitReimbursement.requests.reimbursementRequest,
       payloadSubmitReimbursement
     );
 
-    return {success: true, reimbursementRequestId};
+    return out;
 
   }
 
@@ -847,7 +851,7 @@ class ReimbursementRequest {
 
   /**
    * @description Get total reimbursement request reimbursement amount grouped by funding source and employee
-   * @param {*} query 
+   * @param {*} query
    */
   async getTotalFundingSourceExpendituresByEmployee(query={}){
     const whereArgs = {'1': '1'};

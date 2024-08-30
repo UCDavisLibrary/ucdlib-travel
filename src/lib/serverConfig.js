@@ -52,7 +52,7 @@ class ServerConfig {
       key: this.getEnv('UCDLIB_PERSONNEL_API_KEY', ''),
       serverCacheExpiration: this.getEnv('UCDLIB_PERSONNEL_API_CACHE_EXPIRATION', '24 hours')
     }
-    
+
     this.email = {
       host: this.getEnv('APP_SMTP_HOST', 'smtp.lib.ucdavis.edu'),
       port: this.getEnv('APP_SMTP_PORT', '25'),
@@ -62,7 +62,7 @@ class ServerConfig {
       notificationRecipient: this.getEnv('APP_SMTP_NOTIFICATION_EMAIL_ADDRESS', ''),
       enableCron: this.getEnv('APP_SMTP_ENABLE_CRON', false)
     }
-    
+
     this.logger = {
       logLevel: this.getEnv('APP_LOGGER_LOG_LEVEL', 'info'),
       logLevels: {},
@@ -77,6 +77,17 @@ class ServerConfig {
         customAttributes: {appOwner: 'itis', appName: 'travel-app'}
       }
     }
+  }
+
+  /**
+   * @description Print the current status of the server configuration to the console.
+   */
+  printStatus() {
+    console.log('Error Reporting:', this.logger.reportErrors.enabled ? 'Enabled' : 'Disabled');
+    console.log('Email Notifications:', this.email.enabled ? 'Enabled' : 'Disabled');
+    console.log('Email Cron:', this.email.enableCron ? 'Enabled' : 'Disabled');
+    console.log('System Email Address:', this.email.systemEmailAddress);
+    console.log('Notification Recipient Override:', this.email.notificationRecipient);
   }
 
   /**

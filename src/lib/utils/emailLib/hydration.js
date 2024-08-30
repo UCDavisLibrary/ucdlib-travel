@@ -44,16 +44,17 @@ export default class Hydration {
   * @returns approver list
 */
 approvers(){
-  if(this.type == "request" || this.type == "next-approver") return this.approvalRequest.approvalStatusActivity.filter(x => x.action == 'approval-needed');
-  if(this.type == "request-cancel") return this.approvalRequest.approvalStatusActivity.filter(x => (x.action == 'approved') || (x.action == 'approved-with-changes'));
-
+  const approvalStatusActivity = this.approvalRequest?.approvalStatusActivity || [];
+  if(this.type == "request" || this.type == "next-approver") return approvalStatusActivity.filter(x => x.action == 'approval-needed');
+  if(this.type == "request-cancel") return approvalStatusActivity.filter(x => (x.action == 'approved') || (x.action == 'approved-with-changes'));
+  return [];
 }
 /**
   * @description requester first name
   * @returns requester first name
 */
 _getRequesterFirstName(){
-  return this.approvalRequest.employee.firstName;
+  return this.approvalRequest?.employee?.firstName || '';
 }
 
 /**
@@ -61,7 +62,7 @@ _getRequesterFirstName(){
   * @returns requester last name
 */
 _getRequesterLastName(){
-  return this.approvalRequest.employee.lastName;
+  return this.approvalRequest?.employee?.lastName || '';
 }
 
 /**
@@ -77,7 +78,7 @@ _getRequesterFullName(){
   * @returns requester kerberos
 */
 _getRequesterKerberos(){
-  return this.approvalRequest.employeeKerberos;
+  return this.approvalRequest?.employeeKerberos || '';
 }
 
 /**
@@ -85,7 +86,7 @@ _getRequesterKerberos(){
   * @returns requester label
 */
 _getRequesterLabel(){
-  return this.approvalRequest.label;
+  return this.approvalRequest?.label || '';
 }
 
 /**
@@ -93,7 +94,7 @@ _getRequesterLabel(){
   * @returns requester organization
 */
 _getRequesterOrganization(){
-  return this.approvalRequest.organization;
+  return this.approvalRequest?.organization || '';
 }
 
 /**
@@ -101,7 +102,7 @@ _getRequesterOrganization(){
   * @returns requester buisness purpose
 */
 _getRequesterBuisnessPurpose(){
-  return this.approvalRequest.businessPurpose;
+  return this.approvalRequest?.businessPurpose || '';
 }
 
 /**
@@ -109,8 +110,8 @@ _getRequesterBuisnessPurpose(){
   * @returns requester location
 */
 _getRequesterLocation(){
-  if(this.approvalRequest.location == 'virtual') return "Virtual"
-  return this.approvalRequest.locationDetails;
+  if(this.approvalRequest?.location == 'virtual') return "Virtual"
+  return this.approvalRequest?.locationDetails || '';
 }
 
 /**
@@ -118,7 +119,7 @@ _getRequesterLocation(){
   * @returns requester program date
 */
 _getRequesterProgramDate(){
-  return `${this.approvalRequest.programStartDate} - ${this.approvalRequest.programEndDate} `;
+  return `${this.approvalRequest?.programStartDate || ''} - ${this.approvalRequest?.programEndDate || ''} `;
 }
 
 /**
@@ -126,7 +127,7 @@ _getRequesterProgramDate(){
   * @returns requester travel date
 */
 _getRequesterTravelDate(){
-  return `${this.approvalRequest.programStartDate} - ${this.approvalRequest.programEndDate} ` || 'Not Included';
+  return `${this.approvalRequest?.travelStartDate || ''} - ${this.approvalRequest?.travelEndDate || ''} ` || 'Not Included';
 }
 
 /**
@@ -134,7 +135,7 @@ _getRequesterTravelDate(){
   * @returns requester comments
 */
 _getRequesterComments(){
-  return this.approvalRequest.comments;
+  return this.approvalRequest?.comments || '';
 }
 
 /**
@@ -143,7 +144,8 @@ _getRequesterComments(){
 */
 _getNextApproverFullName(){
   let results = this.approvers();
-  return `${results[0].employee.firstName} ${results[0].employee.lastName}`;
+  if ( !results?.length ) return '';
+  return `${results[0].employee?.firstName} ${results[0].employee?.lastName}`;
 }
 
 /**
@@ -152,7 +154,8 @@ _getNextApproverFullName(){
 */
 _getNextApproverFundChanges(){
   let results = this.approvers();
-  return results[0].fundChanges;
+  if ( !results?.length ) return '';
+  return results[0]?.fundChanges || '';
 }
 
 /**
@@ -161,7 +164,8 @@ _getNextApproverFundChanges(){
 */
 _getNextApproverKerberos(){
   let results = this.approvers();
-  return results[0].employeeKerberos;
+  if ( !results?.length ) return '';
+  return results[0].employeeKerberos || '';
 }
 
 /**
@@ -169,7 +173,7 @@ _getNextApproverKerberos(){
   * @returns reimbursement label
 */
 _getReimbursementLabel(){
-  return this.reimbursementRequest.label;
+  return this.reimbursementRequest?.label || '';
 }
 
 /**
@@ -177,15 +181,7 @@ _getReimbursementLabel(){
   * @returns reimbursement employee residence
 */
 _getReimbursementEmployeeResidence(){
-  return this.reimbursementRequest.employeeResidence;
-}
-
-/**
-  * @description reimbursement travel date
-  * @returns reimbursement travel date
-*/
-_getReimbursementTravelDate(){
-  return `${this.reimbursementRequest.travelStart} - ${this.reimbursementRequest.travelEnd} ` || 'Not Included';
+  return this.reimbursementRequest?.employeeResidence || '';
 }
 
 /**
@@ -193,7 +189,7 @@ _getReimbursementTravelDate(){
   * @returns reimbursement personal time
 */
 _getReimbursementPersonalTime(){
-  return this.reimbursementRequest.personalTime;
+  return this.reimbursementRequest?.personalTime || '';
 }
 
 /**
@@ -201,7 +197,7 @@ _getReimbursementPersonalTime(){
   * @returns reimbursement comments
 */
 _getReimbursementComments(){
-  return this.reimbursementRequest.comments;
+  return this.reimbursementRequest?.comments || '';
 }
 
 /**
@@ -209,7 +205,7 @@ _getReimbursementComments(){
   * @returns reimbursement status
 */
 _getReimbursementStatus(){
-  return this.reimbursementRequest.status;
+  return this.reimbursementRequest?.status || '';
 }
 
 /**
@@ -217,7 +213,7 @@ _getReimbursementStatus(){
   * @returns approval request url
 */
 _getApprovalRequestUrl(){
-  return `${serverConfig.appRoot}/approval-request/${this.approvalRequest.approvalRequestId}`;
+  return `${serverConfig.appRoot}/approval-request/${this.approvalRequest?.approvalRequestId || ''}`;
 }
 
 /**
@@ -225,7 +221,13 @@ _getApprovalRequestUrl(){
   * @returns  reimbursement url
 */
 _getReimbursementRequestUrl(){
-  return `${serverConfig.appRoot}/reimbursement-request/${this.reimbursementRequest.reimbursementRequestId}`;
+  return `${serverConfig.appRoot}/reimbursement-request/${this.reimbursementRequest?.reimbursementRequestId || ''}`;
+}
+
+_getReimbursementTravelDate(){
+  const start = this.reimbursementRequest?.travelStart || '';
+  const end = this.reimbursementRequest?.travelEnd || '';
+  return `${start} - ${end}`;
 }
 
 /**
@@ -233,17 +235,13 @@ _getReimbursementRequestUrl(){
   * @returns email(s)
 */
 async _getRequesterEmail(){
-  let emp = {};
-
-  emp.emp = await employee.getIamRecordById(this.approvalRequest.employeeKerberos);
-  if ( emp.emp.error) {
-    console.error('Error getting employee object', emp.emp.error);
-    return null;
+  const emp = await employee.getIamRecordById(this.approvalRequest.employeeKerberos);
+  if ( emp.error) {
+    console.error('Error getting employee object', emp.error);
+    return '';
   }
-
-  let email = emp.emp.res.email || null;
+  let email = emp.res.email || '';
   return email;
-
 }
 
 /**
@@ -251,20 +249,18 @@ async _getRequesterEmail(){
   * @returns email(s)
 */
 async _getNextApproverEmail(){
-  let emp = {};
   let results = this.approvers();
+  let approver = results?.[0]?.employeeKerberos;
 
-  let approver = results[0].employeeKerberos;
+  if(approver === undefined || approver.length == 0) return '';
 
-  if(approver === undefined || approver.length == 0) return;
-
-  emp.emp = await employee.getIamRecordById(approver);
-  if ( emp.emp.error) {
-    console.error('Error getting employee object', emp.emp.error);
-    return null;
+  const emp = await employee.getIamRecordById(approver);
+  if ( emp.error) {
+    console.error('Error getting employee object', emp.error);
+    return '';
   }
 
-  let email = emp.emp.res.email || null;
+  let email = emp.res.email || null;
   return email;
 }
 
@@ -274,22 +270,21 @@ async _getNextApproverEmail(){
 */
 async _getAllApprovedEmail(){
   let emp = {};
-  let emps = []; 
+  let emps = [];
   let records = [];
   let results = this.approvers();
 
   results.map(r => records.push(r.employeeKerberos));
+  if (records.length == 0) return [];
 
   emp.emp = await employee.getIamRecordById(records);
-
-
   if ( emp.emp.error) {
     console.error('Error getting employee object', emp.emp.error);
-    return null;
+    return [];
   }
 
   emp.emp.res.map(e => emps.push(e.email));
-
+  emps = emps.filter(e => e);
   return emps;
 }
 
@@ -300,10 +295,9 @@ async _getAllApprovedEmail(){
 async _getHrEmail(){
   let hrEmailObject = await settings._getEmail();
 
-
   if ( hrEmailObject.error ) {
     console.error('Error getting setting hrEmail object in POST /system-notification', hrEmailObject.error);
-    return null;
+    return '';
   }
 
   return hrEmailObject;
@@ -333,8 +327,14 @@ _getContext(content){
   * @returns hydrated email template
 */
   hydrate(content){
-    const context = this._getContext(content);
-    return this._evaluateTemplate(content, context);
+    let output = '';
+    try {
+      const context = this._getContext(content);
+      output = this._evaluateTemplate(content, context);
+    } catch (error) {
+      console.error('Error hydrating email template', error);
+    }
+    return output;
   }
 
 /**
@@ -344,7 +344,7 @@ _getContext(content){
   * @returns template
 */
   _evaluateTemplate(template, context) {
-    const templateFunction = new Function(...Object.keys(context), `return \`${JSON.stringify(template)}\`;`);
+    const templateFunction = new Function(...Object.keys(context), `return \`${template}\`;`);
     return templateFunction(...Object.values(context));
   }
 
@@ -355,38 +355,38 @@ _getContext(content){
   getNotificationRecipient(){
     let recipient;
 
-    /* Requester 
+    /* Requester
       - Approver denies, changes requested, or approves but modifies request
       - All approvers in chain have approved request
-      - Finance/HR completed of funded trip send xx number of hours (from settings) 
+      - Finance/HR completed of funded trip send xx number of hours (from settings)
       - Finance/HR enters reimbursement into Aggie Expense
       - Finance/HR states one of the reimbursement refund goes through
       - Finance/HR states all reimbursement refunds are complete
     */
       if(this.type == 'approver-change' ||
          this.type == 'chain-completed' ||
-         this.type == 'funded-hours'
+         this.type == 'funded-hours' ||
+         this.type == 'request'
         ) recipient = this._getRequesterEmail();
-   
-      
-    /* One/Next Approver 
+
+
+    /* One/Next Approver
       - Requester submits/resubmits approval request
       - An approver approves approval request
       -
     */
-      if(this.type == 'request' ||
-         this.type == 'next-approver'
+      if( this.type == 'next-approver'
         ) {
           recipient = this._getNextApproverEmail();
         }
 
 
-    /* Many Approvers 
+    /* Many Approvers
       - Requester recalls/cancels approval request
     */
       if(this.type == 'request-cancel') recipient = this._getAllApprovedEmail();
 
-    /* Finance/HR  
+    /* Finance/HR
       - Requester submits reimbursement
     */
       if(this.type == 'submit-reimbursement') recipient = this._getHrEmail();
@@ -396,5 +396,5 @@ _getContext(content){
   }
 
 }
- 
+
 
