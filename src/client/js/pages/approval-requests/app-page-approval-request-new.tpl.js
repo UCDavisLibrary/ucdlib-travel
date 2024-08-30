@@ -4,10 +4,12 @@ import { ref } from 'lit/directives/ref.js';
 
 import "../../components/funding-source-select.js";
 import "../../components/approval-request-draft-list.js";
+import "../../components/character-limit-tracker.js"
+import "../../components/user-current-allocation-summary.js";
 
 
 export function render() {
-return html`
+  return html`
   <div class='l-gutter u-space-mb--large'>
     <div class='l-basic--flipped'>
       <div class ='l-content'>
@@ -24,6 +26,11 @@ return html`
         ${renderForm.call(this)}
       </div>
       <div class='l-sidebar-second'>
+        <user-current-allocation-summary
+          page-id=${this.id}
+          ${ref(this.allocationSummaryRef)}
+          >
+        </user-current-allocation-summary>
         <approval-request-draft-list
           exclude-id=${this.approvalFormId}
           ${ref(this.draftListSelectRef)}
@@ -31,18 +38,19 @@ return html`
       </div>
     </div>
   </div>
-`;}
+`;
+}
 
-export function renderForm(){
+export function renderForm() {
   const page = 'app-page-approval-request-new';
 
   const hideLocationDetails = !this.approvalRequest.location || this.approvalRequest.location === 'virtual';
   let locationDetailsLabel = '';
-  if ( this.approvalRequest.location === 'in-state' ) {
+  if (this.approvalRequest.location === 'in-state') {
     locationDetailsLabel = 'City *';
-  } else if ( this.approvalRequest.location === 'out-of-state' ) {
+  } else if (this.approvalRequest.location === 'out-of-state') {
     locationDetailsLabel = 'City, State *';
-  } else if ( this.approvalRequest.location === 'foreign' ) {
+  } else if (this.approvalRequest.location === 'foreign') {
     locationDetailsLabel = 'Country *';
   }
 
@@ -57,6 +65,7 @@ export function renderForm(){
           @input=${e => this._onFormInput('label', e.target.value)}
           >
           <div>${this.validationHandler.renderErrorMessages('label')}</div>
+          <character-limit-tracker .value=${this.approvalRequest.label} character-limit=100></character-limit-tracker>
       </div>
 
       <div class="field-container ${this.validationHandler.errorClass('organization')}">
@@ -68,6 +77,7 @@ export function renderForm(){
           @input=${e => this._onFormInput('organization', e.target.value)}
           >
           <div>${this.validationHandler.renderErrorMessages('organization')}</div>
+          <character-limit-tracker .value=${this.approvalRequest.organization} character-limit=100></character-limit-tracker>
       </div>
 
       <div class="field-container ${this.validationHandler.errorClass('businessPurpose')}">
@@ -79,6 +89,7 @@ export function renderForm(){
           @input=${e => this._onFormInput('businessPurpose', e.target.value)}
           ></textarea>
           <div>${this.validationHandler.renderErrorMessages('businessPurpose')}</div>
+          <character-limit-tracker .value=${this.approvalRequest.businessPurpose} character-limit=500></character-limit-tracker>
       </div>
 
       <div class="field-container ${this.validationHandler.errorClass('location')}">
@@ -149,6 +160,7 @@ export function renderForm(){
           @input=${e => this._onFormInput('locationDetails', e.target.value)}
           >
         <div>${this.validationHandler.renderErrorMessages('locationDetails')}</div>
+        <character-limit-tracker .value=${this.approvalRequest.locationDetails} character-limit=100></character-limit-tracker>
       </div>
 
       <fieldset>
@@ -304,6 +316,7 @@ export function renderForm(){
           @input=${e => this._onFormInput('comments', e.target.value)}
         ></textarea>
         <div>${this.validationHandler.renderErrorMessages('comments')}</div>
+        <character-limit-tracker .value=${this.approvalRequest.comments} character-limit=2000></character-limit-tracker>
       </div>
 
       <div class='form-buttons alignable-promo__buttons'>
@@ -336,12 +349,12 @@ export function renderForm(){
  * @param {Object} expenditure - expenditure option object
  * @returns
  */
-function renderExpenditureItem(expenditure){
+function renderExpenditureItem(expenditure) {
 
   let value = this.approvalRequest.expenditures.find(e => e.expenditureOptionId === expenditure.expenditureOptionId)?.amount || '';
 
   // personal car mileage - needs special handling because it's a calculated field
-  if ( expenditure.expenditureOptionId == 6 ){
+  if (expenditure.expenditureOptionId == 6) {
     value = value ? value.toFixed(2) : '0.00'
     return html`
       <div class='expenditure-item expenditure-item--calculated'>

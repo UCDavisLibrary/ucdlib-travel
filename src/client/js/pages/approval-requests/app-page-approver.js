@@ -1,7 +1,7 @@
 import { LitElement } from 'lit';
 import { createRef } from 'lit/directives/ref.js';
 import {render} from "./app-page-approver.tpl.js";
-import { LitCorkUtils, Mixin } from "../../../../lib/appGlobals.js";
+import { LitCorkUtils, Mixin } from '@ucd-lib/cork-app-utils';
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 import { WaitController } from "@ucd-lib/theme-elements/utils/controllers/wait.js";
 
@@ -51,6 +51,7 @@ export default class AppPageApprover extends Mixin(LitElement)
     this.approvalRequestLink = '';
     this.totalExpenditures = 0;
     this.fundingSourceSelectRef = createRef();
+    this.allocationSummaryRef = createRef();
     this.fundingSources = [];
     this.isFundingSourceChange = false;
     this.fundingSourceError = false;
@@ -95,7 +96,7 @@ export default class AppPageApprover extends Mixin(LitElement)
     const d = await this.getPageData();
     const hasError = d.some(e => e.status === 'rejected' || e.value.state === 'error');
     if ( hasError ) {
-      this.AppStateModel.showError(d);
+      this.AppStateModel.showError(d, {ele: this});
       return;
     }
 
@@ -129,6 +130,7 @@ export default class AppPageApprover extends Mixin(LitElement)
       this.ApprovalRequestModel.query(this.queryObject),
       this.SettingsModel.getByCategory(this.settingsCategory),
       this.fundingSourceSelectRef.value.init(),
+      this.allocationSummaryRef.value.init()
     ]
     const resolvedPromises = await Promise.allSettled(promises);
     return promiseUtils.flattenAllSettledResults(resolvedPromises);

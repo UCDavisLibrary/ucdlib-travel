@@ -5,6 +5,8 @@ import urlUtils from "../lib/utils/urlUtils.js";
 import apiUtils from "../lib/utils/apiUtils.js";
 import reimbursementRequest from "../lib/db-models/reimbursementRequest.js";
 import approvalRequest from "../lib/db-models/approvalRequest.js";
+import employee from "../lib/db-models/employee.js";
+import IamEmployeeObjectAccessor from "../lib/utils/iamEmployeeObjectAccessor.js";
 
 
 export default (api) => {
@@ -19,6 +21,7 @@ export default (api) => {
     // query args that need to be arrays
     query.approvalRequestIds = apiUtils.explode(query.approvalRequestIds, true);
     query.reimbursementRequestIds = apiUtils.explode(query.reimbursementRequestIds, true);
+    query.status = apiUtils.explode(query.status);
 
     // pagination
     query.page = apiUtils.getPageNumber(req);
@@ -55,6 +58,29 @@ export default (api) => {
       });
     }
 
+    if ( query.includeReimbursedTotal ) {
+      const ids = results.data.map(rr => rr.reimbursementRequestId);
+      if ( ids.length ) {
+        const transactions = await reimbursementRequest.getFundTransactions(ids);
+        if ( transactions.error ) {
+          console.error('Error in GET /reimbursement-request', transactions.error);
+          return res.status(500).json({error: true, message: 'Error getting reimbursement transactions.'});
+        }
+        const reimbursedTotals = transactions.reduce((acc, t) => {
+          if ( !acc[t.reimbursementRequestId] ) acc[t.reimbursementRequestId] = 0;
+          if ( t.reimbursementStatus === 'fully-reimbursed' ) {
+            acc[t.reimbursementRequestId] += t.amount;
+          }
+          return acc;
+        }, {});
+
+        results.data.forEach(rr => {
+          rr.reimbursedTotal = reimbursedTotals[rr.reimbursementRequestId] || 0;
+        });
+      }
+
+    }
+
     if ( req.auth.token.hasAdminAccess ) return res.json(results);
 
     for (const ar of approvalRequests.data) {
@@ -73,6 +99,105 @@ export default (api) => {
     uploads.uploadReiumbursementReceipts(),
     createReimbursementRequest
   );
+
+  api.post('/reimbursement-transaction', protect('hasAdminAccess'), async (req, res) => {
+    const data = req.body || {};
+    const kerberos = req.auth.token.id;
+
+    // get full employee object (with department) for logged in user
+    let employeeObj = await employee.getIamRecordById(kerberos);
+    if ( employeeObj.error ) {
+      console.error('Error getting employee object in POST /approval-request', employeeObj.error);
+      return res.status(500).json({error: true, message: 'Error creating approval request.'});
+    }
+    employeeObj = (new IamEmployeeObjectAccessor(employeeObj.res)).travelAppObject;
+
+    const result = await reimbursementRequest.createFundTransaction(data, employeeObj);
+    if ( result.error && result.is400 ) {
+      return res.status(400).json(result);
+    }
+    if ( result.error ) {
+      console.error('Error in POST /reimbursement-transaction', result.error);
+      return res.status(500).json({error: true, message: 'Error creating reimbursement transaction.'});
+    }
+
+    res.json(result);
+  });
+
+  api.put('/reimbursement-transaction', protect('hasAdminAccess'), async (req, res) => {
+    const data = req.body || {};
+    const kerberos = req.auth.token.id;
+
+    // get full employee object (with department) for logged in user
+    let employeeObj = await employee.getIamRecordById(kerberos);
+    if ( employeeObj.error ) {
+      console.error('Error getting employee object in POST /approval-request', employeeObj.error);
+      return res.status(500).json({error: true, message: 'Error creating approval request.'});
+    }
+    employeeObj = (new IamEmployeeObjectAccessor(employeeObj.res)).travelAppObject;
+
+    const result = await reimbursementRequest.updateFundTransaction(data, employeeObj);
+    if ( result.error && result.is400 ) {
+      return res.status(400).json(result);
+    }
+
+    if ( result.error ) {
+      console.error('Error in PUT /reimbursement-transaction', result.error);
+      return res.status(500).json({error: true, message: 'Error updating reimbursement transaction.'});
+    }
+
+    res.json(result);
+  });
+
+  api.get('/reimbursement-transaction', protect('hasBasicAccess'), async (req, res) => {
+    const kerberos = req.auth.token.id;
+    const query = urlUtils.queryToCamelCase(req.query);
+
+    const reimbursementRequestIds = apiUtils.explode(query.reimbursementRequestIds, true);
+    if ( !reimbursementRequestIds.length ) return res.status(400).json({error: 'Invalid reimbursement request id'});
+    if ( reimbursementRequestIds.length > 100 ) return res.status(400).json({error: 'Too many reimbursement request ids'});
+
+    const results = await reimbursementRequest.getFundTransactions(reimbursementRequestIds);
+    if ( results.error ) {
+      console.error('Error in GET /reimbursement-transaction', results);
+      return res.status(500).json({error: true, message: 'Error getting reimbursement transactions.'});
+    }
+
+    if ( req.auth.token.hasAdminAccess ) return res.json(results);
+
+    const reimbursementRequests = await reimbursementRequest.get({reimbursementRequestIds, pageSize: -1});
+    if ( reimbursementRequests.error ) {
+      console.error('Error in GET /reimbursement-transaction', reimbursementRequests.error);
+      return res.status(500).json({error: true, message: 'Error getting reimbursement requests.'});
+    }
+
+    const approvalRequestIds = [...(new Set(reimbursementRequests.data.map(rr => rr.approvalRequestId)))];
+    let arQuery = {
+      requestIds: approvalRequestIds,
+      isCurrent: true,
+      pageSize: -1
+    };
+    const approvalRequests = await approvalRequest.get(arQuery);
+    if ( approvalRequests.error ){
+      console.error('Error in GET /reimbursement-request', approvalRequests.error);
+      return res.status(500).json({error: true, message: 'Error when authorizing access to reimbursement requests.'});
+    }
+
+    if ( query.includeApprovalRequest ) {
+      results.data.forEach(rr => {
+        rr.approvalRequest = approvalRequests.data.find(ar => ar.approvalRequestId === rr.approvalRequestId);
+      });
+    }
+
+    for (const ar of approvalRequests.data) {
+      const isOwnRequest = ar.employeeKerberos === kerberos;
+      const inApprovalChain = ar.approvalStatusActivity.some(a => a.employeeKerberos === kerberos);
+      if ( !isOwnRequest && !inApprovalChain ) return apiUtils.do403(res);
+    }
+
+    return res.json(results);
+
+  });
 };
 
 const createReimbursementRequest = async (req, res) => {
@@ -120,8 +245,6 @@ const createReimbursementRequest = async (req, res) => {
     return receipt;
   });
 
-  console.log(data);
-
   const result = await reimbursementRequest.create(data);
 
   if ( result.error ) {
@@ -132,7 +255,6 @@ const createReimbursementRequest = async (req, res) => {
     console.error('Error in POST /reimbursement-request', result.error);
     return res.status(500).json({ error: true, message: 'Error creating reimbursement request'});
   }
-
 
   res.json(result);
 };
