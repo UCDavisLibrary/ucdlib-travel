@@ -377,6 +377,7 @@ function renderExpenditureItem(expenditure) {
       <div class='amount input--dollar'>
         <input
           type='number'
+          step="0.01"
           class=''
           .value=${value}
           @input=${e => this._onExpenditureInput(expenditure.expenditureOptionId, e.target.value)}

@@ -440,6 +440,18 @@ class ApplicationOptions {
     return nextApprover && nextApprover.employeeKerberos === userKerberos;
   }
 
+  /**
+   * @description - Get the next approver for an approval request
+   * @param {Object} approvalRequest - The approval request object
+   * @param {Boolean} returnKerberos - Return the kerberos of the next approver
+   * @returns {Object|String}
+   */
+  getNextApprover(approvalRequest, returnKerberos=false){
+    const nextApprover = (approvalRequest?.approvalStatusActivity || []).find(a => a.action === 'approval-needed');
+    if ( returnKerberos ) return nextApprover?.employeeKerberos || '';
+    return nextApprover;
+  }
+
 
 }
 

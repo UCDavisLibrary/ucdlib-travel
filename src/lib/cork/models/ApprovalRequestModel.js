@@ -12,7 +12,10 @@ class ApprovalRequestModel extends BaseModel {
     this.store = ApprovalRequestStore;
     this.service = ApprovalRequestService;
 
-    this.register('ApprovalRequestModel', 'EmployeeAllocationModel');
+    this.register('ApprovalRequestModel');
+
+    this.inject('EmployeeAllocationModel');
+
   }
 
   async query(query={}) {
