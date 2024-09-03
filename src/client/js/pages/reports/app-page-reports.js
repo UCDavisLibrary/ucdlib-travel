@@ -8,7 +8,8 @@ export default class AppPageReports extends Mixin(LitElement)
 
   static get properties() {
     return {
-
+      page: {type: String},
+      helpUrl: {type: String}
     }
   }
 
@@ -16,8 +17,10 @@ export default class AppPageReports extends Mixin(LitElement)
   constructor() {
     super();
     this.render = render.bind(this);
+    this.page = this.getPageId('403');
+    this.helpUrl = ''
 
-    this._injectModel('AppStateModel');
+    this._injectModel('AppStateModel', 'ReportsModel');
   }
 
   /**
@@ -26,6 +29,7 @@ export default class AppPageReports extends Mixin(LitElement)
    */
   async _onAppStateUpdate(state) {
     if ( this.id !== state.page ) return;
+    this.AppStateModel.showLoading();
 
     this.AppStateModel.setTitle('Reports');
 
@@ -34,6 +38,30 @@ export default class AppPageReports extends Mixin(LitElement)
       this.AppStateModel.store.breadcrumbs[this.id]
     ];
     this.AppStateModel.setBreadcrumbs(breadcrumbs);
+
+
+    const accessLevel = await this.ReportsModel.getAccessLevel();
+    this.logger.info('access level fetched', accessLevel);
+    if ( accessLevel.state === 'error' ) {
+      this.AppStateModel.showError(accessLevel, {ele: this});
+      return;
+    }
+
+    if ( !accessLevel.payload.hasAccess){
+      this.page = this.getPageId('403');
+      this.helpUrl = accessLevel.payload.helpUrl;
+      this.AppStateModel.showLoaded(this.id);
+      return;
+    }
+
+    // todo: load page content
+
+    this.page = this.getPageId('builder');
+    this.AppStateModel.showLoaded(this.id);
+  }
+
+  getPageId(page){
+    return `${this.id}-page--${page}`;
   }
 
 }
