@@ -279,15 +279,21 @@ class AppStateModelImpl extends AppStateModel {
         errorMessage = fallbackMessage;
       }
 
-      if ( msg?.error?.response?.status >= 500 && ele ){
-        const e = JSON.parse(JSON.stringify(msg));
-        e.response = {
-          status: msg?.error?.response?.status,
-          statusText: msg?.error?.response?.statusText,
-          url: msg?.error?.response?.url
-        };
-        ele.logger.error('network', e);
+      if ( ele ){
+        if ( msg?.error?.response?.status >= 500 ){
+          const e = JSON.parse(JSON.stringify(msg));
+          e.response = {
+            status: msg?.error?.response?.status,
+            statusText: msg?.error?.response?.statusText,
+            url: msg?.error?.response?.url
+          };
+          ele.logger.error('network', e);
+        } else if (msg?.error?.details instanceof TypeError){
+          ele.logger.error('TypeError', msg?.error?.details);
+        }
       }
+
+
     } else {
       errorMessage = msg;
     }

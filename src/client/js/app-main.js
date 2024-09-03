@@ -33,6 +33,7 @@ import "../../lib/cork/models/FundingSourceModel.js";
 import "../../lib/cork/models/LineItemsModel.js";
 import "../../lib/cork/models/NotificationModel.js";
 import "../../lib/cork/models/ReimbursementRequestModel.js";
+import "../../lib/cork/models/ReportsModel.js";
 
 // auth
 import Keycloak from 'keycloak-js';

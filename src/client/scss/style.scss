@@ -16,6 +16,7 @@
 @use './pages//approval-request.scss' as approvalRequest;
 @use './pages/home.scss' as home;
 @use './pages/reimbursement-request.scss' as reimbursementRequest;
+@use './pages/reports.scss' as reports;
 
 // components
 @use './components/admin-funding-source-management.scss' as adminFundingSourceManagement;

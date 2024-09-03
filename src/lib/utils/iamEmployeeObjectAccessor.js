@@ -45,4 +45,24 @@ export default class IamEmployeeObjectAccessor {
   get kerberos() {
     return this.data.user_id || '';
   }
+
+  /**
+   * @description Get the iamId of the employee
+   */
+  get iamId() {
+    return this.data.iam_id || '';
+  }
+
+  /**
+   * @description Get the department head iamId of the employee
+   */
+  get departmentHeadIamId() {
+    if ( !this.department ) return '';
+    if ( this.department.isHead) return this.iamId;
+    return this.data.departmentHead?.iamId || '';
+  }
+
+  get isDepartmentHead() {
+    return this.department?.isHead;
+  }
 }
