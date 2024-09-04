@@ -1,28 +1,51 @@
 version: '3'
 services:
-  app:
-    build: .
-    ports:
-      - '3000:3000'
-    depends_on:
-      - mysql
-    environment:
-      MYSQL_HOST: mysql
-      MYSQL_USER: root
-      MYSQL_PASSWORD: rootpassword
-      MYSQL_DATABASE: mydatabase
-
   mysql:
     image: mysql:latest
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: mydatabase
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: my_mysql_db
+      MYSQL_USER: mysql_user
+      MYSQL_PASSWORD: mysql_password
     ports:
       - '3306:3306'
+    networks:
+      - internal_network
     volumes:
-      - mysql-data:/var/lib/mysql
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      # - mysql-data:/var/lib/mysql
+      - ./travel.sql:/docker-entrypoint-initdb.d/travel.sql
+
+  app:
+    build: .
+    # ports:
+    #   - '5000:5000'
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: my_mysql_db
+      MYSQL_USER: mysql_user
+      MYSQL_PASSWORD: mysql_password
+      POSTGRES_USER: postgres
+      POSTGRES_HOST: db
+      POSTGRES_DATABASE: postgres
+      POSTGRES_PASSWORD: localhost
+      POSTGRES_PORT: 5432
+    volumes:
+      - ./migration-app:/migration-app
+    networks:
+      - internal_network
+      - migrate_network
+    depends_on:
+      - mysql
+    #command: node run.js # Replace with your migration command
+    command: tail -f /dev/null
+
 
 volumes:
   mysql-data:
+networks:
+  internal_network:
+    driver: bridge
+  migrate_network:
+    external: true
