@@ -1,9 +1,10 @@
 import serverConfig from "../../serverConfig.js";
 import nodemailer from 'nodemailer';
+ 
 
 /**
  * @class Nodemailer
- * @description Utility class for querying the .
+ * @description Mailing class for sending notifications.
  * Does auth. 
  */
 class Nodemailer {
@@ -20,17 +21,19 @@ class Nodemailer {
     });
   }
 
-  async runEmail(message){
-      await this.transporter.sendMail(message, (err, info) => {
-            if (err) {
-              console.log("E:", err)
-              return err;
-            }
-            console.log(info);
-            return info;
-
-      });
-    
+  /**
+   * @description run the email
+   * @param {String} message - email text
+   * @returns {Object} {info, error} email success status 
+   */
+  async runEmail(message){ 
+    let out = {}; 
+    try { 
+      out.info = await this.transporter.sendMail(message); 
+    } catch (error) { 
+      out.error = error; 
+    } 
+    return out; 
   }
 
 

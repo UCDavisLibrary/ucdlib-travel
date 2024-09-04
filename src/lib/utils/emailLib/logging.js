@@ -1,34 +1,28 @@
-import serverConfig from "../../serverConfig.js";
 import pg from "../../db-models/pg.js";
 import EntityFields from "../EntityFields.js";
 
 /**
  * @class Logging
- * @description Utility class for querying the library IAM API.
- * Does auth.
+ * @description Accessing the notification database and log to the notification database
  */
 class Logging {
 
-  constructor(payload = {}){
-    this.payload = payload;
+  constructor(){
 
     this.entityFields = new EntityFields([
       {
         dbName: 'notification_id',
         jsonName: 'notificationId',
-        validateType: 'integer'
       },
       {
         dbName: 'approval_request_revision_id',
         jsonName: 'approvalRequestRevisionId',
         label: 'Approval Request Revision Id',
-        validateType: 'integer'
       },
       {
         dbName: 'reimbursement_request_id',
         jsonName: 'reimbursementRequestId',
         label: 'Reimbursement Request Id',
-        validateType: 'integer'
       },
       {
         dbName: 'employee_kerberos',
@@ -42,12 +36,10 @@ class Logging {
       {
         dbName: 'subject',
         jsonName: 'subject',
-        validateType: 200
       },
       {
         dbName: 'email_sent',
         jsonName: 'emailSent',
-        validateType: 'boolean'
       },
       {
         dbName: 'details',
@@ -60,6 +52,11 @@ class Logging {
     ]);
   }
 
+  /**
+   * @description adds sent email notification to the notification table
+   * @param {Object} data - email notification object
+   * @returns {Object} {status, id}
+   */
   async addNotificationLogging(data){
     data = this.entityFields.toDbObj(data);
 
@@ -69,33 +66,35 @@ class Logging {
 
     // start transaction
     let notificationId;
-    const client = await pg.pool.connect();
-    try {
 
-      data = pg.prepareObjectForInsert(data);
-      const sql = `INSERT INTO notification (${data.keysString}) VALUES (${data.placeholdersString}) RETURNING notification_id`;
-      const res = await client.query(sql, data.values);
-      if( res.rowCount !== 1 ) {
-        throw new Error('Error creating notification');
-      }
-      notificationId = res.rows[0].notification_id;
+    data = pg.prepareObjectForInsert(data);
+    const sql = `INSERT INTO notification (${data.keysString}) VALUES (${data.placeholdersString}) RETURNING notification_id`;
+    const res = await pg.query(sql, data.values);
 
+    if( res.error ) return res;
 
-    } catch (e) {
-      return {error: e, message: 'Error creating notification'};
-    } finally {
-      client.release();
+    if( res.res.rowCount !== 1 ) {
+      throw new Error('Error creating notification');
     }
+    notificationId = res.res.rows[0].notification_id;
 
     return {success: true, notificationId};
   }
 
+  /**
+   * @description get sent email notification to the notification table
+   * @param {Object} kwargs - query
+   * @returns {Object} {data, total, page, pageSize, totalPages}
+   */
   async getNotificationLogging(kwargs={}){
+    const page = Number(kwargs.page) || 1;
+    const pageSize = kwargs.pageSize || 10;
+    const noPaging = pageSize === -1;
 
     const whereArgs = {};
     if( kwargs.email_sent ) {
       whereArgs['n.email_sent'] = true;
-    } else if( kwargs.email_sent ) {
+    } else if( kwargs.email_sent === false ) {
       whereArgs['n.email_sent'] = false;
     }
     if( Array.isArray(kwargs.approval_request_ids) && kwargs.approval_request_ids.length) {
@@ -104,10 +103,24 @@ class Logging {
     if( Array.isArray(kwargs.reimbursement_ids) && kwargs.reimbursement_ids ) {
       whereArgs['n.reimbursement_request_id'] = kwargs.reimbursement_ids;
     }
-
-
     const whereClause = pg.toWhereClause(whereArgs);
 
+
+    // get total count
+    const countSql = `
+      SELECT
+        COUNT(DISTINCT n.notification_id) as total
+      FROM
+        notification n
+      ${whereClause.sql ? `WHERE ${whereClause.sql}` : ''}
+      `;
+
+    const countRes = await pg.query(countSql, whereClause.values);
+
+    if( countRes.error ) return countRes;
+    const total = Number(countRes.res.rows[0].total);
+
+    //get data
     const query = `
     SELECT
       n.*,
@@ -118,21 +131,22 @@ class Logging {
               'lastName', emp.last_name
           ))
           FROM employee emp
-          WHERE ar.employee_kerberos = emp.kerberos
+          WHERE n.employee_kerberos = emp.kerberos
       ) AS employees
     FROM
         notification n
-    LEFT JOIN
-        approval_request ar ON n.approval_request_revision_id = ar.approval_request_revision_id
-    LEFT JOIN
-        reimbursement_request rr ON n.reimbursement_request_id = rr.reimbursement_request_id
-    ${whereClause.sql ? `WHERE ${whereClause.sql}` : ''};
+    ${whereClause.sql ? `WHERE ${whereClause.sql}` : ''}
+    ${noPaging ? '' : `LIMIT ${pageSize} OFFSET ${(page - 1) * pageSize}`}
     `;
 
 
     const res = await pg.query(query, whereClause.values);
     if( res.error ) return res;
-    return res.res.rows;
+
+    const data = this.entityFields.toJsonArray(res.res.rows);
+
+    const totalPages = noPaging ? 1 : Math.ceil(total / pageSize);
+    return {data, total, page, pageSize, totalPages};
   }
 
 }

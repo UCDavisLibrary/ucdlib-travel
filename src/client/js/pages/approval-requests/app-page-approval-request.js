@@ -1,12 +1,12 @@
 import { LitElement } from 'lit';
 import {render} from "./app-page-approval-request.tpl.js";
-import { LitCorkUtils, Mixin } from "../../../../lib/appGlobals.js";
+import { LitCorkUtils, Mixin } from '@ucd-lib/cork-app-utils';
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 import { WaitController } from "@ucd-lib/theme-elements/utils/controllers/wait.js";
 
 import promiseUtils from '../../../../lib/utils/promiseUtils.js';
 import applicationOptions from '../../../../lib/utils/applicationOptions.js';
-import reimbursmentExpenses from '../../../../lib/utils/reimbursmentExpenses.js';
+import reimbursementExpenses from '../../../../lib/utils/reimbursementExpenses.js';
 
 /**
  * @class AppPageApprovalRequest
@@ -31,7 +31,7 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
       reimbursementRequests: {type: Array},
       approvedExpenseTotal: {state: true},
       hasApprovedExpenses: {state: true},
-      reimbursmentRequestTotal: {state: true},
+      reimbursementRequestTotal: {state: true},
       _hideReimbursementSection: {state: true}
     }
   }
@@ -46,7 +46,7 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
     this._hideReimbursementSection = false;
     this.approvedExpenseTotal = '0.00';
     this.hasApprovedExpenses = false;
-    this.reimbursmentRequestTotal = '0.00';
+    this.reimbursementRequestTotal = '0.00';
     this.reimbursementRequests = [];
 
     this.waitController = new WaitController(this);
@@ -81,7 +81,7 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
     const d = await this.getPageData();
     const hasError = d.some(e => e.status === 'rejected' || e.value.state === 'error');
     if ( hasError ) {
-      this.AppStateModel.showError(d);
+      this.AppStateModel.showError(d, {ele: this});
       return;
     }
 
@@ -98,10 +98,16 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
    * @description Get all data required for rendering this page
    */
   async getPageData(){
+    const reimbursementQuery = {
+      approvalRequestIds: [this.approvalRequestId],
+      isCurrent: true,
+      pageSize: -1,
+      includeReimbursedTotal: true
+    };
 
     const promises = [
       this.ApprovalRequestModel.query(this.queryObject),
-      this.ReimbursementRequestModel.query({approvalRequestIds: [this.approvalRequestId], isCurrent: true, pageSize: -1})
+      this.ReimbursementRequestModel.query(reimbursementQuery)
     ]
     const resolvedPromises = await Promise.allSettled(promises);
     return promiseUtils.flattenAllSettledResults(resolvedPromises);
@@ -113,11 +119,11 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
 
     this.reimbursementRequests = e.payload.data;
 
-    let reimbursmentRequestTotal = 0;
+    let reimbursementRequestTotal = 0;
     for (const r of e.payload.data) {
-      reimbursmentRequestTotal += Number(reimbursmentExpenses.addExpenses(r.expenses));
+      reimbursementRequestTotal += Number(reimbursementExpenses.addExpenses(r.expenses));
     }
-    this.reimbursmentRequestTotal = reimbursmentRequestTotal.toFixed(2);
+    this.reimbursementRequestTotal = reimbursementRequestTotal.toFixed(2);
   }
 
   /**
@@ -171,7 +177,7 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
     }
 
     this.approvalRequest = approvalRequest;
-    this.approvedExpenseTotal = reimbursmentExpenses.addExpenses(approvalRequest.expenditures || []);
+    this.approvedExpenseTotal = reimbursementExpenses.addExpenses(approvalRequest.expenditures || []);
     this._setReimbursementSectionVisibility();
     this._setActivity(e.payload.data);
 
@@ -213,6 +219,8 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
       action.occurredTimeString = action.occurredDate.toLocaleTimeString();
       if (action.reimbursementRequestId ){
         action.actionObject = applicationOptions.approvalRequestReimbursementActivity.find(a => a.value === action.action);
+      } else if(action.action.includes("notification")){
+        action.actionObject = applicationOptions.approvalRequestActivity.find(a => a.value === action.action);
       } else {
         action.actionObject = applicationOptions.approvalStatusActions.find(a => a.value === action.action);
       }

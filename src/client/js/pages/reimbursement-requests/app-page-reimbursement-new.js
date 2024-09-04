@@ -1,14 +1,14 @@
 import { LitElement } from 'lit';
 import { createRef } from 'lit/directives/ref.js';
 import {render} from "./app-page-reimbursement-new.tpl.js";
-import { LitCorkUtils, Mixin } from "../../../../lib/appGlobals.js";
+import { LitCorkUtils, Mixin } from '@ucd-lib/cork-app-utils';
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 import { WaitController } from "@ucd-lib/theme-elements/utils/controllers/wait.js";
 
 import promiseUtils from '../../../../lib/utils/promiseUtils.js';
 import applicationOptions from '../../../../lib/utils/applicationOptions.js';
 import typeTransform from '../../../../lib/utils/typeTransform.js';
-import reimbursmentExpenses from '../../../../lib/utils/reimbursmentExpenses.js';
+import reimbursementExpenses from '../../../../lib/utils/reimbursementExpenses.js';
 
 export default class AppPageReimbursementNew extends Mixin(LitElement)
   .with(LitCorkUtils, MainDomElement) {
@@ -63,7 +63,7 @@ export default class AppPageReimbursementNew extends Mixin(LitElement)
     const d = await this.getPageData();
     const hasError = d.some(e => e.status === 'rejected' || e.value.state === 'error');
     if ( hasError ) {
-      this.AppStateModel.showError(d);
+      this.AppStateModel.showError(d, {ele: this});
       return;
     }
 
@@ -108,7 +108,7 @@ export default class AppPageReimbursementNew extends Mixin(LitElement)
 
     let otherTotalExpenses = 0;
     for (const r of e.payload.data) {
-      otherTotalExpenses += Number(reimbursmentExpenses.addExpenses(r.expenses));
+      otherTotalExpenses += Number(reimbursementExpenses.addExpenses(r.expenses));
     }
     this.otherTotalExpenses = otherTotalExpenses.toFixed(2);
   }
@@ -144,7 +144,7 @@ export default class AppPageReimbursementNew extends Mixin(LitElement)
   }
 
   this.approvalRequest = approvalRequest;
-  this.approvedExpenses = reimbursmentExpenses.addExpenses(approvalRequest.expenditures || []);
+  this.approvedExpenses = reimbursementExpenses.addExpenses(approvalRequest.expenditures || []);
   this.form.value.resetForm();
   this.form.value.setDatesFromApprovalRequest(approvalRequest);
 

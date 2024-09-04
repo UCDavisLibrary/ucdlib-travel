@@ -1,16 +1,17 @@
 import { LitElement } from 'lit';
 import {render} from "./app-page-admin-allocations.tpl.js";
-import { LitCorkUtils, Mixin } from "../../../../lib/appGlobals.js";
+import { LitCorkUtils, Mixin } from '@ucd-lib/cork-app-utils';
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
+import fiscalYearUtils from '../../../../lib/utils/fiscalYearUtils.js';
 
 /**
  * @class AppPageAdminAllocations
  * @description Admin page for managing employee allocations
  * @property {Array} fundingSourceFilters - list of active funding sources returned from EmployeeAllocationModel
  * @property {Array} employeeFilters - list of employees with at least one allocation returned from EmployeeAllocationModel
+ * @property {Array} fiscalYearFilters - list of fiscal years returned from EmployeeAllocationModel
  * @property {Array} selectedFundingSourceFilters - list of selected funding source ids
  * @property {Array} selectedEmployeeFilters - list of selected employee kerberos ids
- * @property {Array} selectedDateRangeFilters - list of selected date range keywords
  * @property {Number} page - current page number of query results
  * @property {Number} maxPage - total number of pages returned by query
  * @property {Array} results - list of employee allocations returned by query
@@ -23,9 +24,10 @@ export default class AppPageAdminAllocations extends Mixin(LitElement)
     return {
       fundingSourceFilters: {type: Array},
       employeeFilters: {type: Array},
+      fiscalYearFilters: {type: Array},
       selectedFundingSourceFilters: {type: Array},
       selectedEmployeeFilters: {type: Array},
-      selectedDateRangeFilters: {type: Array},
+      selectedFiscalYearFilters: {type: Array},
       page: {type: Number},
       maxPage: {type: Number},
       results: {type: Array},
@@ -39,6 +41,7 @@ export default class AppPageAdminAllocations extends Mixin(LitElement)
 
     this.fundingSourceFilters = [];
     this.employeeFilters = [];
+    this.fiscalYearFilters = [];
     this.page = 1;
     this.resetFilters();
     this.maxPage = 1;
@@ -54,7 +57,7 @@ export default class AppPageAdminAllocations extends Mixin(LitElement)
   resetFilters() {
     this.selectedFundingSourceFilters = [];
     this.selectedEmployeeFilters = [];
-    this.selectedDateRangeFilters = ['current'];
+    this.selectedFiscalYearFilters = [fiscalYearUtils.fromDate().startYear];
   }
 
   /**
@@ -86,7 +89,7 @@ export default class AppPageAdminAllocations extends Mixin(LitElement)
     const d = await this.getPageData();
     const hasError = d.some(e => e.status === 'rejected' || e.value.state === 'error');
     if( hasError ) {
-      this.AppStateModel.showError(d);
+      this.AppStateModel.showError(d, {ele: this});
       return;
     }
     this.AppStateModel.showLoaded(this.id);
@@ -100,7 +103,7 @@ export default class AppPageAdminAllocations extends Mixin(LitElement)
       page: this.page,
       fundingSources: this.selectedFundingSourceFilters,
       employees: this.selectedEmployeeFilters,
-      dateRanges: this.selectedDateRangeFilters
+      fiscalYears: this.selectedFiscalYearFilters
     };
   }
 
@@ -135,6 +138,7 @@ export default class AppPageAdminAllocations extends Mixin(LitElement)
     if ( e.state !== 'loaded') return;
     this.fundingSourceFilters = e.payload.fundingSources;
     this.employeeFilters = e.payload.employees;
+    this.fiscalYearFilters = fiscalYearUtils.fromStartYears([...e.payload.fiscalYears, fiscalYearUtils.fromDate().startYear]);
   }
 
   /**
@@ -145,12 +149,6 @@ export default class AppPageAdminAllocations extends Mixin(LitElement)
    */
   _onFilterChange(options, prop, toInt){
     let values = options.map(option => toInt ? parseInt(option.value) : option.value);
-    if ( prop === 'selectedDateRangeFilters') {
-      if ( values.length === 2 && values.includes('past') && values.includes('future') ) {
-        values = [];
-        this.AppStateModel.showToast({message: 'Sorry, you cannot display past and future allocations together.', type: 'info'})
-      }
-    }
     this[prop] = values;
 
     this.page = 1;

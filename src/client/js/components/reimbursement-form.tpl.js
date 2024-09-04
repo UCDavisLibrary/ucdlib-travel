@@ -1,7 +1,7 @@
 import { html } from 'lit';
 import { ref } from 'lit/directives/ref.js';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
-import reimbursmentExpenses from '../../../lib/utils/reimbursmentExpenses.js';
+import reimbursementExpenses from '../../../lib/utils/reimbursementExpenses.js';
 import './character-limit-tracker.js';
 
 export function render() {
@@ -70,11 +70,11 @@ export function render() {
         </div>
       </fieldset>
 
-      <fieldset class=${this.validationHandler.errorClass('expenses', reimbursmentExpenses.transportation.value)}>
-        <legend>${reimbursmentExpenses.transportation.label}</legend>
-        <div>${this.validationHandler.renderErrorMessages('expenses', reimbursmentExpenses.transportation.value, 'u-space-mb')}</div>
+      <fieldset class=${this.validationHandler.errorClass('expenses', reimbursementExpenses.transportation.value)}>
+        <legend>${reimbursementExpenses.transportation.label}</legend>
+        <div>${this.validationHandler.renderErrorMessages('expenses', reimbursementExpenses.transportation.value, 'u-space-mb')}</div>
 
-        ${reimbursmentExpenses.transportation.subCategories.map(category => html`
+        ${reimbursementExpenses.transportation.subCategories.map(category => html`
           <div class='u-space-mb'>
             <div class='flex flex--space-between'>
               <div class='field-container u-space-mr--small'>
@@ -82,21 +82,21 @@ export function render() {
                   <input
                     id="${idPrefix}--transportation-${category.value}"
                     type="checkbox"
-                    .checked=${this.hasExpense(reimbursmentExpenses.transportation.value, category.value)}
-                    @change=${() => this._onExpenseCategoryToggle(reimbursmentExpenses.transportation.value, category.value)} />
+                    .checked=${this.hasExpense(reimbursementExpenses.transportation.value, category.value)}
+                    @change=${() => this._onExpenseCategoryToggle(reimbursementExpenses.transportation.value, category.value)} />
                   <label for="${idPrefix}--transportation-${category.value}" class='bold'>${category.label}</label>
                 </div>
               </div>
               <a
                 title='Add ${category.label} Expense'
-                ?hidden=${!this.hasExpense(reimbursmentExpenses.transportation.value, category.value)}
-                @click=${() => this.addBlankExpense(reimbursmentExpenses.transportation.value, category.value)}
+                ?hidden=${!this.hasExpense(reimbursementExpenses.transportation.value, category.value)}
+                @click=${() => this.addBlankExpense(reimbursementExpenses.transportation.value, category.value)}
                 class='icon-link quad'>
                 <i class="fa-solid fa-circle-plus"></i>
               </a>
             </div>
             <div class='l-gutter'>
-              ${(this.reimbursementRequest.expenses || []).filter(e => e.category === reimbursmentExpenses.transportation.value && (e.details || {}).subCategory === category.value).map(expense => html`
+              ${(this.reimbursementRequest.expenses || []).filter(e => e.category === reimbursementExpenses.transportation.value && (e.details || {}).subCategory === category.value).map(expense => html`
                 <div class='flex u-space-mb'>
                   <div class='u-space-mr--small'>
                     <a
@@ -114,17 +114,17 @@ export function render() {
         `)}
       </fieldset>
 
-      <fieldset class=${this.validationHandler.errorClass('expenses', reimbursmentExpenses.registrationFee.value)}>
-        <legend>${reimbursmentExpenses.registrationFee.label}</legend>
-        <div>${this.validationHandler.renderErrorMessages('expenses', reimbursmentExpenses.registrationFee.value, 'u-space-mb')}</div>
+      <fieldset class=${this.validationHandler.errorClass('expenses', reimbursementExpenses.registrationFee.value)}>
+        <legend>${reimbursementExpenses.registrationFee.label}</legend>
+        <div>${this.validationHandler.renderErrorMessages('expenses', reimbursementExpenses.registrationFee.value, 'u-space-mb')}</div>
         <div class='flex flex--justify-end'>
-          <a class='icon-link' @click=${() => this.addBlankExpense(reimbursmentExpenses.registrationFee.value)}>
+          <a class='icon-link' @click=${() => this.addBlankExpense(reimbursementExpenses.registrationFee.value)}>
             <i class="fa-solid fa-circle-plus quad"></i>
             <span>Add Fee</span>
           </a>
         </div>
         <div>
-          ${(this.reimbursementRequest.expenses || []).filter(e => e.category === reimbursmentExpenses.registrationFee.value).map(expense => html`
+          ${(this.reimbursementRequest.expenses || []).filter(e => e.category === reimbursementExpenses.registrationFee.value).map(expense => html`
             <div class='flex u-space-mb'>
               <div class='u-space-mr--small'>
                 <a
@@ -140,9 +140,9 @@ export function render() {
         </div>
       </fieldset>
 
-      <fieldset class=${this.validationHandler.errorClass('expenses', reimbursmentExpenses.dailyExpense.value)}>
-        <legend>${reimbursmentExpenses.dailyExpense.label}</legend>
-        <div>${this.validationHandler.renderErrorMessages('expenses', reimbursmentExpenses.dailyExpense.value, 'u-space-mb')}</div>
+      <fieldset class=${this.validationHandler.errorClass('expenses', reimbursementExpenses.dailyExpense.value)}>
+        <legend>${reimbursementExpenses.dailyExpense.label}</legend>
+        <div>${this.validationHandler.renderErrorMessages('expenses', reimbursementExpenses.dailyExpense.value, 'u-space-mb')}</div>
 
         <div class='flex flex--justify-end'>
           <a class='icon-link' @click=${() => this._onNewDateClick('add')}>
@@ -172,13 +172,13 @@ export function render() {
                 </div>
                 <div class='flex flex--space-between flex--wrap u-space-mb--small'>
                   <label>Expenses</label>
-                  <a class='icon-link' @click=${() => this.addBlankExpense(reimbursmentExpenses.dailyExpense.value, null, date)}>
+                  <a class='icon-link' @click=${() => this.addBlankExpense(reimbursementExpenses.dailyExpense.value, null, date)}>
                     <i class="fa-solid fa-circle-plus quad"></i>
                     <span>Add New Expense</span>
                   </a>
                 </div>
                 <div>
-                  ${this.reimbursementRequest.expenses.filter(e => e.category === reimbursmentExpenses.dailyExpense.value && e.date === date).map(expense => html`
+                  ${this.reimbursementRequest.expenses.filter(e => e.category === reimbursementExpenses.dailyExpense.value && e.date === date).map(expense => html`
                     <div class='flex u-space-mb'>
                       <div class='u-space-mr--small'>
                         <a
@@ -378,7 +378,7 @@ function renderDailyExpenseForm(expense){
               @change=${e => this._setObjectProperty(expense.details, 'subCategory', e.target.value)}
             >
               <option value="" ?selected=${!expense?.details?.subCategory}>Select an expense type</option>
-              ${reimbursmentExpenses.dailyExpense.subCategories.filter(sc => !sc.hideFromSelect).map(subCategory => html`
+              ${reimbursementExpenses.dailyExpense.subCategories.filter(sc => !sc.hideFromSelect).map(subCategory => html`
                 <option
                   value="${subCategory.value}"
                   ?selected=${expense?.details?.subCategory === subCategory.value}
