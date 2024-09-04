@@ -6,11 +6,39 @@ class ReportsStore extends BaseStore {
     super();
 
     this.data = {
-      accessLevel: {}
+      accessLevel: {},
+      filters: {}
     };
     this.events = {
       REPORTS_ACCESS_LEVEL_FETCHED: 'reports-access-level-fetched',
+      REPORTS_FILTERS_FETCHED: 'reports-filters-fetched'
     };
+  }
+
+  filtersLoading(request) {
+    this._setFiltersState({
+      state : this.STATE.LOADING,
+      request
+    });
+  }
+
+  filtersLoaded(payload) {
+    this._setFiltersState({
+      state : this.STATE.LOADED,
+      payload
+    });
+  }
+
+  filtersError(error) {
+    this._setFiltersState({
+      state : this.STATE.ERROR,
+      error
+    });
+  }
+
+  _setFiltersState(state) {
+    this.data.filters = state;
+    this.emit(this.events.REPORTS_FILTERS_FETCHED, state);
   }
 
   accessLevelLoading(request) {

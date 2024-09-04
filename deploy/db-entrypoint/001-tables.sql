@@ -20,7 +20,8 @@ COMMENT ON COLUMN department.department_id IS 'The group ID from the Library IAM
 CREATE TABLE employee (
     kerberos VARCHAR(100) PRIMARY KEY,
     first_name VARCHAR(100) NOT NULL,
-    last_name VARCHAR(100) NOT NULL
+    last_name VARCHAR(100) NOT NULL,
+    archived BOOLEAN DEFAULT FALSE
 );
 COMMENT ON TABLE employee IS 'Historical employee information. Most employee information is pulled from our IAM system';
 
@@ -116,6 +117,7 @@ CREATE TABLE approval_request (
     has_custom_travel_dates BOOLEAN NOT NULL DEFAULT FALSE,
     travel_start_date DATE,
     travel_end_date DATE,
+    department_id INTEGER REFERENCES department(department_id),
     comments VARCHAR(2000),
     no_expenditures BOOLEAN NOT NULL DEFAULT FALSE,
     validated_successfully BOOLEAN NOT NULL DEFAULT FALSE,
