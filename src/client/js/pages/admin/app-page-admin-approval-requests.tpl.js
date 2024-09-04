@@ -9,6 +9,7 @@ export function render() {
 return html`
   <div class='l-gutter l-basic--flipped'>
     <div class='l-content'>
+          ${renderFilters.call(this)}
       <div ?hidden=${!this.approvalRequests.length}>
         ${this.approvalRequests.map(request => html`
           <div class='approval-request-teaser-wrapper'>
@@ -42,3 +43,29 @@ return html`
   </div>
 
 `;}
+
+/**
+ * @description Render the filters for the allocations page
+ */
+function renderFilters() {
+  return html`
+    <div class='allocations-filters l-3col'>
+      <div class='l-first'>
+        <div class='field-container'>
+          <label>Approval Request State</label>
+          <ucd-theme-slim-select @change=${e => this._onFilterChange(e.detail, 'selectedApprovalRequestFilters')}>
+            <select multiple>
+              ${this.approvalStatusFilters.map(application => html`
+                <option
+                  value=${application.kerberos}
+                  ?selected=${this.selectedApprovalRequestFilters.includes(application.approvalStatus)}
+                  >${application.approvalStatus}
+                </option>
+              `)}
+            </select>
+          </ucd-theme-slim-select>
+        </div>
+      </div>
+    </div>
+  `;
+}

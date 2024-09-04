@@ -18,7 +18,13 @@ export default class AppPageAdminApprovalRequests extends Mixin(LitElement)
       queryArgs: {type: Object},
       page: {type: Number},
       totalPages: {type: Number},
-      approvalRequests: {type: Array}
+      approvalRequests: {type: Array},
+      isCurrent: {type: Boolean},
+      waitController: {type: Object},
+      approvalStatuses: {type: Array},
+      approvalStatus: {type: String},
+      approvalStatusFilters: {type: Array},
+      selectedApprovalRequestFilters: {type: Array}
     }
   }
 
@@ -29,16 +35,20 @@ export default class AppPageAdminApprovalRequests extends Mixin(LitElement)
     this.page = 1;
     this.approvalRequests = [];
     this.waitController = new WaitController(this);
+    this.approvalStatuses = applicationOptions.approvalStatuses;
+    this.isCurrent = false;
+    this.approvalStatusFilters = [];
+    this.selectedApprovalRequestFilters = [];
 
     this._injectModel('AppStateModel', 'ApprovalRequestModel', 'AuthModel');
-
-    this.queryArgs = {
-      isCurrent: true,
-      // employees: this.AuthModel.getToken().id,
-      approvalStatus: applicationOptions.approvalStatuses.map(s => s.value),
-      page: this.page
-    };
   }
+
+    /**
+   * @description Reset selected filters to default values
+   */
+    resetFilters() {
+      this.selectedApprovalRequestFilters = [];
+    }
 
   /**
    * @description bound to AppStateModel app-state-update event
@@ -48,7 +58,7 @@ export default class AppPageAdminApprovalRequests extends Mixin(LitElement)
     if ( this.id !== state.page ) return;
     this.AppStateModel.showLoading();
     this._setPage(state);
-    this.queryArgs.page = this.page;
+    this._queryObject().page = this.page;
 
     this.AppStateModel.setTitle('All Approval Requests');
 
@@ -69,6 +79,20 @@ export default class AppPageAdminApprovalRequests extends Mixin(LitElement)
     this.AppStateModel.showLoaded(this.id);
   }
 
+
+    /**
+   * @description Construct query object for ApprovalRequestModel query from element properties
+   */
+    _queryObject(){
+      return {
+        isCurrent: true,
+        // employees: this.AuthModel.getToken().id,
+        // approvalStatus: applicationOptions.approvalStatuses.filter(s => s.value != 'draft').map(s => s.value),
+        approvalStatus: applicationOptions.approvalStatuses.filter(s => s.value == 'approved').map(s => s.value),
+        page: this.page
+      };
+    }
+
   /**
    * @description Get all data required for rendering this page
    */
@@ -76,7 +100,7 @@ export default class AppPageAdminApprovalRequests extends Mixin(LitElement)
     await this.waitController.waitForUpdate();
 
     const promises = [
-      this.ApprovalRequestModel.query(this.queryArgs),
+      this.ApprovalRequestModel.query(this._queryObject()),
     ]
     const resolvedPromises = await Promise.allSettled(promises);
     return promiseUtils.flattenAllSettledResults(resolvedPromises);
@@ -87,7 +111,7 @@ export default class AppPageAdminApprovalRequests extends Mixin(LitElement)
 
     // check that request was issue by this element
     if ( !this.AppStateModel.isActivePage(this) ) return;
-    const elementQueryString = urlUtils.queryObjectToKebabString(this.queryArgs);
+    const elementQueryString = urlUtils.queryObjectToKebabString(this._queryObject());
     if ( e.query !== elementQueryString ) return;
 
     this.approvalRequests = e.payload.data;
@@ -101,6 +125,17 @@ export default class AppPageAdminApprovalRequests extends Mixin(LitElement)
   _setPage(state){
     this.page = typeTransform.toPositiveInt(state?.location?.query?.page) || 1;
   }
+
+
+    /**
+   * @description bound to ApprovalRequestModel employee-allocations-filters-fetched event
+   * Set fundingSourceFilters and employeeFilters
+   */
+    _onApprovalRequestsFiltersFetched(e) {
+      if ( e.state !== 'loaded') return;
+      this.approvalStatusFilters = e.payload;
+      console.log(this.approvalStatusFilters);
+    }
 
   /**
    * @description callback for when user clicks on pagination
