@@ -7,13 +7,13 @@ class NotificationService extends BaseService {
     super();
     this.store = NotificationStore;
   }
-  getNotificationHistory(){
+  getNotificationHistory(query){
     return this.request({
-      url : `/api/admin/comments-notification`,
-      checkCached: () => this.store.data.notificationHistory,
-      onLoading : request => this.store.notificationHistoryLoading(request),
-      onLoad : result => this.store.notificationHistoryLoaded(result.body),
-      onError : e => this.store.notificationHistoryError(e)
+      url : `/api/admin/comments-notification${query ? '?' + query : ''}`,
+      checkCached: () => this.store.data.notificationHistory[query],
+      onLoading : request => this.store.notificationHistoryLoading(request, query),
+      onLoad : result => this.store.notificationHistoryLoaded(result.body, query),
+      onError : e => this.store.notificationHistoryError(e, query)
     });
   }
 
@@ -28,20 +28,6 @@ class NotificationService extends BaseService {
       onLoading : request => this.store.notificationCommentsLoading(request, timestamp),
       onLoad : result => this.store.notificationCommentsLoaded(result.body, timestamp),
       onError : e => this.store.notificationCommentsError(e, timestamp)
-    });
-  }
-
-  createSystemNotification(payload, timestamp) {
-    return this.request({
-      url : '/api/admin/system-notification',
-      fetchOptions : {
-        method : 'POST',
-        body : payload
-      },
-      json: true,
-      onLoading : request => this.store.systemNotificationLoading(request, timestamp),
-      onLoad : result => this.store.systemNotificationLoaded(result.body, timestamp),
-      onError : e => this.store.systemNotificationError(e, timestamp)
     });
   }
 }

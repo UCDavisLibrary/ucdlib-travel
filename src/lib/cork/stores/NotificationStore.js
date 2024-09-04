@@ -8,13 +8,10 @@ class NotificationStore extends BaseStore {
     this.data = {
       notificationHistory: {},
       notificationComments: {},
-      notificationSystems: {}
     };
     this.events = {
       NOTIFICATION_HISTORY: 'notification-history',
       NOTIFICATION_COMMENTS: 'notification-comments',
-      NOTIFICATION_SYSTEMS: 'notification-systems',
-
     };
   }
 
@@ -24,20 +21,22 @@ class NotificationStore extends BaseStore {
       request
     });
   }
-  notificationHistoryLoaded(payload) {
+  notificationHistoryLoaded(payload, query) {
     this._setNotificationHistoryState({
       state : this.STATE.LOADED,
-      payload
+      payload,
+      query
     });
   }
-  notificationHistoryError(error) {
+  notificationHistoryError(error, query) {
     this._setNotificationHistoryState({
       state : this.STATE.ERROR,
-      error
+      error, 
+      query
     });
   }
   _setNotificationHistoryState(state) {
-    this.data.notificationHistory = state;
+    this.data.notificationHistory[state.query] = state;
     this.emit(this.events.NOTIFICATION_HISTORY, state);
   }
 
@@ -62,29 +61,6 @@ class NotificationStore extends BaseStore {
   _setNotificationCommentsState(state, timestamp) {
     this.data.notificationComments[timestamp] = state;
     this.emit(this.events.NOTIFICATION_COMMENTS, state);
-  }
-
-  systemNotificationLoading(request, timestamp) {
-    this._setSystemNotificationState({
-      state : this.STATE.LOADING,
-      request
-    }, timestamp);
-  }
-  systemNotificationLoaded(payload, timestamp) {
-    this._setSystemNotificationState({
-      state : this.STATE.LOADED,
-      payload
-    }, timestamp);
-  }
-  systemNotificationError(error, timestamp) {
-    this._setSystemNotificationState({
-      state : this.STATE.ERROR,
-      error
-    }, timestamp);
-  }
-  _setSystemNotificationState(state, timestamp) {
-    this.data.notificationSystems[timestamp] = state;
-    this.emit(this.events.NOTIFICATION_SYSTEMS, state);
   }
 
 }

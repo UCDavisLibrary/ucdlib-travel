@@ -1,57 +1,63 @@
-import emailController from "../../db-models/emailController.js";
-import pg from "../../db-models/pg.js";
 import dbSettings from "../../db-models/settings.js";
 
 /**
- * @class Nodemailer
- * @description Utility class for querying the Settings based on notification type.
- * Does auth. 
+ * @class Settings
+ * @description Get data for email from settings database
  */
 class Settings {
 
   constructor(){
   }
 
+  /**
+   * @description change the format of the keyword
+   * @param {String} type - keyword type
+   * @returns {Object} changed format of keyword
+   */
   _changeFormat(type){
     let changedType = type.replaceAll('-', '_');
     return changedType;
   }
 
-  async _getTemplates(type, temp){
+  /**
+   * @description run the email
+   * @param {String} type - email text
+   * @returns {Array}[body, subject] default values
+   */
+  async _getTemplates(type){
     let changedType = this._changeFormat(type);
     let parse_body = 'admin_email_body_' + changedType;
     let parse_subject = 'admin_email_subject_' + changedType;
 
-    // Quick fix
-    const body = temp.filter((t) => t.key == parse_body);
-    const subject = temp.filter((t) => t.key == parse_subject);
 
+    let body = await dbSettings.getByKey(parse_body);
+    let subject = await dbSettings.getByKey(parse_subject);
 
-    /* This is real way to do it */
-    // let body = await dbSettings.getByKey(parse_body);
-    // let subject = await dbSettings.getByKey(parse_subject);
+    body = body.useDefaultValue ? body.defaultValue : body.value;
+    subject = subject.useDefaultValue ? subject.defaultValue : subject.value;
 
-    return [body[0].defaultValue, subject[0].defaultValue]
+    return [body, subject]
   }
 
-  async _getEmail(temp){
+  /**
+   * @description run the email
+   * @returns {String} Email value
+   */
+  async _getEmail(){
 
-    // Quick fix
-    const email = temp.filter((t) => t.key == "admin_email_address");
+    let email = await dbSettings.getByKey("admin_email_address");
 
-    /* This is real way to do it */
-    // let email = await dbSettings.getByKey("admin_email_address");
+    if(!email) return;
+    if ( email.error) {
+      console.error('Error getting email object', email.error);
+      return email.error;
+    }
 
-    return email[0].defaultValue;
+    if(email.useDefaultValue) return email.defaultValue;
+
+    return email.value;
   }
 
-//   getNotificationRecipient(type){
-//     this._changeFormat(type);
-//     let system_email = 'admin_email_recipient_' + changedType;
-//     let email =  settings.getByKey(system_email).default_value;
-
-//     return email;
-//   }
 
 
 }

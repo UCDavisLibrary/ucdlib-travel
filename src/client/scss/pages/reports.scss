@@ -1,0 +1,16 @@
+app-page-reports {
+
+  .message-403 {
+    display: flex;
+    justify-content: center;
+    flex-flow: column;
+    align-items: center;
+    padding: 1rem;
+    text-align: center;
+
+    .message-403--icon {
+      color: #13639e;
+      font-size: 3rem;
+    }
+  }
+}
