@@ -3,7 +3,7 @@ import { render } from "./funding-source-select.tpl.js";
 
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 
-import { LitCorkUtils, Mixin } from "../../../lib/appGlobals.js";
+import { LitCorkUtils, Mixin } from '@ucd-lib/cork-app-utils';
 
 /**
  * @class FundingSourceSelect

@@ -5,6 +5,7 @@ import { ref } from 'lit/directives/ref.js';
 import "../../components/funding-source-select.js";
 import "../../components/approval-request-draft-list.js";
 import "../../components/character-limit-tracker.js"
+import "../../components/user-current-allocation-summary.js";
 
 
 export function render() {
@@ -25,6 +26,11 @@ export function render() {
         ${renderForm.call(this)}
       </div>
       <div class='l-sidebar-second'>
+        <user-current-allocation-summary
+          page-id=${this.id}
+          ${ref(this.allocationSummaryRef)}
+          >
+        </user-current-allocation-summary>
         <approval-request-draft-list
           exclude-id=${this.approvalFormId}
           ${ref(this.draftListSelectRef)}
@@ -371,6 +377,7 @@ function renderExpenditureItem(expenditure) {
       <div class='amount input--dollar'>
         <input
           type='number'
+          step="0.01"
           class=''
           .value=${value}
           @input=${e => this._onExpenditureInput(expenditure.expenditureOptionId, e.target.value)}

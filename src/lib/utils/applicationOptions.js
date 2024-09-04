@@ -68,26 +68,47 @@ class ApplicationOptions {
     return [
       {
         value: 'not-required',
-        label: 'Not Required'
+        label: 'Reimbursement Not Required',
+        labelShort: 'Not Required',
+        iconClass: 'fa-solid fa-ban',
+        brandColor: 'pinot'
       },
       {
         value: 'not-submitted',
         label: 'Reimbursement Not Submitted',
-        isActive: true
+        labelShort: 'Not Submitted',
+        isActive: true,
+        iconClass: 'fa-solid fa-ban',
+        brandColor: 'pinot'
       },
       {
-        value: 'reimbursment-pending',
+        value: 'submitted',
+        label: 'Reimbursement Request Submitted',
+        labelShort: 'Submitted',
+        isActive: true,
+        iconClass: 'fa-solid fa-upload',
+        brandColor: 'putah-creek'
+      },
+      {
+        value: 'reimbursement-pending',
         label: 'Reimbursement Pending',
-        isActive: true
+        labelShort: 'Pending',
+        isActive: true,
+        iconClass: 'fa-solid fa-circle-half-stroke',
+        brandColor: 'secondary'
       },
       {
         value: 'partially-reimbursed',
         label: 'Partially Reimbursed',
-        isActive: true
+        isActive: true,
+        iconClass: 'fa-solid fa-circle-half-stroke',
+        brandColor: 'secondary'
       },
       {
         value: 'fully-reimbursed',
-        label: 'Fully Reimbursed'
+        label: 'Fully Reimbursed',
+        iconClass: 'fa-solid fa-check',
+        brandColor: 'redwood'
       }
     ];
   }
@@ -97,12 +118,8 @@ class ApplicationOptions {
    * @returns {Array} - Array of objects containing the options for the status column in the reimbursement_request table
    */
   get reimbursementRequestStatuses(){
-    return [
-      {
-        value: 'submitted',
-        label: 'Submitted'
-      }
-    ]
+    const exclude = ['not-required', 'not-submitted'];
+    return this.reimbursementStatuses.filter(s => !exclude.includes(s.value));
   }
 
   /**
@@ -199,6 +216,31 @@ class ApplicationOptions {
     ];
   }
 
+  get approvalRequestActivity(){
+    return [
+      {
+        value: 'request-notification',
+        label: 'Requester Notification',
+        actor: 'submitter',
+        resultingStatus: 'requester-notified',
+        actionTakenText: 'System has sent a notification about request.',
+        byLine: 'Requester Notification Sent By:',
+        iconClass: 'fas fa-comment',
+        brandColor: 'quad',
+      },
+      {
+        value: 'approver-notification',
+        label: 'Approver Notification',
+        actor: 'approver',
+        resultingStatus: 'approver-notified',
+        actionTakenText: 'System has sent a notification to an approver.',
+        byLine: 'Approver Notification Sent By:',
+        iconClass: 'fas fa-comment',
+        brandColor: 'cabernet',
+      }
+    ]
+  }
+
   get approvalRequestReimbursementActivity(){
     return [
       {
@@ -209,6 +251,30 @@ class ApplicationOptions {
         iconClass: 'fa-solid fa-money-bill-wave',
         brandColor: 'putah-creek'
       },
+      {
+        value: 'reimbursement-transaction-added',
+        label: 'Reimbursement Transaction Added',
+        actionTakenText: 'Reimbursement transaction added.',
+        byLine: 'Added By:',
+        iconClass: 'fa-solid fa-money-bill-transfer',
+        brandColor: 'pinot'
+      },
+      {
+        value: 'reimbursement-transaction-updated',
+        label: 'Reimbursement Transaction Updated',
+        actionTakenText: 'Reimbursement transaction updated.',
+        byLine: 'Updated By:',
+        iconClass: 'fa-solid fa-money-bill-transfer',
+        brandColor: 'pinot'
+      },
+      {
+        value: 'reimbursement-notification',
+        label: 'Reimbursement Notification',
+        actionTakenText: 'System has sent a notification to admin about reimbursement.',
+        byLine: 'Reimbursement Notification Sent By:',
+        iconClass: 'fas fa-comment',
+        brandColor: 'poppy',
+      }
     ]
   }
 
@@ -220,7 +286,7 @@ class ApplicationOptions {
         label: 'Submitted To Aggie Expense'
       },
       {
-        value: 'partial-reimbursement',
+        value: 'partially-reimbursed',
         labelShort: 'Partial Reimbursement',
         label: 'Transaction Partially Reimbursed'
       },
@@ -259,17 +325,24 @@ class ApplicationOptions {
    * @description - Get the label for an reimbursement status
    * @param {String} status - The status keyword
    * @param {String} entity - The entity type - 'approvalRequest' or 'reimbursementRequest'
+   * @param {Boolean} useShortLabel - Use the short label if available
    * @returns {String}
    */
-  reimbursementStatusLabel(status, entity='approvalRequest'){
+  reimbursementStatusLabel(status, entity='approvalRequest', useShortLabel=false){
+    let statusObj;
     if ( entity === 'approvalRequest' ){
-      return this.reimbursementStatuses.find(s => s.value === status)?.label || '';
+      statusObj = this.reimbursementStatuses.find(s => s.value === status);
     }
     if ( entity === 'reimbursementRequest' ){
-      return this.reimbursementRequestStatuses.find(s => s.value === status)?.label || '';
+      statusObj = this.reimbursementRequestStatuses.find(s => s.value === status);
     }
 
-    return '';
+    if ( !statusObj ) return '';
+    if ( useShortLabel ) {
+      return statusObj.labelShort || statusObj.label || '';
+    }
+
+    return statusObj.label || '';
   }
 
   /**
@@ -298,7 +371,7 @@ class ApplicationOptions {
 
     if ( isSubmitter ){
 
-      const noReimbursmentActivity = ['not-required', 'not-submitted'].includes(approvalRequest.reimbursementStatus)
+      const noReimbursementActivity = ['not-required', 'not-submitted'].includes(approvalRequest.reimbursementStatus)
 
       if ( approvalRequest.approvalStatus === 'draft' ){
         this._pushAction(actions, 'submit');
@@ -309,12 +382,12 @@ class ApplicationOptions {
         const submitAction = this.approvalStatusActions.find(a => a.value === 'submit');
         submitAction.label = 'Edit and Resubmit';
         actions.push(submitAction);
-      } else if ( noReimbursmentActivity && !['canceled', 'recalled'].includes(approvalRequest.approvalStatus) ){
+      } else if ( noReimbursementActivity && !['canceled', 'recalled'].includes(approvalRequest.approvalStatus) ){
         this._pushAction(actions, 'recall');
       }
 
 
-      if ( noReimbursmentActivity && approvalRequest.approvalStatus !== 'canceled'){
+      if ( noReimbursementActivity && approvalRequest.approvalStatus !== 'canceled'){
         this._pushAction(actions, 'cancel');
       }
 
@@ -365,6 +438,18 @@ class ApplicationOptions {
 
     const nextApprover = (approvalRequest.approvalStatusActivity || []).find(a => a.action === 'approval-needed');
     return nextApprover && nextApprover.employeeKerberos === userKerberos;
+  }
+
+  /**
+   * @description - Get the next approver for an approval request
+   * @param {Object} approvalRequest - The approval request object
+   * @param {Boolean} returnKerberos - Return the kerberos of the next approver
+   * @returns {Object|String}
+   */
+  getNextApprover(approvalRequest, returnKerberos=false){
+    const nextApprover = (approvalRequest?.approvalStatusActivity || []).find(a => a.action === 'approval-needed');
+    if ( returnKerberos ) return nextApprover?.employeeKerberos || '';
+    return nextApprover;
   }
 
 

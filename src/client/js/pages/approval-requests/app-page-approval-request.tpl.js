@@ -1,8 +1,9 @@
 import { html } from 'lit';
 import '../../components/approval-request-header.js';
 import applicationOptions from '../../../../lib/utils/applicationOptions.js';
+import objectUtils from '../../../../lib/utils/objectUtils.js';
 import typeTransform from '../../../../lib/utils/typeTransform.js';
-import reimbursmentExpenses from '../../../../lib/utils/reimbursmentExpenses.js';
+import reimbursementExpenses from '../../../../lib/utils/reimbursementExpenses.js';
 
 export function render() {
 return html`
@@ -38,11 +39,11 @@ return html`
             </div>
             <div class='u-space-mb--small flex flex--space-between flex--align-center small'>
               <div class='u-space-mr--small'>Total Reimbursement Requested</div>
-              <div class='monospace-number'>$${this.reimbursmentRequestTotal}</div>
+              <div class='monospace-number'>$${this.reimbursementRequestTotal}</div>
             </div>
             <div class='u-space-mb--small flex flex--space-between flex--align-center small'>
-              <div class='u-space-mr--small'>TODO: Total Reimbursed</div>
-              <div class='monospace-number'>$0.00</div>
+              <div class='u-space-mr--small'>Total Reimbursed</div>
+              <div class='monospace-number'>$${typeTransform.toDollarString(objectUtils.sumArray(this.reimbursementRequests || [], 'reimbursedTotal'))}</div>
             </div>
           </div>
           <div class='u-space-mt flex flex--align-center'>
@@ -110,11 +111,11 @@ return html`
                 </div>
                 <div>
                   <div class='reimbursement-amount__label'>Amount Requested</div>
-                  <div class='monospace-number reimbursement-amount'>$${reimbursmentExpenses.addExpenses(rr)}</div>
+                  <div class='monospace-number reimbursement-amount'>$${reimbursementExpenses.addExpenses(rr)}</div>
                 </div>
                 <div>
                   <div class='reimbursement-amount__label'>Amount Reimbursed</div>
-                  <div class='monospace-number reimbursement-amount'>$0.00</div>
+                  <div class='monospace-number reimbursement-amount'>$${typeTransform.toDollarString(rr.reimbursedTotal)}</div>
                 </div>
               </div>
               `)}
@@ -131,7 +132,11 @@ return html`
                     <i class='fa-solid ${action.actionObject.iconClass} ${action.actionObject.brandColor}'></i>
                   </div>
                   <div class='content'>
-                    <div class='bold primary'>${action.actionObject.actionTakenText}</div>
+                    ${action.reimbursementRequestId ? html`
+                      <a class='bold primary underline-hover' href='/reimbursement-request/${action.reimbursementRequestId}'>${action.actionObject.actionTakenText}</a>
+                    ` : html`
+                      <div class='bold primary'>${action.actionObject.actionTakenText}</div>
+                    `}
                     <div class='name-role'>
                       <div class='primary small'>${action.employee.firstName} ${action.employee.lastName}</div>
                       ${action.approverTypes.map(t => html`

@@ -9,6 +9,8 @@ import typeTransform from "../utils/typeTransform.js";
 import IamEmployeeObjectAccessor from "../utils/iamEmployeeObjectAccessor.js";
 import applicationOptions from "../utils/applicationOptions.js";
 import objectUtils from "../utils/objectUtils.js";
+import emailController from "./emailController.js";
+import fiscalYearUtils from "../utils/fiscalYearUtils.js";
 
 class ApprovalRequest {
 
@@ -236,6 +238,22 @@ class ApprovalRequest {
       whereArgs['ar.approval_status'] = kwargs.approvalStatus;
     }
 
+    if ( kwargs.programEndDate ){
+      whereArgs['ar.program_end_date'] = kwargs.programEndDate;
+    }
+
+    if ( kwargs.programStartDate ){
+      whereArgs['ar.program_start_date'] = kwargs.programStartDate;
+    }
+
+    if ( kwargs.travelEndDate ){
+      whereArgs['ar.travel_end_date'] = kwargs.travelEndDate;
+    }
+
+    if ( kwargs.travelStartDate ){
+      whereArgs['ar.travel_start_date'] = kwargs.travelStartDate;
+    }
+
     if ( kwargs.isCurrent ){
       whereArgs['ar.is_current'] = true;
     } else if ( kwargs.isNotCurrent ){
@@ -457,7 +475,6 @@ class ApprovalRequest {
    * @returns {Object}
    */
   async createRevision(data, submittedBy, forceValidation){
-
     // if submittedBy is provided, assign approval request revision to that employee
     if ( submittedBy ){
       data.employee = submittedBy;
@@ -777,12 +794,39 @@ class ApprovalRequest {
   }
 
   /**
+   * @description add the notification to the notification table
+   * @param {Number} approvalRequestRevisionId - approval request ID
+   * @param {String} kerb - kerberos
+   * @param {String} action - action object
+   * @returns
+   */
+  async addNotification(approvalRequestRevisionId, kerb, action){
+    // get max approver order
+    let sql = `SELECT MAX(approver_order) as max_order FROM approval_request_approval_chain_link WHERE approval_request_revision_id = $1`;
+    const maxOrderResApprover = await pg.query(sql, [approvalRequestRevisionId]);
+    const maxOrderApprover = maxOrderResApprover.res.rows[0].max_order || 0;
+
+
+    // insert submission to approval status activity table
+    let notification = {
+      approval_request_revision_id: approvalRequestRevisionId,
+      approver_order: maxOrderApprover + 1,
+      action: action,
+      employee_kerberos: kerb
+    }
+    notification = pg.prepareObjectForInsert(notification);
+    sql = `INSERT INTO approval_request_approval_chain_link (${notification.keysString}) VALUES (${notification.placeholdersString}) RETURNING approval_request_approval_chain_link_id`;
+    await pg.query(sql, notification.values);
+  }
+
+  /**
    * @description Submit an existing approval request draft for approval
    * @param {Object|Number} approvalRequestObjectOrId - approval request object or approval request ID
    * @returns {Object} - {success: true} or {error: true}
    */
   async submitDraft(approvalRequestObjectOrId){
     const { approvalRequest, approvalRequestError, approvalRequestId } = await this._getApprovalRequest(approvalRequestObjectOrId);
+    let modifiedApprovalRequest = approvalRequest;
     if ( approvalRequestError ) return approvalRequestError;
 
     // ensure approval request is in draft status
@@ -874,9 +918,70 @@ class ApprovalRequest {
       client.release();
     }
 
-    return {success: true, approvalRequestId, approvalRequestRevisionId};
+    // do system notifications and add them to approval request activity table
+    // if they fail, log the error but don't prevent the request from being submitted
+    const out = {success: true, approvalRequestId, approvalRequestRevisionId};
+    const notificationErrorMessage = 'Error sending system notifications for approval request submission';
+
+    modifiedApprovalRequest = await this.get({revisionIds: [approvalRequestRevisionId]});
+    if ( modifiedApprovalRequest.error ) {
+      console.error(notificationErrorMessage, modifiedApprovalRequest);
+      return out;
+    }
+    modifiedApprovalRequest = modifiedApprovalRequest.data[0];
+
+    // email the requester
+    let tokenRequest = {preferred_username: modifiedApprovalRequest.employeeKerberos}
+    const payloadRequest = {
+      requests: {
+        approvalRequest: modifiedApprovalRequest,
+        reimbursementRequest: {},
+      },
+      token: tokenRequest,
+      notificationType: 'request'
+    }
+    const requesterEmailSent = await emailController.sendSystemNotification(
+      payloadRequest.notificationType,
+      payloadRequest.requests.approvalRequest,
+      payloadRequest.requests.reimbursementRequest,
+      payloadRequest);
+
+    if ( requesterEmailSent ){
+      await this.addNotification(approvalRequestRevisionId, modifiedApprovalRequest.employeeKerberos, "request-notification");
+    }
+
+    // Email first approver
+    const approverEmployee = modifiedApprovalRequest.approvalStatusActivity.filter((o) => o.action == 'approval-needed');
+    let tokenApprover = {preferred_username: approverEmployee[0].employeeKerberos}
+    const payloadNextApprover = {
+      requests: {
+        approvalRequest: modifiedApprovalRequest,
+        reimbursementRequest: {},
+      },
+      token: tokenApprover,
+      notificationType: 'next-approver'
+    }
+    const approverEmailSent = await emailController.sendSystemNotification(
+      payloadNextApprover.notificationType,
+      payloadNextApprover.requests.approvalRequest,
+      payloadNextApprover.requests.reimbursementRequest,
+      payloadNextApprover
+    );
+    if ( approverEmailSent ){
+      await this.addNotification(approvalRequestRevisionId, approverEmployee[0].employeeKerberos, "approver-notification");
+    }
+    return out;
   }
 
+  /**
+   * @description Update requester status to a new status for an requester
+   * @param {Object|Number} approvalRequestObjectOrId - approval request object or approval request ID
+   * @param {Object} actionPayload - object with properties:
+   * - action {String} - new action status
+   * - comments {String} OPTIONAL - comments for the action
+   * - fundingSources {Array} OPTIONAL - Array of funding source objects with updated amounts
+   * @returns {Object} - {success: true} or {error: true}
+   */
   async doRequesterAction(approvalRequestObjectOrId, actionPayload){
 
     // get approval request
@@ -959,9 +1064,11 @@ class ApprovalRequest {
    * @returns {Object} - {success: true} or {error: true}
    */
   async doApproverAction(approvalRequestObjectOrId, actionPayload, approverKerberos){
+    let notification;
 
     // get approval request
     const { approvalRequest, approvalRequestError, approvalRequestId } = await this._getApprovalRequest(approvalRequestObjectOrId);
+    let modifiedApprovalRequest = approvalRequest;
     if ( approvalRequestError ) return approvalRequestError;
 
     // ensure approver is next in approval chain
@@ -1063,7 +1170,148 @@ class ApprovalRequest {
       client.release();
     }
 
-    return {success: true, approvalRequestId, approvalRequestRevisionId};
+    // do system notifications and add them to approval request activity table
+    // if they fail, log the error but don't prevent the request from being submitted
+    const out = {success: true, approvalRequestId, approvalRequestRevisionId};
+    const notificationErrorMessage = 'Error sending system notifications for approval request approver action';
+
+    modifiedApprovalRequest = await this.get({revisionIds: [approvalRequestRevisionId]});
+    if ( modifiedApprovalRequest.error ) {
+      console.error(notificationErrorMessage, modifiedApprovalRequest);
+      return out;
+    }
+    modifiedApprovalRequest = modifiedApprovalRequest.data[0];
+
+    let aKerberos = modifiedApprovalRequest.approvalStatusActivity.filter(
+      a => a.action === 'approve' ||
+      a.action === 'approve-with-changes' ||
+      a.action === 'deny' ||
+      a.action === 'request-revision' ||
+      a.action === 'approval-needed'
+    );
+    let lastApprover = aKerberos.pop();
+
+    let token = {preferred_username: approverKerberos}
+
+
+    const payloadApprover = {
+      "requests": {
+        approvalRequest: modifiedApprovalRequest,
+        reimbursementRequest: {},
+      },
+      token: token,
+    }
+
+    // approval notification
+    if(action.value == 'approve' || action.value == 'approve-with-changes'){
+      let notified;
+      let notificationKerberos;
+      if(lastApprover.employeeKerberos === approverKerberos){
+        notified = "request-notification";
+        notification = 'chain-completed';
+        notificationKerberos = modifiedApprovalRequest.employeeKerberos;
+      } else {
+        notified = "approver-notification";
+        notification = 'next-approver';
+        notificationKerberos = applicationOptions.getNextApprover(modifiedApprovalRequest, true);
+      }
+      payloadApprover.token = {preferred_username: notificationKerberos};
+
+      payloadApprover.notificationType = notification;
+      const approvalNotificationSent = await emailController.sendSystemNotification( payloadApprover.notificationType,
+        payloadApprover.requests.approvalRequest,
+        payloadApprover.requests.reimbursementRequest,
+        payloadApprover
+      );
+      if ( approvalNotificationSent ){
+        await this.addNotification(approvalRequestRevisionId, notificationKerberos, notified);
+      }
+    }
+
+    // deny or request revision notification
+    if (action.value == 'deny' || action.value == 'request-revision') {
+      notification = 'approver-change';
+      payloadApprover.notificationType = notification;
+      payloadApprover.token = {preferred_username: modifiedApprovalRequest.employeeKerberos};
+      const deniedNotificationSent = await emailController.sendSystemNotification( payloadApprover.notificationType,
+        payloadApprover.requests.approvalRequest,
+        payloadApprover.requests.reimbursementRequest,
+        payloadApprover
+      );
+      if ( deniedNotificationSent ){
+        await this.addNotification(approvalRequestRevisionId, modifiedApprovalRequest.employeeKerberos, "request-notification");
+      }
+    }
+
+    return out;
+
+  }
+
+  /**
+   * @description Get total approval request expenditures grouped by funding source and employee
+   * @param {Object} query - optional query object with properties:
+   * - fiscalYear {String} - fiscal year string (YYYY)
+   * - employees {Array} - array of employee kerberos
+   * - excludeReimbursed {Boolean} - exclude approval requests that have been fully reimbursed
+   * - approvalStatus {String} - approval status to filter by
+   * @returns {Object} - {error: true, message: 'error message'} or array of objects with properties:
+   * - employeeKerberos {String} - kerberos of employee
+   * - fundingSourceId {Number} - funding source ID
+   * - totalExpenditures {Number} - total expenditures for employee and funding source
+   */
+  async getTotalFundingSourceExpendituresByEmployee(query={}){
+
+    const whereArgs = {
+      'ar.is_current': true
+    };
+
+    if ( query.employees ){
+      whereArgs['ar.employee_kerberos'] = query.employees;
+    }
+
+    const fiscalYear = fiscalYearUtils.fromStartYear(query.fiscalYear, true);
+    if ( fiscalYear ){
+      whereArgs['fy_start'] = {relation: 'AND', 'ar.program_start_date' : {operator: '>=', value: fiscalYear.startDate({isoDate: true})}};
+      whereArgs['fy_end'] = {relation: 'AND', 'ar.program_start_date' : {operator: '<=', value: fiscalYear.endDate({isoDate: true})}};
+    }
+
+    if ( query.excludeReimbursed ){
+      whereArgs['ar.reimbursement_status'] = {operator: '!=', value: 'fully-reimbursed'};
+    }
+
+    if ( query.approvalStatus ){
+      whereArgs['ar.approval_status'] = query.approvalStatus;
+    }
+
+    const whereClause = pg.toWhereClause(whereArgs);
+    const sql = `
+      SELECT
+        ar.employee_kerberos,
+        arfs.funding_source_id,
+        SUM(arfs.amount) AS total_expenditures
+      FROM
+        approval_request ar
+      JOIN
+        approval_request_funding_source arfs ON ar.approval_request_revision_id = arfs.approval_request_revision_id
+      WHERE
+        ${whereClause.sql}
+      GROUP BY
+        ar.employee_kerberos, arfs.funding_source_id
+    `
+
+    const res = await pg.query(sql, whereClause.values);
+    if ( res.error ) return res;
+
+    const fields = new EntityFields([
+      {dbName: 'employee_kerberos', jsonName: 'employeeKerberos'},
+      {dbName: 'funding_source_id', jsonName: 'fundingSourceId'},
+      {dbName: 'total_expenditures', jsonName: 'totalExpenditures'}
+    ]);
+
+    return fields.toJsonArray(res.res.rows).map(r => {
+      r.totalExpenditures = Number(r.totalExpenditures);
+      return r;
+    });
 
   }
 
