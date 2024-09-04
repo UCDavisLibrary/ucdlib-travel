@@ -128,6 +128,10 @@ class ApprovalRequest {
         jsonName: 'submittedAt',
       },
       {
+        dbName: 'department_id',
+        jsonName: 'departmentId',
+      },
+      {
         dbName: 'no_expenditures',
         jsonName: 'noExpenditures',
         validateType: 'boolean'
@@ -488,6 +492,7 @@ class ApprovalRequest {
     delete data.is_current;
     delete data.submitted_at
     delete data.approval_status_activity;
+    delete data.department_id;
 
     // do validation
     data.validated_successfully = false;
@@ -504,6 +509,9 @@ class ApprovalRequest {
     // extract employee object from data
     const employee = data.employee_kerberos ? {kerberos: data.employee.kerberos} : data.employee;
     data.employee_kerberos = data.employee_kerberos || data.employee.kerberos;
+    if ( data?.employee?.department?.departmentId ) {
+      data.department_id = data.employee.department.departmentId;
+    }
     delete data.employee;
 
     // set funding source to "No funding/program time only" if no expenditures
