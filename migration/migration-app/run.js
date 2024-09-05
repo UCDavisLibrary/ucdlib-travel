@@ -17,8 +17,36 @@ const connectToMySQLDatabase = async () => {
     return connection;
 };
 
+// Run MySQL query
+const runPostgresQuery = async (rows, connection) => {
+    const conn = connection;
+
+    for(let row in rows){
+        // create createRevision
+        // create submitDraft
+        // create doRequesterAction
+        console.log("R:",row);
+        // conn.query(sql);
+    } 
+
+    // conn.connect()
+    // .then(() => {
+    //     console.log('Connected to PostgreSQL database', sql);
+        
+    // })
+    // .catch(err => console.error('Connection error', err.stack))
+    // .finally(() => {
+    //     conn.end();
+    // });
+
+
+    // return sql = `
+    //     SELECT * FROM settings
+    // `;
+};
+
 // Create a connection to the MySQL database
-const connectToPostgresDatabase = async () => {
+const insertIntoPostgresDatabase = async (rows) => {
     const connection = new Client({
         user: process.env.POSTGRES_USER || 'postgres',
         host: process.env.POSTGRES_HOST || 'db',  
@@ -26,55 +54,9 @@ const connectToPostgresDatabase = async () => {
         password: process.env.POSTGRES_PASSWORD || 'localhost',
         port: process.env.POSTGRES_PORT || 5432
     });
+    await runPostgresQuery(rows, connection);
 
-
-    // connection.connect()
-    // .then(() => {
-    //     connection.query('SELECT NOW()');
-    // })
-    // .then(res => {
-    //     console.log('Query result:', res.rows);
-    // })
-    // .catch(err => console.error('Connection error', err.stack))
-    // .finally(() => {
-    //     connection.end();
-    // });
-
-    // connection.connect()
-    // .then(() => {
-    //     return connection;
-    // })
-    // .catch(err => console.error('Connection error', err.stack));
-
-    return connection;
 };
-
-
-// Run MySQL query
-const runPostgresQuery = async () => {
-    try {
-        const connection = await connectToPostgresDatabase();
-
-        const sql = 'SELECT * FROM settings';
-        // Simple query to test the connection
-        connection.connect()
-        .then(() => {
-            console.log("Q:",connection.query('SELECT NOW()'));
-        })
-
-
-        // const [rows] = await connection.query(sql);
-        // console.log("R:",rows);
-
-        await connection.end();
-        //return rows;                    
-
-    } catch (error) {
-        console.error('Error connecting to the database:', error);
-    }
-};
-
-runPostgresQuery();
 
 // Run MySQL query
 const runMySQLQuery = async () => {
@@ -135,35 +117,10 @@ const runMySQLQuery = async () => {
 
 // Create a connection to the MySQL database
 const convertData = async () => {
-    //const rows = await runMySQLQuery();
-    const rows = await runPostgresQuery();
-    console.log('The solution 1 is:', rows); // Should output: The solution is: 2
+    const rows = await runMySQLQuery();
+
+    await insertIntoPostgresDatabase(rows);
+    // console.log('The solution 1 is:', rows); // Should output: The solution is: 2
 };
 
-// convertData();
-
-
-// const connection = mysql.createConnection({
-//   host: 'mysql',
-//   user:'root',
-//   password: process.env.MYSQL_ROOT_PASSWORD,
-//   database: process.env.MYSQL_DATABASE // Replace with the actual database name
-// });
-
-// connection.connect((err) => {
-//   if (err) {
-//     console.error('Error connecting to MySQL:', err);
-//     return;
-//   }
-//   console.log('Connected to MySQL!');
-
-//   // Perform your database operations here
-//   connection.query('SELECT * FROM forms', (err, results, fields) => {
-//     if (err) throw err;
-//     console.log("R:",results);
-//     console.log("F:",fields);
-
-//   });
-
-//   connection.end();
-// });
+convertData();
