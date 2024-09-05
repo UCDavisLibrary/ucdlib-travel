@@ -1,5 +1,7 @@
 import { LitElement } from 'lit';
 import {render} from "./app-page-reports.tpl.js";
+import { createRef } from 'lit/directives/ref.js';
+
 import { LitCorkUtils, Mixin } from '@ucd-lib/cork-app-utils';
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 
@@ -13,8 +15,12 @@ export default class AppPageReports extends Mixin(LitElement)
     return {
       page: {type: String},
       helpUrl: {type: String},
+      helpDialogPage: {type: String},
       filterRows: {state: true},
-      selectedFilters: {state: true}
+      selectedFilters: {state: true},
+      selectedMeasures: {state: true},
+      selectedAggregatorX: {state: true},
+      selectedAggregatorY: {state: true}
     }
   }
 
@@ -24,13 +30,18 @@ export default class AppPageReports extends Mixin(LitElement)
     this.render = render.bind(this);
     this.page = this.getPageId('403');
     this.helpUrl = ''
+    this.helpDialogRef = createRef();
+    this.helpDialogPage = 'metrics';
 
     this.filterRows = [];
     this.selectedFilters = {
       fiscalYear: [fiscalYearUtils.current().startYear]
     };
+    this.selectedMeasures = [];
+    this.selectedAggregatorX = '';
+    this.selectedAggregatorY = '';
 
-    this._injectModel('AppStateModel', 'ReportsModel');
+    this._injectModel('AppStateModel', 'ReportsModel', 'SettingsModel');
   }
 
   /**
@@ -78,7 +89,8 @@ export default class AppPageReports extends Mixin(LitElement)
 
   async getPageData(){
     const promises = [
-      this.ReportsModel.getFilters()
+      this.ReportsModel.getFilters(),
+      this.SettingsModel.getByCategory('reports')
     ];
     return await Promise.allSettled(promises);
   }
@@ -96,7 +108,11 @@ export default class AppPageReports extends Mixin(LitElement)
     this.selectedFilters[filter.type] = e.detail.map(v => filter.isNumber ? Number(v.value) : v.value);
     this.requestUpdate();
     console.log(this.selectedFilters);
+  }
 
+  _onHelpClick(page){
+    this.helpDialogPage = page;
+    this.helpDialogRef.value.showModal();
   }
 
 }
