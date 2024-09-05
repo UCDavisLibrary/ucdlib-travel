@@ -1,6 +1,6 @@
 import { LitElement } from 'lit';
 import {render} from "./app-page-admin-email-settings.tpl.js";
-import { LitCorkUtils, Mixin } from "../../../../lib/appGlobals.js";
+import { LitCorkUtils, Mixin } from '@ucd-lib/cork-app-utils';
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 import { WaitController } from "@ucd-lib/theme-elements/utils/controllers/wait.js";
 import ValidationHandler from "../../utils/ValidationHandler.js";
@@ -191,10 +191,13 @@ export default class AppPageAdminEmailSettings extends Mixin(LitElement)
         setting.hidden = false;
         continue;
       }
+
       const fields = [setting.label, setting.key, setting.description, setting.keywords];
+
       setting.hidden = fields.every(f => !f || !f.toLowerCase().includes(s));
     }
     this.noSettings = this.settings.every(s => s.hidden);
+
     this.requestUpdate();
 
   }

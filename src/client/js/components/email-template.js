@@ -1,7 +1,7 @@
 import { LitElement } from 'lit';
 import {render} from "./email-template.tpl.js";
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
-import { LitCorkUtils, Mixin } from "../../../lib/appGlobals.js";
+import { LitCorkUtils, Mixin } from '@ucd-lib/cork-app-utils';
 
 /**
  * @class EmailTemplate
