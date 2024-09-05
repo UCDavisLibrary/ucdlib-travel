@@ -31,7 +31,7 @@ class Email {
     body = body + `\n${serverConfig.appRoot}/${url}`
 
     const from = sender;
-    const to = 'sabaggett@ucdavis.edu';//await settings._getEmail(); // This is getting the email to send help too currently donotreply@lib.ucdavis.edu
+    const to = await settings._getEmail(); // This is getting the email to send help too currently donotreply@lib.ucdavis.edu
     const subject = sub;
     const text = body;
 
