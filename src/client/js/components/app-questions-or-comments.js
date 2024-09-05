@@ -4,7 +4,7 @@ import * as Templates from "./app-questions-or-comments.tpl.js";
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 import { createRef } from 'lit/directives/ref.js';
-import { LitCorkUtils, Mixin } from "../../../lib/appGlobals.js";
+import { LitCorkUtils, Mixin } from "@ucd-lib/cork-app-utils";
 import AccessToken from '../../../lib/utils/AccessToken.js';
 
 /**
@@ -85,9 +85,10 @@ export default class AppQuestionsOrComments extends Mixin(LitElement)
         url = `reimbursement/${this.reimbursementRequestId}`
         this.reimbursementRequest = await this.ReimbursementModel.query({requestIds: this.reimbursementRequestId});
     }
+    if(!this.approvalRequestId || !this.reimbursementRequestId) url = '';
 
     let ap = this.approvalRequest ? this.approvalRequest.payload.data[0] : {};
-    let rb = this.reimbursementRequest ? this.reimbursementRequest.payload.data[0] : {};
+    let rr = this.reimbursementRequest ? this.reimbursementRequest.payload.data[0] : {};
 
     this.data = {
         "emailContent": {
@@ -95,7 +96,6 @@ export default class AppQuestionsOrComments extends Mixin(LitElement)
           text: this.comments
         }, //email content 
         "url": url, //url
-        "temp": emailCategory.payload, //temporary payload
         "requests": {
           approvalRequestId: ap.approvalRequestRevisionId || null,
           reimbursementRequestId: rr.reimbursementRequestId || null,
