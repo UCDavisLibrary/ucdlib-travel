@@ -18,6 +18,16 @@ class ReportsService extends BaseService {
     });
   }
 
+  getFilters() {
+    return this.request({
+      url : '/api/reports/filters',
+      checkCached: () => this.store.data.filters,
+      onLoading : request => this.store.filtersLoading(request),
+      onLoad : result => this.store.filtersLoaded(result.body),
+      onError : e => this.store.filtersError(e)
+    });
+  }
+
 }
 
 const service = new ReportsService();

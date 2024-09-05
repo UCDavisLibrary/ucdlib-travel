@@ -13,4 +13,16 @@ app-page-reports {
       font-size: 3rem;
     }
   }
+
+  .filters {
+    background-color: #ebf3fa;
+    padding: 1rem;
+
+    .l-4col {
+      --l-gap: 1rem;
+    }
+    .l-second, .l-third, .l-fourth {
+      margin-top: 0 !important;
+    }
+  }
 }
