@@ -1,14 +1,19 @@
 import { html } from 'lit';
+import { unsafeHTML } from 'lit/directives/unsafe-html.js';
+import { ref } from 'lit/directives/ref.js';
 
 import '@ucd-lib/theme-elements/ucdlib/ucdlib-pages/ucdlib-pages.js';
 import '@ucd-lib/theme-elements/brand/ucd-theme-slim-select/ucd-theme-slim-select.js';
 
+import reportUtils from '../../../../lib/utils/reports/reportUtils.js';
+
 export function render() {
 return html`
-  <ucdlib-pages id='main-pages' selected=${this.page}>
+  <ucdlib-pages selected=${this.page}>
     ${render403.call(this)}
     ${renderReportBuilder.call(this)}
   </ucdlib-pages>
+  ${renderHelpDialog.call(this)}
 `;}
 
 
@@ -46,6 +51,55 @@ function renderReportBuilder(){
               `)}
           </div>
         </div>
+        <div class='l-2col'>
+          <div class='l-first container-type--normal'>
+            <div class='metrics panel panel--icon panel--icon-custom'>
+              <div class='flex flex--space-between flex--align-center'>
+                <h2 class="panel__title"><span class="panel__custom-icon fas fa-chart-simple"></span>Metrics</h2>
+                <a
+                  title='About Metrics'
+                  @click=${() => this._onHelpClick('metrics')}
+                  class='icon-link u-space-ml--small'>
+                  <i class="fa-solid fa-circle-question"></i>
+                </a>
+              </div>
+              <div>
+                <ucd-theme-slim-select @change=${e => this.selectedMeasures = Array.isArray(e.detail) ? e.detail.map(option => option.value) : [e.detail.value]}>
+                  <select ?multiple=${!(this.selectedAggregatorX && this.selectedAggregatorY)}>
+                    ${this.selectedAggregatorX && this.selectedAggregatorY ? html`
+                      <option
+                        value=''
+                        ?selected=${this.selectedMeasures.length === 0}
+                        disabled
+                        >Select Value
+                      </option>
+                      ` : html``}
+                    ${reportUtils.metrics.map(metric => html`
+                      <option
+                        value=${metric.value}
+                        ?selected=${this.selectedMeasures.includes(metric.value)}
+                        >${metric.label}
+                      </option>
+                      `)}
+                  </select>
+                </ucd-theme-slim-select>
+              </div>
+            </div>
+          </div>
+          <div class='l-second container-type--normal'>
+            <div class='aggregators panel panel--icon panel--icon-custom'>
+              <div class='flex flex--space-between flex--align-center'>
+                <h2 class="panel__title"><span class="panel__custom-icon fas fa-grip"></span>Aggregators</h2>
+                <a
+                  title='About Aggregators'
+                  @click=${() => this._onHelpClick('aggregators')}
+                  class='icon-link u-space-ml--small'>
+                  <i class="fa-solid fa-circle-question"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   `
@@ -57,7 +111,7 @@ function renderFilter(filter, i) {
   const selected = this.selectedFilters[filter.type] || [];
   const options = filter.options || [];
   return html`
-    <div class=${columnClass}>
+    <div class='${columnClass} container-type--normal'>
       <div class='field-container'>
         <label>${filter.label}</label>
         <ucd-theme-slim-select @change=${e => this._onFilterChange(e, filter)}>
@@ -85,5 +139,48 @@ function renderFilter(filter, i) {
         </ucd-theme-slim-select>
       </div>
     </div>
+  `;
+}
+
+/**
+ * @description Render help dialog for the page. Content depends on this.helpDialogPage.
+ * @returns {TemplateResult}
+ */
+function renderHelpDialog(){
+  return html`
+    <dialog ${ref(this.helpDialogRef)}>
+      <ucdlib-pages attr-for-selected='dialog-page' selected=${this.helpDialogPage}>
+        <div dialog-page='metrics'>
+          <div class='u-space-mb'>
+            <h4>About Metrics</h4>
+            <div>${unsafeHTML(this.SettingsModel.getByKey('metrics_description'))}</div>
+          </div>
+          <div>
+            ${reportUtils.metrics.map(metric => html`
+              <div class='u-space-mb--small'>
+                <div class='bold primary'>${metric.label}</div>
+                <div class='small grey'>${unsafeHTML(this.SettingsModel.getByKey(metric.descriptionSettingKey))}</div>
+              </div>
+              `)}
+          </div>
+        </div>
+        <div dialog-page='aggregators'>
+          <div class='u-space-mb'>
+            <h4>About Aggregators</h4>
+            <div>${unsafeHTML(this.SettingsModel.getByKey('aggregators_description'))}</div>
+          </div>
+        </div>
+      </ucdlib-pages>
+      <div class='alignable-promo__buttons u-space-mt flex flex--wrap'>
+        <div class='category-brand--secondary'>
+          <button
+            class='btn btn--invert'
+            type='button'
+            @click=${() => this.helpDialogRef.value.close()} >
+            Close
+          </button>
+        </div>
+      </div>
+    </dialog>
   `;
 }

@@ -49,7 +49,7 @@ return html`
 function renderFilters() {
   return html`
     <div class='allocations-filters l-3col'>
-      <div class='l-first'>
+      <div class='l-first container-type--normal'>
         <div class='field-container'>
           <label>Fiscal Year</label>
           <ucd-theme-slim-select @change=${e => this._onFilterChange(e.detail, 'selectedFiscalYearFilters', true)}>
@@ -65,7 +65,7 @@ function renderFilters() {
           </ucd-theme-slim-select>
         </div>
       </div>
-      <div class='l-second'>
+      <div class='l-second container-type--normal'>
         <div class='field-container'>
           <label>Employee</label>
           <ucd-theme-slim-select @change=${e => this._onFilterChange(e.detail, 'selectedEmployeeFilters')}>
@@ -81,7 +81,7 @@ function renderFilters() {
           </ucd-theme-slim-select>
         </div>
       </div>
-      <div class='l-third'>
+      <div class='l-third container-type--normal'>
         <div class='field-container'>
           <label>Funding Source</label>
           <ucd-theme-slim-select @change=${e => this._onFilterChange(e.detail, 'selectedFundingSourceFilters', true)}>

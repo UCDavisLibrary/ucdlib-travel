@@ -25,4 +25,29 @@ app-page-reports {
       margin-top: 0 !important;
     }
   }
+
+  .metrics {
+    background-color: #fff4d2;
+    padding: 1rem;
+  }
+
+  .aggregators {
+    background-color: #fff4d2;
+    padding: 1rem;
+  }
+
+  dialog {
+    width: 95%;
+    padding: 2rem;
+    border: none;
+  }
+  dialog::backdrop {
+    background-color: black;
+    opacity: 0.5;
+  }
+  @media (min-width: 768px) {
+    dialog {
+      width: 65%;
+    }
+  }
 }
