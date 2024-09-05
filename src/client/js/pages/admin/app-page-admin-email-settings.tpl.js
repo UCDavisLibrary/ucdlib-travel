@@ -41,7 +41,6 @@ function renderEmailSetting(setting) {
 
   let vRes = this.getTemplatesVariables();
   let object = {label: this.toUpper(key), emailPrefix: this.toCamelCase(key)};
-  console.log("H:", setting.hidden);
 
   return html`
 
