@@ -45,6 +45,7 @@ class subsetIcons {
         'exclamation-circle',
         'file-import',
         'file-lines',
+        'filter',
         'gear',
         'list',
         'magnifying-glass',
