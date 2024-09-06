@@ -100,13 +100,25 @@ function renderReportBuilder(){
             </div>
           </div>
           <div class='l-second container-type--normal'>
-            <div class='filters panel panel--icon panel--icon-custom'>
+            <div class='filters panel panel--icon panel--icon-custom u-space-mb--large'>
               <h2 class="panel__title"><span class="panel__custom-icon fas fa-filter"></span>Filters</h2>
               <div>
                 ${this.filters.map(row => renderFilter.call(this, row))}
               </div>
             </div>
           </div>
+        </div>
+        <div class='generate-container'>
+          <a
+            @click=${this._onGenerateReportClick}
+            class="btn btn--primary btn--lg pointer ${this.generatingReport ? 'btn--disabled' : ''}">
+
+            ${this.generatingReport ? html`
+              <span>Generating Report</span>
+              <span class='u-space-ml'><i class="fas fa-spinner fa-spin"></i></span>` : html`
+              <span>Generate Report</span>
+            `}
+          </a>
         </div>
       </div>
     </div>
