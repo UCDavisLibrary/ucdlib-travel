@@ -41,16 +41,6 @@ function renderReportBuilder(){
   return html`
     <div id=${this.getPageId('builder')}>
       <div class='l-gutter u-space-mb--large'>
-        <div class='filters panel panel--icon panel--icon-custom'>
-          <h2 class="panel__title"><span class="panel__custom-icon fas fa-filter"></span>Filters</h2>
-          <div>
-            ${this.filterRows.map(row => html`
-              <div class="l-4col">
-                ${row.map((filter, i) => renderFilter.call(this, filter, i))}
-              </div>
-              `)}
-          </div>
-        </div>
         <div class='l-2col'>
           <div class='l-first container-type--normal'>
             <div class='metrics panel panel--icon panel--icon-custom'>
@@ -64,12 +54,12 @@ function renderReportBuilder(){
                 </a>
               </div>
               <div>
-                <ucd-theme-slim-select @change=${e => this.selectedMeasures = Array.isArray(e.detail) ? e.detail.map(option => option.value) : [e.detail.value]}>
+                <ucd-theme-slim-select @change=${e => this.selectedMetrics = Array.isArray(e.detail) ? e.detail.map(option => option.value) : [e.detail.value]}>
                   <select ?multiple=${!(this.selectedAggregatorX && this.selectedAggregatorY)}>
                     ${this.selectedAggregatorX && this.selectedAggregatorY ? html`
                       <option
                         value=''
-                        ?selected=${this.selectedMeasures.length === 0}
+                        ?selected=${this.selectedMetrics.length === 0}
                         disabled
                         >Select Value
                       </option>
@@ -77,7 +67,7 @@ function renderReportBuilder(){
                     ${reportUtils.metrics.map(metric => html`
                       <option
                         value=${metric.value}
-                        ?selected=${this.selectedMeasures.includes(metric.value)}
+                        ?selected=${this.selectedMetrics.includes(metric.value)}
                         >${metric.label}
                       </option>
                       `)}
@@ -85,8 +75,6 @@ function renderReportBuilder(){
                 </ucd-theme-slim-select>
               </div>
             </div>
-          </div>
-          <div class='l-second container-type--normal'>
             <div class='aggregators panel panel--icon panel--icon-custom'>
               <div class='flex flex--space-between flex--align-center'>
                 <h2 class="panel__title"><span class="panel__custom-icon fas fa-grip"></span>Aggregators</h2>
@@ -97,6 +85,26 @@ function renderReportBuilder(){
                   <i class="fa-solid fa-circle-question"></i>
                 </a>
               </div>
+              <div class='flex flex--align-center'>
+                <div class='flex--grow'>
+                  ${renderAggregatorSelect.call(this, 'x')}
+                  ${renderAggregatorSelect.call(this, 'y')}
+                </div>
+                <a
+                  title='Swap X and Y Aggregators'
+                  @click=${this._onAggregatorSwap}
+                  class='icon-link u-space-ml--small'>
+                  <i class="fa-solid fa-arrow-down-up-across-line"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+          <div class='l-second container-type--normal'>
+            <div class='filters panel panel--icon panel--icon-custom'>
+              <h2 class="panel__title"><span class="panel__custom-icon fas fa-filter"></span>Filters</h2>
+              <div>
+                ${this.filters.map(row => renderFilter.call(this, row))}
+              </div>
             </div>
           </div>
         </div>
@@ -105,13 +113,35 @@ function renderReportBuilder(){
   `
 }
 
-function renderFilter(filter, i) {
-  const columnClasses = ['l-first', 'l-second', 'l-third', 'l-fourth'];
-  const columnClass = columnClasses[i % columnClasses.length];
+function renderAggregatorSelect(axis) {
+  const value = this[`selectedAggregator${axis.toUpperCase()}`];
+  return html`
+    <div class='field-container'>
+      <label>${axis.toUpperCase()} Axis</label>
+      <select @change=${e => this._onAggregatorChange(e, axis)} .value=${value}>
+        <option
+          value=''
+          ?selected=${value === ''}
+          >Select Value
+        </option>
+        ${reportUtils.aggregators.map(aggregator => html`
+          <option
+            value=${aggregator.value}
+            ?selected=${value === aggregator.value}
+            >${aggregator.label}
+          </option>
+          `)}
+      </select>
+    </div>
+  `;
+}
+
+function renderFilter(filter) {
   const selected = this.selectedFilters[filter.type] || [];
   const options = filter.options || [];
+
   return html`
-    <div class='${columnClass} container-type--normal'>
+    <div>
       <div class='field-container'>
         <label>${filter.label}</label>
         <ucd-theme-slim-select @change=${e => this._onFilterChange(e, filter)}>

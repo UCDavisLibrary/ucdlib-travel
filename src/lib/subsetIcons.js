@@ -22,6 +22,7 @@ class subsetIcons {
     this.icons = {
       'ucdlib-travel': [
         'arrow-down',
+        'arrow-down-up-across-line',
         'arrow-left',
         'arrow-up',
         'ban',
