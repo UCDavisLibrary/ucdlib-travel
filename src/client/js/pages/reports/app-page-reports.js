@@ -16,11 +16,12 @@ export default class AppPageReports extends Mixin(LitElement)
       page: {type: String},
       helpUrl: {type: String},
       helpDialogPage: {type: String},
-      filters: {state: true},
-      selectedFilters: {state: true},
-      selectedMetrics: {state: true},
-      selectedAggregatorX: {state: true},
-      selectedAggregatorY: {state: true}
+      filters: {type: Array},
+      selectedFilters: {type: Array},
+      selectedMetrics: {type: Array},
+      selectedAggregatorX: {type: String},
+      selectedAggregatorY: {type: String},
+      generatingReport: {state: true}
     }
   }
 
@@ -40,6 +41,8 @@ export default class AppPageReports extends Mixin(LitElement)
     this.selectedMetrics = reportUtils.defaultMetrics(true);
     this.selectedAggregatorX = reportUtils.defaultAggregator('x', true);
     this.selectedAggregatorY = reportUtils.defaultAggregator('y', true);
+
+    this.generatingReport = false;
 
     this._injectModel('AppStateModel', 'ReportsModel', 'SettingsModel');
   }
@@ -97,6 +100,11 @@ export default class AppPageReports extends Mixin(LitElement)
 
   getPageId(page){
     return `${this.id}-page--${page}`;
+  }
+
+  _onGenerateReportClick(){
+    if ( this.generatingReport ) return;
+    this.generatingReport = true;
   }
 
   _onReportsFiltersFetched(e){
