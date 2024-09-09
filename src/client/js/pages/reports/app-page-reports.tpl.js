@@ -112,7 +112,6 @@ function renderReportBuilder(){
           <a
             @click=${this._onGenerateReportClick}
             class="btn btn--primary btn--lg pointer ${this.generatingReport ? 'btn--disabled' : ''}">
-
             ${this.generatingReport ? html`
               <span>Generating Report</span>
               <span class='u-space-ml'><i class="fas fa-spinner fa-spin"></i></span>` : html`

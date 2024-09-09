@@ -2,10 +2,58 @@ import protect from "../lib/protect.js";
 import settings from "../lib/db-models/settings.js";
 import reports from "../lib/db-models/reports.js";
 import apiUtils from "../lib/utils/apiUtils.js"
+import reportUtils from "../lib/utils/reports/reportUtils.js";
 
 const basePath = '/reports';
 
 export default (api) => {
+
+  api.get(basePath, protect('hasBasicAccess'), async (req, res) => {
+    const accessLevel = await reports.getAccessLevel(req.auth.token);
+    if ( accessLevel.error ){
+      console.error('Error fetching access level', accessLevel);
+      return res.status(500).json({error: true, message: 'Error fetching access level'});
+    }
+
+    const metrics = reportUtils.getMetricsFromValues(apiUtils.explode(req.query.metrics), true);
+    if ( !metrics.length ){
+      return res.status(400).json({error: true, message: 'No valid metrics provided. At least one metric is required'});
+    }
+
+    const aggregators = {
+      x: reportUtils.aggregators.find(a => a.urlParam === req.query['aggregator-x']),
+      y: reportUtils.aggregators.find(a => a.urlParam === req.query['aggregator-y'])
+    };
+    if ( !aggregators.x && !aggregators.y ){
+      return res.status(400).json({error: true, message: 'No valid aggregators provided. At least one aggregator is required'});
+    }
+    if ( aggregators.x && aggregators.y && metrics.length > 1 ){
+      return res.status(400).json({error: true, message: 'Multiple metrics are not allowed when both x and y aggregators are provided'});
+    }
+
+    const filters = {};
+    reportUtils.filters.forEach(filter => {
+      filters[filter.value] = apiUtils.explode(req.query[filter.urlParam]);
+    });
+
+    if ( accessLevel.departmentRestrictions.length ){
+      if ( filters.department?.length ){
+        if ( !filters.department.every(department => accessLevel.departmentRestrictions.includes(department)) ){
+          return apiUtils.do403(res);
+        }
+      } else {
+        filters.department = accessLevel.departmentRestrictions;
+      }
+    }
+
+    const kwargs = {metrics, aggregators, filters};
+    const data = await reports.get(kwargs);
+    if ( data.error ){
+      console.error('Error fetching report', data);
+      return res.status(500).json({error: true, message: 'Error fetching report'});
+    }
+    return res.json(data);
+  });
 
   api.get(`${basePath}/access-level`, protect('hasBasicAccess'), async (req, res) => {
     const out = {

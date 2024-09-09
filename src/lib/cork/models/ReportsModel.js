@@ -2,6 +2,8 @@ import {BaseModel} from '@ucd-lib/cork-app-utils';
 import ReportsService from '../services/ReportsService.js';
 import ReportsStore from '../stores/ReportsStore.js';
 
+import urlUtils from '../../utils/urlUtils.js';
+
 class ReportsModel extends BaseModel {
 
   constructor() {
@@ -11,6 +13,23 @@ class ReportsModel extends BaseModel {
     this.service = ReportsService;
 
     this.register('ReportsModel');
+  }
+
+  async getReport(query={}) {
+    const queryString = urlUtils.queryObjectToKebabString(query);
+
+    let state = this.store.data.reports[queryString];
+    try {
+      if( state && state.state === 'loading' ) {
+        await state.request;
+      } else {
+        await this.service.getReport(queryString);
+      }
+    } catch(e) {}
+
+    this.store.emit(this.store.events.REPORT_REQUESTED, this.store.data.reports[queryString]);
+
+    return this.store.data.reports[queryString];
   }
 
   /**
