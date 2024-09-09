@@ -23,7 +23,6 @@ export default class AppPageAdminApprovalRequests extends Mixin(LitElement)
       waitController: {type: Object},
       approvalStatuses: {type: Array},
       approvalStatus: {type: String},
-      approvalStatusFilters: {type: Array},
       selectedApprovalRequestFilters: {type: Array}
     }
   }
@@ -37,7 +36,6 @@ export default class AppPageAdminApprovalRequests extends Mixin(LitElement)
     this.waitController = new WaitController(this);
     this.approvalStatuses = applicationOptions.approvalStatuses;
     this.isCurrent = false;
-    this.approvalStatusFilters = [];
     this.selectedApprovalRequestFilters = [];
 
     this._injectModel('AppStateModel', 'ApprovalRequestModel', 'AuthModel');
@@ -49,6 +47,14 @@ export default class AppPageAdminApprovalRequests extends Mixin(LitElement)
     resetFilters() {
       this.selectedApprovalRequestFilters = [];
     }
+
+      /**
+   * @description Query employee allocations using current filter values
+   */
+  async query(values){
+    this.queryState = 'loading';
+    return await this.ApprovalRequestModel.query(this._queryObject(values));
+  }
 
   /**
    * @description bound to AppStateModel app-state-update event
@@ -83,12 +89,10 @@ export default class AppPageAdminApprovalRequests extends Mixin(LitElement)
     /**
    * @description Construct query object for ApprovalRequestModel query from element properties
    */
-    _queryObject(){
+    _queryObject(values){
       return {
         isCurrent: true,
-        // employees: this.AuthModel.getToken().id,
-        // approvalStatus: applicationOptions.approvalStatuses.filter(s => s.value != 'draft').map(s => s.value),
-        approvalStatus: applicationOptions.approvalStatuses.filter(s => s.value == 'approved').map(s => s.value),
+        approvalStatus: this.selectedApprovalRequestFilters,
         page: this.page
       };
     }
@@ -126,16 +130,24 @@ export default class AppPageAdminApprovalRequests extends Mixin(LitElement)
     this.page = typeTransform.toPositiveInt(state?.location?.query?.page) || 1;
   }
 
-
-    /**
-   * @description bound to ApprovalRequestModel employee-allocations-filters-fetched event
-   * Set fundingSourceFilters and employeeFilters
+      /**
+   * @description Event handler for filter changes. Triggers a query to update results
+   * @param {Array} options - selected options
+   * @param {String} prop - property to update
+   * @param {Boolean} toInt - convert values to integers before setting property
    */
-    _onApprovalRequestsFiltersFetched(e) {
-      if ( e.state !== 'loaded') return;
-      this.approvalStatusFilters = e.payload;
-      console.log(this.approvalStatusFilters);
-    }
+  _onFilterChange(options, prop, toInt){
+    let values = options.map(option => toInt ? parseInt(option.value) : option.value);
+
+    this[prop] = values;
+
+    this.page = 1;
+    this.results = [];
+    this.maxPage = 1;
+
+    this.query();
+
+  }
 
   /**
    * @description callback for when user clicks on pagination

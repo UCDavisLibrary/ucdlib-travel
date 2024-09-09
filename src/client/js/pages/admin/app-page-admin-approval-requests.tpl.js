@@ -52,14 +52,14 @@ function renderFilters() {
     <div class='allocations-filters l-3col'>
       <div class='l-first'>
         <div class='field-container'>
-          <label>Approval Request State</label>
+          <label>Approval Request Status</label>
           <ucd-theme-slim-select @change=${e => this._onFilterChange(e.detail, 'selectedApprovalRequestFilters')}>
             <select multiple>
-              ${this.approvalStatusFilters.map(application => html`
+              ${this.approvalStatuses.map(s => html`
                 <option
-                  value=${application.kerberos}
-                  ?selected=${this.selectedApprovalRequestFilters.includes(application.approvalStatus)}
-                  >${application.approvalStatus}
+                  value=${s.value}
+                  ?selected=${this.selectedApprovalRequestFilters.includes(s.value)}
+                  >${s.label}
                 </option>
               `)}
             </select>
