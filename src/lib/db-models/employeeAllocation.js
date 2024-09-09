@@ -94,6 +94,7 @@ class EmployeeAllocation {
     }
     delete data.employee_allocation_id;
     delete data.employee;
+    delete data.department_id;
 
     // check if an allocation already exists for this date range, funding source, and employees
     // wont break the db if a duplicate is inserted, but it's not a user pattern we want to happen
@@ -133,7 +134,7 @@ class EmployeeAllocation {
       // insert allocation for each employee
       for (const employee of data.employees) {
         employee.added_at = new Date();
-        let d = {...data, 'employee_kerberos': employee.kerberos };
+        let d = {...data, 'employee_kerberos': employee.kerberos, department_id: employee?.department?.departmentId };
         delete d.employees;
         d = pg.prepareObjectForInsert(d);
         const sql = `INSERT INTO employee_allocation (${d.keysString}) VALUES (${d.placeholdersString}) RETURNING employee_allocation_id`;
@@ -404,7 +405,7 @@ class EmployeeAllocation {
   async getTotalByFundFy(query={}){
     const fiscalYears = (query.fiscalYears || []).map(fy => fiscalYearUtils.fromStartYear(fy, true)).filter(fy => fy !== null);
     const employees = Array.isArray(query.employees) ? query.employees : [];
-    
+
     const whereArgs = {};
     whereArgs['ea.deleted'] = false;
     if ( fiscalYears.length ){

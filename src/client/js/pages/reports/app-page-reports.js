@@ -98,13 +98,51 @@ export default class AppPageReports extends Mixin(LitElement)
     return await Promise.allSettled(promises);
   }
 
+  getReport(){
+    const query = {
+      metrics: reportUtils.getMetricsFromValues(this.selectedMetrics).map(m => m.urlParam)
+    };
+
+    if ( this.selectedAggregatorX ) {
+      query['aggregator-x'] = reportUtils.aggregators.find(a => a.value === this.selectedAggregatorX)?.urlParam;
+    }
+    if ( this.selectedAggregatorY ) {
+      query['aggregator-y'] = reportUtils.aggregators.find(a => a.value === this.selectedAggregatorY)?.urlParam;
+    }
+
+    for( const filter of reportUtils.filters ){
+      if ( this.selectedFilters[filter.value] ) {
+        query[filter.urlParam] = this.selectedFilters[filter.value];
+      }
+    }
+
+    this.logger.info('get report', query);
+    this.ReportsModel.getReport(query);
+  }
+
+  _onReportRequested(e){
+    if ( !this.AppStateModel.isActivePage(this) ) return;
+    if ( e.state === 'loading' ) {
+      this.generatingReport = true;
+      return;
+    }
+    this.generatingReport = false;
+    if ( e.state === 'error' ) {
+      this.AppStateModel.showError(e, {ele: this});
+      return;
+    }
+    if ( e.state === 'loaded' ){
+      this.logger.info('report generated', e.payload);
+    }
+  }
+
   getPageId(page){
     return `${this.id}-page--${page}`;
   }
 
   _onGenerateReportClick(){
     if ( this.generatingReport ) return;
-    this.generatingReport = true;
+    this.getReport();
   }
 
   _onReportsFiltersFetched(e){
@@ -115,7 +153,6 @@ export default class AppPageReports extends Mixin(LitElement)
   _onFilterChange(e, filter){
     this.selectedFilters[filter.type] = e.detail.map(v => filter.isNumber ? Number(v.value) : v.value);
     this.requestUpdate();
-    console.log(this.selectedFilters);
   }
 
   _onHelpClick(page){

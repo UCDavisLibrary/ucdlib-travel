@@ -1,8 +1,4 @@
-/**
- * @description Class for a report metric
- */
-class Metric {
-
+class Filter {
   constructor(data){
     this.data = data;
   }
@@ -24,16 +20,14 @@ class Metric {
   }
 
   get descriptionSettingKey() {
-    return `metric_${this.value}_description`;
+    return `filter_${this.value}_description`;
   }
 
   get urlParam() {
-    return this.data.urlParam || this.value;
+    const d = this.data.urlParam || this.value;
+    return `filter-${d}`;
   }
 
-  get reportsRequired() {
-    return this.data.reportsRequired || [];
-  }
 }
 
-export default Metric;
+export default Filter

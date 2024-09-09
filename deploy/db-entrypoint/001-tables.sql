@@ -186,6 +186,7 @@ CREATE TABLE employee_allocation (
     amount NUMERIC NOT NULL,
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
+    department_id INTEGER REFERENCES department(department_id),
     added_by VARCHAR(100) REFERENCES employee(kerberos),
     added_at timestamp DEFAULT NOW(),
     deleted BOOLEAN DEFAULT FALSE,

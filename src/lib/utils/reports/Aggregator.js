@@ -26,6 +26,10 @@ class Aggregator {
   get descriptionSettingKey() {
     return `aggregator_${this.value}_description`;
   }
+
+  get urlParam() {
+    return this.data.urlParam || this.value;
+  }
 }
 
 export default Aggregator;

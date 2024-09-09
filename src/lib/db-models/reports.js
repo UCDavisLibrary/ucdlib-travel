@@ -9,6 +9,41 @@ class Reports {
 
   constructor(){}
 
+  async get(kwargs={}){
+    const {metrics, aggregators, filters} = kwargs;
+
+
+    // Get all reports required by the metrics for this request
+    const reportsRequired = [];
+    for ( const metric of metrics ){
+      for ( const report of metric.reportsRequired ){
+        if ( !reportsRequired.find(r => r.report === report) ){
+          const funcName = `get${report[0].toUpperCase()}${report.slice(1)}`;
+          if ( typeof this[funcName] !== 'function' ){
+            return {error: true, message: `Invalid report type: ${report}`};
+          }
+          reportsRequired.push({report, fn: this[funcName]});
+        }
+      }
+    }
+    const reportPromises = await Promise.allSettled(reportsRequired.map(({fn}) => fn({aggregators, filters})));
+    for ( const [i, promise] of reportPromises.entries() ){
+      if ( promise.status === 'rejected' || promise.value.error ){
+        return {error: true, message: `Error fetching report: ${reportsRequired[i].report}`, details: promise};
+      }
+      reportsRequired[i].data = promise.value;
+    }
+
+    return reportsRequired.map(({report, data}) => ({report, data}));
+  }
+
+  async getAllocated(kwargs={}){
+    const {aggregators, filters} = kwargs;
+
+    return {foo: 'bar'};
+  }
+
+
   /**
    * @description Get the access level of the user
    * @param {AccessToken} token - The user's access token
