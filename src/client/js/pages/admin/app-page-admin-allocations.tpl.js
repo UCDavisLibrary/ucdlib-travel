@@ -121,6 +121,7 @@ function renderAllocationItem(allocation) {
         <div hidden>From: ${allocation.startDate}</div>
         <div hidden>To: ${allocation.endDate}</div>
         <div>Fiscal Year: ${fiscalYearUtils.fromDate(allocation.startDate)}</div>
+        <div>Department: ${allocation.department?.label || ''}</div>
         <div class='allocation-amount__mobile'>Amount: $${allocation.amount}</div>
       </div>
       <div class='allocation-amount__desktop u-space-ml'>$${allocation.amount}</div>

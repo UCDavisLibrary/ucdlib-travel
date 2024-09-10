@@ -3,6 +3,7 @@ import settings from "../lib/db-models/settings.js";
 import reports from "../lib/db-models/reports.js";
 import apiUtils from "../lib/utils/apiUtils.js"
 import reportUtils from "../lib/utils/reports/reportUtils.js";
+import log from "../lib/utils/log.js";
 
 const basePath = '/reports';
 
@@ -33,7 +34,7 @@ export default (api) => {
 
     const filters = {};
     reportUtils.filters.forEach(filter => {
-      filters[filter.value] = apiUtils.explode(req.query[filter.urlParam]);
+      filters[filter.value] = apiUtils.explode(req.query[filter.urlParam], filter.isInt);
     });
 
     if ( accessLevel.departmentRestrictions.length ){
@@ -49,7 +50,7 @@ export default (api) => {
     const kwargs = {metrics, aggregators, filters};
     const data = await reports.get(kwargs);
     if ( data.error ){
-      console.error('Error fetching report', data);
+      log.error('Error fetching report', data);
       return res.status(500).json({error: true, message: 'Error fetching report'});
     }
     return res.json(data);

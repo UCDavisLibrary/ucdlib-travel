@@ -28,6 +28,10 @@ class Filter {
     return `filter-${d}`;
   }
 
+  get isInt() {
+    return this.data.isInt || false;
+  }
+
 }
 
 export default Filter

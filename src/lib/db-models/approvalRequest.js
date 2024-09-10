@@ -97,6 +97,10 @@ class ApprovalRequest {
         customValidation: this.validations.programDate.bind(this.validations)
       },
       {
+        dbName: 'fiscal_year',
+        jsonName: 'fiscalYear'
+      },
+      {
         dbName: 'travel_required',
         jsonName: 'travelRequired',
         validateType: 'boolean'
@@ -519,6 +523,10 @@ class ApprovalRequest {
     if ( data.no_expenditures ){
       data.funding_sources = [{fundingSourceId: 8, amount: 0}];
       data.expenditures = [];
+    }
+
+    if ( data.program_start_date ){
+      data.fiscal_year = fiscalYearUtils.fromDate(data.program_start_date).startYear;
     }
 
     // prep data for transaction

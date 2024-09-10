@@ -51,10 +51,22 @@ class EmployeeAllocation {
         customValidation: this.validateDateRange.bind(this)
       },
       {
+        dbName: 'fiscal_year',
+        jsonName: 'fiscalYear'
+      },
+      {
         dbName: 'amount',
         jsonName: 'amount',
         required: true,
         validateType: 'number'
+      },
+      {
+        dbName: 'department_id',
+        jsonName: 'departmentId'
+      },
+      {
+        dbName: 'department',
+        jsonName: 'department'
       },
       {
         dbName: 'added_by',
@@ -85,31 +97,35 @@ class EmployeeAllocation {
    * Takes multiple employees (in the employees field) and creates an allocation for each.
    * @param {Object} submittedBy - employee object of the user submitting the allocation
    */
-  async create(data, submittedBy={}){
+  async create(data, submittedBy={}, skipDuplicateCheck=false){
 
     data = this.entityFields.toDbObj(data);
     const validation = await this.entityFields.validate(data, ['employee_allocation_id']);
     if ( !validation.valid ) {
       return {error: true, message: 'Validation Error', is400: true, fieldsWithErrors: validation.fieldsWithErrors};
     }
+    data.fiscal_year = fiscalYearUtils.fromDate(data.start_date).startYear;
     delete data.employee_allocation_id;
     delete data.employee;
     delete data.department_id;
+    delete data.department;
 
     // check if an allocation already exists for this date range, funding source, and employees
     // wont break the db if a duplicate is inserted, but it's not a user pattern we want to happen
-    const existingAllocations = await this.allocationExists(data.start_date, data.end_date, data.funding_source_id, data.employees.map(e => e.kerberos));
-    if ( existingAllocations.error ) return existingAllocations;
-    if ( Object.values(existingAllocations.res).some(v => v) ) {
-      const field = {...this.entityFields.fields.find(f => f.jsonName === 'employees')};
-      const employees = data.employees.filter(e => existingAllocations.res[e.kerberos]);
-      const message = 'An allocation already exists for this date range and funding source for the following employees:';
-      field.errors = [{errorType: 'already-exists', message, employees}];
-      return {
-        error: true,
-        message: 'Validation Error',
-        is400: true,
-        fieldsWithErrors: [field]
+    if ( !skipDuplicateCheck ) {
+      const existingAllocations = await this.allocationExists(data.start_date, data.end_date, data.funding_source_id, data.employees.map(e => e.kerberos));
+      if ( existingAllocations.error ) return existingAllocations;
+      if ( Object.values(existingAllocations.res).some(v => v) ) {
+        const field = {...this.entityFields.fields.find(f => f.jsonName === 'employees')};
+        const employees = data.employees.filter(e => existingAllocations.res[e.kerberos]);
+        const message = 'An allocation already exists for this date range and funding source for the following employees:';
+        field.errors = [{errorType: 'already-exists', message, employees}];
+        return {
+          error: true,
+          message: 'Validation Error',
+          is400: true,
+          fieldsWithErrors: [field]
+        }
       }
     }
 
@@ -168,7 +184,12 @@ class EmployeeAllocation {
     const sql = `
       SELECT employee_kerberos, true as allocation_exists
       FROM employee_allocation
-      WHERE start_date = $1 AND end_date = $2 AND funding_source_id = $3 AND employee_kerberos = ANY($4)
+      WHERE
+        start_date = $1 AND
+        end_date = $2 AND
+        funding_source_id = $3 AND
+        employee_kerberos = ANY($4) AND
+        deleted = false
     `;
     const res = await pg.query(sql, [startDate, endDate, fundingSourceId, kerberosIds]);
     if ( res.error ) return res;
@@ -267,13 +288,19 @@ class EmployeeAllocation {
         'kerberos', e.kerberos,
         'firstName', e.first_name,
         'lastName', e.last_name
-      ) AS employee
+      ) AS employee,
+      json_build_object(
+        'departmentId', d.department_id,
+        'label', d.label
+      ) AS department
     FROM
       employee_allocation ea
     JOIN
       employee e ON e.kerberos = ea.employee_kerberos
     JOIN
       funding_source fs ON fs.funding_source_id = ea.funding_source_id
+    LEFT JOIN
+      department d ON d.department_id = ea.department_id
     WHERE ${whereClause.sql}
     ORDER BY
       ea.start_date DESC,
@@ -300,6 +327,10 @@ class EmployeeAllocation {
       // ensure startDate and endDate are in format YYYY-MM-DD
       for (const dateField of ['startDate', 'endDate']) {
         allocation[dateField] = allocation[dateField].toISOString().split('T')[0];
+      }
+
+      if ( !allocation.department?.departmentId ) {
+        allocation.department = null;
       }
 
     }

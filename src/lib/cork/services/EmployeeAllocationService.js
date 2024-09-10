@@ -42,9 +42,9 @@ class EmployeeAllocationService extends BaseService {
     });
   }
 
-  createEmployeeAllocations(payload, timestamp) {
+  createEmployeeAllocations(payload, allowDuplicateAllocations, timestamp) {
     return this.request({
-      url : '/api/admin/employee-allocation',
+      url : `/api/admin/employee-allocation${allowDuplicateAllocations ? '?allow-duplicate-allocations=true' : ''}`,
       fetchOptions : {
         method : 'POST',
         body : payload

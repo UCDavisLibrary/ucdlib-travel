@@ -13,8 +13,9 @@ export default (api) => {
    * @description Create new employee allocations
    */
   api.post('/employee-allocation', protect('hasAdminAccess'), async (req, res) => {
+    const allowDuplicateAllocations = req.query['allow-duplicate-allocations'] ? true : false;
     const payload = (typeof req.body === 'object') && !Array.isArray(req.body) ? req.body : {};
-    const data = await employeeAllocation.create(payload, req.auth.token.employeeObject);
+    const data = await employeeAllocation.create(payload, req.auth.token.employeeObject, allowDuplicateAllocations);
     if ( data.error && data.is400 ) {
       return res.status(400).json(data);
     }
@@ -50,7 +51,7 @@ export default (api) => {
     let forAnotherUser = false;
 
     const reqQuery = urlUtils.queryToCamelCase(req.query);
-    
+
     const fiscalYears = apiUtils.explode(reqQuery.fiscalYears, true)
       .map(year => fiscalYearUtils.fromStartYear(year, true))
       .filter(fy => fy !== null);
@@ -90,7 +91,7 @@ export default (api) => {
       approvalRequestFundingSources = ap.fundingSources;
       approvalRequestFiscalYear = fiscalYearUtils.fromDate(ap.programStartDate).startYear;
 
-    } 
+    }
 
     const fundTotals = await employeeAllocation.getTotalByFundFy({fiscalYears: startYears});
     if ( fundTotals.error ) {
@@ -114,11 +115,11 @@ export default (api) => {
         console.error('Error in GET /employee-allocation/user-summary', approvedTotal.error);
         return res.status(500).json({error: true, message: 'Error getting user allocation summary.'});
       }
-      
+
       // get reimbursed total for the user
       args = {
-        employees: [employeeKerberos], 
-        fiscalYear: fy.startYear, 
+        employees: [employeeKerberos],
+        fiscalYear: fy.startYear,
         approvalRequestReimbursementStatus: 'fully-reimbursed',
         reimbursementRequestStatus: 'fully-reimbursed'
       };
