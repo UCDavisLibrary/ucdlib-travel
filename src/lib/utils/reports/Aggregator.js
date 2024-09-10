@@ -30,6 +30,10 @@ class Aggregator {
   get urlParam() {
     return this.data.urlParam || this.value;
   }
+
+  get reportColumn() {
+    return this.data.reportColumn || `agg_${this.value.toLowerCase()}`;
+  }
 }
 
 export default Aggregator;

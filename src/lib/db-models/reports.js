@@ -4,11 +4,20 @@ import departmentModel from './department.js';
 import IamEmployeeObjectAccessor from "../utils/iamEmployeeObjectAccessor.js";
 import fiscalYearUtils from "../utils/fiscalYearUtils.js";
 import EntityFields from "../utils/EntityFields.js";
+import ReportSqlUtils from "../utils/reports/ReportSqlUtils.js";
 
 class Reports {
 
   constructor(){}
 
+  /**
+   * @description Get the totals for the given metrics, aggregators, and filters in a combined tabular format
+   * @param {Object} kwargs - An object with the following properties:
+   * - metrics: Array - An array of Metric class objects
+   * - aggregators: Object - An object with the x and y properties that are Aggregator class objects
+   * - filters: Object - An object with the filter names as the keys and the filter values as the values
+   * @returns
+   */
   async get(kwargs={}){
     const {metrics, aggregators, filters} = kwargs;
 
@@ -37,10 +46,74 @@ class Reports {
     return reportsRequired.map(({report, data}) => ({report, data}));
   }
 
+  /**
+   * @description Get the total requested amount from approval requests
+   * @param {Object} kwargs - See get method for details
+   * @returns {Array} - An array of objects with the requested amount and the aggregators
+   */
+  async getRequested(kwargs={}){
+    const {aggregators, filters} = kwargs;
+
+    const sqlUtils = new ReportSqlUtils({
+      department: 'ar.department_id',
+      employee: 'ar.employee_kerberos',
+      fundingSource: 'arfs.funding_source_id',
+      fiscalYear: 'ar.fiscal_year'
+    });
+    const whereClause = sqlUtils.parseFilters(filters, {'ar.is_current': true, 'ar.approval_status': 'approved'});
+    const groupBy = sqlUtils.parseAggregators(aggregators);
+    const sql = `
+      SELECT
+        SUM(arfs.amount) as ${sqlUtils.measureColumn}
+        ${groupBy.select ? `, ${groupBy.select}` : ''}
+      FROM
+        approval_request ar
+      JOIN
+        approval_request_funding_source arfs ON arfs.approval_request_revision_id = ar.approval_request_revision_id
+      WHERE
+        ${whereClause.sql}
+      ${groupBy.groupBy ? `GROUP BY ${groupBy.groupBy}` : ''}
+    `;
+    const result = await pg.query(sql, whereClause.values);
+    if ( result.error ) {
+      return result;
+    }
+
+    return sqlUtils.prepareReportResults(result.res.rows);
+  }
+
+  /**
+   * @description Get the total allocated amount
+   * @param {Object} kwargs - See get method for details
+   * @returns
+   */
   async getAllocated(kwargs={}){
     const {aggregators, filters} = kwargs;
 
-    return {foo: 'bar'};
+    const sqlUtils = new ReportSqlUtils({
+      department: 'ea.department_id',
+      employee: 'ea.employee_kerberos',
+      fundingSource: 'ea.funding_source_id',
+      fiscalYear: 'ea.fiscal_year'
+    });
+    const whereClause = sqlUtils.parseFilters(filters, {'ea.deleted': false});
+    const groupBy = sqlUtils.parseAggregators(aggregators);
+    const sql = `
+      SELECT
+        SUM(ea.amount) as ${sqlUtils.measureColumn}
+        ${groupBy.select ? `, ${groupBy.select}` : ''}
+      FROM
+        employee_allocation ea
+      WHERE
+        ${whereClause.sql}
+      ${groupBy.groupBy ? `GROUP BY ${groupBy.groupBy}` : ''}
+    `;
+    const result = await pg.query(sql, whereClause.values);
+    if ( result.error ) {
+      return result;
+    }
+
+    return sqlUtils.prepareReportResults(result.res.rows);
   }
 
 

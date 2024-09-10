@@ -84,10 +84,10 @@ class ReportUtils {
 
   get aggregators() {
     const aggregators = [
-      {label: 'Fiscal Year', shortLabel: 'Fiscal Year', value: 'fiscalYear', urlParam: 'fiscal-year'},
-      {label: 'Department', shortLabel: 'Department', value: 'department'},
+      {label: 'Fiscal Year', shortLabel: 'Fiscal Year', value: 'fiscalYear', urlParam: 'fiscal-year', isInt: true},
+      {label: 'Department', shortLabel: 'Department', value: 'department', isInt: true},
       {label: 'Employee', shortLabel: 'Employee', value: 'employee'},
-      {label: 'Funding Source', shortLabel: 'Fund', value: 'fundingSource', isDefaultY: true, urlParam: 'funding-source'}
+      {label: 'Funding Source', shortLabel: 'Fund', value: 'fundingSource', isDefaultY: true, urlParam: 'funding-source', isInt: true}
     ];
     return aggregators.map(data => new Aggregator(data));
   }

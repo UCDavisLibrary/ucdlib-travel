@@ -57,10 +57,10 @@ class EmployeeAllocationModel extends BaseModel {
   /**
    * @description Create employee allocations
    */
-  async createEmployeeAllocations(payload) {
+  async createEmployeeAllocations(payload, allowDuplicateAllocations) {
     let timestamp = Date.now();
     try {
-      await this.service.createEmployeeAllocations(payload, timestamp);
+      await this.service.createEmployeeAllocations(payload, allowDuplicateAllocations, timestamp);
     } catch(e) {}
     const state = this.store.data.employeeAllocationsCreated[timestamp];
     if ( state && state.state === 'loaded' ) {
