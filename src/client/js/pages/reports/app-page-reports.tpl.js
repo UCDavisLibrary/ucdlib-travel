@@ -126,6 +126,7 @@ function renderReportBuilder(){
 
 function renderAggregatorSelect(axis) {
   const value = this[`selectedAggregator${axis.toUpperCase()}`];
+  const otherValue = this[`selectedAggregator${axis === 'x' ? 'Y' : 'X'}`];
   return html`
     <div class='field-container'>
       <label>${axis.toUpperCase()} Axis</label>
@@ -139,6 +140,7 @@ function renderAggregatorSelect(axis) {
           <option
             value=${aggregator.value}
             ?selected=${value === aggregator.value}
+            ?disabled=${otherValue === aggregator.value}
             >${aggregator.label}
           </option>
           `)}

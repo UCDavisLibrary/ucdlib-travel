@@ -5,6 +5,7 @@ import IamEmployeeObjectAccessor from "../utils/iamEmployeeObjectAccessor.js";
 import fiscalYearUtils from "../utils/fiscalYearUtils.js";
 import EntityFields from "../utils/EntityFields.js";
 import ReportSqlUtils from "../utils/reports/ReportSqlUtils.js";
+import department from "./department.js";
 
 class Reports {
 
@@ -43,7 +44,70 @@ class Reports {
       reportsRequired[i].data = promise.value;
     }
 
-    return reportsRequired.map(({report, data}) => ({report, data}));
+    // Combine the data from the reports according to the aggregators
+    const combinedData = [];
+    for ( const report of reportsRequired ){
+      const reportSlug  = report.report;
+      for ( const row of report.data ){
+        const agX = aggregators.x ? row[aggregators.x.reportColumn] : null;
+        const agY = aggregators.y ? row[aggregators.y.reportColumn] : null;
+        const existing = combinedData.find(r => r.aggregatorX === agX && r.aggregatorY === agY);
+        if ( existing ) {
+          existing.reportValues[reportSlug] = row[ReportSqlUtils.measureColumn];
+        } else {
+          const newRow = {
+            aggregatorX: agX,
+            aggregatorY: agY,
+            reportValues: {
+              [reportSlug]: row[ReportSqlUtils.measureColumn]
+            }
+          }
+          combinedData.push(newRow);
+        }
+      }
+    }
+
+    // compute metrics based on the report values
+    for ( const row of combinedData ){
+      row.metricValues = {};
+      for ( const metric of metrics ){
+        const reportValues = metric.reportsRequired.map(r => row.reportValues[r] || 0);
+        row.metricValues[metric.value] = metric.doReportsCalculation(...reportValues);
+      }
+    }
+
+
+    return combinedData;
+  }
+
+  async getAggregatorLabels(aggregator, values=[]){
+    let out = [];
+    if ( aggregator?.value === 'fiscalYear' ) {
+      out = values.map(v => {
+        return {
+          value: v,
+          label: fiscalYearUtils.fromStartYear(v, true)?.label || v
+        }
+      });
+    } else if ( aggregator?.value === 'department' ) {
+      const departments = await departmentModel.get({departmentId: values});
+      if ( departments.error ) {
+        return departments;
+      }
+      out = departments.map(d => {
+        return {
+          value: d.departmentId,
+          label: d.label
+        }
+      });
+    } else if ( aggregator?.value === 'employee' ) {
+      // todo
+    } else if ( aggregator?.value === 'fundingSource' ) {
+      // todo
+    }
+
+    //out = out.filter(o => values.includes(o.value));
+    return out;
   }
 
   /**
@@ -70,6 +134,122 @@ class Reports {
         approval_request ar
       JOIN
         approval_request_funding_source arfs ON arfs.approval_request_revision_id = ar.approval_request_revision_id
+      WHERE
+        ${whereClause.sql}
+      ${groupBy.groupBy ? `GROUP BY ${groupBy.groupBy}` : ''}
+    `;
+    const result = await pg.query(sql, whereClause.values);
+    if ( result.error ) {
+      return result;
+    }
+
+    return sqlUtils.prepareReportResults(result.res.rows);
+  }
+
+  /**
+   * @description Get total requested amount for approval requests that have not been fully reimbursed
+   * @param {Object} kwargs - See get method for details
+   * @returns {Array} - An array of objects with the requested amount and the aggregators
+   */
+  async getRequestedNotReimbursed(kwargs={}){
+    const {aggregators, filters} = kwargs;
+
+    const sqlUtils = new ReportSqlUtils({
+      department: 'ar.department_id',
+      employee: 'ar.employee_kerberos',
+      fundingSource: 'arfs.funding_source_id',
+      fiscalYear: 'ar.fiscal_year'
+    });
+    const whereArgs = {
+      'ar.is_current': true,
+      'ar.approval_status': 'approved',
+      'reimbursement_status': {operator: '!=', value: 'fully-reimbursed'}
+    }
+    const whereClause = sqlUtils.parseFilters(filters, whereArgs);
+    const groupBy = sqlUtils.parseAggregators(aggregators);
+    const sql = `
+      SELECT
+        SUM(arfs.amount) as ${sqlUtils.measureColumn}
+        ${groupBy.select ? `, ${groupBy.select}` : ''}
+      FROM
+        approval_request ar
+      JOIN
+        approval_request_funding_source arfs ON arfs.approval_request_revision_id = ar.approval_request_revision_id
+      WHERE
+        ${whereClause.sql}
+      ${groupBy.groupBy ? `GROUP BY ${groupBy.groupBy}` : ''}
+    `;
+
+    const result = await pg.query(sql, whereClause.values);
+    if ( result.error ) {
+      return result;
+    }
+
+    return sqlUtils.prepareReportResults(result.res.rows);
+
+  }
+
+  async getFullyReimbursed(kwargs={}){
+    const {aggregators, filters} = kwargs;
+
+    const sqlUtils = new ReportSqlUtils({
+      department: 'ar.department_id',
+      employee: 'ar.employee_kerberos',
+      fundingSource: 'arfs.funding_source_id',
+      fiscalYear: 'ar.fiscal_year'
+    });
+
+    const whereArgs = {
+      'ar.is_current': true,
+      'ar.approval_status': 'approved',
+      'ar.reimbursement_status': 'fully-reimbursed',
+      'rrf.reimbursement_status': 'fully-reimbursed'
+    }
+    const whereClause = sqlUtils.parseFilters(filters, whereArgs);
+    const groupBy = sqlUtils.parseAggregators(aggregators);
+
+    const sql = `
+      SELECT
+        SUM(rrf.amount) as ${sqlUtils.measureColumn}
+        ${groupBy.select ? `, ${groupBy.select}` : ''}
+      FROM
+        reimbursement_request_fund rrf
+      LEFT JOIN
+        reimbursement_request rr ON rrf.reimbursement_request_id = rr.reimbursement_request_id
+      LEFT JOIN
+        approval_request ar ON rr.approval_request_id = ar.approval_request_id
+      LEFT JOIN
+        approval_request_funding_source arfs ON rrf.approval_request_funding_source_id = arfs.approval_request_funding_source_id
+      WHERE
+        ${whereClause.sql}
+      ${groupBy.groupBy ? `GROUP BY ${groupBy.groupBy}` : ''}
+    `;
+
+    const result = await pg.query(sql, whereClause.values);
+    if ( result.error ) {
+      return result;
+    }
+
+    return sqlUtils.prepareReportResults(result.res.rows);
+  }
+
+  async getReleaseTime(kwargs={}){
+    const {aggregators, filters} = kwargs;
+
+    const sqlUtils = new ReportSqlUtils({
+      department: 'ar.department_id',
+      employee: 'ar.employee_kerberos',
+      fundingSource: 'arfs.funding_source_id',
+      fiscalYear: 'ar.fiscal_year'
+    });
+    const whereClause = sqlUtils.parseFilters(filters, {'ar.is_current': true, 'ar.approval_status': 'approved'});
+    const groupBy = sqlUtils.parseAggregators(aggregators);
+    const sql = `
+      SELECT
+        SUM(ar.release_time) as ${sqlUtils.measureColumn}
+        ${groupBy.select ? `, ${groupBy.select}` : ''}
+      FROM
+        approval_request ar
       WHERE
         ${whereClause.sql}
       ${groupBy.groupBy ? `GROUP BY ${groupBy.groupBy}` : ''}
@@ -160,29 +340,36 @@ class Reports {
   /**
    * @description Get total number of approval requests by fiscal year
    * @param {Array} departments - An array of department ids to filter by. If empty, no filter is applied
-   * @param {Boolean} includeCurrentYear - If true, include the current fiscal year in the results even if there are no approval requests
    */
-  async getFiscalYearCount(departments=[], includeCurrentYear=false){
-
-    const whereArgs = {
-      'ar.is_current': true,
-      'ar.approval_status': 'approved'
+  async getFiscalYearCount(departments=[], table='approval_request'){
+    if ( table !== 'approval_request' && table !== 'employee_allocation' ){
+      return pg.returnError('Invalid table');
     }
+    const whereArgs = {'1' : '1'};
+    if ( table === 'approval_request' ){
+      whereArgs[`${table}.is_current`] = true;
+      whereArgs[`${table}.approval_status`] = 'approved';
+    } else {
+      whereArgs[`${table}.deleted`] = false;
+    }
+
     if ( departments.length ){
-      whereArgs['ar.department_id'] = departments;
+      whereArgs[`${table}.department_id`] = departments;
     }
     const whereClause = pg.toWhereClause(whereArgs);
 
     const sql = `
       SELECT
-        ar.program_start_date,
-        COUNT(ar.*) as count
+        ${table}.fiscal_year,
+        COUNT(${table}.*) as count
       FROM
-        approval_request ar
+        ${table}
       WHERE
-        ${whereClause.sql} AND ar.program_start_date IS NOT NULL
+        ${whereClause.sql}
       GROUP BY
-        ar.program_start_date
+        ${table}.fiscal_year
+      ORDER BY
+        ${table}.fiscal_year
     `;
 
     const result = await pg.query(sql, whereClause.values);
@@ -190,29 +377,11 @@ class Reports {
       return result;
     }
 
-    const out = [];
-    for ( const row of result.res.rows ){
-      const fy = fiscalYearUtils.fromDate(row.program_start_date);
-      const count = Number(row.count);
-      const d = out.find(o => o.fiscalYear.startYear === fy.startYear);
-      if ( d ){
-        d.count += count;
-      } else {
-        out.push({fiscalYear: fy, count});
-      }
-    }
-
-    if ( includeCurrentYear ){
-      const currentFiscalYear = fiscalYearUtils.current();
-      const d = out.find(o => o.fiscalYear.startYear === currentFiscalYear.startYear);
-      if ( !d ){
-        out.push({fiscalYear: currentFiscalYear, count: 0});
-      }
-    }
-
-    out.sort((a, b) => a.fiscalYear.startYear - b.fiscalYear.startYear);
-
-    return out;
+    const fields = new EntityFields([
+      {dbName: 'fiscal_year', jsonName: 'fiscalYear'},
+      {dbName: 'count', jsonName: 'count'},
+    ])
+    return fields.toJsonArray(result.res.rows);
   }
 
   /**
@@ -220,24 +389,30 @@ class Reports {
    * @param {Array} departments - An array of department ids to filter by. If empty, no filter is applied
    * @returns {Array|Object} - An array of objects with departmentId, label, archived, and count properties
    */
-  async getDepartmentCount(departments=[]){
-    const whereArgs = {
-      'ar.is_current': true,
-      'ar.approval_status': 'approved'
+  async getDepartmentCount(departments=[], table='approval_request'){
+    if ( table !== 'approval_request' && table !== 'employee_allocation' ){
+      return pg.returnError('Invalid table');
+    }
+    const whereArgs = {'1' : '1'};
+    if ( table === 'approval_request' ){
+      whereArgs[`${table}.is_current`] = true;
+      whereArgs[`${table}.approval_status`] = 'approved';
+    } else {
+      whereArgs[`${table}.deleted`] = false;
     }
     if ( departments.length ){
-      whereArgs['ar.department_id'] = departments;
+      whereArgs[`${table}.department_id`] = departments;
     }
     const whereClause = pg.toWhereClause(whereArgs);
     const sql = `
       SELECT
         d.*,
-        COUNT(ar.*) as count
+        COUNT(${table}.*) as count
       FROM
-        approval_request ar
+        ${table}
       JOIN
         department d
-        ON ar.department_id = d.department_id
+        ON ${table}.department_id = d.department_id
       WHERE
         ${whereClause.sql}
       GROUP BY
@@ -261,28 +436,70 @@ class Reports {
   }
 
   /**
+   * @description Merge the results of multiple count queries
+   * @param {Array} queries - An array of promises that return the results of count queries
+   * @param {String} key - Unique key to merge on
+   * @param {String} countColumn - The column to sum
+   * @returns {Array|Object} - An array of objects with at minimum the key and count properties
+   */
+  async mergeCountQueries(queries, key, countColumn='count'){
+    let results = await Promise.allSettled(queries);
+    for ( const result of results ){
+      if ( result.status === 'rejected') {
+        return {error: true, message: 'Error fetching count queries', details: result.reason};
+      }
+      if ( result.value.error ){
+        return result.value;
+      }
+    }
+    results = results.map(r => r.value);
+
+    const out = [];
+    for ( const result of results ){
+      for ( const row of result ){
+        row[countColumn] = Number(row[countColumn]);
+        const existing = out.find(o => o[key] === row[key]);
+        if ( existing ){
+          existing[countColumn] += row[countColumn];
+        } else {
+          out.push(row);
+        }
+      }
+    }
+
+    return out;
+
+  }
+
+  /**
    * @description Get the total number of approval requests by employee
    * @param {Array} departments - An array of department ids to filter by. If empty, no filter is applied
    * @returns {Array|Object} - An array of objects with kerberos, firstName, lastName, archived, and count properties
    */
-  async getEmployeeCount(departments=[]){
-    const whereArgs = {
-      'ar.is_current': true,
-      'ar.approval_status': 'approved'
+  async getEmployeeCount(departments=[], table='approval_request'){
+    if ( table !== 'approval_request' && table !== 'employee_allocation' ){
+      return pg.returnError('Invalid table');
+    }
+    const whereArgs = {'1' : '1'};
+    if ( table === 'approval_request' ){
+      whereArgs[`${table}.is_current`] = true;
+      whereArgs[`${table}.approval_status`] = 'approved';
+    } else {
+      whereArgs[`${table}.deleted`] = false;
     }
     if ( departments.length ){
-      whereArgs['ar.department_id'] = departments;
+      whereArgs[`${table}.department_id`] = departments;
     }
     const whereClause = pg.toWhereClause(whereArgs);
     const sql = `
       SELECT
         e.*,
-        COUNT(ar.*) as count
+        COUNT(${table}.*) as count
       FROM
-        approval_request ar
+        ${table}
       JOIN
         employee e
-        ON ar.employee_kerberos = e.kerberos
+        ON ${table}.employee_kerberos = e.kerberos
       WHERE
         ${whereClause.sql}
       GROUP BY
@@ -306,13 +523,19 @@ class Reports {
     return fields.toJsonArray(result.res.rows);
   }
 
-  async getFundingSourceCount(departments=[]){
-    const whereArgs = {
-      'ar.is_current': true,
-      'ar.approval_status': 'approved'
+  async getFundingSourceCount(departments=[], table='approval_request'){
+    if ( table !== 'approval_request' && table !== 'employee_allocation' ){
+      return pg.returnError('Invalid table');
+    }
+    const whereArgs = {'1' : '1'};
+    if ( table === 'approval_request' ){
+      whereArgs[`${table}.is_current`] = true;
+      whereArgs[`${table}.approval_status`] = 'approved';
+    } else {
+      whereArgs[`${table}.deleted`] = false;
     }
     if ( departments.length ){
-      whereArgs['ar.department_id'] = departments;
+      whereArgs[`${table}.department_id`] = departments;
     }
     const whereClause = pg.toWhereClause(whereArgs);
     const sql = `
@@ -320,13 +543,18 @@ class Reports {
         fs.funding_source_id,
         fs.label,
         fs.archived,
-        COUNT(ar.*) as count
+        COUNT(${table}.*) as count
       FROM
-        approval_request ar
-      JOIN
-        approval_request_funding_source arfs ON arfs.approval_request_revision_id = ar.approval_request_revision_id
-      JOIN
-        funding_source fs ON arfs.funding_source_id = fs.funding_source_id
+        ${table}
+      ${table === 'approval_request' ? `
+        JOIN
+          approval_request_funding_source arfs ON arfs.approval_request_revision_id = ${table}.approval_request_revision_id
+        JOIN
+          funding_source fs ON arfs.funding_source_id = fs.funding_source_id
+        ` : `
+        JOIN
+          funding_source fs ON ${table}.funding_source_id = fs.funding_source_id
+        `}
       WHERE
         ${whereClause.sql}
       GROUP BY

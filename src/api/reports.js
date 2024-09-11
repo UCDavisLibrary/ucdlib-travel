@@ -4,6 +4,7 @@ import reports from "../lib/db-models/reports.js";
 import apiUtils from "../lib/utils/apiUtils.js"
 import reportUtils from "../lib/utils/reports/reportUtils.js";
 import log from "../lib/utils/log.js";
+import fiscalYearUtils from "../lib/utils/fiscalYearUtils.js";
 
 const basePath = '/reports';
 
@@ -88,16 +89,25 @@ export default (api) => {
     const departmentRestrictions = accessLevel.departmentRestrictions;
 
     // fiscal years
-    const fiscalYears = await reports.getFiscalYearCount(departmentRestrictions, true);
+    const fiscalYears = await reports.mergeCountQueries([
+      reports.getFiscalYearCount(departmentRestrictions, 'employee_allocation'),
+      reports.getFiscalYearCount(departmentRestrictions, 'approval_request')
+    ], 'fiscalYear')
     if ( fiscalYears.error ){
       console.error('Error fetching fiscal year count', fiscalYears);
       return res.status(500).json({error: true, message: 'Error fetching fiscal year count'});
     }
-    const fiscalYearOptions = fiscalYears.map(fy => {
+    const currentFiscalYear = fiscalYearUtils.current();
+    if ( !fiscalYears.find(row => row.fiscalYear == currentFiscalYear.startYear) ){
+      fiscalYears.push({fiscalYear: currentFiscalYear.startYear, count: 0});
+    }
+    fiscalYears.sort((a, b) => a.fiscalYear - b.fiscalYear);
+    const fiscalYearOptions = fiscalYears.map(row => {
+      const fy = fiscalYearUtils.fromStartYear(row.fiscalYear);
       return {
-        value: fy.fiscalYear.startYear,
-        label: fy.fiscalYear.labelShort,
-        count: fy.count
+        value: fy.startYear,
+        label: fy.labelShort,
+        count: row.count
       }
     });
     filters.push({
@@ -108,7 +118,14 @@ export default (api) => {
     });
 
     // departments
-    const departments = await reports.getDepartmentCount(departmentRestrictions);
+    const departments = await reports.mergeCountQueries([
+      reports.getDepartmentCount(departmentRestrictions, 'employee_allocation'),
+      reports.getDepartmentCount(departmentRestrictions, 'approval_request')
+    ], 'departmentId');
+    if ( departments.error ){
+      log.error('Error fetching department count', departments);
+      return res.status(500).json({error: true, message: 'Error fetching department count'});
+    }
     const activeDepartmentOptions = [];
     const archivedDepartmentOptions = [];
     departments.forEach(department => {
@@ -146,7 +163,10 @@ export default (api) => {
     });
 
     // employees
-    const employees = await reports.getEmployeeCount(departmentRestrictions);
+    const employees = await reports.mergeCountQueries([
+      reports.getEmployeeCount(departmentRestrictions, 'employee_allocation'),
+      reports.getEmployeeCount(departmentRestrictions, 'approval_request')
+    ], 'kerberos');
     const activeEmployeeOptions = [];
     const archivedEmployeeOptions = [];
     employees.forEach(employee => {
@@ -183,7 +203,10 @@ export default (api) => {
     });
 
     // funding sources
-    const fundingSources = await reports.getFundingSourceCount(departmentRestrictions);
+    const fundingSources = await reports.mergeCountQueries([
+      reports.getFundingSourceCount(departmentRestrictions, 'employee_allocation'),
+      reports.getFundingSourceCount(departmentRestrictions, 'approval_request')
+    ], 'fundingSourceId');
     const activeFundingSourceOptions = [];
     const archivedFundingSourceOptions = [];
     fundingSources.forEach(fs => {

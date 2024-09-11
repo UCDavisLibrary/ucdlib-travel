@@ -1,3 +1,5 @@
+import typeTransform from "../typeTransform.js";
+
 /**
  * @description Class for a report metric
  */
@@ -33,6 +35,23 @@ class Metric {
 
   get reportsRequired() {
     return this.data.reportsRequired || [];
+  }
+
+  /**
+   * @description Perform the calculation for a metric given individual report values
+   * @param  {...any} reportValues - The individual report values - corresponding to the reportsRequired array
+   * @returns {Number}
+   */
+  doReportsCalculation(...reportValues) {
+    reportValues = reportValues.map(report => typeTransform.toNumberOrZero(report));
+    if ( !this.data.reportsCalculation ){
+      return reportValues[0] || 0;
+    }
+    // append 0s to the end of the array if there are not enough values
+    while ( reportValues.length < this.reportsRequired.length ){
+      reportValues.push(0);
+    }
+    return this.data.reportsCalculation(...reportValues);
   }
 }
 
