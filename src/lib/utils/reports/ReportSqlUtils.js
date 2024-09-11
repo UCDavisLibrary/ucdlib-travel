@@ -3,12 +3,14 @@ import reportUtils from "./reportUtils.js";
 
 class ReportSqlUtils {
 
+  static measureColumn = 'value';
+
   /**
    * @param {Object} columnMap - A map of the report filter/aggregator names to the column names in the database
    */
   constructor(columnMap={}){
     this.columnMap = columnMap;
-    this.measureColumn = 'value';
+    this.measureColumn = ReportSqlUtils.measureColumn;
   }
 
   /**

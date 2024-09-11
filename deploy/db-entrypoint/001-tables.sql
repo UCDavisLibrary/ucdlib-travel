@@ -111,6 +111,7 @@ CREATE TABLE approval_request (
     business_purpose VARCHAR(500),
     location VARCHAR(100),
     location_details VARCHAR(100),
+    release_time INTEGER NOT NULL DEFAULT 0,
     program_start_date DATE,
     program_end_date DATE,
     fiscal_year INTEGER,

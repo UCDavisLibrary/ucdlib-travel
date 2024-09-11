@@ -28,21 +28,24 @@ class ReportUtils {
         shortLabel: 'Requested/Reimbursed',
         value: 'requestedOrReimbursed',
         urlParam: 'requested-or-reimbursed',
-        reportsRequired: ['requestedNotReimbursed', 'fullyReimbursed']
+        reportsRequired: ['requestedNotReimbursed', 'fullyReimbursed'],
+        reportsCalculation: (...reports) => reports[0] + reports[1]
       },
       {
         label: 'Amount Allocated Minus Requested',
         shortLabel: 'Allocated - Requested',
         value: 'allocatedMinusRequested',
         urlParam: 'allocated-minus-requested',
-        reportsRequired: ['allocated', 'requested']
+        reportsRequired: ['allocated', 'requested'],
+        reportsCalculation: (...reports) => reports[0] - reports[1]
       },
       {
         label: 'Amount Allocated Minus Requested or Reimbursed',
         shortLabel: 'Allocated - Requested/Reimbursed',
         value: 'allocatedMinusRequestedOrReimbursed',
         urlParam: 'allocated-minus-requested-or-reimbursed',
-        reportsRequired: ['allocated', 'requestedNotReimbursed', 'fullyReimbursed']
+        reportsRequired: ['allocated', 'requestedNotReimbursed', 'fullyReimbursed'],
+        reportsCalculation: (...reports) => reports[0] - (reports[1] + reports[2])
       },
       {
         label: 'Release Time (Hours)',
