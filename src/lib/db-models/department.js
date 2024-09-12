@@ -30,7 +30,7 @@ class Department {
     const whereArgs = {'1': '1'};
 
     if ( query.departmentId?.length ){
-      whereArgs.departmentId = query.departmentId;
+      whereArgs['department_id'] = query.departmentId;
     }
     const whereClause = pg.toWhereClause(whereArgs);
 

@@ -21,7 +21,9 @@ export default class AppPageReports extends Mixin(LitElement)
       selectedMetrics: {type: Array},
       selectedAggregatorX: {type: String},
       selectedAggregatorY: {type: String},
-      generatingReport: {state: true}
+      report: {type: Array},
+      generatingReport: {state: true},
+      reportIsEmpty: {state: true}
     }
   }
 
@@ -33,6 +35,7 @@ export default class AppPageReports extends Mixin(LitElement)
     this.helpUrl = ''
     this.helpDialogRef = createRef();
     this.helpDialogPage = 'metrics';
+    this.report = [];
 
     this.filters = [];
     this.selectedFilters = {
@@ -45,6 +48,29 @@ export default class AppPageReports extends Mixin(LitElement)
     this.generatingReport = false;
 
     this._injectModel('AppStateModel', 'ReportsModel', 'SettingsModel');
+  }
+
+  willUpdate(props){
+    if ( props.has('report') ){
+      this._setReportIsEmpty();
+    }
+  }
+
+  /**
+   * @description sets the reportIsEmpty property based on the current report
+   * @returns {Boolean} - value of reportIsEmpty
+   */
+  _setReportIsEmpty(){
+    this.reportIsEmpty = true;
+    for( const row of this.report ){
+      for ( const cell of row ){
+        if ( cell.isTotal && !cell.isHeader && cell.value ){
+          this.reportIsEmpty = false;
+          return this.reportIsEmpty;
+        }
+      }
+    }
+    return this.reportIsEmpty;
   }
 
   /**
@@ -93,12 +119,13 @@ export default class AppPageReports extends Mixin(LitElement)
   async getPageData(){
     const promises = [
       this.ReportsModel.getFilters(),
-      this.SettingsModel.getByCategory('reports')
+      this.SettingsModel.getByCategory('reports'),
+      this.getReport()
     ];
     return await Promise.allSettled(promises);
   }
 
-  getReport(){
+  async getReport(){
     const query = {
       metrics: reportUtils.getMetricsFromValues(this.selectedMetrics).map(m => m.urlParam)
     };
@@ -117,7 +144,7 @@ export default class AppPageReports extends Mixin(LitElement)
     }
 
     this.logger.info('get report', query);
-    this.ReportsModel.getReport(query);
+    return await this.ReportsModel.getReport(query);
   }
 
   _onReportRequested(e){
@@ -133,6 +160,7 @@ export default class AppPageReports extends Mixin(LitElement)
     }
     if ( e.state === 'loaded' ){
       this.logger.info('report generated', e.payload);
+      this.report = e.payload;
     }
   }
 
@@ -140,9 +168,12 @@ export default class AppPageReports extends Mixin(LitElement)
     return `${this.id}-page--${page}`;
   }
 
-  _onGenerateReportClick(){
+  async _onGenerateReportClick(){
     if ( this.generatingReport ) return;
-    this.getReport();
+    const r = await this.getReport();
+    if ( r.state === 'loaded' ){
+      this.AppStateModel.scrollToAnchor(`${this.id}--report-container`) ;
+    }
   }
 
   _onReportsFiltersFetched(e){
