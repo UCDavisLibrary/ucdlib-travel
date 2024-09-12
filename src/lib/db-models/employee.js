@@ -1,6 +1,7 @@
 import cache from "./cache.js";
 import libraryIamApi from "../utils/LibraryIamApi.js";
 import pg from "./pg.js";
+import EntityFields from "../utils/EntityFields.js";
 
 /**
  * @class Employee
@@ -28,6 +29,13 @@ class Employee {
       {methodParam: 'employee-id', responseProp: 'employee_id', name: 'Employee ID'},
       {methodParam: 'db-id', responseProp: 'id', name: 'Library IAM DB ID'}
     ];
+
+    this.entityFields = new EntityFields([
+      {dbName: 'kerberos', jsonName: 'kerberos'},
+      {dbName: 'first_name', jsonName: 'firstName'},
+      {dbName: 'last_name', jsonName: 'lastName'},
+      {dbName: 'archived', jsonName: 'archived'}
+    ]);
   }
 
   /**
@@ -85,6 +93,39 @@ class Employee {
     if ( membershipRes.rowCount ) return;
     await client.query('INSERT INTO employee_department (employee_kerberos, department_id, start_date) VALUES ($1, $2, $3)', [kerberos, departmentId, now]);
     await client.query('UPDATE employee_department SET end_date = $1 WHERE employee_kerberos = $2 AND department_id != $3 AND end_date IS NULL', [now, kerberos, departmentId]);
+  }
+
+  /**
+   * @description Get employee records
+   * @param {Object} query - Query object with the following available properties:
+   * - kerberos: String|String[]
+   * - firstName: String
+   * - lastName: String
+   * @returns {Array|Object} - Array of employee records or an error object
+   */
+  async get(query={}){
+    const whereArgs = {'1': '1'};
+
+    if ( query.kerberos?.length ){
+      whereArgs.kerberos = query.kerberos;
+    }
+    if ( query.firstName?.length ){
+      whereArgs.first_name = {value: query.firstName, operator: 'ILIKE'};
+    }
+    if ( query.lastName?.length ){
+      whereArgs.last_name = {value: query.lastName, operator: 'ILIKE'};
+    }
+    const whereClause = pg.toWhereClause(whereArgs);
+
+    const sql = `
+      SELECT *
+      FROM employee
+      WHERE ${whereClause.sql}
+      ORDER BY last_name, first_name
+    `
+    const res = await pg.query(sql, whereClause.values);
+    if ( res.error ) return res;
+    return this.entityFields.toJsonArray(res.res.rows);
   }
 
   /**

@@ -14,6 +14,7 @@ class ReportUtils {
         shortLabel: 'Allocated',
         value: 'allocated',
         isDefault: true,
+        isMonetary: true,
         reportsRequired: ['allocated']
       },
       {
@@ -21,6 +22,7 @@ class ReportUtils {
         shortLabel: 'Requested',
         value: 'requested',
         isDefault: true,
+        isMonetary: true,
         reportsRequired: ['requested']
       },
       {
@@ -28,6 +30,7 @@ class ReportUtils {
         shortLabel: 'Requested/Reimbursed',
         value: 'requestedOrReimbursed',
         urlParam: 'requested-or-reimbursed',
+        isMonetary: true,
         reportsRequired: ['requestedNotReimbursed', 'fullyReimbursed'],
         reportsCalculation: (...reports) => reports[0] + reports[1]
       },
@@ -36,6 +39,7 @@ class ReportUtils {
         shortLabel: 'Allocated - Requested',
         value: 'allocatedMinusRequested',
         urlParam: 'allocated-minus-requested',
+        isMonetary: true,
         reportsRequired: ['allocated', 'requested'],
         reportsCalculation: (...reports) => reports[0] - reports[1]
       },
@@ -44,6 +48,7 @@ class ReportUtils {
         shortLabel: 'Allocated - Requested/Reimbursed',
         value: 'allocatedMinusRequestedOrReimbursed',
         urlParam: 'allocated-minus-requested-or-reimbursed',
+        isMonetary: true,
         reportsRequired: ['allocated', 'requestedNotReimbursed', 'fullyReimbursed'],
         reportsCalculation: (...reports) => reports[0] - (reports[1] + reports[2])
       },

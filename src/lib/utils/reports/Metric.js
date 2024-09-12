@@ -37,6 +37,10 @@ class Metric {
     return this.data.reportsRequired || [];
   }
 
+  get isMonetary() {
+    return this.data.isMonetary ? true : false;
+  }
+
   /**
    * @description Perform the calculation for a metric given individual report values
    * @param  {...any} reportValues - The individual report values - corresponding to the reportsRequired array

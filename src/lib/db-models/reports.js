@@ -1,11 +1,11 @@
 import pg from "./pg.js";
 import employeeModel from './employee.js';
 import departmentModel from './department.js';
+import fundingSourceModel from "./fundingSource.js";
 import IamEmployeeObjectAccessor from "../utils/iamEmployeeObjectAccessor.js";
 import fiscalYearUtils from "../utils/fiscalYearUtils.js";
 import EntityFields from "../utils/EntityFields.js";
 import ReportSqlUtils from "../utils/reports/ReportSqlUtils.js";
-import department from "./department.js";
 
 class Reports {
 
@@ -17,7 +17,12 @@ class Reports {
    * - metrics: Array - An array of Metric class objects
    * - aggregators: Object - An object with the x and y properties that are Aggregator class objects
    * - filters: Object - An object with the filter names as the keys and the filter values as the values
-   * @returns
+   * @returns {Array} - If successful, an array of arrays of objects with the following properties:
+   * - value: The value of the cell
+   * - label: The label of the cell
+   * - isTotal: Boolean - Whether the cell is a total cell
+   * - isHeader: Boolean - Whether the cell is a header cell
+   * - isMonetary: Boolean - Whether the cell value is a monetary value
    */
   async get(kwargs={}){
     const {metrics, aggregators, filters} = kwargs;
@@ -76,12 +81,111 @@ class Reports {
       }
     }
 
+    // Get the x/y axis headers for the data
+    const headers = {};
+    const metricHeaders = metrics.map(m => { return {value: m.value, label: m.shortLabel, metricIsMonetary: m.isMonetary}});
+    if ( aggregators.x ){
+      headers.x = await this.getAggregatorLabels(aggregators.x, combinedData.map(r => r.aggregatorX));
+      if ( headers.x.error ) {
+        return headers.x;
+      }
+    } else {
+      headers.x = metricHeaders;
+    }
+    if ( aggregators.y ){
+      headers.y = await this.getAggregatorLabels(aggregators.y, combinedData.map(r => r.aggregatorY));
+      if ( headers.y.error ) {
+        return headers.y;
+      }
+    } else {
+      headers.y = metricHeaders;
+    }
 
-    return combinedData;
+    // Based on order of aggregators, create the data rows
+    const bodyRows = [];
+    for ( const headerY of headers.y ){
+      const row = [];
+      for ( const headerX of headers.x ){
+        let value = 0;
+        if ( aggregators.x && aggregators.y ){
+          const existing = combinedData.find(r => r.aggregatorX === headerX.value && r.aggregatorY === headerY.value);
+          if ( existing ) {
+            value = existing.metricValues[metrics[0].value];
+          }
+        } else if ( aggregators.x ) {
+          const existing = combinedData.find(r => r.aggregatorX === headerX.value);
+          if ( existing ) {
+            value = existing.metricValues[headerY.value];
+          }
+        } else if ( aggregators.y ) {
+          const existing = combinedData.find(r => r.aggregatorY === headerY.value);
+          if ( existing ) {
+            value = existing.metricValues[headerX.value];
+          }
+        }
+        row.push(value);
+      }
+      bodyRows.push(row);
+    }
+
+    // create total column if applicable
+    if ( aggregators.x ){
+      for ( const row of bodyRows ){
+        row.push(row.reduce((a, b) => a + b, 0));
+      }
+      headers.x.push({value: 'total', label: 'Total'});
+    }
+
+    // create total row if applicable
+    if ( aggregators.y ){
+      const totalRow = [];
+      for ( let i = 0; i < headers.x.length; i++ ){
+        totalRow.push(bodyRows.reduce((a, b) => a + b[i], 0));
+      }
+      bodyRows.push(totalRow);
+      headers.y.push({value: 'total', label: 'Total'});
+    }
+
+    // combine headers and body rows into final format
+    const isMonetary = aggregators.x && aggregators.y ? metrics[0].isMonetary : false;
+    const combinedDataRows = [];
+    for ( const [rowIndex, row] of bodyRows.entries() ){
+      const newRow = [];
+      newRow.push({
+        value: headers.y[rowIndex].value,
+        label: headers.y[rowIndex].label,
+        isTotal: headers.y[rowIndex].value === 'total',
+        isHeader: true
+      });
+      for ( const [i, value] of row.entries() ){
+        newRow.push({
+          value,
+          label: value,
+          isTotal: headers.x[i].value === 'total' || headers.y[rowIndex].value === 'total',
+          isMonetary: isMonetary || headers.x[i].metricIsMonetary || headers.y[rowIndex].metricIsMonetary,
+          isHeader: false
+        });
+      }
+      combinedDataRows.push(newRow);
+    }
+    combinedDataRows.unshift([
+      {value: '', label: '', isTotal: false, isHeader: true},
+      ...headers.x.map(h => {
+        return {
+          value: h.value,
+          label: h.label,
+          isTotal: h.value === 'total',
+          isHeader: true
+        }
+      })
+    ]);
+
+    return combinedDataRows;
   }
 
   async getAggregatorLabels(aggregator, values=[]){
     let out = [];
+    values = [...new Set( values.filter(v => v !== null) )];
     if ( aggregator?.value === 'fiscalYear' ) {
       out = values.map(v => {
         return {
@@ -101,12 +205,34 @@ class Reports {
         }
       });
     } else if ( aggregator?.value === 'employee' ) {
-      // todo
+      const query = {};
+      if ( values?.length < 100 ){
+        query.kerberos = values;
+      }
+      const employees = await employeeModel.get(query);
+      if ( employees.error ) {
+        return employees;
+      }
+      out = employees.map(e => {
+        return {
+          value: e.kerberos,
+          label: `${e.firstName} ${e.lastName}`
+        }
+      });
     } else if ( aggregator?.value === 'fundingSource' ) {
-      // todo
+      const fundingSources = await fundingSourceModel.get();
+      if ( fundingSources.error ) {
+        return fundingSources;
+      }
+      out = fundingSources.map(fs => {
+        return {
+          value: fs.fundingSourceId,
+          label: fs.label
+        }
+      });
     }
 
-    //out = out.filter(o => values.includes(o.value));
+    out = out.filter(o => values.includes(o.value));
     return out;
   }
 
@@ -250,6 +376,8 @@ class Reports {
         ${groupBy.select ? `, ${groupBy.select}` : ''}
       FROM
         approval_request ar
+      JOIN
+        approval_request_funding_source arfs ON arfs.approval_request_revision_id = ar.approval_request_revision_id
       WHERE
         ${whereClause.sql}
       ${groupBy.groupBy ? `GROUP BY ${groupBy.groupBy}` : ''}

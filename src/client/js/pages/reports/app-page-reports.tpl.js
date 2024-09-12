@@ -119,6 +119,32 @@ function renderReportBuilder(){
             `}
           </a>
         </div>
+        <div id='${this.id}--report-container' class='report-container'>
+          <div ?hidden=${this.reportIsEmpty}>
+          <div class="responsive-table">
+            <table>
+              ${this.report.map(row => html`
+                <tr>
+                  ${row.map(cell => html`
+                    ${cell.isHeader ? html`
+                      <th>${cell.label}</th>
+                    ` : html`
+                      <td class='${cell.isTotal ? 'bold' : ''}'>${cell.isMonetary ? Number(cell.label).toFixed(2) : cell.label}</td>
+                    `}
+                  `)}
+                </tr>
+                `)}
+            </table>
+          </div>
+
+          </div>
+          <div ?hidden=${!this.reportIsEmpty} class='flex flex--justify-center flex--column flex--align-center'>
+            <div class='admin-blue'>
+              <i class='fas fa-exclamation-circle fa-2x'></i>
+            </div>
+            <div>No report data available. Redefine your criteria and try again.</div>
+          </div>
+        </div>
       </div>
     </div>
   `
