@@ -4,19 +4,29 @@ import { ref } from 'lit/directives/ref.js';
 
 import '@ucd-lib/theme-elements/ucdlib/ucdlib-pages/ucdlib-pages.js';
 import '@ucd-lib/theme-elements/brand/ucd-theme-slim-select/ucd-theme-slim-select.js';
+import '@ucd-lib/theme-elements/brand/ucd-theme-pagination/ucd-theme-pagination.js'
 
 import reportUtils from '../../../../lib/utils/reports/reportUtils.js';
+import '../../components/approval-request-teaser.js';
 
+/**
+ * @description Main render function for this element
+ * @returns {TemplateResult}
+ */
 export function render() {
 return html`
   <ucdlib-pages selected=${this.page}>
     ${render403.call(this)}
     ${renderReportBuilder.call(this)}
+    ${renderApprovalRequestView.call(this)}
   </ucdlib-pages>
   ${renderHelpDialog.call(this)}
 `;}
 
-
+/**
+ * @description Render Unauthorized page
+ * @returns {TemplateResult}
+ */
 function render403() {
   return html`
     <div id=${this.getPageId('403')}>
@@ -37,6 +47,10 @@ function render403() {
   `;
 }
 
+/**
+ * @description Render report builder page - main view for this element
+ * @returns {TemplateResult}
+ */
 function renderReportBuilder(){
   return html`
     <div id=${this.getPageId('builder')}>
@@ -163,6 +177,11 @@ function renderReportBuilder(){
   `
 }
 
+/**
+ * @description Render aggregator select dropdown
+ * @param {String} axis - 'x' or 'y'
+ * @returns {TemplateResult}
+ */
 function renderAggregatorSelect(axis) {
   const value = this[`selectedAggregator${axis.toUpperCase()}`];
   const otherValue = this[`selectedAggregator${axis === 'x' ? 'Y' : 'X'}`];
@@ -188,7 +207,13 @@ function renderAggregatorSelect(axis) {
   `;
 }
 
-function renderFilter(filter) {
+/**
+ * @description Render filter select dropdown
+ * @param {Object} filter - filter object from this.filters
+ * @param {Boolean} disabled - whether the select should be disabled
+ * @returns {TemplateResult}
+ */
+function renderFilter(filter, disabled=false) {
   const selected = this.selectedFilters[filter.type] || [];
   const options = filter.options || [];
 
@@ -197,7 +222,7 @@ function renderFilter(filter) {
       <div class='field-container'>
         <label>${filter.label}</label>
         <ucd-theme-slim-select @change=${e => this._onFilterChange(e, filter)}>
-          <select multiple>
+          <select multiple ?disabled=${disabled}>
             ${options.map(option => html`
               ${filter.hasOptionGroups ? html`
                 <optgroup label=${option.label}>
@@ -219,6 +244,53 @@ function renderFilter(filter) {
             `)}
           </select>
         </ucd-theme-slim-select>
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * @description Render list of approval requests for applied filters
+ * @returns {TemplateResult}
+ */
+function renderApprovalRequestView(){
+  return html`
+    <div id=${this.getPageId('approval-requests')}>
+      <div class='l-gutter u-space-mb--large'>
+        <div class='l-basic--flipped'>
+          <div class='l-content'>
+            <h2 class='u-space-mb'>Approval Requests</h2>
+            ${this.approvalRequests.map(ar => html`
+              <div class='approval-request-teaser-wrapper'>
+                <approval-request-teaser
+                  .approvalRequest=${ar}
+                ></approval-request-teaser>
+              </div>
+              `)}
+              <ucd-theme-pagination
+                current-page=${this.approvalRequestPage}
+                max-pages=${this.approvalRequestTotalPages}
+                @page-change=${(e) => this._onApprovalRequestViewClick(e.detail.page)}
+                xs-screen>
+              </ucd-theme-pagination>
+          </div>
+          <div class='l-sidebar-second'>
+            <a href='/reports' class="focal-link u-space-mb category-brand--quad pointer">
+              <div class="focal-link__figure focal-link__icon">
+                <i class="fas fa-arrow-left fa-2x"></i>
+              </div>
+              <div class="focal-link__body">
+                <strong>Back To Report Builder</strong>
+              </div>
+            </a>
+            <div class='filters panel panel--icon panel--icon-custom u-space-mb--large'>
+              <h2 class="panel__title"><span class="panel__custom-icon fas fa-filter"></span>Applied Filters</h2>
+              <div>
+                ${this.filters.map(row => renderFilter.call(this, row, true))}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   `;
