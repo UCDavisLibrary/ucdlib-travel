@@ -121,22 +121,35 @@ function renderReportBuilder(){
         </div>
         <div id='${this.id}--report-container' class='report-container'>
           <div ?hidden=${this.reportIsEmpty}>
-          <div class="responsive-table">
-            <table>
-              ${this.report.map(row => html`
-                <tr>
-                  ${row.map(cell => html`
-                    ${cell.isHeader ? html`
-                      <th>${cell.label}</th>
-                    ` : html`
-                      <td class='${cell.isTotal ? 'bold' : ''}'>${cell.isMonetary ? Number(cell.label).toFixed(2) : cell.label}</td>
-                    `}
+            <div class='flex flex--align-center flex--justify-end u-space-py'>
+              <a
+                title='Download Report'
+                @click=${() => this._onReportDownloadClick()}
+                class='icon-link icon-link--circle u-space-mr--small'>
+                <i class="fa-solid fa-download"></i>
+              </a>
+              <a
+                title='View Approval Requests For Applied Filters'
+                @click=${() => this._onApprovalRequestViewClick()}
+                class='icon-link icon-link--circle'>
+                <i class="fa-solid fa-list"></i>
+              </a>
+            </div>
+            <div class="responsive-table">
+              <table>
+                ${this.report.map(row => html`
+                  <tr>
+                    ${row.map(cell => html`
+                      ${cell.isHeader ? html`
+                        <th>${cell.label}</th>
+                      ` : html`
+                        <td class='${cell.isTotal ? 'bold' : ''}'>${cell.isMonetary ? Number(cell.label).toFixed(2) : cell.label}</td>
+                      `}
+                    `)}
+                  </tr>
                   `)}
-                </tr>
-                `)}
-            </table>
-          </div>
-
+              </table>
+            </div>
           </div>
           <div ?hidden=${!this.reportIsEmpty} class='flex flex--justify-center flex--column flex--align-center'>
             <div class='admin-blue'>

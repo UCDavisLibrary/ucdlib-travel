@@ -44,6 +44,7 @@ class subsetIcons {
         'comment',
         'credit-card',
         'diagram-project',
+        'download',
         'edit',
         'exclamation-circle',
         'file-import',
