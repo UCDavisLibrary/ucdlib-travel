@@ -193,6 +193,7 @@ class Reports {
           label: fiscalYearUtils.fromStartYear(v, true)?.label || v
         }
       });
+      out.sort((a, b) => a.value - b.value);
     } else if ( aggregator?.value === 'department' ) {
       const departments = await departmentModel.get({departmentId: values});
       if ( departments.error ) {

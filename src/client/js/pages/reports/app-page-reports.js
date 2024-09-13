@@ -1,9 +1,11 @@
 import { LitElement } from 'lit';
-import {render} from "./app-page-reports.tpl.js";
+import { render } from "./app-page-reports.tpl.js";
 import { createRef } from 'lit/directives/ref.js';
 
 import { LitCorkUtils, Mixin } from '@ucd-lib/cork-app-utils';
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
+
+import Papa from 'papaparse'
 
 import fiscalYearUtils from '../../../../lib/utils/fiscalYearUtils.js';
 import reportUtils from '../../../../lib/utils/reports/reportUtils.js';
@@ -72,6 +74,32 @@ export default class AppPageReports extends Mixin(LitElement)
     }
     return this.reportIsEmpty;
   }
+
+  /**
+   * @description bound to the download report button click event
+   * Generates a CSV file from the current report and downloads it
+   */
+  _onReportDownloadClick(){
+    try {
+      const data = this.report.map(row => row.map(cell => cell.label));
+      const csv = Papa.unparse(data);
+      const blob = new Blob([csv], {type: 'text/csv'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `travel-report-${Date.now()}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      this.AppStateModel.showToast({
+        type: 'error',
+        message: 'Error downloading report'
+      });
+      this.logger.error('Error downloading report', error);
+    }
+  }
+
+  _onApprovalRequestViewClick(){}
 
   /**
    * @description bound to AppStateModel app-state-update event
@@ -170,6 +198,13 @@ export default class AppPageReports extends Mixin(LitElement)
 
   async _onGenerateReportClick(){
     if ( this.generatingReport ) return;
+    if ( !this.selectedMetrics.length ) {
+      this.AppStateModel.showToast({
+        type: 'error',
+        message: 'At least one metric must be selected'
+      });
+      return;
+    }
     const r = await this.getReport();
     if ( r.state === 'loaded' ){
       this.AppStateModel.scrollToAnchor(`${this.id}--report-container`) ;
