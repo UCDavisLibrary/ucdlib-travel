@@ -441,6 +441,7 @@ class Reports {
 
     if ( token.canAccessReports ){
       out.hasAccess = true;
+      out.hasFullAccess = true;
       return out;
     }
 
