@@ -1,10 +1,8 @@
 import { LitElement } from 'lit';
 import {render} from "./app-page-admin-approval-requests.tpl.js";
-
 import { LitCorkUtils, Mixin } from '@ucd-lib/cork-app-utils';
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 import { WaitController } from "@ucd-lib/theme-elements/utils/controllers/wait.js";
-
 import promiseUtils from '../../../../lib/utils/promiseUtils.js';
 import applicationOptions from '../../../../lib/utils/applicationOptions.js';
 import typeTransform from "../../../../lib/utils/typeTransform.js";
@@ -23,7 +21,9 @@ export default class AppPageAdminApprovalRequests extends Mixin(LitElement)
       waitController: {type: Object},
       approvalStatuses: {type: Array},
       approvalStatus: {type: String},
-      selectedApprovalRequestFilters: {type: Array}
+      selectedApprovalRequestFilters: {type: Array},
+      employeesInDB: {type: Array},
+      selectedEmployeesFromDB: {type: Array},
     }
   }
 
@@ -35,10 +35,12 @@ export default class AppPageAdminApprovalRequests extends Mixin(LitElement)
     this.approvalRequests = [];
     this.waitController = new WaitController(this);
     this.approvalStatuses = applicationOptions.approvalStatuses;
+    this.employeesInDB = [];
     this.isCurrent = false;
     this.selectedApprovalRequestFilters = [];
+    this.selectedEmployeesFromDB = [];
 
-    this._injectModel('AppStateModel', 'ApprovalRequestModel', 'AuthModel');
+    this._injectModel('AppStateModel', 'ApprovalRequestModel', 'AuthModel', 'EmployeeModel');
   }
 
     /**
@@ -102,7 +104,8 @@ export default class AppPageAdminApprovalRequests extends Mixin(LitElement)
    */
   async getPageData(){
     await this.waitController.waitForUpdate();
-
+    this.employeesInDB = await this.EmployeeModel.getAllEmployees();
+    console.log(JSON.stringify(this.employeesInDB));
     const promises = [
       this.ApprovalRequestModel.query(this._queryObject()),
     ]

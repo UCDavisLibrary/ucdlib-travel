@@ -49,7 +49,7 @@ return html`
  */
 function renderFilters() {
   return html`
-    <div class='allocations-filters l-3col'>
+    <div class='allocations-filters l-2col'>
       <div class='l-first'>
         <div class='field-container'>
           <label>Approval Request Status</label>

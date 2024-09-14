@@ -229,6 +229,15 @@ class Employee {
     // return records
     return returnSingle ? {res: recordsById[ids[0]]} : {res: ids.map(id => recordsById[id]).filter(record => record)};
   }
+
+  /**
+   * @description Get all users in the database
+  */
+  async getAllEmployees(){
+    const res = await pg.pool.query('SELECT * FROM employee');
+    return res;
+  };
+
 }
 
 export default new Employee();
