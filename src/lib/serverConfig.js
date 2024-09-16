@@ -50,7 +50,9 @@ class ServerConfig {
       url: this.getEnv('UCDLIB_PERSONNEL_API_USER_URL', 'https://iam.staff.library.ucdavis.edu/json'),
       user: this.getEnv('UCDLIB_PERSONNEL_API_USER', ''),
       key: this.getEnv('UCDLIB_PERSONNEL_API_KEY', ''),
-      serverCacheExpiration: this.getEnv('UCDLIB_PERSONNEL_API_CACHE_EXPIRATION', '24 hours')
+      serverCacheExpiration: this.getEnv('UCDLIB_PERSONNEL_API_CACHE_EXPIRATION', '24 hours'),
+      enableCron: this.getEnv('UCDLIB_PERSONNEL_API_ENABLE_CRON', false),
+      cronSchedule: this.getEnv('UCDLIB_PERSONNEL_API_CRON_SCHEDULE', '0 1 * * *')
     }
 
     this.email = {
@@ -88,6 +90,7 @@ class ServerConfig {
     console.log('Email Cron:', this.email.enableCron ? 'Enabled' : 'Disabled');
     console.log('System Email Address:', this.email.systemEmailAddress);
     console.log('Notification Recipient Override:', this.email.notificationRecipient);
+    console.log('Library IAM Cron:', this.libraryIamApi.enableCron ? 'Enabled' : 'Disabled');
   }
 
   /**
