@@ -128,9 +128,9 @@ class LibraryIamApi {
       if ( !iamDepartment && !dbDepartment.archived ) {
         out.update = true;
         out.archived = true;
-      } else if ( iamDepartment.archived != dbDepartment.archived ) {
+      } else if ( iamDepartment?.archived != dbDepartment.archived ) {
         out.update = true;
-        out.archived = iamDepartment.archived;
+        out.archived = iamDepartment?.archived;
       }
       return out;
     }).filter(c => c.update);
