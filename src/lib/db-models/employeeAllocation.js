@@ -2,6 +2,8 @@ import pg from "./pg.js";
 import EntityFields from "../utils/EntityFields.js";
 import employeeModel from "./employee.js";
 import fiscalYearUtils from "../utils/fiscalYearUtils.js";
+import typeTransform from "../utils/typeTransform.js";
+import employee from "./employee.js";
 
 class EmployeeAllocation {
 
@@ -11,7 +13,7 @@ class EmployeeAllocation {
       {
         dbName: 'employee_allocation_id',
         jsonName: 'employeeAllocationId',
-        required: true
+        customValidationAsync: this.validateAllocationId.bind(this)
       },
       {
         dbName: 'employee',
@@ -172,6 +174,38 @@ class EmployeeAllocation {
     return await this.get({ids});
   }
 
+  async update(data, modifiedBy){
+    data = this.entityFields.toDbObj(data);
+    const updateableFields = ['amount', 'department_id'];
+    const skipValidation = this.entityFields.fields
+      .map(f => f.dbName)
+      .filter(f => ![...updateableFields, 'employee_allocation_id'].includes(f))
+    const validation = await this.entityFields.validate(data, skipValidation);
+    if ( !validation.valid ) {
+      return {error: true, message: 'Validation Error', is400: true, fieldsWithErrors: validation.fieldsWithErrors};
+    }
+    const id = data.employee_allocation_id;
+    const updateData = {
+      'modified_by': modifiedBy.kerberos,
+      'modified_at': new Date()
+    };
+    for (const field of updateableFields) {
+      updateData[field] = data[field];
+    }
+
+    const updateClause = pg.toUpdateClause(updateData);
+    const sql = `
+    UPDATE employee_allocation
+    SET ${updateClause.sql}
+    WHERE employee_allocation_id = $${updateClause.values.length + 1}
+    RETURNING employee_allocation_id
+    `
+    const res = await pg.query(sql, [...updateClause.values, id]);
+    if ( res.error ) return res;
+
+    return {success: true, employeeAllocationId: id};
+  }
+
   /**
    * @description Check if an allocation exists for a given date range, funding source for a list of employees
    * @param {String} startDate - start date in format YYYY-MM-DD
@@ -233,6 +267,22 @@ class EmployeeAllocation {
       error.message = 'End date must be after start date';
     }
     this.entityFields.pushError(out, field, error);
+  }
+
+  async validateAllocationId(field, value, out) {
+    const id = typeTransform.toPositiveInt(value);
+    if ( !id ){
+      this.entityFields.pushError(out, field, {errorType: 'invalid', message: 'Invalid allocation id'});
+      return;
+    }
+    const res = await pg.query('SELECT employee_allocation_id FROM employee_allocation WHERE employee_allocation_id = $1', [id]);
+    if ( res.error ) {
+      this.entityFields.pushError(out, field, {errorType: 'db', message: 'Error checking allocation id'});
+      return;
+    }
+    if ( res.res.rows.length === 0 ){
+      this.entityFields.pushError(out, field, {errorType: 'not-found', message: 'Allocation not found'});
+    }
   }
 
   /**

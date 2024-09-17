@@ -1,5 +1,6 @@
 import department from "../lib/db-models/department.js";
 import protect from "../lib/protect.js";
+import log from "../lib/utils/log.js";
 
 /**
  * @param {Router} api - Express router instance
@@ -18,5 +19,17 @@ export default (api) => {
     }
 
     res.json(result.res);
+  });
+
+  /**
+   * @description Get an array of all library departments from the local database
+   */
+  api.get('/department', protect('hasBasicAccess'), async (req, res) => {
+    const result = await department.get();
+    if (result.error) {
+      log.error('Error querying department data.', result.error);
+      return res.status(500).json({error: true, message: 'Error querying department data.'});
+    }
+    return res.json(result);
   });
 };

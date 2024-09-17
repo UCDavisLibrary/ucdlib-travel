@@ -70,6 +70,19 @@ class EmployeeAllocationModel extends BaseModel {
     return state;
   }
 
+  async update(payload){
+    let timestamp = Date.now();
+    try {
+      await this.service.update(payload, timestamp);
+    } catch(e) {}
+    const state = this.store.data.updated[timestamp];
+    if ( state && state.state === 'loaded' ) {
+      this.store.data.fetched = {};
+      this.store.data.filters = {};
+    }
+    return state;
+  }
+
   /**
    * @description Delete employee allocations
    * @param {Object} payload - object with ids property containing array of allocation ids to delete
