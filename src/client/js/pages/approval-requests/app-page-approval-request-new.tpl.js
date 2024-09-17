@@ -247,6 +247,17 @@ export function renderForm() {
             </div>
           </div>
         </div>
+        <div class='field-container ${this.validationHandler.errorClass('releaseTime')}'>
+          <label for="${page}--releaseTime">Release Time (hours)</label>
+          <input
+            type='number'
+            .value=${this.approvalRequest.releaseTime || '0'}
+            id="${page}--releaseTime"
+            @input=${e => this._onFormInput('releaseTime', e.target.value)}
+          >
+          <div>${this.validationHandler.renderErrorMessages('releaseTime')}</div>
+          <div class='small'>${unsafeHTML(this.SettingsModel.getByKey('approval_request_form_release_time'))}</div>
+        </div>
       </fieldset>
 
       <fieldset>
