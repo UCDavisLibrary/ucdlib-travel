@@ -97,6 +97,11 @@ class ApprovalRequest {
         customValidation: this.validations.programDate.bind(this.validations)
       },
       {
+        dbName: 'release_time',
+        jsonName: 'releaseTime',
+        validateType: 'integer'
+      },
+      {
         dbName: 'fiscal_year',
         jsonName: 'fiscalYear'
       },
