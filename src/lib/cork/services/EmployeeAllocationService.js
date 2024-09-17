@@ -32,6 +32,20 @@ class EmployeeAllocationService extends BaseService {
     });
   }
 
+  update(payload, timestamp) {
+    return this.request({
+      url : '/api/admin/employee-allocation',
+      fetchOptions : {
+        method : 'PUT',
+        body : payload
+      },
+      json: true,
+      onLoading : request => this.store.updatedLoading(request, timestamp, payload),
+      onLoad : result => this.store.updatedLoaded(result.body, timestamp, payload),
+      onError : e => this.store.updatedError(e, timestamp, payload)
+    });
+  }
+
   query(query) {
     return this.request({
       url : `/api/admin/employee-allocation${query ? '?' + query : ''}`,

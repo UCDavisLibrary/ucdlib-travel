@@ -194,7 +194,9 @@ CREATE TABLE employee_allocation (
     added_at timestamp DEFAULT NOW(),
     deleted BOOLEAN DEFAULT FALSE,
     deleted_by VARCHAR(100) REFERENCES employee(kerberos),
-    deleted_at timestamp
+    deleted_at timestamp,
+    modified_by VARCHAR(100) REFERENCES employee(kerberos),
+    modified_at timestamp
 );
 COMMENT ON TABLE employee_allocation IS 'Funding source allocations for employees by date range.';
 

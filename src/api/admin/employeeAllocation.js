@@ -6,6 +6,7 @@ import urlUtils from "../../lib/utils/urlUtils.js";
 import protect from "../../lib/protect.js";
 import fiscalYearUtils from "../../lib/utils/fiscalYearUtils.js";
 import typeTransform from "../../lib/utils/typeTransform.js";
+import log from "../../lib/utils/log.js";
 
 export default (api) => {
 
@@ -22,6 +23,19 @@ export default (api) => {
     if ( data.error ) {
       console.error('Error in POST /employee-allocation', data.error);
       return res.status(500).json({error: true, message: 'Error creating employee allocation.'});
+    }
+    return res.json(data);
+  });
+
+  api.put('/employee-allocation', protect('hasAdminAccess'), async (req, res) => {
+
+    const data = await employeeAllocation.update(req.body, req.auth.token.employeeObject);
+    if ( data.error && data.is400 ) {
+      return res.status(400).json(data);
+    }
+    if ( data.error ) {
+      log.error('Error in PUT /employee-allocation', data.error);
+      return res.status(500).json({error: true, message: 'Error updating employee allocation.'});
     }
     return res.json(data);
   });
