@@ -13,21 +13,21 @@ fi
 
 # Main version number we are tagging the app with. Always update
 # this when you cut a new version of the app!
-APP_VERSION=v0.0.9.${BUILD_NUM}
+APP_VERSION=v1.0.0.${BUILD_NUM}
 
 # This is used anywhere a name is needed for the app
 APP_SLUG=ucdlib-travel
 
 # App url and ports
-APP_HOST=localhost:3000
-APP_URL=http://$APP_HOST
-APP_HOST_PORT=3000
+APP_HOST=travel.staff.library.ucdavis.edu
+APP_URL=https://$APP_HOST
+APP_HOST_PORT=3003
 APP_CONTAINER_PORT=3000
 
 # Repository tags/branchs
 # Tags should always be used for production deployments
 # Branches can be used for development deployments
-REPO_TAG=dev
+REPO_TAG=v1.0.0
 
 # Dependency tags/branches
 NODE_TAG=20
