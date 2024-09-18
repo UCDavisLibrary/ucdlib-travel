@@ -30,5 +30,26 @@ else
     echo "Tables found in db. Skipping hydration."
   fi
 
+  # check if need to hydrate uploads directory
+  UPLOADS_FILE_COUNT=$(ls -1q '/uploads' | wc -l)
+  if [[ $UPLOADS_FILE_COUNT -eq 0 ]]; then
+    echo "No files found in uploads directory. Hydrating uploads directory."
+    GC_UPLOADS_SOURCE="gs://${GC_BACKUP_BUCKET}/${INIT_DATA_ENV}/uploads.tar.gz"
+    gcloud auth login --quiet --cred-file=${GOOGLE_APPLICATION_CREDENTIALS}
+    if gsutil stat "$GC_UPLOADS_SOURCE" >/dev/null 2>&1; then
+      echo "Downloading: $GC_UPLOADS_SOURCE"
+      gsutil cp "$GC_UPLOADS_SOURCE" $DATA_DIR/uploads.tar.gz
+    else
+      echo "Error: $GC_UPLOADS_SOURCE does not exist"
+      exit 1
+    fi
+    echo "Extracting uploads directory"
+    tar -xzvf $DATA_DIR/uploads.tar.gz -C /
+    rm $DATA_DIR/uploads.tar.gz
+    echo "Uploads directory hydration complete"
+  else
+    echo "Files found in uploads directory. Skipping hydration."
+  fi
+
 fi
 echo "Init container is finished and exiting (this is supposed to happen)"
