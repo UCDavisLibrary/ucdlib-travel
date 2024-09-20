@@ -1,34 +1,26 @@
-FROM node:16
+# FROM node:16
+FROM localhost/local-dev/ucdlib-travel:dev
 
-# Set the working directory inside the container
 WORKDIR /app
+RUN cd /app && npm link
+ENV NODE_PATH /usr/local/lib/node_modules/
+WORKDIR /migration
 
-
-# Install PostgreSQL and MySQL clients
-# RUN apt-get update && apt-get install -y \
-#     postgresql-client \
-#     default-mysql-client \
-#     && rm -rf /var/lib/apt/lists/*
-RUN apt-get update && apt-get install -y postgresql-client
-
-RUN apt-get update && apt-get install -y default-mysql-client
+# Copy the rest of the application code
+# COPY ./src ./src
 
 # Copy the package.json and package-lock.json files
 COPY package*.json ./
 
-# Install the Node.js dependencies
 RUN npm install
 
+# Install the Node.js dependencies
+RUN npm link ucdlib-simple-spa-server
 
-# Copy the rest of the application code
-COPY migration-app/ ./migration-app
-
-WORKDIR /app/migration-app
-
+# ARG MYSQL_HOST
 
 # Expose the port the app runs on
-EXPOSE 5000
-
+# EXPOSE 5432
 
 # Command to run the application
-# CMD ["npm", "start"]
+# RUN node src/index.js

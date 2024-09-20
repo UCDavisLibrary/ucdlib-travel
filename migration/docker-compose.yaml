@@ -2,50 +2,36 @@ version: '3'
 services:
   mysql:
     image: mysql:latest
-    restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: root_password
-      MYSQL_DATABASE: my_mysql_db
-      MYSQL_USER: mysql_user
-      MYSQL_PASSWORD: mysql_password
+      MYSQL_ROOT_PASSWORD: 'root_password'
+      MYSQL_DATABASE: 'db_mysql'
+      MYSQL_USER: 'user_mysql'
+      MYSQL_PASSWORD: 'localhost'
     ports:
       - '3306:3306'
-    networks:
-      - internal_network
     volumes:
-      # - mysql-data:/var/lib/mysql
-      - ./travel.sql:/docker-entrypoint-initdb.d/travel.sql
+      - ./db1_lib_ucdavis_edu.sql:/docker-entrypoint-initdb.d/db1_lib_ucdavis_edu.sql
 
-  app:
+  migrate:
     build: .
-    # ports:
-    #   - '5000:5000'
     environment:
+      PGUSER: postgres
+      PGHOST: host.docker.internal
+      PGDATABASE: postgres
+      PGPASSWORD: localhost
+      PGPORT: 5432
       MYSQL_HOST: mysql
       MYSQL_PORT: 3306
-      MYSQL_DATABASE: my_mysql_db
-      MYSQL_USER: mysql_user
-      MYSQL_PASSWORD: mysql_password
-      POSTGRES_USER: postgres
-      POSTGRES_HOST: db
-      POSTGRES_DATABASE: postgres
-      POSTGRES_PASSWORD: localhost
-      POSTGRES_PORT: 5432
+      MYSQL_DATABASE: db_mysql
+      MYSQL_USER: user_mysql
+      MYSQL_PASSWORD: localhost
+      UCDLIB_PERSONNEL_API_USER: sa-travel
+      UCDLIB_PERSONNEL_API_KEY: aac3ca7bde75cd0d1df8472e47d14ce2
     volumes:
-      - ./migration-app:/migration-app
-    networks:
-      - internal_network
-      - migrate_network
+      - ./src:/migration/src
+      - ./index.js:/migration/index.js
     depends_on:
       - mysql
+    command: /app/lib/tail.sh
     #command: node run.js # Replace with your migration command
-    command: tail -f /dev/null
 
-
-volumes:
-  mysql-data:
-networks:
-  internal_network:
-    driver: bridge
-  migrate_network:
-    external: true
