@@ -21,6 +21,7 @@ export default (api) => {
 
     // construct iam query object
     const query = {};
+    console.log("Name:", name);
     if ( name ) query.name = name;
     if ( department.length ) query.department = department;
     if ( titleCode.length ) query['title-code'] = titleCode;
