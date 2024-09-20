@@ -9,6 +9,7 @@ services:
     depends_on:
       - db
     environment:
+      APP_ROOT_URL: ${APP_ROOT_URL:-http://localhost:{{APP_CONTAINER_PORT}}}
       APP_ENV: ${APP_ENV:-dev}
       PGUSER: 'postgres'
       PGHOST: 'db'
@@ -73,10 +74,6 @@ services:
     image: {{POSTGRES_IMAGE_NAME_TAG}}
     environment:
       POSTGRES_PASSWORD: localhost
-    ports:
-    - 5432:5432
-    networks:
-      - migrate_network
     volumes:
       - db-data:/var/lib/postgresql/data
       - ../../deploy/db-entrypoint:/docker-entrypoint-initdb.d
@@ -84,12 +81,6 @@ services:
     image: {{ADMINER_IMAGE_NAME_TAG}}
     ports:
       - ${ADMINER_HOST_PORT:-8080}:8080
-
-networks:
-  migrate_network:
-    external: true
-
 volumes:
   db-data:
   uploads-data:
-
