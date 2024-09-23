@@ -1,5 +1,7 @@
 import cache from "./cache.js";
 import libraryIamApi from "../utils/LibraryIamApi.js";
+import pg from "./pg.js";
+import EntityFields from "../utils/EntityFields.js";
 
 /**
  * @class Department
@@ -11,11 +13,36 @@ class Department {
 
     this.api = libraryIamApi;
 
+    this.entityFields = new EntityFields([
+      {dbName: 'department_id', jsonName: 'departmentId'},
+      {dbName: 'label', jsonName: 'label'},
+      {dbName: 'archived', jsonName: 'archived'}
+    ]);
+
     // DB cache keys
     this.cacheKeys = {
       activeDepartments: 'ucdlib-iam-active-departments',
       childDepartments: 'ucdlib-iam-child-departments'
     };
+  }
+
+  async get(query={}){
+    const whereArgs = {'1': '1'};
+
+    if ( query.departmentId?.length ){
+      whereArgs['department_id'] = query.departmentId;
+    }
+    const whereClause = pg.toWhereClause(whereArgs);
+
+    const sql = `
+      SELECT *
+      FROM department
+      WHERE ${whereClause.sql}
+      ORDER BY label
+    `
+    const res = await pg.query(sql, whereClause.values);
+    if ( res.error ) return res;
+    return this.entityFields.toJsonArray(res.res.rows);
   }
 
   /**
