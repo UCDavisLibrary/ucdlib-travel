@@ -19,6 +19,9 @@
 .flex--grow {
   flex-grow: 1;
 }
+.flex--column {
+  flex-direction: column;
+}
 .approval-request-teaser-wrapper {
   padding: 1rem;
   margin-bottom: 1rem;
@@ -27,4 +30,7 @@
 }
 .width-100 {
   width: 100%;
+}
+.container-type--normal {
+  container-type: normal !important;
 }

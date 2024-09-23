@@ -5,6 +5,7 @@ import setUpStaticRoutes from './lib/static.js';
 import setUpApiRoutes from "./api/index.js"
 import uploads from "./lib/utils/uploads.js";
 import emailController from './lib/db-models/emailController.js';
+import libraryIamApi from './lib/utils/LibraryIamApi.js';
 
 const app = express();
 
@@ -21,6 +22,8 @@ setUpStaticRoutes(app);
 uploads.setUpRoutes(app);
 
 emailController.emailDailyRunner();
+
+libraryIamApi.startCron();
 
 serverConfig.printStatus();
 

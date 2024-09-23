@@ -13,6 +13,7 @@ export function render() {
     ${renderField('Location', this.getLocation())}
     ${renderField('Program Dates', this.getProgramDates())}
     ${renderField('Travel Dates', this.getTravelDates(), 'Not Applicable')}
+    ${renderField('Release Time (hours)', this.approvalRequest.releaseTime, '0')}
     ${renderField('Comments', this.approvalRequest.comments, 'None')}
   `;}
 

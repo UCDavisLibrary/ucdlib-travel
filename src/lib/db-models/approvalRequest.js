@@ -97,6 +97,15 @@ class ApprovalRequest {
         customValidation: this.validations.programDate.bind(this.validations)
       },
       {
+        dbName: 'release_time',
+        jsonName: 'releaseTime',
+        validateType: 'integer'
+      },
+      {
+        dbName: 'fiscal_year',
+        jsonName: 'fiscalYear'
+      },
+      {
         dbName: 'travel_required',
         jsonName: 'travelRequired',
         validateType: 'boolean'
@@ -268,6 +277,29 @@ class ApprovalRequest {
       whereArgs['ar.employee_kerberos'] = kwargs.employees;
     }
 
+    if ( kwargs.department?.length ){
+      whereArgs['ar.department_id'] = kwargs.department;
+    }
+
+    if ( kwargs.fiscalYear?.length ){
+      whereArgs['ar.fiscal_year'] = kwargs.fiscalYear;
+    }
+
+    // some special handling for funding sources,
+    // due to nature of query, it's difficult to do standard parameterized query
+    let fundingSources = [];
+    if ( kwargs.fundingSource?.length ){
+      if ( Array.isArray(kwargs.fundingSource) ){
+        fundingSources = kwargs.fundingSource;
+      } else {
+        fundingSources = [kwargs.fundingSource];
+      }
+      fundingSources = fundingSources.map(fs => Number(fs)).filter(fs => fs);
+      if ( fundingSources.length ){
+        whereArgs['arfs.funding_source_id'] = fundingSources;
+      }
+    }
+
     let approvers = [];
     if ( Array.isArray(kwargs.approvers) && kwargs.approvers.length ){
       approvers = kwargs.approvers;
@@ -296,7 +328,7 @@ class ApprovalRequest {
       }
     }
 
-    const whereClause = pg.toWhereClause(whereArgs);
+    let whereClause = pg.toWhereClause(whereArgs);
     let approverActionArray = applicationOptions.approvalStatusActions.filter(s => s.actor === 'approver');
     approverActionArray.push({value: 'approval-needed'});
     approverActionArray = `(${approverActionArray.map(s => `'${s.value}'`).join(',')})`;
@@ -308,6 +340,10 @@ class ApprovalRequest {
         approval_request ar
       LEFT JOIN
         approval_request_approval_chain_link aracl ON ar.approval_request_revision_id = aracl.approval_request_revision_id
+      ${fundingSources.length ? `
+        LEFT JOIN
+          approval_request_funding_source arfs ON ar.approval_request_revision_id = arfs.approval_request_revision_id
+        ` : ``}
       WHERE
         ${whereClause.sql}
       ${approvers.length ? `
@@ -318,6 +354,11 @@ class ApprovalRequest {
     const countRes = await pg.query(countQuery, approvers.length ? [...whereClause.values, approvers] : whereClause.values);
     if( countRes.error ) return countRes;
     const total = Number(countRes.res.rows[0].total);
+
+    if ( kwargs.fundingSource?.length ){
+      delete whereArgs['arfs.funding_source_id'];
+    }
+    whereClause = pg.toWhereClause(whereArgs);
 
     const query = `
     WITH funding_sources AS (
@@ -337,6 +378,10 @@ class ApprovalRequest {
         approval_request_funding_source arfs
       LEFT JOIN
         funding_source fs ON arfs.funding_source_id = fs.funding_source_id
+      ${fundingSources.length ? `
+        WHERE
+          arfs.funding_source_id IN (${fundingSources.join(',')})
+        ` : ``}
       GROUP BY
         arfs.approval_request_revision_id
     ),
@@ -419,6 +464,9 @@ class ApprovalRequest {
     LEFT JOIN
       approval_status_activity asa ON ar.approval_request_revision_id = asa.approval_request_revision_id
     WHERE ${whereClause.sql}
+    ${fundingSources.length ? `
+      AND fs.funding_sources IS NOT NULL
+      ` : ``}
     ${approvers.length ? `
       AND EXISTS (
         SELECT 1
@@ -519,6 +567,10 @@ class ApprovalRequest {
     if ( data.no_expenditures ){
       data.funding_sources = [{fundingSourceId: 8, amount: 0}];
       data.expenditures = [];
+    }
+
+    if ( data.program_start_date ){
+      data.fiscal_year = fiscalYearUtils.fromDate(data.program_start_date).startYear;
     }
 
     // prep data for transaction
