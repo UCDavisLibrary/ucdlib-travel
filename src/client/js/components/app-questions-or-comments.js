@@ -1,11 +1,8 @@
 import { LitElement } from 'lit';
-// import {render, Templates} from "./app-questions-or-comments.tpl.js";
 import * as Templates from "./app-questions-or-comments.tpl.js";
-import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 import { createRef } from 'lit/directives/ref.js';
 import { LitCorkUtils, Mixin } from "@ucd-lib/cork-app-utils";
-import AccessToken from '../../../lib/utils/AccessToken.js';
 
 /**
  * @class AppQuestionsOrComments
@@ -37,6 +34,7 @@ export default class AppQuestionsOrComments extends Mixin(LitElement)
 
     this.page = "";
     this.data = {};
+    this.subject = '';
     this.comments = '';
     this.actions = [
           {text: 'Submit', value: 'questions-comments-item', color: 'quad'},
@@ -49,8 +47,8 @@ export default class AppQuestionsOrComments extends Mixin(LitElement)
   }
 
   /**
-   * @description Bound to dialog button(s) click event
-   * Will emit a dialog-action AppStateModel event with the action value and data
+   * @description Bound to modal button(s) click event
+   * Will emit a AppStateModel event with the action value and data of qc
    */
   _onModalClick(){
     this.dialogRef.value.showModal();
@@ -61,50 +59,28 @@ export default class AppQuestionsOrComments extends Mixin(LitElement)
    * Will emit a dialog-action AppStateModel event with the action value and data
    * @param {String} action - The action value to emit
    */
-   _onButtonClick(action){
+   async _onButtonClick(action){
     this.dialogRef.value.close();
-    this.AppStateModel.emit('dialog-action', {action, data: this.comments});
-   }
 
-  /**
-   * @description on dialog action for deleting an approver
-   * @param {CustomEvent}
-  */
-  async _onDialogAction(e){
-    if ( e.action !== 'questions-comments-item' ) return;
+    if ( action !== 'questions-comments-item' ) return;
 
-    let emailCategory = await this.SettingsModel.getByCategory(this.settingsCategory);
-    let url;
-    this.comments = e.data;
-    this.subject = `Comment Added: Request ${this.approvalRequestId}`
-    if(this.approvalRequestId) {
-        url = `approval-request/${this.approvalRequestId}`
-        this.approvalRequest = await this.ApprovalRequestModel.query({requestIds: this.approvalRequestId});
-    }
-    if(this.reimbursementRequestId) {
-        url = `reimbursement/${this.reimbursementRequestId}`
-        this.reimbursementRequest = await this.ReimbursementModel.query({requestIds: this.reimbursementRequestId});
-    }
-    if(!this.approvalRequestId || !this.reimbursementRequestId) url = '';
-
-    let ap = this.approvalRequest ? this.approvalRequest.payload.data[0] : {};
-    let rr = this.reimbursementRequest ? this.reimbursementRequest.payload.data[0] : {};
+    let url = window.location.pathname;
 
     this.data = {
         "emailContent": {
           subject: this.subject,
           text: this.comments
-        }, //email content 
-        "url": url, //url
+        }, // email content 
+        "url": url, // url
         "requests": {
-          approvalRequestId: ap.approvalRequestRevisionId || null,
-          reimbursementRequestId: rr.reimbursementRequestId || null,
-        }, //requests could be replaced with id
-        notificationType: 'questions-comments' //notification type
+          approvalRequestId: this.approvalRequestId || null,
+          reimbursementRequestId: this.reimbursementRequestId || null,
+        }, // requests could be replaced with id
+        notificationType: 'questions-comments' // notification type
     }
 
     await this.NotificationModel.createNotificationComments(this.data);
-  }
+   }
 
   /**
    * @description bound to NotificationModel notification-comments event
