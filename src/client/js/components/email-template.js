@@ -7,6 +7,18 @@ import { LitCorkUtils, Mixin } from '@ucd-lib/cork-app-utils';
  * @class EmailTemplate
  * @description Component that gives the email template 
  *
+ * @property {String} emailPrefix - Email Prefix for template
+ * @property {String} defaultSubjectTemplate - default subject template
+ * @property {String} defaultBodyTemplate - default body template
+ * @property {String} subjectTemplate - User added subject template
+ * @property {String} bodyTemplate - User added body template
+ * @property {Array} templateVariables - variables available for template
+ * @property {Boolean} notAnAutomatedEmail - Mark if an automatic email
+ * @property {String} _subjectTemplate - Subject template to revert to
+ * @property {String} _bodyTemplate - Body template to revert to
+ * @property {Boolean} isDefaultBodyTemplate - Marks if the original body template
+ * @property {Boolean} isDefaultSubjectTemplate - Marks if the original subject template
+ * @property {Array} _selectionPositionHistory - Gives all history of email selection
  */
 export default class EmailTemplate extends Mixin(LitElement)
 .with(LitCorkUtils, MainDomElement) {
@@ -18,7 +30,6 @@ export default class EmailTemplate extends Mixin(LitElement)
       defaultBodyTemplate: { type: String },
       subjectTemplate: { type: String },
       bodyTemplate: { type: String },
-      // disableNotification: { type: Boolean },
       templateVariables: { type: Array },
       notAnAutomatedEmail: { type: Boolean },
       _subjectTemplate: { state: true },
@@ -37,7 +48,6 @@ export default class EmailTemplate extends Mixin(LitElement)
     this.defaultBodyTemplate = '';
     this.subjectTemplate = '';
     this.bodyTemplate = '';
-    // this.disableNotification = false;
     this.templateVariables = [];
     this._subjectTemplate = '';
     this._bodyTemplate = '';
@@ -49,6 +59,10 @@ export default class EmailTemplate extends Mixin(LitElement)
     this._selectionPositionHistoryMax = 10;
   }
 
+  /**
+   * @description Lit lifecycle method callback
+   * @param {Map} props - changed properties
+   */
   willUpdate(props) {
     if ( props.has('subjectTemplate') || props.has('defaultSubjectTemplate') ) {
       this._subjectTemplate = this.subjectTemplate || this.defaultSubjectTemplate;
@@ -64,6 +78,10 @@ export default class EmailTemplate extends Mixin(LitElement)
     }
   }
 
+  /**
+   * @description focus the changes on the template
+   * @param {e} e - e
+   */
   _onTemplateFocus(e) {
     const template = e.target.getAttribute('email-template');
     if ( !template ) return;
@@ -75,12 +93,21 @@ export default class EmailTemplate extends Mixin(LitElement)
     }
   }
 
+  /**
+   * @description Inputs the new value in the form
+   * @param {String} template - type of template
+   * @param {String} newValue - new value entered
+   */
   async _onFormInput(template, newValue){
     this[template] = newValue;
     await this.updateComplete;
     this.dispatchUpdateEvent();
   }
 
+  /**
+   * @description reverts the template back to original
+   * @param {String} template - type of template
+   */
   _onTemplateRevert(template){
     if ( template === 'subject' ) {
       this._onFormInput('_subjectTemplate', this.defaultSubjectTemplate);
@@ -89,7 +116,10 @@ export default class EmailTemplate extends Mixin(LitElement)
     }
   }
 
-
+/**
+   * @description Selects the variables that are available 
+   * @param {e} props - e
+   */
   _onVariableSelect(e){
     if ( !e.target.value ) return;
     const v = `\${${e.target.value}\}`;
@@ -116,11 +146,9 @@ export default class EmailTemplate extends Mixin(LitElement)
 
   }
 
-  // _onDisableToggle(){
-  //   this.disableNotification = !this.disableNotification;
-  //   this.dispatchUpdateEvent();
-  // }
-
+  /**
+   * @description dispatches the update for the email
+   */
   dispatchUpdateEvent() {
     this.dispatchEvent(new CustomEvent('email-update', {
       bubbles: true,

@@ -153,6 +153,7 @@ export default class AppPageHome extends Mixin(LitElement)
     this.AppStateModel.setLocation(url);
   }
 
+
 }
 
 customElements.define('app-page-home', AppPageHome);

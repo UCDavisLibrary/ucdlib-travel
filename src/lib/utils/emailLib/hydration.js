@@ -1,6 +1,8 @@
 import serverConfig from "../../serverConfig.js";
 import employee from "../../db-models/employee.js";
 import settings from "./settings.js";
+import emailVariables from "../emailVariables.js"
+
 
 /**
  * @class Hydration
@@ -14,28 +16,28 @@ export default class Hydration {
     this.type = notificationType;
 
     this._variables = [
-      {name: 'requesterFirstName', cb: this._getRequesterFirstName},
-      {name: 'requesterLastName', cb: this._getRequesterLastName},
-      {name: 'requesterFullName', cb: this._getRequesterFullName},
-      {name: 'requesterKerberos', cb: this._getRequesterKerberos},
-      {name: 'requesterLabel', cb: this._getRequesterLabel},
-      {name: 'requesterOrganization', cb: this._getRequesterOrganization},
-      {name: 'requesterBuisnessPurpose', cb: this._getRequesterBuisnessPurpose},
-      {name: 'requesterLocation', cb: this._getRequesterLocation},
-      {name: 'requesterProgramDate', cb: this._getRequesterProgramDate},
-      {name: 'requesterTravelDate', cb: this._getRequesterTravelDate},
-      {name: 'requesterComments', cb: this._getRequesterComments},
-      {name: 'nextApproverFullName', cb: this._getNextApproverFullName},
-      {name: 'nextApproverFundChanges', cb: this._getNextApproverFundChanges},
-      {name: 'nextApproverKerberos', cb: this._getNextApproverKerberos},
-      {name: 'reimbursementLabel', cb: this._getReimbursementLabel},
-      {name: 'reimbursementEmployeeResidence', cb: this._getReimbursementEmployeeResidence},
-      {name: 'reimbursementTravelDate', cb: this._getReimbursementTravelDate},
-      {name: 'reimbursementPersonalTime', cb: this._getReimbursementPersonalTime},
-      {name: 'reimbursementComments', cb: this._getReimbursementComments},
-      {name: 'reimbursementStatus', cb: this._getReimbursementStatus},
-      {name: 'approvalRequestUrl', cb: this._getApprovalRequestUrl},
-      {name: 'reimbursementRequestUrl', cb: this._getReimbursementRequestUrl}
+      {name: emailVariables.requesterFirstName, cb: this._getRequesterFirstName},
+      {name: emailVariables.requesterLastName, cb: this._getRequesterLastName},
+      {name: emailVariables.requesterFullName, cb: this._getRequesterFullName},
+      {name: emailVariables.requesterKerberos, cb: this._getRequesterKerberos},
+      {name: emailVariables.requesterLabel, cb: this._getRequesterLabel},
+      {name: emailVariables.requesterOrganization, cb: this._getRequesterOrganization},
+      {name: emailVariables.requesterBuisnessPurpose, cb: this._getRequesterBuisnessPurpose},
+      {name: emailVariables.requesterLocation, cb: this._getRequesterLocation},
+      {name: emailVariables.requesterProgramDate, cb: this._getRequesterProgramDate},
+      {name: emailVariables.requesterTravelDate, cb: this._getRequesterTravelDate},
+      {name: emailVariables.requesterComments, cb: this._getRequesterComments},
+      {name: emailVariables.nextApproverFullName, cb: this._getNextApproverFullName},
+      {name: emailVariables.nextApproverFundChanges, cb: this._getNextApproverFundChanges},
+      {name: emailVariables.nextApproverKerberos, cb: this._getNextApproverKerberos},
+      {name: emailVariables.reimbursementLabel, cb: this._getReimbursementLabel},
+      {name: emailVariables.reimbursementEmployeeResidence, cb: this._getReimbursementEmployeeResidence},
+      {name: emailVariables.reimbursementTravelDate, cb: this._getReimbursementTravelDate},
+      {name: emailVariables.reimbursementPersonalTime, cb: this._getReimbursementPersonalTime},
+      {name: emailVariables.reimbursementComments, cb: this._getReimbursementComments},
+      {name: emailVariables.reimbursementStatus, cb: this._getReimbursementStatus},
+      {name: emailVariables.approvalRequestUrl, cb: this._getApprovalRequestUrl},
+      {name: emailVariables.reimbursementRequestUrl, cb: this._getReimbursementRequestUrl}
     ];
   }
 

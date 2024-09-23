@@ -3,9 +3,7 @@ import {render} from "./app-page-admin-email-settings.tpl.js";
 import { LitCorkUtils, Mixin } from '@ucd-lib/cork-app-utils';
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 import { WaitController } from "@ucd-lib/theme-elements/utils/controllers/wait.js";
-import ValidationHandler from "../../utils/ValidationHandler.js";
-
-
+import emailVariables from "../../../../lib/utils/emailVariables.js";
 import "../../components/email-template.js";
 
 /**
@@ -40,30 +38,8 @@ export default class AppPageAdminEmailSettings extends Mixin(LitElement)
     this.noSettings = false;
     this.formProperty = {};
     this.settingTypes = {};
-    this.variableList = [
-      "requesterFirstName",
-      "requesterLastName",
-      "requesterFullName",
-      "requesterKerberos",
-      "requesterLabel",
-      "requesterOrganization",
-      "requesterBuisnessPurpose",
-      "requesterLocation",
-      "requesterProgramDate",
-      "requesterTravelDate",
-      "requesterComments",
-      "nextApproverFullName",
-      "nextApproverFundChanges",
-      "nextApproverKerberos",
-      "reimbursementLabel",
-      "reimbursementEmployeeResidence",
-      "reimbursementTravelDate",
-      "reimbursementPersonalTime",
-      "reimbursementComments",
-      "reimbursementStatus",
-      "approvalRequestUrl",
-      "reimbursementRequestUrl"
-    ];
+    this.variableList = emailVariables.variableList;
+    this.originalSettings = [];
     this.waitController = new WaitController(this);
 
     this._injectModel('AppStateModel', 'SettingsModel', 'NotificationModel');
@@ -131,20 +107,7 @@ export default class AppPageAdminEmailSettings extends Mixin(LitElement)
     this.requestUpdate();
   }
 
-
   /**
-   * @description bound to "use default value" checkbox change event
-   */
-   _onSettingDefaultToggle(settingsId){
-    let setting = this.settings.find(s => s.settingsId === settingsId);
-    if ( !setting ) return;
-    setting.useDefaultValue = !setting.useDefaultValue;
-    setting.updated = true;
-    this.settingsHaveChanged = true;
-    this.requestUpdate();
-  }
-
-    /**
    * @description bound to SettingsModel settings-updated event
    * Caches are automatically cleared as part of the 'SettingsModel.updateSettings' method
    */
@@ -155,28 +118,6 @@ export default class AppPageAdminEmailSettings extends Mixin(LitElement)
         this.AppStateModel.showToast({message: 'Email Settings update failed', type: 'error'});
       }
     }
-
-      /**
-   * @description bound to setting value input event
-   */
-  _onSettingValueInput(settingsId, value){
-    let setting = this.settings.find(s => s.settingsId === settingsId);
-    if ( !setting ) return;
-    setting.value = value;
-    setting.updated = true;
-    this.settingsHaveChanged = true;
-    this.requestUpdate();
-  }
-
-  /**
-   * @description bound to save button click event
-   */
-  _onSaveSettings(){
-    if ( !this.settingsHaveChanged ) return;
-    const settings = this.settings.filter(s => s.updated);
-    this.SettingsModel.updateSettings(settings);
-  }
-
 
   /**
    * @description bound to search form search event
@@ -199,7 +140,6 @@ export default class AppPageAdminEmailSettings extends Mixin(LitElement)
     this.noSettings = this.settings.every(s => s.hidden);
 
     this.requestUpdate();
-
   }
 
 
@@ -276,7 +216,7 @@ export default class AppPageAdminEmailSettings extends Mixin(LitElement)
   }
 
   _onEmailUpdate(e){
-    const { emailPrefix, bodyTemplate, subjectTemplate, disableNotification } = e.detail;
+    const { emailPrefix, bodyTemplate, subjectTemplate } = e.detail;
     const data = {page: this.settingTypes[emailPrefix]} || {};
 
     let settingSubjectKey = "admin_email_subject_" + data.page;
@@ -284,9 +224,8 @@ export default class AppPageAdminEmailSettings extends Mixin(LitElement)
     let bodyIndex = this.settings.findIndex(obj => obj.key == settingBodyKey);
     let subjectIndex = this.settings.findIndex(obj => obj.key == settingSubjectKey);
 
-    data[`body`] = bodyTemplate;
-    data[`subject`] = subjectTemplate;
-    data[`disable`] = disableNotification ? 'true' : '';
+    this.settings[subjectIndex].useDefaultValue = false;
+    this.settings[bodyIndex].useDefaultValue = false;
 
 
     if(bodyTemplate != ''){
@@ -309,7 +248,6 @@ export default class AppPageAdminEmailSettings extends Mixin(LitElement)
 
     this.settingsHaveChanged = true;
     this.requestUpdate();
-    // this.formProperty = {...data};  
   }
 
   sortSettings(){
@@ -334,38 +272,17 @@ export default class AppPageAdminEmailSettings extends Mixin(LitElement)
 
   async _onFormSubmit(e) {
     e.preventDefault();
-    // if ( !this.formProperty.page ) return;
-    // const data = this.formProperty;
-    // this.errorMessages = [];
-    // this.errorFields = {};
     
     this.settings.map(settings => {
       if(settings.updated) {
         this.SettingsModel.updateSettings(settings);
+        settings.updated = false;
       }
     });
 
     this.requestUpdate();
 
   }
-
-
-    /**
-     * @description Get all data required for rendering this page
-     */
-    // async getPageData(){
-  
-    //   // need to ensure that employee search has been rendered before we can initialize it
-    //   await this.waitController.waitForUpdate();
-  
-    //   const promises = [];
-    //   promises.push(this.SettingsModel.getByCategory(this.settingsCategory))
-
-    //   const resolvedPromises = await Promise.allSettled(promises);
-  
-    //   return resolvedPromises;
-  
-    // }
 
 }
 
