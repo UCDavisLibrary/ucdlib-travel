@@ -111,8 +111,10 @@ CREATE TABLE approval_request (
     business_purpose VARCHAR(500),
     location VARCHAR(100),
     location_details VARCHAR(100),
+    release_time INTEGER NOT NULL DEFAULT 0,
     program_start_date DATE,
     program_end_date DATE,
+    fiscal_year INTEGER,
     travel_required BOOLEAN NOT NULL DEFAULT FALSE,
     has_custom_travel_dates BOOLEAN NOT NULL DEFAULT FALSE,
     travel_start_date DATE,
@@ -186,11 +188,15 @@ CREATE TABLE employee_allocation (
     amount NUMERIC NOT NULL,
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
+    fiscal_year INTEGER NOT NULL,
+    department_id INTEGER REFERENCES department(department_id),
     added_by VARCHAR(100) REFERENCES employee(kerberos),
     added_at timestamp DEFAULT NOW(),
     deleted BOOLEAN DEFAULT FALSE,
     deleted_by VARCHAR(100) REFERENCES employee(kerberos),
-    deleted_at timestamp
+    deleted_at timestamp,
+    modified_by VARCHAR(100) REFERENCES employee(kerberos),
+    modified_at timestamp
 );
 COMMENT ON TABLE employee_allocation IS 'Funding source allocations for employees by date range.';
 

@@ -32,6 +32,7 @@ export default class AppPageAdminAllocationsNew extends Mixin(LitElement)
       fundingAmount: {type: Number},
       fundingSources: {type: Array},
       selectedFundingSource: {type: Object},
+      allowDuplicateAllocations: {type: Boolean},
       _selectedFiscalYear: {type: Object},
       _fiscalYears: {type: Array}
     }
@@ -61,6 +62,7 @@ export default class AppPageAdminAllocationsNew extends Mixin(LitElement)
     this.validationHandler = new ValidationHandler();
     this._setFiscalYear();
     this._fiscalYears = fiscalYearUtils.getRangeFromDate(null, 1, 1);
+    this.allowDuplicateAllocations = false;
     this.requestUpdate();
   }
 
@@ -146,6 +148,15 @@ export default class AppPageAdminAllocationsNew extends Mixin(LitElement)
   }
 
   /**
+   * @description Check if there are any duplicate allocations
+   * @returns {Boolean}
+   */
+  isDuplicateAllocation(){
+    const employeeErrors = this.validationHandler.getError('employees', 'already-exists');
+    return employeeErrors ? true : false;
+  }
+
+  /**
    * @description Event handler for form submission
    * @param {Event} e - Submit event
    */
@@ -158,7 +169,7 @@ export default class AppPageAdminAllocationsNew extends Mixin(LitElement)
       amount: this.fundingAmount,
       employees: this.employees
     };
-    this.EmployeeAllocationModel.createEmployeeAllocations(payload);
+    this.EmployeeAllocationModel.createEmployeeAllocations(payload, this.allowDuplicateAllocations);
   }
 
   /**

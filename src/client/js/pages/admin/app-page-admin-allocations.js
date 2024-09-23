@@ -1,8 +1,10 @@
 import { LitElement } from 'lit';
 import {render} from "./app-page-admin-allocations.tpl.js";
+import { createRef } from 'lit/directives/ref.js';
 import { LitCorkUtils, Mixin } from '@ucd-lib/cork-app-utils';
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 import fiscalYearUtils from '../../../../lib/utils/fiscalYearUtils.js';
+import ValidationHandler from "../../utils/ValidationHandler.js";
 
 /**
  * @class AppPageAdminAllocations
@@ -12,6 +14,9 @@ import fiscalYearUtils from '../../../../lib/utils/fiscalYearUtils.js';
  * @property {Array} fiscalYearFilters - list of fiscal years returned from EmployeeAllocationModel
  * @property {Array} selectedFundingSourceFilters - list of selected funding source ids
  * @property {Array} selectedEmployeeFilters - list of selected employee kerberos ids
+ * @property {Array} selectedFiscalYearFilters - list of selected fiscal year start years
+ * @property {Object} selectedAllocation - selected allocation object for editing
+ * @property {Array} allDepartments - list of all departments in the system - for use in the edit form
  * @property {Number} page - current page number of query results
  * @property {Number} maxPage - total number of pages returned by query
  * @property {Array} results - list of employee allocations returned by query
@@ -28,10 +33,13 @@ export default class AppPageAdminAllocations extends Mixin(LitElement)
       selectedFundingSourceFilters: {type: Array},
       selectedEmployeeFilters: {type: Array},
       selectedFiscalYearFilters: {type: Array},
+      selectedAllocation: {type: Object},
+      allDepartments: {type: Array},
       page: {type: Number},
       maxPage: {type: Number},
       results: {type: Array},
-      queryState: {type: String}
+      queryState: {type: String},
+      updateInProgress: {state: true}
     }
   }
 
@@ -47,8 +55,14 @@ export default class AppPageAdminAllocations extends Mixin(LitElement)
     this.maxPage = 1;
     this.results = [];
     this.queryState = 'loading';
+    this.selectedAllocation = {};
+    this.updateInProgress = false;
+    this.allDepartments = [];
 
-    this._injectModel('AppStateModel', 'EmployeeAllocationModel');
+    this.editDialogRef = createRef();
+    this.validationHandler = new ValidationHandler();
+
+    this._injectModel('AppStateModel', 'EmployeeAllocationModel', 'DepartmentModel');
   }
 
   /**
@@ -87,6 +101,7 @@ export default class AppPageAdminAllocations extends Mixin(LitElement)
     this.AppStateModel.setBreadcrumbs(breadcrumbs);
 
     const d = await this.getPageData();
+    this.logger.info('Page data fetched', d);
     const hasError = d.some(e => e.status === 'rejected' || e.value.state === 'error');
     if( hasError ) {
       this.AppStateModel.showError(d, {ele: this});
@@ -111,9 +126,11 @@ export default class AppPageAdminAllocations extends Mixin(LitElement)
    * @description Get data necessary to render this page
    */
   async getPageData(){
-    const promises = [];
-    promises.push(this.EmployeeAllocationModel.getFilters());
-    promises.push(this.query());
+    const promises = [
+      this.EmployeeAllocationModel.getFilters(),
+      this.query(),
+      this.DepartmentModel.queryLocal()
+    ];
     const resolvedPromises = await Promise.allSettled(promises);
     return resolvedPromises;
   }
@@ -166,6 +183,67 @@ export default class AppPageAdminAllocations extends Mixin(LitElement)
     this.page = e.detail.page;
     this.results = [];
     this.query();
+  }
+
+  /**
+   * @description Event handler for when the edit button is clicked on an allocation
+   * @param {Object} allocation - allocation object to edit
+   */
+  _onEditClick(allocation){
+    this.selectedAllocation = JSON.parse(JSON.stringify(allocation));
+    this.validationHandler = new ValidationHandler();
+    this.editDialogRef.value.showModal();
+  }
+
+  /**
+   * @description Event handler for when the edit form is submitted
+   * @param {*} e - form submit event
+   * @returns
+   */
+  async _onEditSubmit(e){
+    e.preventDefault();
+    if ( this.updateInProgress ) return;
+    this.updateInProgress = true;
+
+    const r = await this.EmployeeAllocationModel.update(this.selectedAllocation);
+    this.updateInProgress = false;
+    if ( r.state === 'loaded' ) {
+      this.validationHandler = new ValidationHandler();
+      this.editDialogRef.value.close();
+      this.AppStateModel.refresh();
+      setTimeout(() => {
+        this.AppStateModel.showToast({message: 'Allocation updated.', type: 'success'});
+      }, 1000);
+    } else {
+      if ( r.error?.payload?.is400 ) {
+        this.validationHandler = new ValidationHandler(r);
+        this.requestUpdate();
+        this.AppStateModel.showToast({message: 'Error when updating the employee allocation. Form data needs fixing.', type: 'error'});
+      } else {
+        this.AppStateModel.showToast({message: 'An unknown error occurred when updating the employee allocation', type: 'error'});
+        this.logger.error('Error updating allocation', r);
+      }
+    }
+  }
+
+  /**
+   * @description Sets a property on the selected allocation object
+   * @param {String} prop - property name
+   * @param {*} value - property value
+   */
+  setSelectedAllocationProperty(prop, value){
+    this.selectedAllocation[prop] = value;
+    this.requestUpdate();
+  }
+
+  /**
+   * @description Bound to DepartmentModel departments-requested event
+   * @param {Object} e - cork-app-utils event object
+   * @returns
+   */
+  _onDepartmentsRequested(e){
+    if ( e.state !== 'loaded' || !this.AppStateModel.isActivePage(this) ) return;
+    this.allDepartments = e.payload;
   }
 
   /**

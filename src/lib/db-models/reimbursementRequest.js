@@ -1,7 +1,7 @@
 import pg from "./pg.js";
 
 import validations from "./reimbursementRequestValidations.js";
-import FundTransactionValidations from "./fundTransactionValidations.js";
+import FundTransactionValidations from "./FundTransactionValidations.js";
 import EntityFields from "../utils/EntityFields.js";
 import objectUtils from "../utils/objectUtils.js";
 import employeeModel from "./employee.js";

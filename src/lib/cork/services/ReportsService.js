@@ -28,6 +28,16 @@ class ReportsService extends BaseService {
     });
   }
 
+  getReport(query){
+    return this.request({
+      url : `/api/reports?${query}`,
+      checkCached: () => this.store.data.reports[query],
+      onLoading : request => this.store.reportLoading(request, query),
+      onLoad : result => this.store.reportLoaded(result.body, query),
+      onError : e => this.store.reportError(e, query)
+    });
+  }
+
 }
 
 const service = new ReportsService();
