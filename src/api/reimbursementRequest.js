@@ -1,19 +1,25 @@
 import protect from "../lib/protect.js";
 import uploads from "../lib/utils/uploads.js";
 import typeTransform from "../lib/utils/typeTransform.js";
+import reports from "../lib/db-models/reports.js";
 import urlUtils from "../lib/utils/urlUtils.js";
 import apiUtils from "../lib/utils/apiUtils.js";
 import reimbursementRequest from "../lib/db-models/reimbursementRequest.js";
 import approvalRequest from "../lib/db-models/approvalRequest.js";
 import employee from "../lib/db-models/employee.js";
 import IamEmployeeObjectAccessor from "../lib/utils/iamEmployeeObjectAccessor.js";
+import log from "../lib/utils/log.js";
 
 
 export default (api) => {
 
   api.get('/reimbursement-request', protect('hasBasicAccess'), async (req, res) => {
-
     const kerberos = req.auth.token.id;
+    const reportAccess = await reports.getAccessLevel(req.auth.token);
+    if ( reportAccess.error ) {
+      log.error('Error fetching access level', reportAccess);
+      return res.status(500).json({error: true, message: 'Error fetching access level'});
+    }
 
     // convert query string to camel case object
     const query = urlUtils.queryToCamelCase(req.query);
@@ -38,6 +44,8 @@ export default (api) => {
       console.error('Error in GET /reimbursement-request', results.error);
       return res.status(500).json({error: true, message: 'Error getting reimbursement requests.'});
     }
+
+    if ( !results.total ) return res.json(results);
 
     // do auth - which is determined by associated approval request
     const approvalRequestIds = [...(new Set(results.data.map(rr => rr.approvalRequestId)))];
@@ -81,12 +89,13 @@ export default (api) => {
 
     }
 
-    if ( req.auth.token.hasAdminAccess ) return res.json(results);
+    if ( req.auth.token.hasAdminAccess || reportAccess.hasFullAccess ) return res.json(results);
 
     for (const ar of approvalRequests.data) {
       const isOwnRequest = ar.employeeKerberos === kerberos;
       const inApprovalChain = ar.approvalStatusActivity.some(a => a.employeeKerberos === kerberos);
-      if ( !isOwnRequest && !inApprovalChain ) return apiUtils.do403(res);
+      const departmentAccess = reportAccess.departmentRestrictions.includes(ar.departmentId);
+      if ( !isOwnRequest && !inApprovalChain && !departmentAccess ) return apiUtils.do403(res);
     }
 
     return res.json(results);
@@ -151,6 +160,11 @@ export default (api) => {
 
   api.get('/reimbursement-transaction', protect('hasBasicAccess'), async (req, res) => {
     const kerberos = req.auth.token.id;
+    const reportAccess = await reports.getAccessLevel(req.auth.token);
+    if ( reportAccess.error ) {
+      log.error('Error fetching access level', reportAccess);
+      return res.status(500).json({error: true, message: 'Error fetching access level'});
+    }
     const query = urlUtils.queryToCamelCase(req.query);
 
     const reimbursementRequestIds = apiUtils.explode(query.reimbursementRequestIds, true);
@@ -163,7 +177,7 @@ export default (api) => {
       return res.status(500).json({error: true, message: 'Error getting reimbursement transactions.'});
     }
 
-    if ( req.auth.token.hasAdminAccess ) return res.json(results);
+    if ( req.auth.token.hasAdminAccess || reportAccess.hasFullAccess ) return res.json(results);
 
     const reimbursementRequests = await reimbursementRequest.get({reimbursementRequestIds, pageSize: -1});
     if ( reimbursementRequests.error ) {
@@ -192,7 +206,8 @@ export default (api) => {
     for (const ar of approvalRequests.data) {
       const isOwnRequest = ar.employeeKerberos === kerberos;
       const inApprovalChain = ar.approvalStatusActivity.some(a => a.employeeKerberos === kerberos);
-      if ( !isOwnRequest && !inApprovalChain ) return apiUtils.do403(res);
+      const departmentAccess = reportAccess.departmentRestrictions.includes(ar.departmentId);
+      if ( !isOwnRequest && !inApprovalChain && !departmentAccess ) return apiUtils.do403(res);
     }
 
     return res.json(results);

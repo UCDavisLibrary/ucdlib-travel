@@ -11,7 +11,6 @@ export default (api) => {
     const category = req.params.category;
 
     if ( !category ) return res.status(400).json({error: true, message: 'Category is required.'});
-
     const data = await settings.getByCategory(category);
     if ( data.error ) {
       console.error('Error in /settings/:category', data.error);

@@ -216,6 +216,31 @@ class ApplicationOptions {
     ];
   }
 
+  get approvalRequestActivity(){
+    return [
+      {
+        value: 'request-notification',
+        label: 'Requester Notification',
+        actor: 'submitter',
+        resultingStatus: 'requester-notified',
+        actionTakenText: 'System has sent a notification about request.',
+        byLine: 'Requester Notification Sent By:',
+        iconClass: 'fas fa-comment',
+        brandColor: 'quad',
+      },
+      {
+        value: 'approver-notification',
+        label: 'Approver Notification',
+        actor: 'approver',
+        resultingStatus: 'approver-notified',
+        actionTakenText: 'System has sent a notification to an approver.',
+        byLine: 'Approver Notification Sent By:',
+        iconClass: 'fas fa-comment',
+        brandColor: 'cabernet',
+      }
+    ]
+  }
+
   get approvalRequestReimbursementActivity(){
     return [
       {
@@ -241,6 +266,14 @@ class ApplicationOptions {
         byLine: 'Updated By:',
         iconClass: 'fa-solid fa-money-bill-transfer',
         brandColor: 'pinot'
+      },
+      {
+        value: 'reimbursement-notification',
+        label: 'Reimbursement Notification',
+        actionTakenText: 'System has sent a notification to admin about reimbursement.',
+        byLine: 'Reimbursement Notification Sent By:',
+        iconClass: 'fas fa-comment',
+        brandColor: 'poppy',
       }
     ]
   }
@@ -405,6 +438,18 @@ class ApplicationOptions {
 
     const nextApprover = (approvalRequest.approvalStatusActivity || []).find(a => a.action === 'approval-needed');
     return nextApprover && nextApprover.employeeKerberos === userKerberos;
+  }
+
+  /**
+   * @description - Get the next approver for an approval request
+   * @param {Object} approvalRequest - The approval request object
+   * @param {Boolean} returnKerberos - Return the kerberos of the next approver
+   * @returns {Object|String}
+   */
+  getNextApprover(approvalRequest, returnKerberos=false){
+    const nextApprover = (approvalRequest?.approvalStatusActivity || []).find(a => a.action === 'approval-needed');
+    if ( returnKerberos ) return nextApprover?.employeeKerberos || '';
+    return nextApprover;
   }
 
 

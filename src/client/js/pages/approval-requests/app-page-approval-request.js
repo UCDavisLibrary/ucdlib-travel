@@ -219,6 +219,8 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
       action.occurredTimeString = action.occurredDate.toLocaleTimeString();
       if (action.reimbursementRequestId ){
         action.actionObject = applicationOptions.approvalRequestReimbursementActivity.find(a => a.value === action.action);
+      } else if(action.action.includes("notification")){
+        action.actionObject = applicationOptions.approvalRequestActivity.find(a => a.value === action.action);
       } else {
         action.actionObject = applicationOptions.approvalStatusActions.find(a => a.value === action.action);
       }

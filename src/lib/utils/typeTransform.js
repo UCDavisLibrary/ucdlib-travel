@@ -155,6 +155,16 @@ class TypeTransform {
     return num.toFixed(2);
   }
 
+  /**
+   * @description Cast value to a number or return 0
+   * @param {*} value
+   * @returns {Number}
+   */
+  toNumberOrZero(value){
+    const num = Number(value);
+    return isNaN(num) ? 0 : num;
+  }
+
 }
 
 export default new TypeTransform();
