@@ -99,6 +99,21 @@ class ObjectUtils {
     }, 0);
   }
 
+  /**
+   * @description Chunk an array into smaller arrays of a specified size
+   * @param {Array} arr - array to chunk
+   * @param {Integer} size - size of chunks
+   * @returns {Array}
+   */
+  chunkArray(arr, size) {
+    return arr.reduce((acc, _, i) => {
+      if (i % size === 0) {
+        acc.push(arr.slice(i, i + size));
+      }
+      return acc;
+    }, []);
+  }
+
 }
 
 export default new ObjectUtils();

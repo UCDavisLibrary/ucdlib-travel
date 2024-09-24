@@ -47,6 +47,7 @@ services:
       - ../utils/init:/app/deploy-utils/init
       - ../../gc-reader-key.json:/etc/service-account.json
       - uploads-data:/uploads
+    # command: /app/lib/tail.sh
     command: ./deploy-utils/init/init.sh
   backup:
     image: {{APP_IMAGE_NAME_TAG}}
@@ -70,6 +71,7 @@ services:
       - ../../gc-writer-key.json:/etc/service-account.json
       - uploads-data:/uploads
     command: ./deploy-utils/backup/entrypoint.sh
+    # command: /app/lib/tail.sh
   db:
     image: {{POSTGRES_IMAGE_NAME_TAG}}
     environment:

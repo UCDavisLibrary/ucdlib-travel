@@ -8,6 +8,7 @@ import approvalRequest from './approvalRequest.js';
 import department from './department.js';
 import employee from './employee.js';
 import reimbursementRequest from './reimbursementRequest.js';
+import reports from './reports.js';
 
 const router = express.Router();
 
@@ -21,6 +22,7 @@ approvalRequest(router);
 department(router);
 employee(router);
 reimbursementRequest(router);
+reports(router);
 
 export default (app) => {
   app.use(config.apiRoot, router);

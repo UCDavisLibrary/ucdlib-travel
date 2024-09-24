@@ -13,6 +13,7 @@ class ServerConfig {
     this.routes = ['approval-request', 'approve', 'reimbursement-request', 'reports', 'admin'];
 
     this.apiRoot = this.getEnv('APP_API_ROOT', '/api');
+    this.appRoot = process?.env?.APP_ROOT_URL;
 
     this.uploadsRoot = this.getEnv('APP_UPLOADS_ROOT', '/uploads');
     this.uploadsDir = this.getEnv('APP_UPLOADS_DIR', '/uploads');
@@ -49,7 +50,19 @@ class ServerConfig {
       url: this.getEnv('UCDLIB_PERSONNEL_API_USER_URL', 'https://iam.staff.library.ucdavis.edu/json'),
       user: this.getEnv('UCDLIB_PERSONNEL_API_USER', ''),
       key: this.getEnv('UCDLIB_PERSONNEL_API_KEY', ''),
-      serverCacheExpiration: this.getEnv('UCDLIB_PERSONNEL_API_CACHE_EXPIRATION', '24 hours')
+      serverCacheExpiration: this.getEnv('UCDLIB_PERSONNEL_API_CACHE_EXPIRATION', '24 hours'),
+      enableCron: this.getEnv('UCDLIB_PERSONNEL_API_ENABLE_CRON', false),
+      cronSchedule: this.getEnv('UCDLIB_PERSONNEL_API_CRON_SCHEDULE', '0 1 * * *')
+    }
+
+    this.email = {
+      host: this.getEnv('APP_SMTP_HOST', 'smtp.lib.ucdavis.edu'),
+      port: this.getEnv('APP_SMTP_PORT', '25'),
+      secure: this.getEnv('APP_SMTP_SECURE', false),
+      enabled: this.getEnv('APP_SEND_EMAIL_NOTIFICATIONS', false),
+      systemEmailAddress: this.getEnv('APP_SMTP_SYSTEM_EMAIL_ADDRESS', ''),
+      notificationRecipient: this.getEnv('APP_SMTP_NOTIFICATION_EMAIL_ADDRESS', ''),
+      enableCron: this.getEnv('APP_SMTP_ENABLE_CRON', false)
     }
 
     this.logger = {
@@ -66,6 +79,18 @@ class ServerConfig {
         customAttributes: {appOwner: 'itis', appName: 'travel-app'}
       }
     }
+  }
+
+  /**
+   * @description Print the current status of the server configuration to the console.
+   */
+  printStatus() {
+    console.log('Error Reporting:', this.logger.reportErrors.enabled ? 'Enabled' : 'Disabled');
+    console.log('Email Notifications:', this.email.enabled ? 'Enabled' : 'Disabled');
+    console.log('Email Cron:', this.email.enableCron ? 'Enabled' : 'Disabled');
+    console.log('System Email Address:', this.email.systemEmailAddress);
+    console.log('Notification Recipient Override:', this.email.notificationRecipient);
+    console.log('Library IAM Cron:', this.libraryIamApi.enableCron ? 'Enabled' : 'Disabled');
   }
 
   /**

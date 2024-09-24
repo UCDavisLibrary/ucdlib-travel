@@ -323,6 +323,7 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
         this.requestUpdate();
         this.AppStateModel.showToast({message: 'Error when submitting your approval request. Form data needs fixing.', type: 'error'});
       } else {
+        this.logger.error('Error submitting approval request', e);
         this.AppStateModel.showToast({message: 'An unknown error occurred when submitting your approval request', type: 'error'});
       }
       this.AppStateModel.showLoaded(this.id);

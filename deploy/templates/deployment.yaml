@@ -4,6 +4,8 @@ services:
     image: {{APP_IMAGE_NAME_TAG}}
     env_file:
       - .env
+    environment:
+      APP_ROOT_URL: ${APP_ROOT_URL:-https://travel.staff.library.ucdavis.edu}
     ports:
       - ${APP_HOST_PORT:-{{APP_HOST_PORT}}}:${APP_CONTAINER_PORT:-{{APP_CONTAINER_PORT}}}
     depends_on:
@@ -30,6 +32,7 @@ services:
     image: {{APP_IMAGE_NAME_TAG}}
     env_file:
       - .env
+    restart: always
     depends_on:
       - db
     environment:
@@ -47,6 +50,7 @@ services:
     restart: always
     volumes:
       - db-data:/var/lib/postgresql/data
+      # - ./db-entrypoint:/docker-entrypoint-initdb.d
 volumes:
   db-data:
   uploads-data:

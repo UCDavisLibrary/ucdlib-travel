@@ -121,6 +121,19 @@ export function render() {
       <fieldset class='${this.validationHandler.errorClass('employees')}'>
         <legend>Employees</legend>
         <div>${this.validationHandler.renderErrorMessages('employees')}</div>
+        <div ?hidden=${!this.isDuplicateAllocation()}>
+          <div class='field-container u-space-mt'>
+            <div class='checkbox'>
+              <input
+                type='checkbox'
+                id='${this.id}--duplicate-allocation'
+                @change=${() => this.allowDuplicateAllocations = !this.allowDuplicateAllocations}
+                .checked=${this.allowDuplicateAllocations ? true : false}
+                />
+              <label for='${this.id}--duplicate-allocation' style='color:#4c4c4c;'>Allow duplicate allocations</label>
+            </div>
+          </div>
+        </div>
         <div ?hidden=${this.employees.length > 0}>
           <p>No employees selected. Use search form to add employees to this list.</p>
         </div>

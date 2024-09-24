@@ -11,7 +11,7 @@ const defs = {
     'approval-requests', 'approval-request-confirm', 'approver-landing'
   ],
   "admin": [
-    'admin', 'admin-approvers', 'admin-settings',
+    'admin', 'admin-approvers', 'admin-settings', 'admin-email-settings',
     'admin-allocations', 'admin-line-items', 'admin-reimbursement', 'admin-allocations-new'
   ],
   "reports": [

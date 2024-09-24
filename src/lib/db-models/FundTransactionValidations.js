@@ -67,7 +67,7 @@ export default class FundTransactionValidations {
 
   amount(field, value, out){
     const amount = typeTransform.toPositiveNumber(value);
-    if ( !amount ){
+    if ( !amount && amount !== 0 ){
       this.model.fundTransactionFields.pushError(out, field, {errorType: 'required', message: 'This field is required.'});
       return;
     }

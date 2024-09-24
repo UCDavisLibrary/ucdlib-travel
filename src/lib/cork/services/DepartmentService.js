@@ -8,6 +8,16 @@ class DepartmentService extends BaseService {
     this.store = DepartmentStore;
   }
 
+  queryLocal(query){
+    return this.request({
+      url: `/api/department${query}`,
+      checkCached: () => this.store.data.localByQuery[query],
+      onLoading : request => this.store.localQueryLoading(request, query),
+      onLoad : result => this.store.localQueryLoaded(result.body, query),
+      onError : e => this.store.localQueryError(e, query)
+    });
+  }
+
   getActiveDepartments(){
     return this.request({
       url : `/api/active-departments`,
