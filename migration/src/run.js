@@ -76,6 +76,8 @@ class Migration {
                 return console.error('Error when submitting a draft', submitResult)
             }
 
+            console.log("Submitted:", submitResult)
+
             /* statusUpdate 
                 - submit 
                 - approver 
@@ -503,6 +505,7 @@ class Migration {
     // Create a connection to the MySQL and Postgres database
     async convertData(year='', single='') {
         const rows = await this.runMySQLQuery(year, single);
+        console.log(rows);
 
         // let row = rows[0];
         await this.insertIntoPostgresDatabase(rows);
