@@ -94,4 +94,14 @@ app-page-admin-allocations {
       }
     }
   }
+
+  dialog {
+    padding: 2rem;
+    border: none;
+    max-width: 500px;
+  }
+  dialog::backdrop {
+    background-color: black;
+    opacity: 0.5;
+  }
 }

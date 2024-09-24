@@ -4,6 +4,8 @@ import serverConfig from './lib/serverConfig.js';
 import setUpStaticRoutes from './lib/static.js';
 import setUpApiRoutes from "./api/index.js"
 import uploads from "./lib/utils/uploads.js";
+import emailController from './lib/db-models/emailController.js';
+import libraryIamApi from './lib/utils/LibraryIamApi.js';
 
 const app = express();
 
@@ -18,6 +20,12 @@ setUpStaticRoutes(app);
 
 // setup uploads routes
 uploads.setUpRoutes(app);
+
+emailController.emailDailyRunner();
+
+libraryIamApi.startCron();
+
+serverConfig.printStatus();
 
 const port = serverConfig.port.container;
 app.listen(port, () => {

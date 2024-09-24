@@ -41,6 +41,27 @@ class Settings {
   }
 
   /**
+   * @description Get settings value by key
+   * @param {String} key - key of the setting
+   * @param {*} defaultValue - default value to return if setting not found
+   * @param {Boolean} suppressError - if true, return defaultValue if setting not found
+   * @returns {Object|String}
+   */
+  async getValue(key, defaultValue=null, suppressError=false){
+    const res = await this.getByKey(key);
+    if( res.error ) {
+      if ( suppressError ) return defaultValue;
+      return res;
+    }
+    if ( !res ) return defaultValue;
+
+    if ( res.useDefaultValue ) {
+      return res.defaultValue;
+    }
+    return res.value;
+  }
+
+  /**
    * @description Get settings objects by category
    * @param {String} categories - category of the setting
    * if multiple categories are provided, settings with any of the categories will be returned

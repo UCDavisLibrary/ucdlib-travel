@@ -1,13 +1,14 @@
 import approvalRequest from "../lib/db-models/approvalRequest.js";
 import ApprovalRequestValidations from "../lib/db-models/approvalRequestValidations.js";
 import employee from "../lib/db-models/employee.js";
-
+import reports from "../lib/db-models/reports.js";
 import protect from "../lib/protect.js";
 import IamEmployeeObjectAccessor from "../lib/utils/iamEmployeeObjectAccessor.js";
 import urlUtils from "../lib/utils/urlUtils.js";
 import apiUtils from "../lib/utils/apiUtils.js";
 import typeTransform from "../lib/utils/typeTransform.js";
 import applicationOptions from "../lib/utils/applicationOptions.js";
+import log from "../lib/utils/log.js";
 
 export default (api) => {
 
@@ -18,6 +19,11 @@ export default (api) => {
    */
   api.get('/approval-request', protect('hasBasicAccess'), async (req, res) => {
     const kerberos = req.auth.token.id;
+    const reportAccess = await reports.getAccessLevel(req.auth.token);
+    if ( reportAccess.error ) {
+      log.error('Error fetching access level', reportAccess);
+      return res.status(500).json({error: true, message: 'Error fetching access level'});
+    }
 
     // convert query string to camel case object
     const query = urlUtils.queryToCamelCase(req.query);
@@ -33,6 +39,9 @@ export default (api) => {
     query.requestIds = apiUtils.explode(query.requestIds, true);
     query.approvalStatus = apiUtils.explode(query.approvalStatus);
     query.employees = apiUtils.explode(query.employees);
+    query.fundingSource = apiUtils.explode(query.fundingSource, true);
+    query.department = apiUtils.explode(query.department, true);
+    query.fiscalYear = apiUtils.explode(query.fiscalYear, true);
 
     // allow user to determine page size if getting single approval request, so that can retrieve all revisions
     const isSingleRequest = query.requestIds.length === 1;
@@ -46,14 +55,17 @@ export default (api) => {
     }
 
     // check if user is authorized to view all results
-    if ( req.auth.token.hasAdminAccess ) return res.json(results);
+    if ( req.auth.token.hasAdminAccess || reportAccess.hasFullAccess ) return res.json(results);
     const requestUsers = new Set();
+    let departmentMatchCt = 0;
     for (const approvalRequest of results.data) {
 
       const isOwnRequest = approvalRequest.employeeKerberos === kerberos;
       const inApprovalChain = approvalRequest.approvalStatusActivity.some(a => a.employeeKerberos === kerberos);
+      const departmentAccess = reportAccess.departmentRestrictions.includes(approvalRequest.departmentId);
+      if ( departmentAccess ) departmentMatchCt++;
 
-      if ( !isSingleRequest && !isOwnRequest && !inApprovalChain ) return apiUtils.do403(res);
+      if ( !isSingleRequest && !isOwnRequest && !inApprovalChain && !departmentAccess ) return apiUtils.do403(res);
 
       requestUsers.add(approvalRequest.employeeKerberos);
       for (const action of approvalRequest.approvalStatusActivity) {
@@ -62,7 +74,7 @@ export default (api) => {
     }
 
     // if single request, ensure user participated somehow in history of request (not necessarily every revision)
-    if ( isSingleRequest && !requestUsers.has(kerberos) ) return apiUtils.do403(res);
+    if ( isSingleRequest && !requestUsers.has(kerberos) && !departmentMatchCt ) return apiUtils.do403(res);
 
     res.json(results);
   });

@@ -4,6 +4,8 @@ services:
     image: gcr.io/ucdlib-pubreg/ucdlib-travel:dev
     env_file:
       - .env
+    environment:
+      APP_ROOT_URL: ${APP_ROOT_URL:-https://travel.staff.library.ucdavis.edu}
     ports:
       - ${APP_HOST_PORT:-3000}:${APP_CONTAINER_PORT:-3000}
     depends_on:
@@ -30,6 +32,7 @@ services:
     image: gcr.io/ucdlib-pubreg/ucdlib-travel:dev
     env_file:
       - .env
+    restart: always
     depends_on:
       - db
     environment:
@@ -47,6 +50,7 @@ services:
     restart: always
     volumes:
       - db-data:/var/lib/postgresql/data
+      # - ./db-entrypoint:/docker-entrypoint-initdb.d
 volumes:
   db-data:
   uploads-data:

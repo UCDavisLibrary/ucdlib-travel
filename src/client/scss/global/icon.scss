@@ -1,6 +1,25 @@
 .icon-link {
   text-decoration: none;
   cursor: pointer;
+
+  &.icon-link--circle {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 2rem;
+    height: 2rem;
+    min-width: 2rem;
+    min-height: 2rem;
+    border-radius: 50%;
+    padding: .5rem;
+    background-color: var(--category-brand, #13639E);
+    color: var(--category-brand-contrast-color, #fff);
+
+    &:hover {
+      color: var(--category-brand-contrast-color, #fff);
+      filter: brightness(1.4);
+    }
+  }
 }
 .icon-link:hover {
   color: var(--category-brand, #13639E);
