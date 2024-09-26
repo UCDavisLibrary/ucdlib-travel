@@ -22,7 +22,7 @@ export default class AppPageAdminApprovalRequests extends Mixin(LitElement)
       approvalStatuses: {type: Array},
       approvalStatus: {type: String},
       selectedApprovalRequestFilters: {type: Array},
-      employeesInDB: {type: Array},
+      employeesInDB: {type: Object},
       selectedEmployeesFromDB: {type: Array},
     }
   }
@@ -35,7 +35,7 @@ export default class AppPageAdminApprovalRequests extends Mixin(LitElement)
     this.approvalRequests = [];
     this.waitController = new WaitController(this);
     this.approvalStatuses = applicationOptions.approvalStatuses;
-    this.employeesInDB = [];
+    this.employeesInDB = {};
     this.isCurrent = false;
     this.selectedApprovalRequestFilters = [];
     this.selectedEmployeesFromDB = [];
@@ -66,7 +66,6 @@ export default class AppPageAdminApprovalRequests extends Mixin(LitElement)
     if ( this.id !== state.page ) return;
     this.AppStateModel.showLoading();
     this._setPage(state);
-    this._queryObject().page = this.page;
 
     this.AppStateModel.setTitle('All Approval Requests');
 
@@ -82,7 +81,6 @@ export default class AppPageAdminApprovalRequests extends Mixin(LitElement)
       this.AppStateModel.showError(d, {ele: this});
       return;
     }
-    await this.waitController.waitForFrames(5);
 
     this.AppStateModel.showLoaded(this.id);
   }
@@ -103,9 +101,8 @@ export default class AppPageAdminApprovalRequests extends Mixin(LitElement)
    * @description Get all data required for rendering this page
    */
   async getPageData(){
-    await this.waitController.waitForUpdate();
     this.employeesInDB = await this.EmployeeModel.getAllEmployees();
-    console.log(JSON.stringify(this.employeesInDB));
+    this.logger.debug('fetched employees', this.employeesInDB);
     const promises = [
       this.ApprovalRequestModel.query(this._queryObject()),
     ]

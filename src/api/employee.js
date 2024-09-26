@@ -92,8 +92,8 @@ export default (api) => {
     /**
    * @description Get all users in the database
    */
-  api.get('/employees', protect('hasBasicAccess'), async (req, res) => {
-    const apiResult = await employee.getAllEmployees();
+  api.get('/employees', protect('hasAdminAccess'), async (req, res) => {
+    const apiResult = await employee.getAllEmployeesInDB();
 
     if ( apiResult.error ) {
       console.error(apiResult.error);

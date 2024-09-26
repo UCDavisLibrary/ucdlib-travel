@@ -34,9 +34,6 @@ return html`
       </div>
     </div>
     <div class='l-sidebar-first'>
-    <approval-request-draft-list
-      ${ref(this.draftListSelectRef)}
-    ></approval-request-draft-list>
 
     </div>
 
