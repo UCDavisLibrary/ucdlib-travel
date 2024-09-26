@@ -63,6 +63,22 @@ function renderFilters() {
           </ucd-theme-slim-select>
         </div>
       </div>
+      <div class='l-second'>
+        <div class='field-container'>
+          <label>Approval Request Status</label>
+          <ucd-theme-slim-select @change=${e => this._onFilterChange(e.detail, 'selectedEmployeeFilters')}>
+            <select multiple>
+              ${this.employeesInDB.map(s => html`
+                <option
+                  value=${s.kerberos}
+                  ?selected=${this.selectedEmployeeFilters.includes(s.kerberos)}
+                  >${s.first_name} ${s.last_name}
+                </option>
+              `)}
+            </select>
+          </ucd-theme-slim-select>
+        </div>
+      </div>
     </div>
   `;
 }

@@ -22,8 +22,9 @@ export default class AppPageAdminApprovalRequests extends Mixin(LitElement)
       approvalStatuses: {type: Array},
       approvalStatus: {type: String},
       selectedApprovalRequestFilters: {type: Array},
-      employeesInDB: {type: Object},
-      selectedEmployeesFromDB: {type: Array},
+      employeesInDB: {type: Array},
+      selectedEmployee: {type: String},
+      selectedEmployeeFilters: {type: Array},
     }
   }
 
@@ -35,10 +36,12 @@ export default class AppPageAdminApprovalRequests extends Mixin(LitElement)
     this.approvalRequests = [];
     this.waitController = new WaitController(this);
     this.approvalStatuses = applicationOptions.approvalStatuses;
-    this.employeesInDB = {};
+    this.approvalStatus = '';
+    this.employeesInDB = [];
     this.isCurrent = false;
     this.selectedApprovalRequestFilters = [];
-    this.selectedEmployeesFromDB = [];
+    this.selectedEmployee = '';
+    this.selectedEmployeeFilters = [];
 
     this._injectModel('AppStateModel', 'ApprovalRequestModel', 'AuthModel', 'EmployeeModel');
   }
@@ -48,14 +51,15 @@ export default class AppPageAdminApprovalRequests extends Mixin(LitElement)
    */
     resetFilters() {
       this.selectedApprovalRequestFilters = [];
+      this.selectedEmployeeFilters = [];
     }
 
       /**
    * @description Query employee allocations using current filter values
    */
-  async query(values){
+  async query(){
     this.queryState = 'loading';
-    return await this.ApprovalRequestModel.query(this._queryObject(values));
+    return await this.ApprovalRequestModel.query(this._queryObject());
   }
 
   /**
@@ -86,26 +90,35 @@ export default class AppPageAdminApprovalRequests extends Mixin(LitElement)
   }
 
 
-    /**
+  /**
    * @description Construct query object for ApprovalRequestModel query from element properties
    */
-    _queryObject(values){
+    _queryObject(){
       return {
         isCurrent: true,
         approvalStatus: this.selectedApprovalRequestFilters,
+        employees: this.selectedEmployeeFilters,
         page: this.page
       };
     }
+
+  async getAllEmployees(){
+    try {
+      const raw = await this.EmployeeModel.getAllEmployees();
+      this.employeesInDB = raw.payload;
+    }
+    catch(e){
+      this.logger.debug('Error fetching employees', e);
+    }
+  }
 
   /**
    * @description Get all data required for rendering this page
    */
   async getPageData(){
-    this.employeesInDB = await this.EmployeeModel.getAllEmployees();
-    this.logger.debug('fetched employees', this.employeesInDB);
+    await this.getAllEmployees();
     const promises = [
-      this.ApprovalRequestModel.query(this._queryObject()),
-    ]
+      this.ApprovalRequestModel.query(this._queryObject())       ];
     const resolvedPromises = await Promise.allSettled(promises);
     return promiseUtils.flattenAllSettledResults(resolvedPromises);
   }

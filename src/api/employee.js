@@ -100,7 +100,7 @@ export default (api) => {
       return res.status(500).json({error: true, message: 'Error querying employee data.'});
     }
 
-    res.json(apiResult.res);
+    res.json(apiResult.rows);
   });
 
 }
