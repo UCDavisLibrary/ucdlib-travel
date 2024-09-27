@@ -1,45 +1,48 @@
 import { html } from 'lit';
-import { ref } from 'lit/directives/ref.js';
 
-import '@ucd-lib/theme-elements/brand/ucd-theme-pagination/ucd-theme-pagination.js'
+import '@ucd-lib/theme-elements/brand/ucd-theme-pagination/ucd-theme-pagination.js';
+import '@ucd-lib/theme-elements/brand/ucd-theme-slim-select/ucd-theme-slim-select.js'
 import "../../components/approval-request-teaser.js";
-import "../../components/approval-request-draft-list.js";
 
 export function render() {
-return html`
-  <div class='l-gutter l-basic--flipped'>
-    <div class='l-content'>
-          ${renderFilters.call(this)}
-      <div ?hidden=${!this.approvalRequests.length}>
-        ${this.approvalRequests.map(request => html`
-          <div class='approval-request-teaser-wrapper'>
-            <approval-request-teaser
-              .approvalRequest=${request}
-            ></approval-request-teaser>
-          </div>
-        `)}
-        <ucd-theme-pagination
-          current-page=${this.page}
-          max-pages=${this.totalPages}
-          @page-change=${this._onPageChange}
-          xs-screen>
-        </ucd-theme-pagination>
-      </div>
+  return html`
 
-      <div ?hidden=${this.approvalRequests.length}>
-        <div class='flex flex--align-center'>
-          <i class='fa-solid fa-circle-exclamation fa-2x admin-blue'></i>
-          <div class='u-space-ml--small'>There are no approval requests.</div>
+
+    <div class='l-gutter l-basic--flipped'>
+      <div class='l-content'>
+        ${renderFilters.call(this)}
+
+        <div ?hidden=${!(this.approvalRequests?.length)}>
+          ${this.approvalRequests.map(request => html`
+            <div class='approval-request-teaser-wrapper'>
+              <approval-request-teaser
+                .approvalRequest=${request}
+              ></approval-request-teaser>
+            </div>
+          `)}
+          <ucd-theme-pagination
+            current-page=${this.page}
+            max-pages=${this.totalPages}
+            @page-change=${this._onPageChange}
+            xs-screen>
+          </ucd-theme-pagination>
+        </div>
+
+        <div ?hidden=${this.approvalRequests?.length}>
+          <div class='flex flex--align-center'>
+            <i class='fa-solid fa-circle-exclamation fa-2x admin-blue'></i>
+            <div class='u-space-ml--small'>
+              There are no approval requests.
+            </div>
+          </div>
         </div>
       </div>
+      <div class='l-sidebar-first'>
+        <!-- Optional sidebar content -->
+      </div>
     </div>
-    <div class='l-sidebar-first'>
-
-    </div>
-
-  </div>
-
-`;}
+  `;
+}
 
 /**
  * @description Render the filters for the allocations page
@@ -65,10 +68,10 @@ function renderFilters() {
       </div>
       <div class='l-second'>
         <div class='field-container'>
-          <label>Approval Request Status</label>
+          <label>Employee</label> <!-- Changed label to Employee -->
           <ucd-theme-slim-select @change=${e => this._onFilterChange(e.detail, 'selectedEmployeeFilters')}>
             <select multiple>
-              ${this.employeesInDB.map(s => html`
+              ${(this.employeesInDB || []).map(s => html`
                 <option
                   value=${s.kerberos}
                   ?selected=${this.selectedEmployeeFilters.includes(s.kerberos)}
