@@ -23,6 +23,7 @@ class AppStateStoreImpl extends AppStateStore {
       'admin-reimbursement': {text: 'Reimbursement Requests', link: '/admin/reimbursement'},
       'admin-settings': {text: 'General Settings', link: '/admin/settings'},
       'admin-line-items': {text: 'Line Items', link: '/admin/items'},
+      'admin-email-settings': {text: 'Email Settings', link: '/admin/email-settings'},
       'reimbursement-new': {text: 'New Reimbursement Request', link: '/approval-request/new-reimbursement'},
     };
 
