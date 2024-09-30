@@ -5,7 +5,7 @@ import { LitCorkUtils, Mixin } from '@ucd-lib/cork-app-utils';
 
 /**
  * @class EmailTemplate
- * @description Component that gives the email template 
+ * @description Component that gives the email template
  *
  * @property {String} emailPrefix - Email Prefix for template
  * @property {String} defaultSubjectTemplate - default subject template
@@ -117,7 +117,7 @@ export default class EmailTemplate extends Mixin(LitElement)
   }
 
 /**
-   * @description Selects the variables that are available 
+   * @description Selects the variables that are available
    * @param {e} props - e
    */
   _onVariableSelect(e){
@@ -136,6 +136,7 @@ export default class EmailTemplate extends Mixin(LitElement)
 
     // return focus to input and set cursor position
     const ele = this.renderRoot.querySelector(`input[email-template=${position.template}]`);
+    if ( !ele ) return;
     ele.focus();
     setTimeout(() => {
       ele.setSelectionRange(position.selectionStart + v.length, position.selectionStart + v.length);

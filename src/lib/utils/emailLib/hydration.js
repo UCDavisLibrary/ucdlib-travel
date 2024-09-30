@@ -15,30 +15,7 @@ export default class Hydration {
     this.reimbursementRequest = reimbursementRequest,
     this.type = notificationType;
 
-    this._variables = [
-      {name: emailVariables.requesterFirstName, cb: this._getRequesterFirstName},
-      {name: emailVariables.requesterLastName, cb: this._getRequesterLastName},
-      {name: emailVariables.requesterFullName, cb: this._getRequesterFullName},
-      {name: emailVariables.requesterKerberos, cb: this._getRequesterKerberos},
-      {name: emailVariables.requesterLabel, cb: this._getRequesterLabel},
-      {name: emailVariables.requesterOrganization, cb: this._getRequesterOrganization},
-      {name: emailVariables.requesterBuisnessPurpose, cb: this._getRequesterBuisnessPurpose},
-      {name: emailVariables.requesterLocation, cb: this._getRequesterLocation},
-      {name: emailVariables.requesterProgramDate, cb: this._getRequesterProgramDate},
-      {name: emailVariables.requesterTravelDate, cb: this._getRequesterTravelDate},
-      {name: emailVariables.requesterComments, cb: this._getRequesterComments},
-      {name: emailVariables.nextApproverFullName, cb: this._getNextApproverFullName},
-      {name: emailVariables.nextApproverFundChanges, cb: this._getNextApproverFundChanges},
-      {name: emailVariables.nextApproverKerberos, cb: this._getNextApproverKerberos},
-      {name: emailVariables.reimbursementLabel, cb: this._getReimbursementLabel},
-      {name: emailVariables.reimbursementEmployeeResidence, cb: this._getReimbursementEmployeeResidence},
-      {name: emailVariables.reimbursementTravelDate, cb: this._getReimbursementTravelDate},
-      {name: emailVariables.reimbursementPersonalTime, cb: this._getReimbursementPersonalTime},
-      {name: emailVariables.reimbursementComments, cb: this._getReimbursementComments},
-      {name: emailVariables.reimbursementStatus, cb: this._getReimbursementStatus},
-      {name: emailVariables.approvalRequestUrl, cb: this._getApprovalRequestUrl},
-      {name: emailVariables.reimbursementRequestUrl, cb: this._getReimbursementRequestUrl}
-    ];
+    this._variables = [...emailVariables.variables];
   }
 
 /**
@@ -317,10 +294,22 @@ _getContext(content){
   const context = {};
 
   for (let v of this._variables) {
-    if(content.includes(v.name)) context[v.name] = v.cb.call(this);
+    if(content.includes(v.name)) context[v.name] = this._doVariableCallback(v.name);
   }
 
   return context;
+}
+
+/**
+ * @description get the value of the variable
+ * @param {Object} variable - an item from emailVariables.variables array
+ * @returns {String} value of the variable
+ */
+_doVariableCallback(variable){
+  const funcName = `_get${variable.charAt(0).toUpperCase() + variable.slice(1)}`;
+  if (typeof this[funcName] === 'function') return this[funcName].call(this);
+  console.warn(`Email hydration function ${funcName} does not exist`);
+  return '';
 }
 
 /**

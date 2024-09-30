@@ -25,7 +25,7 @@ export default class AppPageAdminEmailSettings extends Mixin(LitElement)
       noSettings: {type: Boolean}
     }
   }
- 
+
   constructor() {
     super();
     this.render = render.bind(this);
@@ -46,7 +46,7 @@ export default class AppPageAdminEmailSettings extends Mixin(LitElement)
 
   }
 
-  
+
     /**
    * @description bound to AppStateModel app-state-update event
    * @param {Object} state - AppStateModel state
@@ -54,7 +54,7 @@ export default class AppPageAdminEmailSettings extends Mixin(LitElement)
      async _onAppStateUpdate(state) {
       if ( this.id !== state.page ) return;
       await this.SettingsModel.getByCategory(this.settingsCategory);
-  
+
       this.AppStateModel.setTitle('Email Settings');
       const breadcrumbs = [
         this.AppStateModel.store.breadcrumbs.home,
@@ -70,7 +70,7 @@ export default class AppPageAdminEmailSettings extends Mixin(LitElement)
    * @param {Object} e - cork-app-utils state where payload is an array of settings objects
    */
   _onSettingsCategoryFetched(e) {
-    if ( e.category !== this.settingsCategory ) return;
+    if ( e.category !== this.settingsCategory || !this.AppStateModel.isActivePage(this) ) return;
     if ( e.state === 'loaded' ) {
       this.searchString = '';
       this._setSettingsProperty(e.payload);
@@ -81,7 +81,7 @@ export default class AppPageAdminEmailSettings extends Mixin(LitElement)
       this.AppStateModel.showLoading();
     }
   }
-  
+
   /**
    * @description sets the element's settings property
    * which is used to render the inputs for the settings form on the page
@@ -168,7 +168,7 @@ export default class AppPageAdminEmailSettings extends Mixin(LitElement)
       if (A > B) {
         return 1;
       }
-    
+
       // names must be equal
       return 0;
     });
@@ -199,7 +199,7 @@ export default class AppPageAdminEmailSettings extends Mixin(LitElement)
     for (var x = 0; x < arr.length; x++) {
       newarr.push(arr[x].charAt(0).toUpperCase() + arr[x].slice(1));
     }
-      
+
     let final = newarr.join(' ');
 
     return final;
@@ -272,15 +272,8 @@ export default class AppPageAdminEmailSettings extends Mixin(LitElement)
 
   async _onFormSubmit(e) {
     e.preventDefault();
-    
-    this.settings.map(settings => {
-      if(settings.updated) {
-        this.SettingsModel.updateSettings(settings);
-        settings.updated = false;
-      }
-    });
-
-    this.requestUpdate();
+    const settings = this.settings.filter(s => s.updated);
+    this.SettingsModel.updateSettings(settings);
 
   }
 

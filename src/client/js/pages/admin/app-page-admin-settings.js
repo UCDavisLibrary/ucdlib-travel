@@ -59,7 +59,7 @@ export default class AppPageAdminSettings extends Mixin(LitElement)
    * @param {Object} e - cork-app-utils state where payload is an array of settings objects
    */
   _onSettingsCategoryFetched(e) {
-    if ( e.category !== this.settingsCategory ) return;
+    if ( e.category !== this.settingsCategory || !this.AppStateModel.isActivePage(this) ) return;
     if ( e.state === 'loaded' ) {
       this.searchString = '';
       this._setSettingsProperty(e.payload);
