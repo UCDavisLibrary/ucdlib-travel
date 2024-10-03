@@ -1,12 +1,13 @@
 import mysql from 'mysql2/promise';
 import pg from 'pg'
-const { Client } = pg;
-// import funding from 'ucdlib-simple-spa-server/lib/db-models/fundingSource.js';
-// import expenditure from 'ucdlib-simple-spa-server/lib/db-models/expenditureOptions.js';
-import IamEmployeeObjectAccessor from 'ucdlib-simple-spa-server/lib/utils/iamEmployeeObjectAccessor.js';
-import employee from "ucdlib-simple-spa-server/lib/db-models/employee.js";
-import approvalRequest from 'ucdlib-simple-spa-server/lib/db-models/approvalRequest.js';
+import loading from 'loading-cli';
 
+const { Client } = pg;
+// import funding from '@ucd-lib/travel-app-server/lib/db-models/fundingSource.js';
+// import expenditure from '@ucd-lib/travel-app-server/lib/db-models/expenditureOptions.js';
+import IamEmployeeObjectAccessor from '@ucd-lib/travel-app-server/lib/utils/iamEmployeeObjectAccessor.js';
+import employee from "@ucd-lib/travel-app-server/lib/db-models/employee.js";
+import approvalRequest from '@ucd-lib/travel-app-server/lib/db-models/approvalRequest.js';
 
 class Migration {
   constructor(){}
@@ -16,8 +17,8 @@ class Migration {
         const pool = mysql.createPool({
             host: process.env.MYSQL_HOST || 'mysql', 
             port: process.env.MYSQL_PORT || '3306',
-            user: 'root',//process.env.MYSQL_USER || 'user_mysql',
-            password: 'root_password',//process.env.MYSQL_PASSWORD || 'localhost',
+            user: process.env.MYSQL_USER || 'root',
+            password: process.env.MYSQL_ROOT_PASSWORD || 'root_password',
             database: process.env.MYSQL_DATABASE || 'db_mysql'
         });
         const connection = await pool.getConnection();;
@@ -31,11 +32,11 @@ class Migration {
             user: process.env.PGUSER || 'postgres',
             host: process.env.PGHOST || 'host.docker.internal',  
             database: process.env.PGDATABASE || 'postgres',
-            password: process.env.PGPASSWORD || 'localhost',
+            password: process.env.POSTGRES_PASSWORD || 'localhost',
             port: process.env.PGPORT || 5432
         });
         
-        await this.runPostgresQuery(rows, connection);
+        return await this.runPostgresQuery(rows, connection);
     };
 
 
@@ -52,9 +53,19 @@ class Migration {
 
         conn.end(); // Close the connection
 
+        const loader = loading({
+            "text":"Loading MySQL Rows",
+            "color":"green",
+            "interval":200,
+            "stream": process.stdout,
+            "frames": ["◐", "◓", "◑", "◒"]
+        }).start();
 
+
+        let errorList = [];
 
         for(let row of rows){
+            let errorObject = {};
             const query = row.lib_user[0].kerberosId;
             let employeeObj = await employee.getIamRecordById(query);
             employeeObj = (new IamEmployeeObjectAccessor(employeeObj.res)).travelAppObject;
@@ -63,20 +74,33 @@ class Migration {
 
             // create createRevision
             const draftResult = await approvalRequest.createRevision(data, employeeObj, false);
-
             if ( draftResult.error && draftResult.is400 ) {
-              return console.error('Error when creating a draft', draftResult)
+                errorObject = {
+                    formID: row.id,
+                    errorMessage:"Error when creating a draft",
+                    errorPayload: draftResult,
+                    data: data,
+                };
+                errorList.push(errorObject);
+                continue;
             }
-
-            let approvalRequestObj = await approvalRequest.get({requestIds: [draftResult.approvalRequestRevisionId], isCurrent: true});
 
             // create submitDraft
             const submitResult = await approvalRequest.submitDraft(draftResult.approvalRequestRevisionId);
             if ( submitResult.error && submitResult.is400 ) {
-                return console.error('Error when submitting a draft', submitResult)
+                errorObject = {
+                    formID: row.id,
+                    errorMessage:"Error when submitting a draft",
+                    errorPayload: submitResult,
+                    data: data
+                };
+                errorList.push(errorObject);
+                continue;
             }
 
-            console.log("Submitted:", submitResult)
+            let approvalRequestObj = await approvalRequest.get({requestIds: [submitResult.approvalRequestRevisionId], isCurrent: true});
+
+            approvalRequestObj = approvalRequestObj.data[0];
 
             /* statusUpdate 
                 - submit 
@@ -85,51 +109,65 @@ class Migration {
             */
 
             const result = await this.statusUpdate(row.activity_history, approvalRequestObj);
+            if ( result.error ) {
+                errorObject = {
+                    formID: row.id,
+                    errorMessage:"Error when updating the status",
+                    errorPayload: result,
+                    data: data
+                };
+                errorList.push(errorObject);
+                continue;
+            }
 
-            console.log("Result:", result);
         }
 
-        return;
+        loader.succeed(['Insertion Completed!\n\n']);
+        return errorList;
     };
 
     async statusUpdate(data, approvalRequestObj) {
+        let ap = approvalRequestObj.approvalStatusActivity;
+        const dataIntersection = data.filter((obj1) =>
+            ap.some((obj2) => obj1.employee && obj2.employee.kerberos === obj1.employee[0].kerberosId)
+        );
+
         const result = {};
 
-        approvalRequestObj.approvalStatusActivity = [];
-
-        for(let act of data) {
+        for(let act of dataIntersection) {
             if (!act.employee) {
                 continue; 
             }
 
-            console.log("A:", act.employee)
-
             const query = act.employee[0].kerberosId;
             let employeeObj = await employee.getIamRecordById(query);
             employeeObj = (new IamEmployeeObjectAccessor(employeeObj.res)).travelAppObject;
-            console.log("E:", employeeObj)
 
             if(act.action == 'Approved'){
-                let payload = {action: 'approved'};
+                let payload = {action: 'approve'};
                 result.approved = await approvalRequest.doApproverAction(approvalRequestObj, payload, employeeObj.kerberos);
+
                 if ( result.approved.error && result.approved.is400 ) {
-                    return console.error('Error when updating status to approved', result.approved)
+                    result.error = true;
+                    return
                 }
             }
 
             if(act.action == 'Not Approved'){
-                let payload = {action: 'denied'};
+                let payload = {action: 'deny'};
                 result.notApproved = await approvalRequest.doApproverAction(approvalRequestObj, payload, employeeObj.kerberos);
                 if ( result.notApproved.error && result.notApproved.is400 ) {
-                    return console.error('Error when updating status to not approved', result.notApproved)
+                    result.error = true;
+                    return
                 }
             }
 
             if(act.action == 'Canceled'){
-                let payload = {action: 'canceled'};
+                let payload = {action: 'cancel'};
                 result.canceled = await approvalRequest.doRequesterAction(approvalRequestObj, payload);
                 if ( result.canceled.error && result.canceled.is400 ) {
-                    return console.error('Error when updating status to canceled', result.canceled)
+                    result.error = true;
+                    return
                 }
             }
 
@@ -137,7 +175,8 @@ class Migration {
                 let payload = {action: 'approval-needed'};
                 result.pending = await approvalRequest.doApproverAction(approvalRequestObj, payload, employeeObj.kerberos);
                 if ( result.pending.error && result.pending.is400 ) {
-                    return console.error('Error when updating status to pending', result.pending)
+                    result.error = true;
+                    return
                 }
             }
 
@@ -145,7 +184,8 @@ class Migration {
                 let payload = {action: 'recall'};
                 result.resubmit = await approvalRequest.doRequesterAction(approvalRequestObj, payload);
                 if ( result.resubmit.error && result.resubmit.is400 ) {
-                    return console.error('Error when updating status to resubmit', result.resubmit)
+                    result.error = true;
+                    return
                 }
             }
         }
@@ -225,7 +265,7 @@ class Migration {
             const result = funded.filter((fund) => fund.funding_source_id == 1)[0];
             let obj = {
                 "fundingSourceId": result.funding_source_id,
-                "amount": row.approve_profdev_amount,
+                "amount": row.approve_profdev_amount ? row.approve_profdev_amount : 0,
                 "description": '',
                 "requireDescription": result.require_description
             }
@@ -238,7 +278,7 @@ class Migration {
             const result = funded.filter((fund) => fund.funding_source_id == 6)[0];
             let obj = {
                 "fundingSourceId": result.funding_source_id,
-                "amount": row.approve_admin_amount,
+                "amount": row.approve_admin_amount ? row.approve_admin_amount : 0,
                 "description": '',
                 "requireDescription": result.require_description
             }
@@ -252,7 +292,7 @@ class Migration {
             const result = funded.filter((fund) => fund.funding_source_id == 3)[0];
             let obj = {
                 "fundingSourceId": result.funding_source_id,
-                "amount": row.approve_grant_amount,
+                "amount": row.approve_grant_amount ? row.approve_grant_amount : 0,
                 "description": '',
                 "requireDescription": result.require_description
             }
@@ -265,7 +305,7 @@ class Migration {
             const result = funded.filter((fund) => fund.funding_source_id == 2)[0];
             let obj = {
                 "fundingSourceId": result.funding_source_id,
-                "amount": row.approve_lauc_amount,
+                "amount": row.approve_lauc_amount ? row.approve_lauc_amount : 0,
                 "description": '',
                 "requireDescription": result.require_description
             }
@@ -492,7 +532,6 @@ class Migration {
 
                 // Simple query to test the connection
                 const [rows] = await connection.query(sql);
-                
 
                 await connection.release();
                 return rows;                    
@@ -505,18 +544,10 @@ class Migration {
     // Create a connection to the MySQL and Postgres database
     async convertData(year='', single='') {
         const rows = await this.runMySQLQuery(year, single);
-        console.log(rows);
+        console.log("Some Errors have occured:\n\n", await this.insertIntoPostgresDatabase(rows));
 
-        // let row = rows[0];
-        await this.insertIntoPostgresDatabase(rows);
-
-        console.log('Insertion Completed!');
-
-
-
-        // await this.insertIntoPostgresDatabase(rows);
+        return;
     }
-
 
 }
 
