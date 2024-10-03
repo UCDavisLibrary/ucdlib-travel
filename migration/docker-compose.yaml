@@ -23,15 +23,19 @@ services:
       MYSQL_HOST: mysql
       MYSQL_PORT: 3306
       MYSQL_DATABASE: db_mysql
-      MYSQL_USER: user_mysql
+      MYSQL_USER: root
       MYSQL_PASSWORD: localhost
-      UCDLIB_PERSONNEL_API_USER: sa-travel
-      UCDLIB_PERSONNEL_API_KEY: aac3ca7bde75cd0d1df8472e47d14ce2
+      MYSQL_ROOT_PASSWORD: 'root_password'
+      UCDLIB_PERSONNEL_API_USER: ${UCDLIB_PERSONNEL_API_USER}
+      UCDLIB_PERSONNEL_API_KEY: ${UCDLIB_PERSONNEL_API_KEY}
     volumes:
       - ./src:/migration/src
       - ./index.js:/migration/index.js
+    # ports: 
+    #   - 5432:5432
     depends_on:
       - mysql
+    # command: ./wait-for-it.sh
     command: /app/lib/tail.sh
     #command: node run.js # Replace with your migration command
 

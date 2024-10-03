@@ -16,9 +16,7 @@ program.parse(process.argv);
 const options = program.opts();
 
 if (options.year || options.single) {
-    migration.convertData(options.year, options.single);
+  migration.convertData(options.year, options.single);
 } else{
-    migration.convertData();
+  migration.convertData();
 }
-
-
