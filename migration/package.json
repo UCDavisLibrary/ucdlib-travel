@@ -12,6 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "commander": "^12.1.0",
+    "loading-cli": "^1.1.2",
     "mysql": "^2.18.1",
     "mysql2": "^3.11.0",
     "pg": "^8.12.0"

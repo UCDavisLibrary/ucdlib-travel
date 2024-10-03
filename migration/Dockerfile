@@ -2,6 +2,7 @@
 FROM localhost/local-dev/ucdlib-travel:dev
 
 WORKDIR /app
+
 RUN cd /app && npm link
 ENV NODE_PATH /usr/local/lib/node_modules/
 WORKDIR /migration
@@ -11,11 +12,15 @@ WORKDIR /migration
 
 # Copy the package.json and package-lock.json files
 COPY package*.json ./
+# COPY wait-for-it.sh ./
+
+# RUN chmod +x ./wait-for-it.sh
+
 
 RUN npm install
 
 # Install the Node.js dependencies
-RUN npm link ucdlib-simple-spa-server
+RUN npm link @ucd-lib/travel-app-server
 
 # ARG MYSQL_HOST
 
