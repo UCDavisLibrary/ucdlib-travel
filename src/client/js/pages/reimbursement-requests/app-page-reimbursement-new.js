@@ -22,7 +22,8 @@ export default class AppPageReimbursementNew extends Mixin(LitElement)
       mileageRate: {state: true},
       expenseWarning: {state: true},
       approvedExpenses: {state: true},
-      otherTotalExpenses: {state: true}
+      otherTotalExpenses: {state: true},
+      receiptDescription: {state: true}
     }
   }
 
@@ -100,6 +101,7 @@ export default class AppPageReimbursementNew extends Mixin(LitElement)
     const mileageRate = typeTransform.toPositiveNumber(this.SettingsModel.getByKey('mileage_rate'));
     this.mileageRate = mileageRate ? mileageRate : 0;
     this.expenseWarning = this.SettingsModel.getByKey('reimbursement_form_exceed_message');
+    this.receiptDescription = this.SettingsModel.getByKey('reimbursement_form_receipts');
   }
 
   _onReimbursementRequestRequested(e){

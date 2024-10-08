@@ -21,6 +21,7 @@ return html`
         .approvedExpenses=${this.approvedExpenses}
         .otherTotalExpenses=${this.otherTotalExpenses}
         .netExpensesNegativeWarningMessage=${this.expenseWarning}
+        .receiptDescription=${this.receiptDescription}
         .hasTravel=${this.approvalRequest?.travelRequired ? true : false}>
       </reimbursement-form>
     </div>

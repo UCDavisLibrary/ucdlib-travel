@@ -231,6 +231,7 @@ export function render() {
 
       <fieldset class=${this.validationHandler.errorClass('receipts')}>
         <legend>Receipts</legend>
+        <div>${unsafeHTML(this.receiptDescription)}</div>
         <div>${this.validationHandler.renderErrorMessages('receipts', null, 'u-space-mb')}</div>
         <div class='flex flex--justify-end'>
           <a class='icon-link' @click=${() => this.addBlankReceipt()}>
