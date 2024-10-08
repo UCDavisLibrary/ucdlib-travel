@@ -137,7 +137,6 @@ export default class AppPageReimbursementNew extends Mixin(LitElement)
     return;
   }
 
-  // todo check reimbursement request status
   if ( !applicationOptions.reimbursementStatuses.filter(s => s.isActive).map(s => s.value).includes(approvalRequest.reimbursementStatus) ) {
     this.AppStateModel.showError('Cannot create reimbursement new request.');
     return;

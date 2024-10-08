@@ -142,6 +142,43 @@ export default class ReimbursementForm extends Mixin(LitElement)
 
   _onSubmit(e) {
     e.preventDefault();
+
+    // check if any receipts are missing
+    let receiptWarningHeader = '';
+    let receiptWarningMessage = '';
+    if ( !this.reimbursementRequest.receipts.length ) {
+      receiptWarningHeader = 'No Receipts';
+      receiptWarningMessage = 'You have not uploaded any receipts. Are you sure you want to submit your reimbursement request?';
+    }
+    if ( this.reimbursementRequest.receipts.find(r => {
+      const input = this.renderRoot.querySelector(`#reimbursement-form-receipt--${r.nonce}--file`);
+      if ( !input || !input.files.length ) return true;
+    })){
+      receiptWarningHeader = 'Receipts Missing';
+      receiptWarningMessage = 'You have not uploaded all receipts. Are you sure you want to submit your reimbursement request?';
+    }
+    if ( receiptWarningHeader ) {
+      this.AppStateModel.showDialogModal({
+        title: receiptWarningHeader,
+        content: receiptWarningMessage,
+        actions: [
+          {text: 'Submit Anyway', 'value': 'no-receipt-confirm', 'color': 'secondary'},
+          {text: 'Cancel', 'value': 'cancel', 'invert': true}
+        ]
+      })
+      return;
+    }
+
+    this.submit();
+  }
+
+  /**
+   * @description Callback for dialog-action AppStateModel event
+   * @param {Object} e - AppStateModel dialog-action event
+   * @returns
+   */
+  _onDialogAction(e){
+    if ( e.action !== 'no-receipt-confirm' ) return;
     this.submit();
   }
 
