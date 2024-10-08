@@ -361,6 +361,10 @@ class ReimbursementRequest {
   async create(data){
 
     data = this.entityFields.toDbObj(data);
+    const receiptExpenseIndex = (Array.isArray(data.receipts) ? data.receipts : []).map(r => {
+      if ( !r.expenseNonce ) return -1;
+      return data.expenses.findIndex(e => e.nonce === r.expenseNonce);
+    });
     data.expenses = this.expenseFields.toDbArray(Array.isArray(data.expenses) ?  data.expenses : []);
     data.receipts = this.receiptFields.toDbArray(Array.isArray(data.receipts) ?  data.receipts : []);
 
@@ -399,18 +403,21 @@ class ReimbursementRequest {
       reimbursementRequestId = res.rows[0].reimbursement_request_id;
 
       // insert expenses
+      const expenseIds = [];
       for ( const expense of expenses ){
         delete expense.reimbursement_request_expense_id;
         expense.reimbursement_request_id = reimbursementRequestId;
         const expenseData = pg.prepareObjectForInsert(expense);
-        const sql = `INSERT INTO reimbursement_request_expense (${expenseData.keysString}) VALUES (${expenseData.placeholdersString})`;
-        await client.query(sql, expenseData.values);
+        const sql = `INSERT INTO reimbursement_request_expense (${expenseData.keysString}) VALUES (${expenseData.placeholdersString}) RETURNING reimbursement_request_expense_id`;
+        const id = await client.query(sql, expenseData.values);
+        expenseIds.push(id.rows[0].reimbursement_request_expense_id);
       }
 
       // insert receipts
-      for ( const receipt of receipts ){
+      for ( const [i, receipt] of receipts.entries() ){
         delete receipt.reimbursement_request_receipt_id;
         receipt.reimbursement_request_id = reimbursementRequestId;
+        receipt.reimbursement_request_expense_id = expenseIds[receiptExpenseIndex[i]];
         const receiptData = pg.prepareObjectForInsert(receipt);
         const sql = `INSERT INTO reimbursement_request_receipt (${receiptData.keysString}) VALUES (${receiptData.placeholdersString})`;
         await client.query(sql, receiptData.values);

@@ -316,8 +316,19 @@ export function render() {
 
   `;}
 
+function renderExpenseReceiptLink(expense){
+  const receiptRecord = this.reimbursementRequest.receipts.find(r => r.expenseNonce === expense.nonce);
+  return html`
+    <a class='icon-link' @click=${() => this.goToExpenseReceipt(expense)}>
+      <i class="fa-solid fa-file-lines"></i>
+      <span>${receiptRecord ? 'View Receipt' : 'Upload Receipt'}</span>
+    </a>
+  `;
+}
+
 function renderReceiptForm(receipt){
   const nonce = receipt.nonce || receipt.reimbursementRequestReceiptId;
+  const expense = this.reimbursementRequest.expenses.find(e => e.nonce === receipt.expenseNonce);
   const idPrefix = `reimbursement-form-receipt--${nonce}`;
   return html`
     <div>
@@ -346,6 +357,9 @@ function renderReceiptForm(receipt){
           rows="4"
           @input=${e => this._setObjectProperty(receipt, 'description', e.target.value)}></textarea>
         <character-limit-tracker .value=${receipt.description} character-limit=500></character-limit-tracker>
+      </div>
+      <div ?hidden=${!expense}>
+        <a class='pointer' @click=${() => this.goToExpenseAmountInput(expense)}>Go to associated expense</a>
       </div>
     </div>
   `;
@@ -389,6 +403,7 @@ function renderDailyExpenseForm(expense){
           </div>
         </div>
       </div>
+      ${renderExpenseReceiptLink.call(this, expense)}
     </div>
 
     `;
@@ -429,6 +444,7 @@ function renderRegistrationFeeForm(expense){
         </div>
       </div>
     </div>
+    ${renderExpenseReceiptLink.call(this, expense)}
   `;
 }
 
@@ -448,19 +464,19 @@ function renderTransportationExpenseForm(expense){
     <div class='radio radio--horizontal'>
       <div>
         <input
-          id="${idPrefix}--${subCategory}--round-trip"
+          id="${idPrefix}--round-trip"
           type="radio"
           .checked=${!expense.details.oneWay}
           @input=${e => this._setObjectProperty(expense.details, 'oneWay', false)} />
-        <label for="${idPrefix}--${subCategory}--round-trip">Round Trip</label>
+        <label for="${idPrefix}--round-trip">Round Trip</label>
       </div>
       <div>
         <input
-          id="${idPrefix}--${subCategory}--one-way"
+          id="${idPrefix}--one-way"
           type="radio"
           .checked=${expense.details.oneWay}
           @input=${e => this._setObjectProperty(expense.details, 'oneWay', true)} />
-        <label for="${idPrefix}--${subCategory}--one-way">One Way</label>
+        <label for="${idPrefix}--one-way">One Way</label>
       </div>
     </div>
   `;
@@ -469,12 +485,12 @@ function renderTransportationExpenseForm(expense){
     <div class='l-2col'>
       <div class='l-first'>
         <div class='field-container'>
-          <label for="${idPrefix}--${subCategory}--from">
+          <label for="${idPrefix}--from">
             <span ?hidden=${subCategory !== 'private-car'}>From (Street Address) *</span>
             <span ?hidden=${subCategory === 'private-car'}>From *</span>
           </label>
           <input
-            id="${idPrefix}--${subCategory}--from"
+            id="${idPrefix}--from"
             type="text"
             .value=${expense.details.from || ''}
             @input=${e => this._setObjectProperty(expense.details, 'from', e.target.value)} />
@@ -482,12 +498,12 @@ function renderTransportationExpenseForm(expense){
       </div>
       <div class='l-second'>
         <div class='field-container'>
-          <label for="${idPrefix}--${subCategory}--to">
+          <label for="${idPrefix}--to">
             <span ?hidden=${subCategory !== 'private-car'}>To (Street Address) *</span>
             <span ?hidden=${subCategory === 'private-car'}>To *</span>
           </label>
           <input
-            id="${idPrefix}--${subCategory}--to"
+            id="${idPrefix}--to"
             type="text"
             .value=${expense.details.to || ''}
             @input=${e => this._setObjectProperty(expense.details, 'to', e.target.value)} />
@@ -498,10 +514,10 @@ function renderTransportationExpenseForm(expense){
 
   const amountField = html`
     <div class='field-container'>
-      <label for="${idPrefix}--${subCategory}--amount">Amount *</label>
+      <label for="${idPrefix}--amount">Amount *</label>
       <div class='amount input--dollar'>
         <input
-          id="${idPrefix}--${subCategory}--amount"
+          id="${idPrefix}--amount"
           type="number"
           step="0.01"
           .value=${expense.amount}
@@ -511,7 +527,7 @@ function renderTransportationExpenseForm(expense){
   `;
 
   if ( subCategory === 'private-car' ){
-    const milesId = `${idPrefix}--${subCategory}--estimated-miles`;
+    const milesId = `${idPrefix}--estimated-miles`;
     return html`
       <div>
         ${roundTripRadioButtons}
@@ -529,10 +545,10 @@ function renderTransportationExpenseForm(expense){
           </div>
           <div class='l-second'>
             <div class='field-container'>
-              <label for="${idPrefix}--${subCategory}--amount">Estimated Amount</label>
+              <label for="${idPrefix}--amount">Estimated Amount</label>
               <div class='amount input--dollar width-100'>
                 <input
-                  id="${idPrefix}--${subCategory}--amount"
+                  id="${idPrefix}--amount"
                   type="number"
                   step="0.01"
                   .value=${expense.amount}
@@ -541,6 +557,7 @@ function renderTransportationExpenseForm(expense){
             </div>
           </div>
         </div>
+        ${renderExpenseReceiptLink.call(this, expense)}
       </div>
     `;
   }
@@ -553,6 +570,7 @@ function renderTransportationExpenseForm(expense){
           ${roundTripRadioButtons}
           ${addressFields}
         </div>
+        ${renderExpenseReceiptLink.call(this, expense)}
       </div>
     `;
   }
@@ -565,6 +583,7 @@ function renderTransportationExpenseForm(expense){
           ${roundTripRadioButtons}
           ${addressFields}
         </div>
+        ${renderExpenseReceiptLink.call(this, expense)}
       </div>
     `;
   }
