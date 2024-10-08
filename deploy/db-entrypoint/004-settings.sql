@@ -209,6 +209,10 @@ INSERT INTO "settings" ("key", "value", "label", "description", "default_value",
 VALUES ('reimbursement_no_fund_transactions_message', '', 'No Fund Transactions Message', 'Displays in "Reimbursement Status" section of reimbursement request if there has been nothing entered into Aggie Expense.', 'No reimbursements have been entered into Aggie Expense yet. Please check back later.', '1', NULL, '200', 'textarea', '{admin-settings,reimbursement-requests}', '1');
 INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
 VALUES ('reimbursement_form_receipts', '', 'Reimbursement Request Receipts Description', 'Displays above receipt repeater field on new reimbursement request page', NULL, '0', NULL, '30', 'textarea', '{reimbursement-requests,admin-settings}', '0');
+INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
+VALUES ('reimbursement_form_label_options', '', 'Reimbursement Request Label Options', 'Populates "Label" select options on new reimbursement request.', 'Post-Trip Expenses
+Pre-Trip Expenses
+Other Expenses', '1', NULL, '30', 'textarea', '{reimbursement-requests,admin-settings}', '0');
 
 -- reports
 INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")

@@ -23,7 +23,8 @@ export default class AppPageReimbursementNew extends Mixin(LitElement)
       expenseWarning: {state: true},
       approvedExpenses: {state: true},
       otherTotalExpenses: {state: true},
-      receiptDescription: {state: true}
+      receiptDescription: {state: true},
+      labelOptions: {state: true},
     }
   }
 
@@ -36,7 +37,8 @@ export default class AppPageReimbursementNew extends Mixin(LitElement)
     this.mileageRate = 0;
     this.approvedExpenses = '0.00';
     this.otherTotalExpenses = '0.00';
-    this.expenseWarning = 'Hello World';
+    this.expenseWarning = '';
+    this.labelOptions = [];
 
     this.waitController = new WaitController(this);
 
@@ -102,6 +104,7 @@ export default class AppPageReimbursementNew extends Mixin(LitElement)
     this.mileageRate = mileageRate ? mileageRate : 0;
     this.expenseWarning = this.SettingsModel.getByKey('reimbursement_form_exceed_message');
     this.receiptDescription = this.SettingsModel.getByKey('reimbursement_form_receipts');
+    this.labelOptions = typeTransform.splitStringLines(this.SettingsModel.getByKey('reimbursement_form_label_options', []));
   }
 
   _onReimbursementRequestRequested(e){

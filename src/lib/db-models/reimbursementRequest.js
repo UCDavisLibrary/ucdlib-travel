@@ -29,7 +29,8 @@ class ReimbursementRequest {
       {
         dbName: 'label',
         jsonName: 'label',
-        charLimit: 100
+        charLimit: 100,
+        required: true
       },
       {
         dbName: 'employee_residence',

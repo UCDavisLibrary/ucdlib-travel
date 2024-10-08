@@ -9,15 +9,17 @@ export function render() {
   return html`
     <form @submit=${this._onSubmit} ${ref(this.form)}>
       <div class="field-container ${this.validationHandler.errorClass('label')}">
-        <label for="${idPrefix}--label">Request Title</label>
-        <input
-          id="${idPrefix}--label"
-          type="text"
-          .value=${this.reimbursementRequest.label || ''}
-          @input=${e => this._onInput('label', e.target.value)} />
-        <div class='small u-space-mt--small'>Not required, but helpful if you need to submit mutiple reimbursement requests.</div>
+        <label for="${idPrefix}--label">Request Title *</label>
+        <select id="${idPrefix}--label" @change=${e => this._onInput('label', e.target.value)} .value=${this.reimbursementRequest.label || ''}>
+          <option value="" ?selected=${!this.reimbursementRequest.label}>Select a title</option>
+          ${this.labelOptions.map(label => html`
+            <option
+              value="${label}"
+              ?selected=${this.reimbursementRequest.label === label}
+              >${label}</option>
+          `)}
+        </select>
         <div>${this.validationHandler.renderErrorMessages('label')}</div>
-        <character-limit-tracker .value=${this.reimbursementRequest.label} character-limit=100></character-limit-tracker>
       </div>
 
       <div class="field-container ${this.validationHandler.errorClass('employeeResidence')}">
