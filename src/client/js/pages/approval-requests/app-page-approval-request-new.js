@@ -187,6 +187,7 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
       delete ar.travelEndDate
     }
 
+    console.log('AP:', this.approvalRequest);
     this.ApprovalRequestModel.create(this.approvalRequest, true);
   }
 

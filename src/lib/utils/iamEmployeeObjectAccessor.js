@@ -26,7 +26,6 @@ export default class IamEmployeeObjectAccessor {
     } else {
       out.department = null;
     }
-
     return out;
   }
 
