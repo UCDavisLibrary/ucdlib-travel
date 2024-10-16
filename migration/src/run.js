@@ -53,6 +53,8 @@ class Migration {
 
         conn.end(); // Close the connection
 
+        console.log("Loading Started...");
+
         const loader = loading({
             "text":"Loading MySQL Rows",
             "color":"green",
@@ -60,7 +62,6 @@ class Migration {
             "stream": process.stdout,
             "frames": ["◐", "◓", "◑", "◒"]
         }).start();
-
 
         let errorList = [];
 
