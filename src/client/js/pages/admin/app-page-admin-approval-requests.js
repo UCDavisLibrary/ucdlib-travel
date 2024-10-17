@@ -153,21 +153,12 @@ export default class AppPageAdminApprovalRequests extends Mixin(LitElement)
   
       // Handle each result separately
       const employeeResult = resolvedPromises[0];
-      const approvalRequestResult = resolvedPromises[1];
   
       // Check if employees were loaded successfully
       if (employeeResult.status === 'fulfilled' && employeeResult.value.state === 'loaded') {
         // this.logger.debug('Employees loaded:', employeeResult.value.payload);
       } else {
         this.logger.debug('Failed to load employees:', employeeResult.reason || employeeResult.value);
-      }
-  
-      // Process approval requests
-      if (approvalRequestResult.status === 'fulfilled') {
-        this.approvalRequests = approvalRequestResult.value.data || [];
-        this.totalPages = approvalRequestResult.value.totalPages || 1;
-      } else {
-        this.logger.debug('Failed to load approval requests:', approvalRequestResult.reason);
       }
   
       return promiseUtils.flattenAllSettledResults(resolvedPromises);

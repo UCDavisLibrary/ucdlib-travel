@@ -19,8 +19,7 @@ class ApprovalRequestStore extends BaseStore {
       APPROVAL_REQUEST_DELETED: 'approval-request-deleted',
       APPROVAL_REQUEST_CREATED: 'approval-request-created',
       APPROVAL_REQUEST_CHAIN_FETCHED: 'approval-request-chain-fetched',
-      APPROVAL_REQUEST_STATUS_UPDATE: 'approval-request-status-update',
-      APPROVAL_REQUESTS_FILTERS_FETCHED: 'approval-requests-filters-fetched'
+      APPROVAL_REQUEST_STATUS_UPDATE: 'approval-request-status-update'
     };
   }
 
@@ -168,11 +167,6 @@ class ApprovalRequestStore extends BaseStore {
   _setApprovalRequestsFetchedState(state) {
     this.data.fetched[state.query] = state;
     this.emit(this.events.APPROVAL_REQUESTS_FETCHED, state);
-  }
-
-  _setApprovalRequestsFiltersFetchedState(state) {
-    this.data.filters = state;
-    this.emit(this.events.APPROVAL_REQUESTS_FILTERS_FETCHED, state);
   }
 
 }

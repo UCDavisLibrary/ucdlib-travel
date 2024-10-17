@@ -234,8 +234,9 @@ class Employee {
    * @description Get all users in the database
   */
   async getAllEmployeesInDB(){
-    const res = await pg.pool.query('SELECT * FROM employee');
-    return res;
+    const res = await pg.query('SELECT * FROM employee');
+
+    return res.res;
   };
 
 }
