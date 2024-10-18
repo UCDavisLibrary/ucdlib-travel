@@ -135,7 +135,7 @@ export default (api) => {
   api.delete('/approval-request/:id', protect('hasBasicAccess'), async (req, res) => {
 
     // try to delete draft
-    const result = await approvalRequest.deleteDraft(req.params.id, req.auth.token.id);
+    const result = await approvalRequest.deleteDraft(req.params.id, req.auth.token.id, true);
 
     // handle errors
     if ( result.error && result.is400 ) {

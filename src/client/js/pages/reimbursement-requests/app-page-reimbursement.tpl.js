@@ -146,7 +146,7 @@ function renderStatusSection() {
                     <option value='' disabled>Select a funding source</option>
                     ${(this.approvalRequest?.fundingSources || []).map(source => html`
                       <option
-                        .value=${source.fundingSourceId}
+                        .value=${source.approvalRequestFundingSourceId}
                         ?selected=${this.statusFormData?.approvalRequestFundingSourceId === source.approvalRequestFundingSourceId}
                         >${source.fundingSourceLabel}</option>
                       `)}

@@ -655,7 +655,7 @@ class ApprovalRequest {
    * if included, will be used to check if user is approval request owner
    * @returns {Object} - {success: true} or {error: true||errorobject, message: 'error message'}
    */
-  async deleteDraft(approvalRequestId, authorizeAgainstKerberos){
+  async deleteDraft(approvalRequestId, authorizeAgainstKerberos, cancelIfNotDraft){
 
     // cast to positive integer, return 400 if invalid
     approvalRequestId = typeTransform.toPositiveInt(approvalRequestId);
@@ -675,6 +675,14 @@ class ApprovalRequest {
 
     // check if any records are not in draft status
     const hasNonDraft = existingRecords.data.some(r => r.approvalStatus !== 'draft');
+
+    // try to cancel request
+    if ( hasNonDraft && cancelIfNotDraft ){
+      const r = this.doRequesterAction(approvalRequestId, {action: 'cancel'});
+      if ( r.error ) return r;
+      return {success: true, approvalRequestId};
+    }
+
     if ( hasNonDraft ) return {error: true, message: 'Cannot delete approval request with non-draft status', is400: true};
 
     const revisionIds = existingRecords.data.map(r => r.approvalRequestRevisionId);
