@@ -1,5 +1,9 @@
 app-page-approval-request {
 
+  .l-content section {
+    margin-bottom: 2.5rem;
+  }
+
   .activity-history {
 
     .action:first-child {
@@ -65,8 +69,6 @@ app-page-approval-request {
 
   #approval-request--reimbursement-requests {
 
-    margin-bottom: 1rem;
-
     .row {
       padding: 1rem 0;
       border-bottom: 1px solid #b0d0ed;
@@ -76,6 +78,7 @@ app-page-approval-request {
         font-weight: 700;
         color: #022851;
         border-bottom: 2px dotted #ffbf00;
+        padding-top: 0;
       }
 
       .reimbursement-amount__label {

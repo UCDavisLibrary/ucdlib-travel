@@ -47,6 +47,10 @@ class ApprovalRequest {
         customValidation: this.validations.reimbursementStatus.bind(this.validations)
       },
       {
+        dbName: 'expect_more_reimbursement',
+        jsonName: 'expectMoreReimbursement'
+      },
+      {
         dbName: 'employee_kerberos',
         jsonName: 'employeeKerberos'
       },

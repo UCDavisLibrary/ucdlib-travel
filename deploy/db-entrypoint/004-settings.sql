@@ -34,6 +34,12 @@ VALUES ('allocation_summary_description', '', 'Allocation Summary Description', 
 INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
 VALUES ('approval_request_form_release_time', '', 'Release Time - Description', 'Displays below release time input on approval request form', NULL, '0', NULL, '10', 'textarea', '{approval-requests,admin-settings}', '0');
 
+INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
+VALUES ('approval_request_more_reimbursement_description', '', 'More Reimbursement Description', 'Shows in reimbursement section of approval request when all reimbursements have been processed, but employee has indicated that more requests are forthcoming', 'Even though all reimbursement requests have been fully processed, the overall reimbursement status for this trip/professional development opportunity is still "partially processed" because the employee indicated that more reimbursement requests are forthcoming.', '1', NULL, '10', 'textarea', '{approval-requests,admin-settings}', '1');
+
+INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
+VALUES ('approval_request_more_reimbursement_action', '', 'More Reimbursement Action', 'Shows in reimbursement section of approval request when all reimbursements have been processed, but employee has indicated that more requests are forthcoming', 'Change overall status to "fully reimbursed"', '1', NULL, '10', 'textarea', '{approval-requests,admin-settings}', '0');
+
 -- admin line items page
 INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
 VALUES ('admin_line_items_description', '', 'Admin - Line Items Description', 'Displays on top of line item admin settings page', 'Requesters will be able to select and assign monetary values to the following line items when submitting an approval form', '1', NULL, '100', 'textarea', '{admin-line-items,admin-settings}', '1');

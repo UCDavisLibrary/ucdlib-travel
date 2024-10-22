@@ -129,6 +129,10 @@ class ReimbursementRequest {
         validateType: 'integer'
       },
       {
+        dbName: 'reimbursement_request_expense_id',
+        jsonName: 'reimbursementRequestExpenseId'
+      },
+      {
         dbName: 'file_path',
         jsonName: 'filePath',
         required: true,
@@ -361,6 +365,7 @@ class ReimbursementRequest {
    */
   async create(data){
 
+    const expectMoreReimbursement = data.expectMoreReimbursement ? true : false;
     data = this.entityFields.toDbObj(data);
     const receiptExpenseIndex = (Array.isArray(data.receipts) ? data.receipts : []).map(r => {
       if ( !r.expenseNonce ) return -1;
@@ -425,6 +430,8 @@ class ReimbursementRequest {
       }
 
       // set overall reimbursement status on approval request
+      sql = 'UPDATE approval_request SET expect_more_reimbursement = $1 WHERE approval_request_revision_id = $2';
+      await client.query(sql, [expectMoreReimbursement, approvalRequestRevisionId]);
       await this._updateApprovalRequestReimbursementStatus(client, reimbursementRequestId);
 
       // insert into approval request activity
@@ -700,21 +707,21 @@ class ReimbursementRequest {
 
     sql = `SELECT status FROM reimbursement_request WHERE approval_request_id = $1`;
     res = await client.query(sql, [approvalRequestId]);
-
     const statuses = res.rows.map(r => r.status);
+
+    sql = `SELECT expect_more_reimbursement FROM approval_request WHERE approval_request_id = $1 AND is_current = true`;
+    res = await client.query(sql, [approvalRequestId]);
+    const expectMoreReimbursement = res.rows?.[0].expect_more_reimbursement;
+
     let overallStatus;
-    if ( statuses.includes('partially-reimbursed') ){
-      overallStatus = 'partially-reimbursed';
-    } else if ( statuses.every(s => s === 'fully-reimbursed') ){
-      overallStatus = 'fully-reimbursed';
-    } else if ( statuses.includes('fully-reimbursed') ){
-      overallStatus = 'partially-reimbursed';
+    if( !statuses.length ){
+      overallStatus = 'not-submitted';
     } else if(statuses.every(s => s === 'submitted')){
       overallStatus = 'submitted';
-    } else if( !statuses.length ){
-      overallStatus = 'not-submitted';
+    } else if ( expectMoreReimbursement ){
+      overallStatus = 'partially-reimbursed';
     } else {
-      overallStatus = 'reimbursement-pending';
+      overallStatus = 'fully-reimbursed';
     }
 
     sql = `UPDATE approval_request SET reimbursement_status = $1 WHERE approval_request_id = $2 AND is_current = true`;
@@ -730,19 +737,12 @@ class ReimbursementRequest {
     let sql = `SELECT reimbursement_status FROM reimbursement_request_fund WHERE reimbursement_request_id = $1`;
     let res = await client.query(sql, [reimbursementRequestId]);
 
-
     const statuses = res.rows.map(r => r.reimbursement_status);
-    let overallStatus;
-    if ( statuses.includes('partially-reimbursed') ){
-      overallStatus = 'partially-reimbursed';
-    } else if ( statuses.every(s => s === 'fully-reimbursed') ){
-      overallStatus = 'fully-reimbursed';
-    } else if ( statuses.includes('fully-reimbursed') ){
-      overallStatus = 'partially-reimbursed';
-    } else if(statuses.every(s => s === 'cancelled')){
+    let overallStatus = 'submitted';
+    if(statuses.every(s => s === 'cancelled')){
       overallStatus = 'submitted';
-    } else {
-      overallStatus = 'reimbursement-pending';
+    } else if ( statuses.includes('submitted') ){
+      overallStatus = 'fully-reimbursed';
     }
 
     sql = `UPDATE reimbursement_request SET status = $1 WHERE reimbursement_request_id = $2`;

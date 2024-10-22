@@ -307,6 +307,17 @@ export function render() {
         <character-limit-tracker .value=${this.reimbursementRequest.comments} character-limit=500></character-limit-tracker>
       </div>
 
+      <div class='field-container'>
+        <div class='checkbox'>
+          <input
+            id="${idPrefix}--more-reimbursement"
+            type="checkbox"
+            .checked=${this.reimbursementRequest.expectMoreReimbursement}
+            @change=${() => this._onInput('expectMoreReimbursement', !this.reimbursementRequest.expectMoreReimbursement)} />
+          <label for="${idPrefix}--more-reimbursement" class='bold'>Do you intend to submit more reimbursement requests for this trip/professional development opportunity? </label>
+        </div>
+      </div>
+
       <div class='form-buttons alignable-promo__buttons'>
         <button
           type="submit"

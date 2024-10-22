@@ -120,6 +120,8 @@ export default class ReimbursementForm extends Mixin(LitElement)
         this.validationHandler = new ValidationHandler(e);
         this.requestUpdate();
         this.AppStateModel.showToast({message: 'Error when submitting your reimbursement request. Form data needs fixing.', type: 'error'});
+      } else if ( e.error?.response?.status === 403 ) {
+        this.AppStateModel.showToast({message: 'You are not authorized to submit this reimbursement request', type: 'error'});
       } else {
         this.AppStateModel.showToast({message: 'An unknown error occurred when submitting your approval request', type: 'error'});
       }
