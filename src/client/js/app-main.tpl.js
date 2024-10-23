@@ -23,6 +23,7 @@ return html`
       ?hidden=${!this.AuthModel.getToken().hasAdminAccess}
       >
       <a href="/admin/approvers">Approvers and Funding Sources</a>
+      <a href="/admin/approval-requests">Approval Requests</a>
       <a href="/admin/reimbursement">Reimbursement Requests</a>
       <a href="/admin/allocations">Employee Allocations</a>
       <a href="/admin/settings">General Settings</a>
@@ -55,6 +56,7 @@ return html`
     <app-page-admin-settings id='admin-settings'></app-page-admin-settings>
     <app-page-admin-allocations id='admin-allocations'></app-page-admin-allocations>
     <app-page-admin-allocations-new id='admin-allocations-new'></app-page-admin-allocations-new>
+    <app-page-admin-approval-requests id='admin-approval-requests'></app-page-admin-approval-requests>
     <app-page-admin-line-items id='admin-line-items'></app-page-admin-line-items>
     <app-page-admin-email-settings id='admin-email-settings'></app-page-admin-email-settings>
     <app-page-admin-reimbursement id='admin-reimbursement'></app-page-admin-reimbursement>

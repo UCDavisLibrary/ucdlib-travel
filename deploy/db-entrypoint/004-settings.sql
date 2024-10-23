@@ -69,6 +69,8 @@ INSERT INTO "settings" ("key", "value", "label", "description", "default_value",
 VALUES ('admin_allocations_general_settings_page_description', '', 'Admin - Employee Allocations General Settings Page Description', NULL, 'Manage form field help text and other general settings.', '1', NULL, '100', 'textarea', '{admin-page,admin-settings}', '0');
 INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
 VALUES ('admin_allocations_line_items_page_description', '', 'Admin - Employee Allocations Line Items Page Description', NULL, 'Manage expenditure line item options when submitting an approval request.', '1', NULL, '100', 'textarea', '{admin-page,admin-settings}', '0');
+INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
+VALUES ('admin_approval_requests_page_description', '', 'Admin - Approval Requests Page Description', NULL, 'View and manage all approval requests.', '1', NULL, '100', 'textarea', '{admin-page,admin-settings}', '0');
 
 -- admin email settings
 INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html") VALUES
