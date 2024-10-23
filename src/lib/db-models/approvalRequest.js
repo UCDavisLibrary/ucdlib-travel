@@ -3,6 +3,7 @@ import pg from "./pg.js";
 import validations from "./approvalRequestValidations.js";
 import employeeModel from "./employee.js";
 import fundingSourceModel from "./fundingSource.js"
+import reimbursementRequestModel from "./reimbursementRequest.js";
 
 import EntityFields from "../utils/EntityFields.js";
 import typeTransform from "../utils/typeTransform.js";
@@ -1385,6 +1386,47 @@ class ApprovalRequest {
       return r;
     });
 
+  }
+
+  /**
+   * @description Toggle the more reimbursement flag on an approval request, and possibly update its overall reimbursement status
+   * @param {*} approvalRequestObjectOrId - approval request object or ID
+   * @returns
+   */
+  async toggleMoreReimbursement(approvalRequestObjectOrId){
+    const { approvalRequest, approvalRequestError, approvalRequestId } = await this._getApprovalRequest(approvalRequestObjectOrId);
+    if ( approvalRequestError ) return approvalRequestError;
+
+    const approvalRequestRevisionId = approvalRequest.approvalRequestRevisionId;
+    const client = await pg.pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      let data, sql;
+
+      // update approval request status
+      data = {
+        expect_more_reimbursement: !approvalRequest.expectMoreReimbursement
+      };
+      const updateClause = pg.toUpdateClause(data);
+      sql = `
+        UPDATE approval_request
+        SET ${updateClause.sql}
+        WHERE approval_request_revision_id = $${updateClause.values.length + 1}
+      `;
+
+      await client.query(sql, [...updateClause.values, approvalRequestRevisionId]);
+      await reimbursementRequestModel._updateApprovalRequestReimbursementStatus(client, null, approvalRequestId);
+
+      await client.query('COMMIT');
+    } catch (e) {
+      await client.query('ROLLBACK');
+      return {error: e};
+    } finally {
+      client.release();
+    }
+
+    return {success: true, approvalRequestId, approvalRequestRevisionId};
   }
 
   /**

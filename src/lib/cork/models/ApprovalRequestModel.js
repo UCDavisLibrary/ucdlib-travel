@@ -56,6 +56,20 @@ class ApprovalRequestModel extends BaseModel {
   }
 
   /**
+   * @description Toggle the more reimbursement flag for an approval request
+   * @param {Number} approvalRequestId - id of approval request to toggle
+   * @returns
+   */
+  async moreReimbursementToggle(approvalRequestId) {
+    const r = await this.service.moreReimbursementToggle(approvalRequestId);
+    if ( r.state === 'loaded' ){
+      this.clearCache();
+      this.EmployeeAllocationModel.store.clearCache();
+    }
+    return r;
+  }
+
+  /**
    * @description Delete an approval request by id - must have always been in a draft state
    * @param {String} approvalRequestId - id of approval request to delete
    */

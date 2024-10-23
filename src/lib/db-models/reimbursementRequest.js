@@ -700,11 +700,13 @@ class ReimbursementRequest {
    * @param {*} client - pg client
    * @param {Number} reimbursementRequestId - the id of the reimbursement request
    */
-  async _updateApprovalRequestReimbursementStatus(client, reimbursementRequestId){
-    let sql = `SELECT approval_request_id FROM reimbursement_request WHERE reimbursement_request_id = $1`;
-    let res = await client.query(sql, [reimbursementRequestId]);
-    const approvalRequestId = res.rows[0].approval_request_id;
-
+  async _updateApprovalRequestReimbursementStatus(client, reimbursementRequestId, approvalRequestId){
+    let sql, res;
+    if ( !approvalRequestId ){
+      sql = `SELECT approval_request_id FROM reimbursement_request WHERE reimbursement_request_id = $1`;
+      res = await client.query(sql, [reimbursementRequestId]);
+      approvalRequestId = res.rows[0].approval_request_id;
+    }
     sql = `SELECT status FROM reimbursement_request WHERE approval_request_id = $1`;
     res = await client.query(sql, [approvalRequestId]);
     const statuses = res.rows.map(r => r.status);

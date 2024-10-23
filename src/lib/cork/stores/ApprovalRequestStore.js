@@ -1,4 +1,4 @@
-import {BaseStore} from '@ucd-lib/cork-app-utils';
+import {BaseStore, LruStore} from '@ucd-lib/cork-app-utils';
 
 class ApprovalRequestStore extends BaseStore {
 
@@ -10,7 +10,8 @@ class ApprovalRequestStore extends BaseStore {
       deleted: {},
       created: {},
       approvalChainByRequestId: {},
-      statusUpdate: {}
+      statusUpdate: {},
+      moreReimbursementToggle: new LruStore({name: 'approval-request.more-reimbursement-toggle'}),
 
     };
     this.events = {

@@ -123,15 +123,16 @@ return html`
             <div ?hidden=${!this._showReimbursementStatusWarning}>
               <div class='alert u-space-mt--large'>
                 ${unsafeHTML(this.SettingsModel.getByKey('approval_request_more_reimbursement_description'))}
-                <div class='bold u-space-mt--small'><a>${this.SettingsModel.getByKey('approval_request_more_reimbursement_action')}</a></div>
-
+                <div class='bold u-space-mt--small'>
+                  <a class='pointer' @click=${() => this._onReimbursementWarningClick()}>${this.SettingsModel.getByKey('approval_request_more_reimbursement_action')}</a>
+                </div>
               </div>
-
             </div>
           </div>
           <div ?hidden=${this.reimbursementRequests.length} class='u-space-mb'>
-            <div>No reimbursement requests have been submitted. <a href='/approval-request/new-reimbursement/${this.approvalRequestId}'>Submit one now.</a></div>
+            <div>No reimbursement requests have been submitted.</div>
           </div>
+          <div class='bold u-space-mt--large'><a href='/approval-request/new-reimbursement/${this.approvalRequestId}'>Submit a new reimbursement request</a></div>
         </section>
 
         <section class='activity-history'>
