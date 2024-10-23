@@ -49,8 +49,8 @@ export function render() {
  */
 function renderFilters() {
   return html`
-    <div class='allocations-filters l-2col'>
-      <div class='l-first'>
+    <div class='allocations-filters l-2col l-gap--1rem'>
+      <div class='l-first container-type--normal'>
         <div class='field-container'>
           <label>Approval Request Status</label>
           <ucd-theme-slim-select @change=${e => this._onFilterChange(e.detail, 'selectedApprovalRequestFilters')}>
@@ -66,7 +66,7 @@ function renderFilters() {
           </ucd-theme-slim-select>
         </div>
       </div>
-      <div class='l-second'>
+      <div class='l-second container-type--normal u-space-mt--flush'>
         <div class='field-container'>
           <label>Employee</label> <!-- Changed label to Employee -->
           <ucd-theme-slim-select @change=${e => this._onFilterChange(e.detail, 'selectedEmployeeFilters')}>
@@ -75,7 +75,7 @@ function renderFilters() {
                 <option
                   value=${s.kerberos}
                   ?selected=${this.selectedEmployeeFilters.includes(s.kerberos)}
-                  >${s.first_name} ${s.last_name}
+                  >${s.firstName} ${s.lastName}
                 </option>
               `)}
             </select>

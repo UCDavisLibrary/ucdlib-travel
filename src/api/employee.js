@@ -93,14 +93,14 @@ export default (api) => {
    * @description Get all users in the database
    */
   api.get('/employees', protect('hasAdminAccess'), async (req, res) => {
-    const apiResult = await employee.getAllEmployeesInDB();
+    const apiResult = await employee.get();
 
     if ( apiResult.error ) {
       console.error(apiResult.error);
       return res.status(500).json({error: true, message: 'Error querying employee data.'});
     }
 
-    res.json(apiResult.rows);
+    res.json(apiResult);
   });
 
 }

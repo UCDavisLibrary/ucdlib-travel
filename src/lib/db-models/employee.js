@@ -271,15 +271,6 @@ class Employee {
     return returnSingle ? {res: recordsById[ids[0]]} : {res: ids.map(id => recordsById[id]).filter(record => record)};
   }
 
-  /**
-   * @description Get all users in the database
-  */
-  async getAllEmployeesInDB(){
-    const res = await pg.query('SELECT * FROM employee');
-
-    return res.res;
-  };
-
 }
 
 export default new Employee();

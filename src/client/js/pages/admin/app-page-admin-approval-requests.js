@@ -52,18 +52,6 @@ export default class AppPageAdminApprovalRequests extends Mixin(LitElement)
     this._injectModel('AppStateModel', 'ApprovalRequestModel', 'AuthModel', 'EmployeeModel');
   }
 
-
-  /**
-   * connectedCallback lifecycle method
-   * This is where we trigger employee fetch once the component is added to the DOM
-   */
-  connectedCallback() {
-    super.connectedCallback();
-    // Explicitly trigger the employee fetch
-    this.EmployeeModel.getAllEmployees();
-  }
-
-
   /**
    * Reset selected filters to default values
    */
@@ -132,7 +120,6 @@ export default class AppPageAdminApprovalRequests extends Mixin(LitElement)
       this._updateEmployeeList(e.payload);  // Update employee list without directly setting state
     } else if (e.state === 'error') {
       this.logger.debug('Error loading employees:', e.error);
-      this._showError(e.error);  // Show error message or handle error
     }
   }
 
@@ -159,7 +146,8 @@ async getPageData() {
     };
 
     const promises = [
-      this.ApprovalRequestModel.query(queryObject)  // Fetch approval requests
+      this.ApprovalRequestModel.query(queryObject),  // Fetch approval requests
+      this.EmployeeModel.getAllEmployees()  // Fetch all employees
     ];
 
     const resolvedPromises = await Promise.allSettled(promises);
