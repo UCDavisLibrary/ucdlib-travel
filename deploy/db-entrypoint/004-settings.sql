@@ -8,7 +8,7 @@ INSERT INTO "settings" ("key", "value", "label", "description", "default_value",
 VALUES ('approval_request_form_location_in-state', '', 'Location: In-state desciption', 'Description below the in-state option of the location radio on the approval request form', NULL, '0', NULL, '10', 'textarea', '{approval-requests,admin-settings}', '1');
 
 INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
-VALUES ('approval_request_form_location_out-of-state', '', 'Location: Out of State Description', 'Description below the out-of-state option of the location radio on the approval request form', 'IMPORTANT: All out-of-state trips must be registered using the <a href=''https://ehs.ucop.edu/away/''>UC Away form</a>.', '1', NULL, '10', 'textarea', '{approval-requests,admin-settings}', '1');
+VALUES ('approval_request_form_location_out-of-state', '', 'Location: Out of State Description', 'Description below the out-of-state option of the location radio on the approval request form', '', '0', NULL, '10', 'textarea', '{approval-requests,admin-settings}', '1');
 
 INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
 VALUES ('approval_request_form_location_virtual', '', 'Location: Virtual desciption', 'Description below the virtual option of the location radio on the approval request form', NULL, '0', NULL, '10', 'textarea', '{approval-requests,admin-settings}', '1');
@@ -39,6 +39,14 @@ VALUES ('approval_request_more_reimbursement_description', '', 'More Reimburseme
 
 INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
 VALUES ('approval_request_more_reimbursement_action', '', 'More Reimbursement Action', 'Shows in reimbursement section of approval request when all reimbursements have been processed, but employee has indicated that more requests are forthcoming', 'Change overall status to "fully reimbursed"', '1', NULL, '10', 'textarea', '{approval-requests,admin-settings}', '0');
+
+INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
+VALUES ('approval_request_form_business_purpose', '', 'Business Purpose Description', 'Displayed below the business purpose input on the new approval request form', 'Business purpose must describe how the expense benefits you, as well as how it benefits the university.', '1', NULL, '10', 'textarea', '{approval-requests,admin-settings}', '1');
+
+
+
+INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
+VALUES ('approval_request_form_location_description', '', 'Location: Overall Description', 'Displays below location section header on new approval request form', 'IMPORTANT: All out-of-state trips must be registered using the <a href=''https://ehs.ucop.edu/away/''>UC Away form</a>.', '1', NULL, '10', 'textarea', '{approval-requests,admin-settings}', '1');
 
 -- admin line items page
 INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
