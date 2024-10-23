@@ -43,7 +43,20 @@ export function render() {
     <form @submit=${this._onFormSubmit}>
       <fieldset>
         <legend>Allocation</legend>
-        <div class="l-2col">
+        <div class="field-container ${this.validationHandler.errorClass('startDate')}">
+          <label for="${page}--from">Fiscal Year <abbr title="Required">*</abbr></label>
+          <select @input=${(e) => this._setFiscalYear(e.target.value)} .value=${this._selectedFiscalYear.startYear}>
+            ${this._fiscalYears.map(fiscalYear => html`
+              <option
+                value=${fiscalYear.startYear}
+                ?selected=${this._selectedFiscalYear.startYear === fiscalYear.startYear}
+                >
+                ${fiscalYear.label}
+              </option>
+              `)}
+          </select>
+        </div>
+        <div class="l-2col" hidden>
           <div class="l-first">
             <div class="field-container ${this.validationHandler.errorClass('startDate')}">
               <label for="${page}--from">From <abbr title="Required">*</abbr></label>
@@ -108,6 +121,19 @@ export function render() {
       <fieldset class='${this.validationHandler.errorClass('employees')}'>
         <legend>Employees</legend>
         <div>${this.validationHandler.renderErrorMessages('employees')}</div>
+        <div ?hidden=${!this.isDuplicateAllocation()}>
+          <div class='field-container u-space-mt'>
+            <div class='checkbox'>
+              <input
+                type='checkbox'
+                id='${this.id}--duplicate-allocation'
+                @change=${() => this.allowDuplicateAllocations = !this.allowDuplicateAllocations}
+                .checked=${this.allowDuplicateAllocations ? true : false}
+                />
+              <label for='${this.id}--duplicate-allocation' style='color:#4c4c4c;'>Allow duplicate allocations</label>
+            </div>
+          </div>
+        </div>
         <div ?hidden=${this.employees.length > 0}>
           <p>No employees selected. Use search form to add employees to this list.</p>
         </div>

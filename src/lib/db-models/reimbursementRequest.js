@@ -1,11 +1,13 @@
 import pg from "./pg.js";
 
 import validations from "./reimbursementRequestValidations.js";
-import FundTransactionValidations from "./fundTransactionValidations.js";
+import FundTransactionValidations from "./FundTransactionValidations.js";
 import EntityFields from "../utils/EntityFields.js";
 import objectUtils from "../utils/objectUtils.js";
 import employeeModel from "./employee.js";
 import typeTransform from "../utils/typeTransform.js";
+import emailController from "./emailController.js";
+import fiscalYearUtils from "../utils/fiscalYearUtils.js";
 
 class ReimbursementRequest {
   constructor(){
@@ -27,7 +29,8 @@ class ReimbursementRequest {
       {
         dbName: 'label',
         jsonName: 'label',
-        charLimit: 100
+        charLimit: 100,
+        required: true
       },
       {
         dbName: 'employee_residence',
@@ -124,6 +127,10 @@ class ReimbursementRequest {
         dbName: 'reimbursement_request_id',
         jsonName: 'reimbursementRequestId',
         validateType: 'integer'
+      },
+      {
+        dbName: 'reimbursement_request_expense_id',
+        jsonName: 'reimbursementRequestExpenseId'
       },
       {
         dbName: 'file_path',
@@ -320,6 +327,35 @@ class ReimbursementRequest {
   }
 
   /**
+   * @description add the notification to the notification table
+   * @param {Number} approvalRequestRevisionId - approval request ID
+   * @param {Number} reimbursementRequestId - reimbursement request ID
+   * @param {String} kerb - kerberos
+   * @param {String} action - action object
+   * @returns
+   */
+   async addNotification(approvalRequestRevisionId, reimbursementRequestId, kerb, action){
+    // get max approver order
+    let sql = `SELECT MAX(approver_order) as max_order FROM approval_request_approval_chain_link WHERE approval_request_revision_id = $1`;
+    const maxOrderResApprover = await pg.query(sql, [approvalRequestRevisionId]);
+    const maxOrderApprover = maxOrderResApprover.res.rows[0].max_order || 0;
+
+
+    // insert submission to approval status activity table
+    let notification = {
+      approval_request_revision_id: approvalRequestRevisionId,
+      approver_order: maxOrderApprover + 1,
+      action: action,
+      employee_kerberos: kerb,
+      reimbursement_request_id: reimbursementRequestId
+    }
+    notification = pg.prepareObjectForInsert(notification);
+    sql = `INSERT INTO approval_request_approval_chain_link (${notification.keysString}) VALUES (${notification.placeholdersString}) RETURNING approval_request_approval_chain_link_id`;
+    await pg.query(sql, notification.values);
+  }
+
+
+  /**
    * @description Create a reimbursement request
    * @param {Object} data - reimbursement request data. See this.entityFields for field names
    * @returns {Object} - returns an object with the following properties:
@@ -329,7 +365,12 @@ class ReimbursementRequest {
    */
   async create(data){
 
+    const expectMoreReimbursement = data.expectMoreReimbursement ? true : false;
     data = this.entityFields.toDbObj(data);
+    const receiptExpenseIndex = (Array.isArray(data.receipts) ? data.receipts : []).map(r => {
+      if ( !r.expenseNonce ) return -1;
+      return data.expenses.findIndex(e => e.nonce === r.expenseNonce);
+    });
     data.expenses = this.expenseFields.toDbArray(Array.isArray(data.expenses) ?  data.expenses : []);
     data.receipts = this.receiptFields.toDbArray(Array.isArray(data.receipts) ?  data.receipts : []);
 
@@ -368,24 +409,29 @@ class ReimbursementRequest {
       reimbursementRequestId = res.rows[0].reimbursement_request_id;
 
       // insert expenses
+      const expenseIds = [];
       for ( const expense of expenses ){
         delete expense.reimbursement_request_expense_id;
         expense.reimbursement_request_id = reimbursementRequestId;
         const expenseData = pg.prepareObjectForInsert(expense);
-        const sql = `INSERT INTO reimbursement_request_expense (${expenseData.keysString}) VALUES (${expenseData.placeholdersString})`;
-        await client.query(sql, expenseData.values);
+        const sql = `INSERT INTO reimbursement_request_expense (${expenseData.keysString}) VALUES (${expenseData.placeholdersString}) RETURNING reimbursement_request_expense_id`;
+        const id = await client.query(sql, expenseData.values);
+        expenseIds.push(id.rows[0].reimbursement_request_expense_id);
       }
 
       // insert receipts
-      for ( const receipt of receipts ){
+      for ( const [i, receipt] of receipts.entries() ){
         delete receipt.reimbursement_request_receipt_id;
         receipt.reimbursement_request_id = reimbursementRequestId;
+        receipt.reimbursement_request_expense_id = expenseIds[receiptExpenseIndex[i]];
         const receiptData = pg.prepareObjectForInsert(receipt);
         const sql = `INSERT INTO reimbursement_request_receipt (${receiptData.keysString}) VALUES (${receiptData.placeholdersString})`;
         await client.query(sql, receiptData.values);
       }
 
       // set overall reimbursement status on approval request
+      sql = 'UPDATE approval_request SET expect_more_reimbursement = $1 WHERE approval_request_revision_id = $2';
+      await client.query(sql, [expectMoreReimbursement, approvalRequestRevisionId]);
       await this._updateApprovalRequestReimbursementStatus(client, reimbursementRequestId);
 
       // insert into approval request activity
@@ -424,10 +470,43 @@ class ReimbursementRequest {
     } finally {
       client.release();
     }
-
     if ( out.error ) return out;
+    out = {success: true, reimbursementRequestId};
 
-    return {success: true, reimbursementRequestId};
+    // send notification and add to approval request activity table
+    // fail silently if there is an error
+    const notificationErrorMessage = 'Error sending notification';
+
+    let rr = await this.get({reimbursementRequestIds: [reimbursementRequestId]});
+    if (rr.error){
+      console.error(notificationErrorMessage, rr);
+      return out;
+    }
+
+    let approvalRequestData = await pg.query('SELECT * FROM approval_request WHERE approval_request_id = $1 AND is_current = true', [data.approval_request_id]);
+    if (approvalRequestData.error || !approvalRequestData.res.rows.length){
+      console.error(notificationErrorMessage, approvalRequestData);
+      return out;
+    }
+    approvalRequestData = approvalRequestData.res.rows[0];
+    const approvalRequestRevisionId = approvalRequestData.approval_request_revision_id;
+
+    const payloadSubmitReimbursement = {
+      requests: {
+        approvalRequest: approvalRequestData,
+        reimbursementRequest: rr.data[0],
+      },
+      notificationType: 'submit-reimbursement'
+    }
+
+    const notificationSent = await emailController.sendSystemNotification(
+      payloadSubmitReimbursement.notificationType,
+      payloadSubmitReimbursement.requests.approvalRequest,
+      payloadSubmitReimbursement.requests.reimbursementRequest,
+      payloadSubmitReimbursement
+    );
+
+    return out;
 
   }
 
@@ -621,28 +700,30 @@ class ReimbursementRequest {
    * @param {*} client - pg client
    * @param {Number} reimbursementRequestId - the id of the reimbursement request
    */
-  async _updateApprovalRequestReimbursementStatus(client, reimbursementRequestId){
-    let sql = `SELECT approval_request_id FROM reimbursement_request WHERE reimbursement_request_id = $1`;
-    let res = await client.query(sql, [reimbursementRequestId]);
-    const approvalRequestId = res.rows[0].approval_request_id;
-
+  async _updateApprovalRequestReimbursementStatus(client, reimbursementRequestId, approvalRequestId){
+    let sql, res;
+    if ( !approvalRequestId ){
+      sql = `SELECT approval_request_id FROM reimbursement_request WHERE reimbursement_request_id = $1`;
+      res = await client.query(sql, [reimbursementRequestId]);
+      approvalRequestId = res.rows[0].approval_request_id;
+    }
     sql = `SELECT status FROM reimbursement_request WHERE approval_request_id = $1`;
     res = await client.query(sql, [approvalRequestId]);
-
     const statuses = res.rows.map(r => r.status);
+
+    sql = `SELECT expect_more_reimbursement FROM approval_request WHERE approval_request_id = $1 AND is_current = true`;
+    res = await client.query(sql, [approvalRequestId]);
+    const expectMoreReimbursement = res.rows?.[0].expect_more_reimbursement;
+
     let overallStatus;
-    if ( statuses.includes('partially-reimbursed') ){
-      overallStatus = 'partially-reimbursed';
-    } else if ( statuses.every(s => s === 'fully-reimbursed') ){
-      overallStatus = 'fully-reimbursed';
-    } else if ( statuses.includes('fully-reimbursed') ){
-      overallStatus = 'partially-reimbursed';
+    if( !statuses.length ){
+      overallStatus = 'not-submitted';
     } else if(statuses.every(s => s === 'submitted')){
       overallStatus = 'submitted';
-    } else if( !statuses.length ){
-      overallStatus = 'not-submitted';
+    } else if ( expectMoreReimbursement ){
+      overallStatus = 'partially-reimbursed';
     } else {
-      overallStatus = 'reimbursement-pending';
+      overallStatus = 'fully-reimbursed';
     }
 
     sql = `UPDATE approval_request SET reimbursement_status = $1 WHERE approval_request_id = $2 AND is_current = true`;
@@ -658,19 +739,12 @@ class ReimbursementRequest {
     let sql = `SELECT reimbursement_status FROM reimbursement_request_fund WHERE reimbursement_request_id = $1`;
     let res = await client.query(sql, [reimbursementRequestId]);
 
-
     const statuses = res.rows.map(r => r.reimbursement_status);
-    let overallStatus;
-    if ( statuses.includes('partially-reimbursed') ){
-      overallStatus = 'partially-reimbursed';
-    } else if ( statuses.every(s => s === 'fully-reimbursed') ){
-      overallStatus = 'fully-reimbursed';
-    } else if ( statuses.includes('fully-reimbursed') ){
-      overallStatus = 'partially-reimbursed';
-    } else if(statuses.every(s => s === 'cancelled')){
+    let overallStatus = 'submitted';
+    if(statuses.every(s => s === 'cancelled')){
       overallStatus = 'submitted';
-    } else {
-      overallStatus = 'reimbursement-pending';
+    } else if ( statuses.includes('submitted') ){
+      overallStatus = 'fully-reimbursed';
     }
 
     sql = `UPDATE reimbursement_request SET status = $1 WHERE reimbursement_request_id = $2`;
@@ -783,6 +857,76 @@ class ReimbursementRequest {
       out.push(d);
     }
     return out;
+  }
+
+  /**
+   * @description Get total reimbursement request reimbursement amount grouped by funding source and employee
+   * @param {*} query
+   */
+  async getTotalFundingSourceExpendituresByEmployee(query={}){
+    const whereArgs = {'1': '1'};
+
+    if ( query.employees ){
+      whereArgs['ar.employee_kerberos'] = query.employees;
+    }
+
+    const fiscalYear = fiscalYearUtils.fromStartYear(query.fiscalYear, true);
+    if ( fiscalYear ){
+      whereArgs['fy_start'] = {relation: 'AND', 'ar.program_start_date' : {operator: '>=', value: fiscalYear.startDate({isoDate: true})}};
+      whereArgs['fy_end'] = {relation: 'AND', 'ar.program_start_date' : {operator: '<=', value: fiscalYear.endDate({isoDate: true})}};
+    }
+
+    if ( query.approvalRequestReimbursementStatus ){
+      whereArgs['ar.reimbursement_status'] = query.approvalRequestReimbursementStatus;
+    }
+
+    if ( query.reimbursementRequestStatus ){
+      whereArgs['rr.status'] = query.reimbursementRequestStatus;
+    }
+
+    const whereClause = pg.toWhereClause(whereArgs);
+    const sql = `
+      SELECT
+        ar.employee_kerberos,
+        arfs.funding_source_id,
+        SUM(rrf.amount) as total_expenditures
+      FROM
+        reimbursement_request_fund rrf
+      LEFT JOIN
+        reimbursement_request rr ON rrf.reimbursement_request_id = rr.reimbursement_request_id
+      LEFT JOIN
+        approval_request ar ON rr.approval_request_id = ar.approval_request_id
+      LEFT JOIN
+        approval_request_funding_source arfs ON rrf.approval_request_funding_source_id = arfs.approval_request_funding_source_id
+      WHERE
+        ${whereClause.sql}
+      GROUP BY
+        ar.employee_kerberos,
+        arfs.funding_source_id
+    `;
+    const res = await pg.query(sql, whereClause.values);
+    if ( res.error ) return res;
+
+    const fields = new EntityFields([
+      {
+        dbName: 'employee_kerberos',
+        jsonName: 'employeeKerberos'
+      },
+      {
+        dbName: 'funding_source_id',
+        jsonName: 'fundingSourceId'
+      },
+      {
+        dbName: 'total_expenditures',
+        jsonName: 'totalExpenditures'
+      }
+    ]);
+
+    return fields.toJsonArray(res.res.rows).map(row => {
+      row.totalExpenditures = typeTransform.toPositiveNumber(row.totalExpenditures) || 0;
+      return row;
+    });
+
   }
 }
 

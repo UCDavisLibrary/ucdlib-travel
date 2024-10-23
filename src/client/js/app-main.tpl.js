@@ -27,6 +27,7 @@ return html`
       <a href="/admin/reimbursement">Reimbursement Requests</a>
       <a href="/admin/allocations">Employee Allocations</a>
       <a href="/admin/settings">General Settings</a>
+      <a href="/admin/email-settings">Email Settings</a>
       <a href="/admin/line-items">Line Items</a>
     </ucd-theme-quick-links>
 
@@ -57,6 +58,7 @@ return html`
     <app-page-admin-allocations-new id='admin-allocations-new'></app-page-admin-allocations-new>
     <app-page-admin-approval-requests id='admin-approval-requests'></app-page-admin-approval-requests>
     <app-page-admin-line-items id='admin-line-items'></app-page-admin-line-items>
+    <app-page-admin-email-settings id='admin-email-settings'></app-page-admin-email-settings>
     <app-page-admin-reimbursement id='admin-reimbursement'></app-page-admin-reimbursement>
     <app-page-approver id='approver'></app-page-approver>
     <app-page-reimbursement id='reimbursement'></app-page-reimbursement>

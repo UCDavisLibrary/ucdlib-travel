@@ -8,6 +8,16 @@ class EmployeeAllocationService extends BaseService {
     this.store = EmployeeAllocationStore;
   }
 
+  userSummary(query) {
+    return this.request({
+      url : `/api/admin/employee-allocation/user-summary${query ? '?' + query : ''}`,
+      checkCached: () => this.store.data.userSummary[query],
+      onLoading : request => this.store.userAllocationsSummaryRequestedLoading(request, query),
+      onLoad : result => this.store.userAllocationsSummaryRequestedLoaded(result.body, query),
+      onError : e => this.store.userAllocationsSummaryRequestedError(e, query)
+    });
+  }
+
   delete(payload, timestamp) {
     return this.request({
       url : '/api/admin/employee-allocation',
@@ -22,6 +32,20 @@ class EmployeeAllocationService extends BaseService {
     });
   }
 
+  update(payload, timestamp) {
+    return this.request({
+      url : '/api/admin/employee-allocation',
+      fetchOptions : {
+        method : 'PUT',
+        body : payload
+      },
+      json: true,
+      onLoading : request => this.store.updatedLoading(request, timestamp, payload),
+      onLoad : result => this.store.updatedLoaded(result.body, timestamp, payload),
+      onError : e => this.store.updatedError(e, timestamp, payload)
+    });
+  }
+
   query(query) {
     return this.request({
       url : `/api/admin/employee-allocation${query ? '?' + query : ''}`,
@@ -32,9 +56,9 @@ class EmployeeAllocationService extends BaseService {
     });
   }
 
-  createEmployeeAllocations(payload, timestamp) {
+  createEmployeeAllocations(payload, allowDuplicateAllocations, timestamp) {
     return this.request({
-      url : '/api/admin/employee-allocation',
+      url : `/api/admin/employee-allocation${allowDuplicateAllocations ? '?allow-duplicate-allocations=true' : ''}`,
       fetchOptions : {
         method : 'POST',
         body : payload

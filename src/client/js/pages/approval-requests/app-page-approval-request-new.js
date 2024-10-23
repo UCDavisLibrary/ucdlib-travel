@@ -19,7 +19,6 @@ import promiseUtils from '../../../../lib/utils/promiseUtils.js';
  * @property {Number} approvalFormId - The id of the approval request to edit. Extracted from the url
  * @property {Object} approvalRequest - The current approval request object. Updated as form inputs change
  * @property {Boolean} userCantSubmit - Whether the current user is authorized to submit the form
- * @property {Boolean} canBeDeleted - Whether the current approval request can be deleted
  * @property {Boolean} canBeSaved - Whether the current approval request can be saved as a draft
  * @property {Boolean} isSave - Whether the form is being saved as a draft or submitted
  * @property {Array} expenditureOptions - Line item options for expenditures
@@ -33,7 +32,6 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
       approvalFormId: {type: Number},
       approvalRequest: {type: Object},
       userCantSubmit: {type: Boolean},
-      canBeDeleted: {type: Boolean},
       canBeSaved: {type: Boolean},
       isSave: {type: Boolean},
       expenditureOptions: {type: Array},
@@ -50,6 +48,7 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
     this.expenditureOptions = [];
     this.fundingSourceSelectRef = createRef();
     this.draftListSelectRef = createRef();
+    this.allocationSummaryRef = createRef();
     this.waitController = new WaitController(this);
 
     this._injectModel(
@@ -141,7 +140,8 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
       this.SettingsModel.getByCategory(this.settingsCategory),
       this.LineItemsModel.getActiveLineItems(),
       this.fundingSourceSelectRef.value.init(),
-      this.draftListSelectRef.value.init()
+      this.draftListSelectRef.value.init(),
+      this.allocationSummaryRef.value.init()
     ];
     if ( this.approvalFormId ) {
       promises.push(this.ApprovalRequestModel.query({requestIds: this.approvalFormId}));
@@ -277,7 +277,6 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
       return;
     }
 
-    this.canBeDeleted = e.payload.data.find(r => r.approvalStatus !== 'draft') ? false : true;
     this.validationHandler = new ValidationHandler();
     this.approvalRequest = { ...currentInstance };
   }
@@ -292,7 +291,6 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
       fundingSources: []
     };
     this.validationHandler = new ValidationHandler();
-    this.canBeDeleted = false;
     this.requestUpdate();
   }
 
@@ -320,6 +318,7 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
         this.requestUpdate();
         this.AppStateModel.showToast({message: 'Error when submitting your approval request. Form data needs fixing.', type: 'error'});
       } else {
+        this.logger.error('Error submitting approval request', e);
         this.AppStateModel.showToast({message: 'An unknown error occurred when submitting your approval request', type: 'error'});
       }
       this.AppStateModel.showLoaded(this.id);
@@ -355,7 +354,7 @@ export default class AppPageApprovalRequestNew extends Mixin(LitElement)
    * Calls confirmation dialog to delete the approval request
    */
   _onDeleteButtonClick(){
-    if ( !this.canBeDeleted || this.userCantSubmit ) return;
+    if ( this.userCantSubmit ) return;
     this.AppStateModel.showDialogModal({
       title : 'Delete Approval Request',
       content : 'Are you sure you want to delete this approval request? This action cannot be undone.',

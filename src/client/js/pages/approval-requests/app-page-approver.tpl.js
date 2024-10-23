@@ -3,6 +3,8 @@ import { ref } from 'lit/directives/ref.js';
 
 import '../../components/approval-request-status-action.js';
 import '../../components/approval-request-details.js';
+import '../../components/funding-source-select.js';
+import '../../components/user-current-allocation-summary.js';
 import applicationOptions from '../../../../lib/utils/applicationOptions.js';
 
 export function render() {
@@ -25,9 +27,13 @@ return html`
           </div>
         </div>
 
-        <section class="brand-textbox category-brand__background">
-          TODO: Display applicable allocations and total expenditures from previous approval requests for employee
-        </section>
+        <user-current-allocation-summary
+          page-id=${this.id}
+          for-another
+          approval-request-id=${this.approvalRequestId}
+          ${ref(this.allocationSummaryRef)}
+          >
+        </user-current-allocation-summary>
       </div>
     <div class='l-content'>
       <h2 class="heading--underline">Trip, Training, or Professional Development Opportunity</h2>
@@ -52,7 +58,7 @@ return html`
           ${ref(this.fundingSourceSelectRef)}
           label='Funding Sources'
           @funding-source-input=${this._onFundingSourceInput}
-          can-toggle-view
+          ?can-toggle-view=${this.fundingSources.length > 1}
           reallocate-only
           indent-body
           expenditure-total=${this.totalExpenditures}

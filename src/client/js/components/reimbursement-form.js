@@ -26,6 +26,8 @@ export default class ReimbursementForm extends Mixin(LitElement)
       otherTotalExpenses: {type: String},
       mileageRate: {type: Number},
       netExpensesNegativeWarningMessage: {type: String},
+      receiptDescription: {type: String},
+      labelOptions: {type: Array},
       totalExpenses: {state: true},
       hasOtherTotalExpenses: {state: true},
       netExpenses: {state: true},
@@ -48,6 +50,8 @@ export default class ReimbursementForm extends Mixin(LitElement)
     this.netExpenses = '0.00';
     this.netExpensesNegative = false;
     this.netExpensesNegativeWarningMessage = '';
+    this.receiptDescription = '';
+    this.labelOptions = [];
 
 
     this._injectModel('AppStateModel', 'ReimbursementRequestModel');
@@ -116,6 +120,8 @@ export default class ReimbursementForm extends Mixin(LitElement)
         this.validationHandler = new ValidationHandler(e);
         this.requestUpdate();
         this.AppStateModel.showToast({message: 'Error when submitting your reimbursement request. Form data needs fixing.', type: 'error'});
+      } else if ( e.error?.response?.status === 403 ) {
+        this.AppStateModel.showToast({message: 'You are not authorized to submit this reimbursement request', type: 'error'});
       } else {
         this.AppStateModel.showToast({message: 'An unknown error occurred when submitting your approval request', type: 'error'});
       }
@@ -142,12 +148,49 @@ export default class ReimbursementForm extends Mixin(LitElement)
 
   _onSubmit(e) {
     e.preventDefault();
+
+    // check if any receipts are missing
+    let receiptWarningHeader = '';
+    let receiptWarningMessage = '';
+    if ( !this.reimbursementRequest.receipts.length ) {
+      receiptWarningHeader = 'No Receipts';
+      receiptWarningMessage = 'You have not uploaded any receipts. Are you sure you want to submit your reimbursement request?';
+    }
+    if ( this.reimbursementRequest.receipts.find(r => {
+      const input = this.renderRoot.querySelector(`#reimbursement-form-receipt--${r.nonce}--file`);
+      if ( !input || !input.files.length ) return true;
+    })){
+      receiptWarningHeader = 'Receipts Missing';
+      receiptWarningMessage = 'You have not uploaded all receipts. Are you sure you want to submit your reimbursement request?';
+    }
+    if ( receiptWarningHeader ) {
+      this.AppStateModel.showDialogModal({
+        title: receiptWarningHeader,
+        content: receiptWarningMessage,
+        actions: [
+          {text: 'Submit Anyway', 'value': 'no-receipt-confirm', 'color': 'secondary'},
+          {text: 'Cancel', 'value': 'cancel', 'invert': true}
+        ]
+      })
+      return;
+    }
+
+    this.submit();
+  }
+
+  /**
+   * @description Callback for dialog-action AppStateModel event
+   * @param {Object} e - AppStateModel dialog-action event
+   * @returns
+   */
+  _onDialogAction(e){
+    if ( e.action !== 'no-receipt-confirm' ) return;
     this.submit();
   }
 
   resetForm() {
     this.reimbursementRequest = {
-      label: 'Reimbursement Request',
+      label: '',
       expenses: [],
       receipts: []
     };
@@ -196,8 +239,9 @@ export default class ReimbursementForm extends Mixin(LitElement)
    * @param {String} category - the category of the expense
    * @param {String} subCategory - optional. the subcategory of the expense
    * @param {String} date - optional. the date of the expense for daily expenses
+   * @param {Boolean} noScroll - optional. if true, do not scroll to the new expense
    */
-  addBlankExpense(category, subCategory, date){
+  async addBlankExpense(category, subCategory, date, noScroll){
     const expense = {
       category,
       nonce: Math.random().toString(36).substring(3),
@@ -206,7 +250,10 @@ export default class ReimbursementForm extends Mixin(LitElement)
     if ( date ) expense.date = date;
     if ( subCategory ) expense.details = {subCategory};
     this.reimbursementRequest.expenses.push(expense);
-    this.requestUpdate();
+    await this.waitController.waitForUpdate();
+    if ( !noScroll ) {
+      this.goToExpenseAmountInput(expense);
+    }
   }
 
   /**
@@ -216,6 +263,7 @@ export default class ReimbursementForm extends Mixin(LitElement)
   deleteExpense(expense){
     if ( expense.nonce ){
       this.reimbursementRequest.expenses = this.reimbursementRequest.expenses.filter(e => e.nonce !== expense.nonce);
+      this.reimbursementRequest.receipts = this.reimbursementRequest.receipts.filter(r => r.expenseNonce !== expense.nonce);
     } else if ( expense.reimbursementRequestExpenseId ){
       this.reimbursementRequest.expenses = this.reimbursementRequest.expenses.filter(e => e.reimbursementRequestExpenseId !== expense.reimbursementRequestExpenseId);
     }
@@ -223,14 +271,58 @@ export default class ReimbursementForm extends Mixin(LitElement)
   }
 
   /**
-   * @description Add a blank receipt record to the reimbursement request
+   * @description Go to the receipt input for an expense. If the receipt record does not exist, create a placeholder in receipts array.
+   * @param {Object} expense - the expense object in reimbursementRequest.expenses
    */
-  addBlankReceipt(){
+  async goToExpenseReceipt(expense){
+    let fileInput;
+    let receipt = this.reimbursementRequest.receipts.find(r => r.expenseNonce === expense.nonce);
+    if ( receipt ){
+      fileInput = this.renderRoot.querySelector(`#reimbursement-form-receipt--${receipt.nonce}--file`);
+    } else {
+      let label = expense.category;
+      if ( expense.date ) label += `--${expense.date}`;
+      if ( expense?.details?.subCategory ) label += `--${expense.details.subCategory}`;
+      receipt = {nonce: Math.random().toString(36).substring(3), expenseNonce: expense.nonce, label};
+      this.reimbursementRequest.receipts.push(receipt);
+      await this.waitController.waitForUpdate();
+      fileInput = this.renderRoot.querySelector(`#reimbursement-form-receipt--${receipt.nonce}--file`);
+    }
+    if ( fileInput ) {
+      fileInput.focus();
+    }
+  }
+
+  /**
+   * @description Go to the amount input for an expense
+   * @param {Object} expense - the expense object in reimbursementRequest.expenses
+   */
+  goToExpenseAmountInput(expense){
+    let input = this.renderRoot.querySelector(`#reimbursement-form-expense--${expense.nonce}--amount`);
+    if ( expense.details?.subCategory === 'private-car' ) {
+      input = this.renderRoot.querySelector(`#reimbursement-form-expense--${expense.nonce}--estimated-miles`);
+    }
+    if ( input ) {
+      input.focus();
+    }
+  }
+
+  /**
+   * @description Add a blank receipt record to the reimbursement request
+   * @param {Boolean} noScroll - optional. if true, do not scroll to the new receipt
+   */
+  async addBlankReceipt(noScroll){
     const receipt = {
       nonce: Math.random().toString(36).substring(3)
     };
     this.reimbursementRequest.receipts.push(receipt);
-    this.requestUpdate();
+    await this.waitController.waitForUpdate();
+    if ( !noScroll ) {
+      const input = this.renderRoot.querySelector(`#reimbursement-form-receipt--${receipt.nonce}--file`);
+      if ( input ) {
+        input.focus();
+      }
+    }
   }
 
   /**
@@ -253,6 +345,9 @@ export default class ReimbursementForm extends Mixin(LitElement)
    */
   _onReceiptFileChange(receipt, file){
     let label = file.name;
+    if ( receipt.expenseNonce ){
+      return
+    }
     if ( label.includes('.') ) {
       label = label.split('.').slice(0, -1).join('.');
     }

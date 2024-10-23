@@ -1,9 +1,11 @@
 import { html } from 'lit';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
+import { ref } from 'lit/directives/ref.js';
 
 import '../../components/approval-request-status-action.js';
 import '../../components/approval-request-details.js';
 import '../../components/funding-source-select.js';
+import '../../components/user-current-allocation-summary.js';
 
 export function render() {
 return html`
@@ -50,6 +52,12 @@ return html`
             </div>
           </div>
         </div>
+        <user-current-allocation-summary
+          page-id=${this.id}
+          approval-request-id=${this.approvalRequestId}
+          ${ref(this.allocationSummaryRef)}
+          >
+        </user-current-allocation-summary>
       </div>
     </div>
   </div>
@@ -63,11 +71,21 @@ return html`
           class='btn btn--primary category-brand--secondary'
           @click=${this._onSubmitButtonClick}
           >Submit</button>
+        <button
+          type="button"
+          class='btn btn--invert category-brand--secondary'
+          @click=${this._onSaveButtonClick}
+          >Save</button>
         <a
           type="button"
           class='btn btn--invert category-brand--secondary'
           href=${this.formLink}
-          >Cancel</a>
+          >Edit</a>
+        <button
+          type="button"
+          class='btn btn--primary category-brand--double-decker'
+          @click=${this._onDeleteButtonClick}
+          >Delete Request</button>
         </div>
       </div>
     </div>

@@ -1,5 +1,6 @@
 import { LitElement } from 'lit';
 import {render } from "./app-page-approval-request-confirm.tpl.js";
+import { createRef } from 'lit/directives/ref.js';
 import { LitCorkUtils, Mixin } from '@ucd-lib/cork-app-utils';
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 import { WaitController } from "@ucd-lib/theme-elements/utils/controllers/wait.js";
@@ -38,6 +39,7 @@ export default class AppPageApprovalRequestConfirm extends Mixin(LitElement)
     this.approvalRequest = {};
     this.approvalChain = [];
     this.settingsCategory = 'approval-requests';
+    this.allocationSummaryRef = createRef();
     this.formLink = '';
 
     this._injectModel('AppStateModel', 'ApprovalRequestModel', 'SettingsModel');
@@ -93,10 +95,13 @@ export default class AppPageApprovalRequestConfirm extends Mixin(LitElement)
    */
   async getPageData(){
 
+    await this.waitController.waitForUpdate();
+
     const promises = [
       this.ApprovalRequestModel.query(this.queryObject),
       this.ApprovalRequestModel.getApprovalChain(this.approvalRequestId),
-      this.SettingsModel.getByCategory(this.settingsCategory)
+      this.SettingsModel.getByCategory(this.settingsCategory),
+      this.allocationSummaryRef.value.init()
     ]
     const resolvedPromises = await Promise.allSettled(promises);
     return promiseUtils.flattenAllSettledResults(resolvedPromises);
@@ -129,6 +134,26 @@ export default class AppPageApprovalRequestConfirm extends Mixin(LitElement)
    */
   _onSubmitButtonClick(){
     this.ApprovalRequestModel.statusUpdate(this.approvalRequestId, {action: 'submit'});
+  }
+
+  /**
+   * @description Callback for when the save button is clicked
+   * The request is already saved, so just show a success message
+   */
+  _onSaveButtonClick(){
+    this.AppStateModel.showToast({message: 'Approval request saved', type: 'success'});
+  }
+
+  _onDeleteButtonClick(){
+    this.AppStateModel.showDialogModal({
+      title : 'Delete Approval Request',
+      content : 'Are you sure you want to delete this approval request? This action cannot be undone.',
+      actions : [
+        {text: 'Delete', value: 'delete-approval-request', color: 'double-decker'},
+        {text: 'Cancel', value: 'cancel', invert: true, color: 'primary'}
+      ],
+      data : {approvalRequestId: this.approvalRequestId}
+    });
   }
 
   /**

@@ -13,6 +13,9 @@ class ApprovalRequestModel extends BaseModel {
     this.service = ApprovalRequestService;
 
     this.register('ApprovalRequestModel');
+
+    this.inject('EmployeeAllocationModel');
+
   }
 
   async query(query={}) {
@@ -53,6 +56,20 @@ class ApprovalRequestModel extends BaseModel {
   }
 
   /**
+   * @description Toggle the more reimbursement flag for an approval request
+   * @param {Number} approvalRequestId - id of approval request to toggle
+   * @returns
+   */
+  async moreReimbursementToggle(approvalRequestId) {
+    const r = await this.service.moreReimbursementToggle(approvalRequestId);
+    if ( r.state === 'loaded' ){
+      this.clearCache();
+      this.EmployeeAllocationModel.store.clearCache();
+    }
+    return r;
+  }
+
+  /**
    * @description Delete an approval request by id - must have always been in a draft state
    * @param {String} approvalRequestId - id of approval request to delete
    */
@@ -64,6 +81,7 @@ class ApprovalRequestModel extends BaseModel {
     const state = this.store.data.deleted[timestamp];
     if ( state && state.state === 'loaded' ) {
       this.store.data.fetched = {};
+      this.EmployeeAllocationModel.store.clearCache();
     }
     return state;
   }
@@ -83,6 +101,7 @@ class ApprovalRequestModel extends BaseModel {
     const state = this.store.data.created[timestamp];
     if ( state && state.state === 'loaded' ) {
       this.clearCache();
+      this.EmployeeAllocationModel.store.clearCache();
     }
     return state;
   }

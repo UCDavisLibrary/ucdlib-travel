@@ -42,6 +42,15 @@ class TypeTransform {
   }
 
   /**
+   * @description Split a string into an array of lines
+   * @param {String} value - string to split
+   * @returns
+   */
+  splitStringLines(value){
+    return value.split(/\r\n|\r|\n/);
+  }
+
+  /**
    * @description Convert YYYY-MM-DD date string to Date object
    * @param {String} value - date string
    * @returns {Date|null}
@@ -153,6 +162,16 @@ class TypeTransform {
     num = Number(num);
     if ( isNaN(num) ) return '0.00';
     return num.toFixed(2);
+  }
+
+  /**
+   * @description Cast value to a number or return 0
+   * @param {*} value
+   * @returns {Number}
+   */
+  toNumberOrZero(value){
+    const num = Number(value);
+    return isNaN(num) ? 0 : num;
   }
 
 }

@@ -8,6 +8,7 @@ import { WaitController } from "@ucd-lib/theme-elements/utils/controllers/wait.j
 import { LitCorkUtils, Mixin } from '@ucd-lib/cork-app-utils';
 import IamEmployeeObjectAccessor from '../../../../lib/utils/iamEmployeeObjectAccessor.js';
 import promiseUtils from '../../../../lib/utils/promiseUtils.js';
+import fiscalYearUtils from '../../../../lib/utils/fiscalYearUtils.js';
 import ValidationHandler from "../../utils/ValidationHandler.js";
 
 /**
@@ -30,7 +31,10 @@ export default class AppPageAdminAllocationsNew extends Mixin(LitElement)
       endDate: {type: String},
       fundingAmount: {type: Number},
       fundingSources: {type: Array},
-      selectedFundingSource: {type: Object}
+      selectedFundingSource: {type: Object},
+      allowDuplicateAllocations: {type: Boolean},
+      _selectedFiscalYear: {type: Object},
+      _fiscalYears: {type: Array}
     }
   }
 
@@ -56,6 +60,9 @@ export default class AppPageAdminAllocationsNew extends Mixin(LitElement)
     this.fundingAmount = 0;
     this.selectedFundingSource = {};
     this.validationHandler = new ValidationHandler();
+    this._setFiscalYear();
+    this._fiscalYears = fiscalYearUtils.getRangeFromDate(null, 1, 1);
+    this.allowDuplicateAllocations = false;
     this.requestUpdate();
   }
 
@@ -86,6 +93,16 @@ export default class AppPageAdminAllocationsNew extends Mixin(LitElement)
     }
     this.AppStateModel.showLoaded(this.id);
     this.requestUpdate();
+  }
+
+  /**
+   * @description Set the fiscal year for the allocation
+   * @param {Number} year - the start year of the fiscal year
+   */
+  _setFiscalYear(year){
+    this._selectedFiscalYear= year ? fiscalYearUtils.fromStartYear(year) : fiscalYearUtils.fromDate();
+    this.startDate = this._selectedFiscalYear.startDate({isoDate: true});
+    this.endDate = this._selectedFiscalYear.endDate({isoDate: true});
   }
 
   /**
@@ -131,6 +148,15 @@ export default class AppPageAdminAllocationsNew extends Mixin(LitElement)
   }
 
   /**
+   * @description Check if there are any duplicate allocations
+   * @returns {Boolean}
+   */
+  isDuplicateAllocation(){
+    const employeeErrors = this.validationHandler.getError('employees', 'already-exists');
+    return employeeErrors ? true : false;
+  }
+
+  /**
    * @description Event handler for form submission
    * @param {Event} e - Submit event
    */
@@ -143,7 +169,7 @@ export default class AppPageAdminAllocationsNew extends Mixin(LitElement)
       amount: this.fundingAmount,
       employees: this.employees
     };
-    this.EmployeeAllocationModel.createEmployeeAllocations(payload);
+    this.EmployeeAllocationModel.createEmployeeAllocations(payload, this.allowDuplicateAllocations);
   }
 
   /**

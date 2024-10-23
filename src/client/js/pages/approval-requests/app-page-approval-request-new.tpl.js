@@ -5,6 +5,7 @@ import { ref } from 'lit/directives/ref.js';
 import "../../components/funding-source-select.js";
 import "../../components/approval-request-draft-list.js";
 import "../../components/character-limit-tracker.js"
+import "../../components/user-current-allocation-summary.js";
 
 
 export function render() {
@@ -25,6 +26,11 @@ export function render() {
         ${renderForm.call(this)}
       </div>
       <div class='l-sidebar-second'>
+        <user-current-allocation-summary
+          page-id=${this.id}
+          ${ref(this.allocationSummaryRef)}
+          >
+        </user-current-allocation-summary>
         <approval-request-draft-list
           exclude-id=${this.approvalFormId}
           ${ref(this.draftListSelectRef)}
@@ -82,12 +88,14 @@ export function renderForm() {
           .value=${this.approvalRequest.businessPurpose || ''}
           @input=${e => this._onFormInput('businessPurpose', e.target.value)}
           ></textarea>
+          <div class='small'>${unsafeHTML(this.SettingsModel.getByKey('approval_request_form_business_purpose'))}</div>
           <div>${this.validationHandler.renderErrorMessages('businessPurpose')}</div>
           <character-limit-tracker .value=${this.approvalRequest.businessPurpose} character-limit=500></character-limit-tracker>
       </div>
 
       <div class="field-container ${this.validationHandler.errorClass('location')}">
         <label>Location <abbr title="Required">*</abbr></label>
+        <div class='u-space-mb--small'>${unsafeHTML(this.SettingsModel.getByKey('approval_request_form_location_description'))}</div>
         <div class='radio'>
           <div>
             <input
@@ -95,7 +103,7 @@ export function renderForm() {
               type="radio"
               name="${page}--location"
               .checked=${this.approvalRequest.location === 'in-state'}
-              @change=${e => this._onFormInput('location', 'in-state')}
+              @change=${() => this._onFormInput('location', 'in-state')}
             >
             <label for="${page}--location--in-state">In-State</label>
           </div>
@@ -108,7 +116,7 @@ export function renderForm() {
               type="radio"
               name="${page}--location"
               .checked=${this.approvalRequest.location === 'out-of-state'}
-              @change=${e => this._onFormInput('location', 'out-of-state')}
+              @change=${() => this._onFormInput('location', 'out-of-state')}
             >
             <label for="${page}--location--out-of-state">Out-of-State</label>
           </div>
@@ -121,7 +129,7 @@ export function renderForm() {
               type="radio"
               name="${page}--location"
               .checked=${this.approvalRequest.location === 'foreign'}
-              @change=${e => this._onFormInput('location', 'foreign')}
+              @change=${() => this._onFormInput('location', 'foreign')}
             >
             <label for="${page}--location--foreign">Foreign</label>
           </div>
@@ -134,7 +142,7 @@ export function renderForm() {
               type="radio"
               name="${page}--location"
               .checked=${this.approvalRequest.location === 'virtual'}
-              @change=${e => this._onFormInput('location', 'virtual')}
+              @change=${() => this._onFormInput('location', 'virtual')}
             >
             <label for="${page}--location--virtual">Virtual</label>
           </div>
@@ -241,6 +249,17 @@ export function renderForm() {
             </div>
           </div>
         </div>
+        <div class='field-container ${this.validationHandler.errorClass('releaseTime')}'>
+          <label for="${page}--releaseTime">Release Time (hours)</label>
+          <input
+            type='number'
+            .value=${this.approvalRequest.releaseTime || '0'}
+            id="${page}--releaseTime"
+            @input=${e => this._onFormInput('releaseTime', e.target.value)}
+          >
+          <div>${this.validationHandler.renderErrorMessages('releaseTime')}</div>
+          <div class='small'>${unsafeHTML(this.SettingsModel.getByKey('approval_request_form_release_time'))}</div>
+        </div>
       </fieldset>
 
       <fieldset>
@@ -328,7 +347,6 @@ export function renderForm() {
           >Save</button>
         <button
           type="button"
-          ?hidden=${!this.canBeDeleted}
           ?disabled=${this.userCantSubmit}
           class='btn btn--primary category-brand--double-decker'
           @click=${this._onDeleteButtonClick}
@@ -371,6 +389,7 @@ function renderExpenditureItem(expenditure) {
       <div class='amount input--dollar'>
         <input
           type='number'
+          step="0.01"
           class=''
           .value=${value}
           @input=${e => this._onExpenditureInput(expenditure.expenditureOptionId, e.target.value)}

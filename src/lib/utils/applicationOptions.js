@@ -83,30 +83,24 @@ class ApplicationOptions {
       },
       {
         value: 'submitted',
-        label: 'Reimbursement Request Submitted',
+        label: 'Reimbursement Submitted',
         labelShort: 'Submitted',
         isActive: true,
         iconClass: 'fa-solid fa-upload',
         brandColor: 'putah-creek'
       },
       {
-        value: 'reimbursement-pending',
-        label: 'Reimbursement Pending',
-        labelShort: 'Pending',
-        isActive: true,
-        iconClass: 'fa-solid fa-circle-half-stroke',
-        brandColor: 'secondary'
-      },
-      {
         value: 'partially-reimbursed',
-        label: 'Partially Reimbursed',
+        label: 'Reimbursement Partially Processed',
+        labelShort: 'Partially Processed',
         isActive: true,
         iconClass: 'fa-solid fa-circle-half-stroke',
         brandColor: 'secondary'
       },
       {
         value: 'fully-reimbursed',
-        label: 'Fully Reimbursed',
+        label: 'Reimbursement Fully Processed',
+        labelShort: 'Fully Processed',
         iconClass: 'fa-solid fa-check',
         brandColor: 'redwood'
       }
@@ -216,6 +210,31 @@ class ApplicationOptions {
     ];
   }
 
+  get approvalRequestActivity(){
+    return [
+      {
+        value: 'request-notification',
+        label: 'Requester Notification',
+        actor: 'submitter',
+        resultingStatus: 'requester-notified',
+        actionTakenText: 'System has sent a notification about request.',
+        byLine: 'Requester Notification Sent By:',
+        iconClass: 'fas fa-comment',
+        brandColor: 'quad',
+      },
+      {
+        value: 'approver-notification',
+        label: 'Approver Notification',
+        actor: 'approver',
+        resultingStatus: 'approver-notified',
+        actionTakenText: 'System has sent a notification to an approver.',
+        byLine: 'Approver Notification Sent By:',
+        iconClass: 'fas fa-comment',
+        brandColor: 'cabernet',
+      }
+    ]
+  }
+
   get approvalRequestReimbursementActivity(){
     return [
       {
@@ -241,6 +260,14 @@ class ApplicationOptions {
         byLine: 'Updated By:',
         iconClass: 'fa-solid fa-money-bill-transfer',
         brandColor: 'pinot'
+      },
+      {
+        value: 'reimbursement-notification',
+        label: 'Reimbursement Notification',
+        actionTakenText: 'System has sent a notification to admin about reimbursement.',
+        byLine: 'Reimbursement Notification Sent By:',
+        iconClass: 'fas fa-comment',
+        brandColor: 'poppy',
       }
     ]
   }
@@ -251,16 +278,6 @@ class ApplicationOptions {
         value: 'submitted',
         labelShort: 'Submitted',
         label: 'Submitted To Aggie Expense'
-      },
-      {
-        value: 'partially-reimbursed',
-        labelShort: 'Partial Reimbursement',
-        label: 'Transaction Partially Reimbursed'
-      },
-      {
-        value: 'fully-reimbursed',
-        labelShort: 'Fully Reimbursed',
-        label: 'Transaction Fully Reimbursed'
       },
       {
         value: 'cancelled',
@@ -405,6 +422,18 @@ class ApplicationOptions {
 
     const nextApprover = (approvalRequest.approvalStatusActivity || []).find(a => a.action === 'approval-needed');
     return nextApprover && nextApprover.employeeKerberos === userKerberos;
+  }
+
+  /**
+   * @description - Get the next approver for an approval request
+   * @param {Object} approvalRequest - The approval request object
+   * @param {Boolean} returnKerberos - Return the kerberos of the next approver
+   * @returns {Object|String}
+   */
+  getNextApprover(approvalRequest, returnKerberos=false){
+    const nextApprover = (approvalRequest?.approvalStatusActivity || []).find(a => a.action === 'approval-needed');
+    if ( returnKerberos ) return nextApprover?.employeeKerberos || '';
+    return nextApprover;
   }
 
 

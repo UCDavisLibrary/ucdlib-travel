@@ -72,6 +72,7 @@ function renderForm(){
                     type='number'
                     class=''
                     .value=${fundingSource.amount}
+                    step="0.01"
                     @input=${e => this._onFundingSourceInput(fundingSource, 'amount', e.target.value)}
                   >
                 </div>
