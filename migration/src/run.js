@@ -75,6 +75,7 @@ class Migration {
 
             // create createRevision
             const draftResult = await approvalRequest.createRevision(data, employeeObj, false);
+
             if ( draftResult && draftResult.error ) {
                 errorObject = {
                     formID: row.id,
