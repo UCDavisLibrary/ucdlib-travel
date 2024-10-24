@@ -16,6 +16,7 @@ export function render() {
           ${this.approvalRequests.map(request => html`
             <div class='approval-request-teaser-wrapper'>
               <approval-request-teaser
+                always-show-submitter
                 .approvalRequest=${request}
               ></approval-request-teaser>
             </div>
