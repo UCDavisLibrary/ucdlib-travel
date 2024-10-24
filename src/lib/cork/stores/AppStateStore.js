@@ -19,10 +19,12 @@ class AppStateStoreImpl extends AppStateStore {
       'admin': {text: 'Admin', link: '/admin'},
       'admin-allocations': {text: 'Employee Allocations', link: '/admin/allocations'},
       'admin-allocations-new': {text: 'New', link: '/admin/allocations/new'},
+      'admin-approval-requests': {text: 'Approval Requests Admin', link: '/admin/approval-requests'},
       'admin-approvers': {text: 'Approvers and Funding Sources', link: '/admin/approvers'},
       'admin-reimbursement': {text: 'Reimbursement Requests', link: '/admin/reimbursement'},
       'admin-settings': {text: 'General Settings', link: '/admin/settings'},
       'admin-line-items': {text: 'Line Items', link: '/admin/items'},
+      'admin-email-settings': {text: 'Email Settings', link: '/admin/email-settings'},
       'reimbursement-new': {text: 'New Reimbursement Request', link: '/approval-request/new-reimbursement'},
     };
 

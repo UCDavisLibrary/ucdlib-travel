@@ -23,7 +23,9 @@ export default class ApprovalRequestTeaser extends Mixin(LitElement)
       approvalStatus: {state: true},
       reimbursementStatus: {state: true},
       programDates: {state: true},
-      currentUser: {state: true}
+      currentUser: {state: true},
+      isCurrentUser: {state: true},
+      alwaysShowSubmitter: {type: Boolean, attribute: 'always-show-submitter'}
     }
   }
 
@@ -50,6 +52,7 @@ export default class ApprovalRequestTeaser extends Mixin(LitElement)
       this._setApprovalStatus();
       this._setReimbursementStatus();
       this._setProgramDates();
+      this.isCurrentUser = this.AuthModel.isCurrentUser(this.approvalRequest.employeeKerberos);
     }
 
   }

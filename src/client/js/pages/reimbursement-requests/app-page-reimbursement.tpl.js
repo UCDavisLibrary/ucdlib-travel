@@ -60,10 +60,7 @@ return html`
       ${renderDailyExpenses.call(this)}
       ${renderTotalExpenses.call(this)}
     </div>
-
     ${renderReceipts.call(this)}
-
-
   </div>
 `;}
 
@@ -146,7 +143,7 @@ function renderStatusSection() {
                     <option value='' disabled>Select a funding source</option>
                     ${(this.approvalRequest?.fundingSources || []).map(source => html`
                       <option
-                        .value=${source.fundingSourceId}
+                        .value=${source.approvalRequestFundingSourceId}
                         ?selected=${this.statusFormData?.approvalRequestFundingSourceId === source.approvalRequestFundingSourceId}
                         >${source.fundingSourceLabel}</option>
                       `)}
@@ -249,6 +246,7 @@ function renderTransportationExpenses() {
                 <td>
                   <div>${expense.categoryLabel}</div>
                   <div ?hidden=${!expense.estimatedMiles} class='small grey'>Estimated Miles: ${expense.estimatedMiles}</div>
+                  <div>${renderExpenseReceiptLink.call(this, expense)}</div>
                 </td>
                 <td>${expense.from}</td>
                 <td>${expense.to}</td>
@@ -291,7 +289,10 @@ function renderRegistrationExpenses(){
           <tbody>
             ${(this._registrationExpenses?.expenses || []).map(expense => html`
               <tr>
-                <td>${expense.name}</td>
+                <td>
+                  <div>${expense.name}</div>
+                  <div>${renderExpenseReceiptLink.call(this, expense)}</div>
+                </td>
                 <td class='text-align--right'><span class='monospace-number'>$${expense.amountString}</span></td>
               </tr>
             `)}
@@ -415,10 +416,10 @@ function renderTotalExpenses(){
  */
 function renderReceipts(){
   return html`
-    <div ?hidden=${!(this.reimbursementRequest?.receipts || []).length}>
+    <section ?hidden=${!(this.reimbursementRequest?.receipts || []).length} class='receipts'>
       <h3>Receipts</h3>
       ${(this.reimbursementRequest?.receipts || []).map(receipt => html`
-        <div class='flex u-space-mb'>
+        <div class='flex u-space-mb' expense-id=${receipt.reimbursementRequestExpenseId}>
           <div class='u-space-mr--small primary'>
             <i class='fas fa-file-lines'></i>
           </div>
@@ -433,7 +434,7 @@ function renderReceipts(){
           </div>
         </div>
       `)}
-    </div>
+    </section>
   `;
 }
 
@@ -452,5 +453,19 @@ function renderBasicField(label, value, fallback='hide') {
       <div class='primary bold'>${label}</div>
       <div>${value}</div>
     </div>
+  `;
+}
+
+/**
+ * @description render a link to view the receipt for an expense
+ * @param {Object} expense - expense object
+ * @returns {TemplateResult}
+ */
+function renderExpenseReceiptLink(expense){
+  const expenseId = expense.reimbursementRequestExpenseId;
+  const receipt = this.reimbursementRequest?.receipts?.find(r => r.reimbursementRequestExpenseId === expenseId);
+  if ( !receipt) return html``;
+  return html`
+    <a class='small' href=${receipt.filePath}>View Receipt</a>
   `;
 }

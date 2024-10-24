@@ -76,7 +76,7 @@ export default (api) => {
         }
         const reimbursedTotals = transactions.reduce((acc, t) => {
           if ( !acc[t.reimbursementRequestId] ) acc[t.reimbursementRequestId] = 0;
-          if ( t.reimbursementStatus === 'fully-reimbursed' ) {
+          if ( t.reimbursementStatus === 'submitted' ) {
             acc[t.reimbursementRequestId] += t.amount;
           }
           return acc;

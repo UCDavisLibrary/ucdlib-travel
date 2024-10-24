@@ -71,11 +71,21 @@ return html`
           class='btn btn--primary category-brand--secondary'
           @click=${this._onSubmitButtonClick}
           >Submit</button>
+        <button
+          type="button"
+          class='btn btn--invert category-brand--secondary'
+          @click=${this._onSaveButtonClick}
+          >Save</button>
         <a
           type="button"
           class='btn btn--invert category-brand--secondary'
           href=${this.formLink}
-          >Cancel</a>
+          >Edit</a>
+        <button
+          type="button"
+          class='btn btn--primary category-brand--double-decker'
+          @click=${this._onDeleteButtonClick}
+          >Delete Request</button>
         </div>
       </div>
     </div>

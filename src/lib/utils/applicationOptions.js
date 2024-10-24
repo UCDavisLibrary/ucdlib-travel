@@ -83,30 +83,24 @@ class ApplicationOptions {
       },
       {
         value: 'submitted',
-        label: 'Reimbursement Request Submitted',
+        label: 'Reimbursement Submitted',
         labelShort: 'Submitted',
         isActive: true,
         iconClass: 'fa-solid fa-upload',
         brandColor: 'putah-creek'
       },
       {
-        value: 'reimbursement-pending',
-        label: 'Reimbursement Pending',
-        labelShort: 'Pending',
-        isActive: true,
-        iconClass: 'fa-solid fa-circle-half-stroke',
-        brandColor: 'secondary'
-      },
-      {
         value: 'partially-reimbursed',
-        label: 'Partially Reimbursed',
+        label: 'Reimbursement Partially Processed',
+        labelShort: 'Partially Processed',
         isActive: true,
         iconClass: 'fa-solid fa-circle-half-stroke',
         brandColor: 'secondary'
       },
       {
         value: 'fully-reimbursed',
-        label: 'Fully Reimbursed',
+        label: 'Reimbursement Fully Processed',
+        labelShort: 'Fully Processed',
         iconClass: 'fa-solid fa-check',
         brandColor: 'redwood'
       }
@@ -284,16 +278,6 @@ class ApplicationOptions {
         value: 'submitted',
         labelShort: 'Submitted',
         label: 'Submitted To Aggie Expense'
-      },
-      {
-        value: 'partially-reimbursed',
-        labelShort: 'Partial Reimbursement',
-        label: 'Transaction Partially Reimbursed'
-      },
-      {
-        value: 'fully-reimbursed',
-        labelShort: 'Fully Reimbursed',
-        label: 'Transaction Fully Reimbursed'
       },
       {
         value: 'cancelled',

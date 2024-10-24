@@ -135,7 +135,7 @@ export default (api) => {
   api.delete('/approval-request/:id', protect('hasBasicAccess'), async (req, res) => {
 
     // try to delete draft
-    const result = await approvalRequest.deleteDraft(req.params.id, req.auth.token.id);
+    const result = await approvalRequest.deleteDraft(req.params.id, req.auth.token.id, true);
 
     // handle errors
     if ( result.error && result.is400 ) {
@@ -151,6 +151,40 @@ export default (api) => {
 
     res.json(result);
 
+  });
+
+  api.post('/approval-request/:id/toggle-more-reimbursement', protect('hasBasicAccess'), async (req, res) => {
+    const kerberos = req.auth.token.id;
+
+    // ensure approval request exists
+    const approvalRequestId = typeTransform.toPositiveInt(req.params.id);
+    if ( !approvalRequestId ) {
+      return res.status(400).json({error: true, message: 'Invalid approvalRequestId.'});
+    }
+    let approvalRequestObj = await approvalRequest.get({requestIds: [approvalRequestId], isCurrent: true});
+    if ( approvalRequestObj.error ) {
+      console.error('Error in POST /approval-request/:id/status-update', approvalRequest.error);
+      return res.status(500).json({error: true, message: 'Error getting approval request.'});
+    }
+    if ( !approvalRequestObj.data.length ) {
+      return res.status(404).json({error: true, message: 'Approval request not found.'});
+    }
+    approvalRequestObj = approvalRequestObj.data[0];
+
+    // do authorization check
+    const isOwnRequest = approvalRequestObj.employeeKerberos === kerberos;
+    if ( !isOwnRequest || !req.auth.token.hasAdminAccess ) {
+      return apiUtils.do403(res);
+    }
+
+    // toggle more reimbursement flag on approval request, and possibly update reimbursement status
+    const result = await approvalRequest.toggleMoreReimbursement(approvalRequestObj);
+    if ( result.error ) {
+      console.error('Error in POST /approval-request/:id/toggle-more-reimbursement', result.error);
+      return res.status(500).json({error: true, message: 'Error toggling more reimbursement.'});
+    }
+
+    res.json(result);
   });
 
   api.post('/approval-request/:id/status-update', protect('hasBasicAccess'), async (req, res) => {

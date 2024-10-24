@@ -13,7 +13,16 @@ fi
 
 # Main version number we are tagging the app with. Always update
 # this when you cut a new version of the app!
+<<<<<<< HEAD
 APP_VERSION=v1.0.0.${BUILD_NUM}
+=======
+<<<<<<< HEAD
+APP_VERSION=v1.0.0.${BUILD_NUM}
+=======
+APP_SEMVER=1.0.0
+APP_VERSION=v${APP_SEMVER}.${BUILD_NUM}
+>>>>>>> e08265d6bde15cb1c212bc80a0d6db0fec292361
+>>>>>>> dev
 
 # This is used anywhere a name is needed for the app
 APP_SLUG=ucdlib-travel
@@ -30,6 +39,10 @@ APP_CONTAINER_PORT=3000
 # Tags should always be used for production deployments
 # Branches can be used for development deployments
 REPO_TAG=dev
+<<<<<<< HEAD
+=======
+# REPO_TAG=v${APP_SEMVER}
+>>>>>>> dev
 
 # Dependency tags/branches
 NODE_TAG=20

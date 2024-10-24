@@ -58,7 +58,7 @@ return html`
           ${ref(this.fundingSourceSelectRef)}
           label='Funding Sources'
           @funding-source-input=${this._onFundingSourceInput}
-          can-toggle-view
+          ?can-toggle-view=${this.fundingSources.length > 1}
           reallocate-only
           indent-body
           expenditure-total=${this.totalExpenditures}

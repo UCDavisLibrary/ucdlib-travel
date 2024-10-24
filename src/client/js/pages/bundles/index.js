@@ -12,7 +12,7 @@ const defs = {
   ],
   "admin": [
     'admin', 'admin-approvers', 'admin-settings', 'admin-email-settings',
-    'admin-allocations', 'admin-line-items', 'admin-reimbursement', 'admin-allocations-new'
+    'admin-allocations', 'admin-line-items', 'admin-reimbursement', 'admin-allocations-new','admin-approval-requests'
   ],
   "reports": [
     'reports'

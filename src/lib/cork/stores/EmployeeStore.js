@@ -8,12 +8,14 @@ class EmployeeStore extends BaseStore {
     this.data = {
       iamQuery: {},
       iamById: {},
-      activeTitles: {}
+      activeTitles: {},
+      allEmployees: {}
     };
     this.events = {
       IAM_QUERIED: 'iam-queried',
       IAM_BY_ID_QUERIED: 'iam-by-id-queried',
-      ACTIVE_TITLES_FETCHED: 'active-titles-fetched'
+      ACTIVE_TITLES_FETCHED: 'active-titles-fetched',
+      EMPLOYEES_FETCHED: 'employees-fetched'
     };
   }
 
@@ -97,7 +99,32 @@ class EmployeeStore extends BaseStore {
 
   getIamIdKey(id, idType) {
     return idType+'--'+id;
+  }
 
+  allEmployeesLoading(request) {
+    this._setAllEmployeesState({
+      state : this.STATE.LOADING,
+      request
+    });
+  }
+
+  allEmployeesLoaded(payload) {
+    this._setAllEmployeesState({
+      state : this.STATE.LOADED,
+      payload
+    });
+  }
+
+  allEmployeesError(error) {
+    this._setAllEmployeesState({
+      state : this.STATE.ERROR,
+      error
+    });
+  }
+
+  _setAllEmployeesState(state) {
+    this.data.allEmployees = state;
+    this.emit(this.events.EMPLOYEES_FETCHED, state);
   }
 
 }

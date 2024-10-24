@@ -137,6 +137,26 @@ export default class AppPageApprovalRequestConfirm extends Mixin(LitElement)
   }
 
   /**
+   * @description Callback for when the save button is clicked
+   * The request is already saved, so just show a success message
+   */
+  _onSaveButtonClick(){
+    this.AppStateModel.showToast({message: 'Approval request saved', type: 'success'});
+  }
+
+  _onDeleteButtonClick(){
+    this.AppStateModel.showDialogModal({
+      title : 'Delete Approval Request',
+      content : 'Are you sure you want to delete this approval request? This action cannot be undone.',
+      actions : [
+        {text: 'Delete', value: 'delete-approval-request', color: 'double-decker'},
+        {text: 'Cancel', value: 'cancel', invert: true, color: 'primary'}
+      ],
+      data : {approvalRequestId: this.approvalRequestId}
+    });
+  }
+
+  /**
    * @description Callback for approval-request-status-update event
    * Fires when the status of an approval request is updated (e.g. after a submit action)
    * @param {Object} e - cork-app-utils event object

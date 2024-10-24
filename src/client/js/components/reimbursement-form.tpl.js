@@ -9,15 +9,17 @@ export function render() {
   return html`
     <form @submit=${this._onSubmit} ${ref(this.form)}>
       <div class="field-container ${this.validationHandler.errorClass('label')}">
-        <label for="${idPrefix}--label">Request Title</label>
-        <input
-          id="${idPrefix}--label"
-          type="text"
-          .value=${this.reimbursementRequest.label || ''}
-          @input=${e => this._onInput('label', e.target.value)} />
-        <div class='small u-space-mt--small'>Not required, but helpful if you need to submit mutiple reimbursement requests.</div>
+        <label for="${idPrefix}--label">Request Title *</label>
+        <select id="${idPrefix}--label" @change=${e => this._onInput('label', e.target.value)} .value=${this.reimbursementRequest.label || ''}>
+          <option value="" ?selected=${!this.reimbursementRequest.label}>Select a title</option>
+          ${this.labelOptions.map(label => html`
+            <option
+              value="${label}"
+              ?selected=${this.reimbursementRequest.label === label}
+              >${label}</option>
+          `)}
+        </select>
         <div>${this.validationHandler.renderErrorMessages('label')}</div>
-        <character-limit-tracker .value=${this.reimbursementRequest.label} character-limit=100></character-limit-tracker>
       </div>
 
       <div class="field-container ${this.validationHandler.errorClass('employeeResidence')}">
@@ -231,6 +233,7 @@ export function render() {
 
       <fieldset class=${this.validationHandler.errorClass('receipts')}>
         <legend>Receipts</legend>
+        <div>${unsafeHTML(this.receiptDescription)}</div>
         <div>${this.validationHandler.renderErrorMessages('receipts', null, 'u-space-mb')}</div>
         <div class='flex flex--justify-end'>
           <a class='icon-link' @click=${() => this.addBlankReceipt()}>
@@ -304,6 +307,17 @@ export function render() {
         <character-limit-tracker .value=${this.reimbursementRequest.comments} character-limit=500></character-limit-tracker>
       </div>
 
+      <div class='field-container'>
+        <div class='checkbox'>
+          <input
+            id="${idPrefix}--more-reimbursement"
+            type="checkbox"
+            .checked=${this.reimbursementRequest.expectMoreReimbursement}
+            @change=${() => this._onInput('expectMoreReimbursement', !this.reimbursementRequest.expectMoreReimbursement)} />
+          <label for="${idPrefix}--more-reimbursement" class='bold'>Do you intend to submit more reimbursement requests for this trip/professional development opportunity? </label>
+        </div>
+      </div>
+
       <div class='form-buttons alignable-promo__buttons'>
         <button
           type="submit"
@@ -315,8 +329,19 @@ export function render() {
 
   `;}
 
+function renderExpenseReceiptLink(expense){
+  const receiptRecord = this.reimbursementRequest.receipts.find(r => r.expenseNonce === expense.nonce);
+  return html`
+    <a class='icon-link' @click=${() => this.goToExpenseReceipt(expense)}>
+      <i class="fa-solid fa-file-lines"></i>
+      <span>${receiptRecord ? 'View Receipt' : 'Upload Receipt'}</span>
+    </a>
+  `;
+}
+
 function renderReceiptForm(receipt){
   const nonce = receipt.nonce || receipt.reimbursementRequestReceiptId;
+  const expense = this.reimbursementRequest.expenses.find(e => e.nonce === receipt.expenseNonce);
   const idPrefix = `reimbursement-form-receipt--${nonce}`;
   return html`
     <div>
@@ -345,6 +370,9 @@ function renderReceiptForm(receipt){
           rows="4"
           @input=${e => this._setObjectProperty(receipt, 'description', e.target.value)}></textarea>
         <character-limit-tracker .value=${receipt.description} character-limit=500></character-limit-tracker>
+      </div>
+      <div ?hidden=${!expense}>
+        <a class='pointer' @click=${() => this.goToExpenseAmountInput(expense)}>Go to associated expense</a>
       </div>
     </div>
   `;
@@ -388,6 +416,7 @@ function renderDailyExpenseForm(expense){
           </div>
         </div>
       </div>
+      ${renderExpenseReceiptLink.call(this, expense)}
     </div>
 
     `;
@@ -428,6 +457,7 @@ function renderRegistrationFeeForm(expense){
         </div>
       </div>
     </div>
+    ${renderExpenseReceiptLink.call(this, expense)}
   `;
 }
 
@@ -447,19 +477,19 @@ function renderTransportationExpenseForm(expense){
     <div class='radio radio--horizontal'>
       <div>
         <input
-          id="${idPrefix}--${subCategory}--round-trip"
+          id="${idPrefix}--round-trip"
           type="radio"
           .checked=${!expense.details.oneWay}
           @input=${e => this._setObjectProperty(expense.details, 'oneWay', false)} />
-        <label for="${idPrefix}--${subCategory}--round-trip">Round Trip</label>
+        <label for="${idPrefix}--round-trip">Round Trip</label>
       </div>
       <div>
         <input
-          id="${idPrefix}--${subCategory}--one-way"
+          id="${idPrefix}--one-way"
           type="radio"
           .checked=${expense.details.oneWay}
           @input=${e => this._setObjectProperty(expense.details, 'oneWay', true)} />
-        <label for="${idPrefix}--${subCategory}--one-way">One Way</label>
+        <label for="${idPrefix}--one-way">One Way</label>
       </div>
     </div>
   `;
@@ -468,12 +498,12 @@ function renderTransportationExpenseForm(expense){
     <div class='l-2col'>
       <div class='l-first'>
         <div class='field-container'>
-          <label for="${idPrefix}--${subCategory}--from">
+          <label for="${idPrefix}--from">
             <span ?hidden=${subCategory !== 'private-car'}>From (Street Address) *</span>
             <span ?hidden=${subCategory === 'private-car'}>From *</span>
           </label>
           <input
-            id="${idPrefix}--${subCategory}--from"
+            id="${idPrefix}--from"
             type="text"
             .value=${expense.details.from || ''}
             @input=${e => this._setObjectProperty(expense.details, 'from', e.target.value)} />
@@ -481,12 +511,12 @@ function renderTransportationExpenseForm(expense){
       </div>
       <div class='l-second'>
         <div class='field-container'>
-          <label for="${idPrefix}--${subCategory}--to">
+          <label for="${idPrefix}--to">
             <span ?hidden=${subCategory !== 'private-car'}>To (Street Address) *</span>
             <span ?hidden=${subCategory === 'private-car'}>To *</span>
           </label>
           <input
-            id="${idPrefix}--${subCategory}--to"
+            id="${idPrefix}--to"
             type="text"
             .value=${expense.details.to || ''}
             @input=${e => this._setObjectProperty(expense.details, 'to', e.target.value)} />
@@ -497,10 +527,10 @@ function renderTransportationExpenseForm(expense){
 
   const amountField = html`
     <div class='field-container'>
-      <label for="${idPrefix}--${subCategory}--amount">Amount *</label>
+      <label for="${idPrefix}--amount">Amount *</label>
       <div class='amount input--dollar'>
         <input
-          id="${idPrefix}--${subCategory}--amount"
+          id="${idPrefix}--amount"
           type="number"
           step="0.01"
           .value=${expense.amount}
@@ -510,7 +540,7 @@ function renderTransportationExpenseForm(expense){
   `;
 
   if ( subCategory === 'private-car' ){
-    const milesId = `${idPrefix}--${subCategory}--estimated-miles`;
+    const milesId = `${idPrefix}--estimated-miles`;
     return html`
       <div>
         ${roundTripRadioButtons}
@@ -528,10 +558,10 @@ function renderTransportationExpenseForm(expense){
           </div>
           <div class='l-second'>
             <div class='field-container'>
-              <label for="${idPrefix}--${subCategory}--amount">Estimated Amount</label>
+              <label for="${idPrefix}--amount">Estimated Amount</label>
               <div class='amount input--dollar width-100'>
                 <input
-                  id="${idPrefix}--${subCategory}--amount"
+                  id="${idPrefix}--amount"
                   type="number"
                   step="0.01"
                   .value=${expense.amount}
@@ -540,6 +570,7 @@ function renderTransportationExpenseForm(expense){
             </div>
           </div>
         </div>
+        ${renderExpenseReceiptLink.call(this, expense)}
       </div>
     `;
   }
@@ -552,6 +583,7 @@ function renderTransportationExpenseForm(expense){
           ${roundTripRadioButtons}
           ${addressFields}
         </div>
+        ${renderExpenseReceiptLink.call(this, expense)}
       </div>
     `;
   }
@@ -564,6 +596,7 @@ function renderTransportationExpenseForm(expense){
           ${roundTripRadioButtons}
           ${addressFields}
         </div>
+        ${renderExpenseReceiptLink.call(this, expense)}
       </div>
     `;
   }
