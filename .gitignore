@@ -1,0 +1,11 @@
+node_modules
+.env
+.DS_Store
+src/client/public/js/dev
+src/client/public/js/dist
+src/client/public/css
+gc-writer-key.json
+gc-reader-key.json
+ucdlib-travel-local-dev
+migration/db-entrypoint
+migration/.env

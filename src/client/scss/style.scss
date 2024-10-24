@@ -1,0 +1,34 @@
+// global styles
+@use '@ucd-lib/theme-sass/style-ucdlib.scss' as style;
+@use './fonts.scss' as fonts;
+@use './global/index.scss' as global;
+
+// admin pages
+@use './pages/admin/settings.scss' as adminSettings;
+@use './pages//admin/line-items.scss' as adminLineItems;
+@use './pages/admin/allocations.scss' as adminAllocations;
+@use './pages/admin/email.scss' as email;
+@use './pages//admin/reimbursement-requests.scss' as adminReimbursementRequests;
+
+// pages
+@use './pages/approval-request-new.scss' as approvalRequestNew;
+@use './pages/approver.scss' as approver;
+@use './pages//approval-request.scss' as approvalRequest;
+@use './pages/home.scss' as home;
+@use './pages/reimbursement-request.scss' as reimbursementRequest;
+@use './pages/reports.scss' as reports;
+
+// components
+@use './components/admin-funding-source-management.scss' as adminFundingSourceManagement;
+@use './components/approval-request-header.scss' as approvalRequestHeader;
+@use './components/approval-request-status-action.scss' as approvalRequestStatusAction;
+@use './components/dialog-modal.scss' as dialogModal;
+@use './components/approver-type.scss' as approverType;
+@use './components/reimbursement-form.scss' as reimbursementForm;
+
+@use './components/employee-search-advanced.scss' as employeeSearchAdvanced;
+@use './components/employee-search-basic.scss' as employeeSearchBasic;
+@use './components/funding-source-select.scss' as fundingSourceSelect;
+@use './components/approval-request-teaser.scss' as approvelRequestTeaser;
+@use './components/approval-request-draft-list.scss' as approvalRequestDraftList;
+@use './components/user-current-allocation-summary.scss' as userCurrentAllocationSummary;

@@ -1,0 +1,90 @@
+app-page-reports {
+
+  .message-403 {
+    display: flex;
+    justify-content: center;
+    flex-flow: column;
+    align-items: center;
+    padding: 1rem;
+    text-align: center;
+
+    .message-403--icon {
+      color: #13639e;
+      font-size: 3rem;
+    }
+  }
+
+  .filters {
+    background-color: #ebf3fa;
+    padding: 1rem;
+
+    .l-4col {
+      --l-gap: 1rem;
+    }
+    .l-second, .l-third, .l-fourth {
+      margin-top: 0 !important;
+    }
+  }
+
+  .metrics {
+    background-color: #fff4d2;
+    padding: 1rem;
+  }
+
+  .aggregators {
+    background-color: #fff4d2;
+    padding: 1rem;
+  }
+
+  dialog {
+    width: 95%;
+    padding: 2rem;
+    border: none;
+  }
+  dialog::backdrop {
+    background-color: black;
+    opacity: 0.5;
+  }
+  @media (min-width: 768px) {
+    dialog {
+      width: 65%;
+    }
+  }
+
+  .generate-container {
+    display: flex;
+    justify-content: center;
+    padding-bottom: 2rem;
+    border-bottom: 2px dotted #ffbf00;
+  }
+  .report-container {
+    padding-top: 2rem;
+
+    th {
+      font-weight: 700;
+      background-color:#ebf3fa;
+      color: #022851;
+    }
+
+    td {
+      font-size: .9em;
+      font-family: monospace, monospace;
+      text-align: right;
+      border-top: 1px solid #dbeaf7;
+      color: #4C4C4C;
+    }
+
+    tr:hover {
+      background-color: #b0d0ed;
+
+      th {
+        background-color: #b0d0ed;
+      }
+    }
+
+    table tr:first-child th {
+      text-align: right;
+      background-color:#ebf3fa;
+    }
+  }
+}

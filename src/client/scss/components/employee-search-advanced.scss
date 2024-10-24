@@ -1,0 +1,25 @@
+ucdlib-employee-search-advanced {
+
+  form {
+    border-bottom: 2px dotted #ffbf00;
+    padding-bottom: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .results-header {
+
+    margin-bottom: 1rem;
+
+    label {
+      font-weight: 700;
+      color: #022851;
+    }
+  }
+  .result {
+
+    margin-bottom: .5rem;
+
+    label {
+      width: calc(100% - 1.75rem);
+    }
+  }
+}

@@ -1,0 +1,77 @@
+app-approver-type {
+  display: block;
+    .approvertype-block{
+        border-bottom: 2px solid #DBEAF7;
+        padding: 1rem 0;
+    }
+    .user-icon{
+        color:#13639E;
+        margin-left:10px;
+        width:15px;
+        height:15px;
+        cursor: pointer;
+
+    }
+    .trash-icon{
+        color:#C10230;
+        margin-left:10px;
+        width:15px;
+        height:15px;
+        cursor: pointer;
+    }
+
+    .field-container {
+        font-size:20px;
+    }
+
+    .employeeLabel{
+        width:90%;
+        display: inline-table;
+    }
+
+
+    .employee-search-bar{
+        width: 90%;
+        display: inline-table;
+
+    }
+
+    .icon-employee-minus {
+        display: inline-flex;
+    }
+
+    .textLabel{
+        margin: 10px 0px;
+    }
+
+    .section-header{
+        margin-top:10px;
+    }
+
+    form {
+      border-bottom: medium solid #DBEAF7;
+    }
+
+    .approvertype-form{
+      max-width: 600px;
+    }
+    .btn {
+        margin: 15px 10px 5px 0px;
+    }
+    .approverList{
+        color:#022851;
+        width:15px;
+        height:15px;
+    }
+
+    .employeeBlock{
+        display:inline;
+    }
+
+    #icon-employee-minus{
+        width: 24px;
+        height: 24px;
+        text-align:center;
+        align-items: center;
+    }
+  }

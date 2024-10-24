@@ -1,0 +1,73 @@
+funding-source-select {
+  .component-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+
+    .action-buttons {
+      display: flex;
+      align-items: center;
+
+      a {
+        margin-left: .75rem;
+
+        &.add-funding-source {
+          font-size: 1.25rem;
+        }
+      }
+    }
+  }
+
+  .form-view {
+
+    .funding-source {
+      padding: 1rem;
+      border: 1px solid #DBEAF7;
+      margin-bottom: 1rem;
+    }
+
+    .inputs {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .amount {
+      margin-left: 1rem;
+    }
+
+    @media (max-width: 480px) {
+      .inputs {
+        display: block;
+      }
+      .amount {
+        margin-left: 0;
+        margin-top: 1rem;
+      }
+    }
+  }
+
+  .list-view {
+    .funding-source {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: .5rem;
+    }
+  }
+
+  .total-row {
+    font-weight: 700;
+    color: #022851;
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem 0;
+  }
+
+  .indent-body {
+    .total-row {
+      padding-left: .5rem;
+    }
+    .funding-sources {
+      padding-left: .5rem;
+    }
+  }
+}
