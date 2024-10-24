@@ -270,7 +270,6 @@ class Employee {
     // return records
     return returnSingle ? {res: recordsById[ids[0]]} : {res: ids.map(id => recordsById[id]).filter(record => record)};
   }
-
 }
 
 export default new Employee();

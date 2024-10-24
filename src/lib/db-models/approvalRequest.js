@@ -759,23 +759,35 @@ class ApprovalRequest {
           // submitter supervisor
           if ( ap.approverTypeId == 1 ){
 
-            if ( !submitter?.supervisor?.iamId ) {
+            let isUniversityLibrarian = false;
+            if((submitter?.groups || []).find(g => g.id == 1 && g.partOfOrg && g.isHead)){
+              isUniversityLibrarian = true;
+            } 
+
+
+            if ( !isUniversityLibrarian && !submitter?.supervisor?.iamId ) {
               return {error: true, message: 'Submitter supervisor not found'};
             }
+
             approvers.push({
               approvalTypeOrder: ap.approvalOrder,
               employeeOrder: 0,
               approverTypeLabel: ap.label,
               approverTypeId: ap.approverTypeId,
-              employeeId: submitter.supervisor.iamId,
+              employeeId: isUniversityLibrarian ? submitter.iam_id : submitter.supervisor.iamId,
               employeeIdType: 'iam-id'
             });
 
           // submitter department head
           } else if ( ap.approverTypeId == 2 ){
 
+            let isDepartmentHead = false;
+            if((submitter?.groups || []).find(g => g.partOfOrg && g.isHead)){
+              isDepartmentHead = true;
+            }
+
             // bail if submitter has no department head and is not department head
-            if ( !submitter?.departmentHead?.iamId && !(submitter?.groups || []).find(g => g.partOfOrg && g.isHead) ) {
+            if ( !isDepartmentHead && !submitter?.departmentHead?.iamId && !(submitter?.groups || []).find(g => g.partOfOrg && g.isHead) ) {
               return {error: true, message: 'Submitter department head not found'};
             }
 
@@ -784,7 +796,7 @@ class ApprovalRequest {
               employeeOrder: 0,
               approverTypeLabel: ap.label,
               approverTypeId: ap.approverTypeId,
-              employeeId: submitter.departmentHead.iamId,
+              employeeId: isDepartmentHead ? submitter.iam_id : submitter.departmentHead.iamId,
               employeeIdType: 'iam-id'
             });
 
@@ -939,6 +951,8 @@ class ApprovalRequest {
       sql = `INSERT INTO link_approver_type (${data.keysString}) VALUES (${data.placeholdersString})`;
       await client.query(sql, data.values);
 
+      let isApprover = false;
+
       // insert approval chain links
       for (const [index, approver] of approvalChain.entries()){
 
@@ -946,11 +960,13 @@ class ApprovalRequest {
         const employee = new IamEmployeeObjectAccessor(approver.employee)
         await employeeModel.upsertInTransaction(client, employee.travelAppObject);
 
+        if(employee.kerberos == approvalRequest.employeeKerberos) isApprover = true;
+
         // insert into approval chain table
         data = {
           approval_request_revision_id: approvalRequestRevisionId,
           approver_order: index,
-          action: 'approval-needed',
+          action:  isApprover ? 'approved': 'approval-needed',
           employee_kerberos: employee.kerberos
         };
         data = pg.prepareObjectForInsert(data);
@@ -970,9 +986,20 @@ class ApprovalRequest {
         }
       }
 
+      let apStatus = 'in-progress';
+      if(isApprover && approvalChain.length == 1){
+        apStatus = 'approved';
+      }
+      else if(!isApprover){
+        apStatus = 'submitted';
+      }
+      else {
+        apStatus = 'in-progress';
+      }
+
       // update approval request status to 'submitted'
       data = {
-        approval_status: 'submitted',
+        approval_status: apStatus,
         submitted_at: submittedAt
       };
       const updateClause = pg.toUpdateClause(data);
@@ -1002,6 +1029,12 @@ class ApprovalRequest {
       return out;
     }
     modifiedApprovalRequest = modifiedApprovalRequest.data[0];
+
+    const approverEmployee = modifiedApprovalRequest.approvalStatusActivity.filter((o) => o.action == 'approval-needed');
+
+    if(approverEmployee.length === 0){
+      return out;
+    }
 
     // email the requester
     let tokenRequest = {preferred_username: modifiedApprovalRequest.employeeKerberos}
