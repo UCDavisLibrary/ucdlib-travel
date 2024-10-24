@@ -32,5 +32,5 @@ services:
     depends_on:
       - mysql
     command: /app/lib/tail.sh
-    #command: node index.js # Replace with your migration command
+    #command: node index.js --year=2023 # Replace with your migration command
 
