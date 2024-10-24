@@ -13,25 +13,25 @@ fi
 
 # Main version number we are tagging the app with. Always update
 # this when you cut a new version of the app!
-APP_VERSION_SEMVER=1.0.0
-APP_VERSION=v${APP_VERSION_SEMVER}.${BUILD_NUM}
+APP_SEMVER=1.0.0
+APP_VERSION=v${APP_SEMVER}.${BUILD_NUM}
 
 # This is used anywhere a name is needed for the app
 APP_SLUG=ucdlib-travel
 
 # App url and ports
-# APP_HOST=localhost:3000
-# APP_URL=http://$APP_HOST
-APP_HOST=travel.staff.library.ucdavis.edu
-APP_URL=https://$APP_HOST
+APP_HOST=localhost:3000
+APP_URL=http://$APP_HOST
+# APP_HOST=travel.staff.library.ucdavis.edu
+# APP_URL=https://$APP_HOST
 APP_HOST_PORT=3000
 APP_CONTAINER_PORT=3000
 
 # Repository tags/branchs
 # Tags should always be used for production deployments
 # Branches can be used for development deployments
-#REPO_TAG=dev
-REPO_TAG=v${APP_VERSION_SEMVER}
+REPO_TAG=dev
+# REPO_TAG=v${APP_SEMVER}
 
 # Dependency tags/branches
 NODE_TAG=20
