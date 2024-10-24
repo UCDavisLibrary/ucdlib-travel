@@ -1,6 +1,8 @@
 import serverConfig from "../../serverConfig.js";
 import employee from "../../db-models/employee.js";
 import settings from "./settings.js";
+import emailVariables from "../emailVariables.js"
+
 
 /**
  * @class Hydration
@@ -13,30 +15,7 @@ export default class Hydration {
     this.reimbursementRequest = reimbursementRequest,
     this.type = notificationType;
 
-    this._variables = [
-      {name: 'requesterFirstName', cb: this._getRequesterFirstName},
-      {name: 'requesterLastName', cb: this._getRequesterLastName},
-      {name: 'requesterFullName', cb: this._getRequesterFullName},
-      {name: 'requesterKerberos', cb: this._getRequesterKerberos},
-      {name: 'requesterLabel', cb: this._getRequesterLabel},
-      {name: 'requesterOrganization', cb: this._getRequesterOrganization},
-      {name: 'requesterBuisnessPurpose', cb: this._getRequesterBuisnessPurpose},
-      {name: 'requesterLocation', cb: this._getRequesterLocation},
-      {name: 'requesterProgramDate', cb: this._getRequesterProgramDate},
-      {name: 'requesterTravelDate', cb: this._getRequesterTravelDate},
-      {name: 'requesterComments', cb: this._getRequesterComments},
-      {name: 'nextApproverFullName', cb: this._getNextApproverFullName},
-      {name: 'nextApproverFundChanges', cb: this._getNextApproverFundChanges},
-      {name: 'nextApproverKerberos', cb: this._getNextApproverKerberos},
-      {name: 'reimbursementLabel', cb: this._getReimbursementLabel},
-      {name: 'reimbursementEmployeeResidence', cb: this._getReimbursementEmployeeResidence},
-      {name: 'reimbursementTravelDate', cb: this._getReimbursementTravelDate},
-      {name: 'reimbursementPersonalTime', cb: this._getReimbursementPersonalTime},
-      {name: 'reimbursementComments', cb: this._getReimbursementComments},
-      {name: 'reimbursementStatus', cb: this._getReimbursementStatus},
-      {name: 'approvalRequestUrl', cb: this._getApprovalRequestUrl},
-      {name: 'reimbursementRequestUrl', cb: this._getReimbursementRequestUrl}
-    ];
+    this._variables = [...emailVariables.variables];
   }
 
 /**
@@ -315,10 +294,22 @@ _getContext(content){
   const context = {};
 
   for (let v of this._variables) {
-    if(content.includes(v.name)) context[v.name] = v.cb.call(this);
+    if(content.includes(v.name)) context[v.name] = this._doVariableCallback(v.name);
   }
 
   return context;
+}
+
+/**
+ * @description get the value of the variable
+ * @param {Object} variable - an item from emailVariables.variables array
+ * @returns {String} value of the variable
+ */
+_doVariableCallback(variable){
+  const funcName = `_get${variable.charAt(0).toUpperCase() + variable.slice(1)}`;
+  if (typeof this[funcName] === 'function') return this[funcName].call(this);
+  console.warn(`Email hydration function ${funcName} does not exist`);
+  return '';
 }
 
 /**

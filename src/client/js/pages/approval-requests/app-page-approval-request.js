@@ -7,6 +7,7 @@ import { WaitController } from "@ucd-lib/theme-elements/utils/controllers/wait.j
 import promiseUtils from '../../../../lib/utils/promiseUtils.js';
 import applicationOptions from '../../../../lib/utils/applicationOptions.js';
 import reimbursementExpenses from '../../../../lib/utils/reimbursementExpenses.js';
+import payload from '../../../../lib/cork/payload.js';
 
 /**
  * @class AppPageApprovalRequest
@@ -32,7 +33,8 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
       approvedExpenseTotal: {state: true},
       hasApprovedExpenses: {state: true},
       reimbursementRequestTotal: {state: true},
-      _hideReimbursementSection: {state: true}
+      _hideReimbursementSection: {state: true},
+      _showReimbursementStatusWarning: {state: true}
     }
   }
 
@@ -48,10 +50,11 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
     this.hasApprovedExpenses = false;
     this.reimbursementRequestTotal = '0.00';
     this.reimbursementRequests = [];
+    this._showReimbursementStatusWarning = false;
 
     this.waitController = new WaitController(this);
 
-    this._injectModel('AppStateModel', 'ApprovalRequestModel', 'ReimbursementRequestModel');
+    this._injectModel('AppStateModel', 'ApprovalRequestModel', 'ReimbursementRequestModel', 'SettingsModel');
   }
 
   willUpdate(props){
@@ -107,7 +110,8 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
 
     const promises = [
       this.ApprovalRequestModel.query(this.queryObject),
-      this.ReimbursementRequestModel.query(reimbursementQuery)
+      this.ReimbursementRequestModel.query(reimbursementQuery),
+      this.SettingsModel.getByCategory('approval-requests')
     ]
     const resolvedPromises = await Promise.allSettled(promises);
     return promiseUtils.flattenAllSettledResults(resolvedPromises);
@@ -124,6 +128,39 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
       reimbursementRequestTotal += Number(reimbursementExpenses.addExpenses(r.expenses));
     }
     this.reimbursementRequestTotal = reimbursementRequestTotal.toFixed(2);
+    this._setShowReimbursementStatusWarning();
+  }
+
+  /**
+   * @description Bound to action button click event in reimbursement status warning message
+   */
+  _onReimbursementWarningClick(){
+    this.ApprovalRequestModel.moreReimbursementToggle(this.approvalRequestId);
+  }
+
+  /**
+   * @description bound to ApprovalRequestModel approval-request-more-reimbursement-toggle-update event
+   * Fires when the more reimbursement flag is toggled for this approval request
+   * @param {*} e
+   * @returns
+   */
+  _onApprovalRequestMoreReimbursementToggleUpdate(e){
+    const ido = {approvalRequestId: this.approvalRequestId};
+    const id = payload.getKey(ido);
+    if ( e.id !== id ) return;
+    if ( e.state === 'loaded' ) {
+      this.AppStateModel.showToast({message: 'Reimbursement status updated', type: 'success'});
+      this.AppStateModel.refresh();
+    } else if ( e.state === 'error' ) {
+      this.AppStateModel.showError(e)
+    }
+  }
+
+  _setShowReimbursementStatusWarning(){
+    const allReimbursed = this.reimbursementRequests.every(r => r.status === 'fully-reimbursed');
+    const overallStatusPartial = this.approvalRequest?.reimbursementStatus	=== 'partially-reimbursed';
+    const expectMoreReimbursement = this.approvalRequest?.expectMoreReimbursement ? true : false;
+    this._showReimbursementStatusWarning = allReimbursed && overallStatusPartial && expectMoreReimbursement;
   }
 
   /**
@@ -180,6 +217,7 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
     this.approvedExpenseTotal = reimbursementExpenses.addExpenses(approvalRequest.expenditures || []);
     this._setReimbursementSectionVisibility();
     this._setActivity(e.payload.data);
+    this._setShowReimbursementStatusWarning();
 
     this._showLoaded = true;
   }

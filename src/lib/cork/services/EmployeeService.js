@@ -39,6 +39,16 @@ class EmployeeService extends BaseService {
     });
   }
 
+  getAllEmployees(){
+    return this.request({
+      url : `/api/employees`,
+      checkCached: () => this.store.data.allEmployees,
+      onLoading : request => this.store.allEmployeesLoading(request),
+      onLoad : result => this.store.allEmployeesLoaded(result.body),
+      onError : e => this.store.allEmployeesError(e)
+    });
+  }
+
 }
 
 const service = new EmployeeService();

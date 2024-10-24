@@ -8,7 +8,11 @@ INSERT INTO "settings" ("key", "value", "label", "description", "default_value",
 VALUES ('approval_request_form_location_in-state', '', 'Location: In-state desciption', 'Description below the in-state option of the location radio on the approval request form', NULL, '0', NULL, '10', 'textarea', '{approval-requests,admin-settings}', '1');
 
 INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
+<<<<<<< HEAD
 VALUES ('approval_request_form_location_out-of-state', '', 'Location: Out of State Description', 'Description below the out-of-state option of the location radio on the approval request form', 'IMPORTANT: All out-of-state trips must be registered using the <a href=''https://ehs.ucop.edu/away/''>UC Away form</a>.', '1', NULL, '10', 'textarea', '{approval-requests,admin-settings}', '1');
+=======
+VALUES ('approval_request_form_location_out-of-state', '', 'Location: Out of State Description', 'Description below the out-of-state option of the location radio on the approval request form', '', '0', NULL, '10', 'textarea', '{approval-requests,admin-settings}', '1');
+>>>>>>> e08265d6bde15cb1c212bc80a0d6db0fec292361
 
 INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
 VALUES ('approval_request_form_location_virtual', '', 'Location: Virtual desciption', 'Description below the virtual option of the location radio on the approval request form', NULL, '0', NULL, '10', 'textarea', '{approval-requests,admin-settings}', '1');
@@ -34,6 +38,23 @@ VALUES ('allocation_summary_description', '', 'Allocation Summary Description', 
 INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
 VALUES ('approval_request_form_release_time', '', 'Release Time - Description', 'Displays below release time input on approval request form', NULL, '0', NULL, '10', 'textarea', '{approval-requests,admin-settings}', '0');
 
+<<<<<<< HEAD
+=======
+INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
+VALUES ('approval_request_more_reimbursement_description', '', 'More Reimbursement Description', 'Shows in reimbursement section of approval request when all reimbursements have been processed, but employee has indicated that more requests are forthcoming', 'Even though all reimbursement requests have been fully processed, the overall reimbursement status for this trip/professional development opportunity is still "partially processed" because the employee indicated that more reimbursement requests are forthcoming.', '1', NULL, '10', 'textarea', '{approval-requests,admin-settings}', '1');
+
+INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
+VALUES ('approval_request_more_reimbursement_action', '', 'More Reimbursement Action', 'Shows in reimbursement section of approval request when all reimbursements have been processed, but employee has indicated that more requests are forthcoming', 'Change overall status to "fully reimbursed"', '1', NULL, '10', 'textarea', '{approval-requests,admin-settings}', '0');
+
+INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
+VALUES ('approval_request_form_business_purpose', '', 'Business Purpose Description', 'Displayed below the business purpose input on the new approval request form', 'Business purpose must describe how the expense benefits you, as well as how it benefits the university.', '1', NULL, '10', 'textarea', '{approval-requests,admin-settings}', '1');
+
+
+
+INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
+VALUES ('approval_request_form_location_description', '', 'Location: Overall Description', 'Displays below location section header on new approval request form', 'IMPORTANT: All out-of-state trips must be registered using the <a href=''https://ehs.ucop.edu/away/''>UC Away form</a>.', '1', NULL, '10', 'textarea', '{approval-requests,admin-settings}', '1');
+
+>>>>>>> e08265d6bde15cb1c212bc80a0d6db0fec292361
 -- admin line items page
 INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
 VALUES ('admin_line_items_description', '', 'Admin - Line Items Description', 'Displays on top of line item admin settings page', 'Requesters will be able to select and assign monetary values to the following line items when submitting an approval form', '1', NULL, '100', 'textarea', '{admin-line-items,admin-settings}', '1');
@@ -55,6 +76,11 @@ INSERT INTO "settings" ("key", "value", "label", "description", "default_value",
 VALUES ('admin_allocations_general_settings_page_description', '', 'Admin - Employee Allocations General Settings Page Description', NULL, 'Manage form field help text and other general settings.', '1', NULL, '100', 'textarea', '{admin-page,admin-settings}', '0');
 INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
 VALUES ('admin_allocations_line_items_page_description', '', 'Admin - Employee Allocations Line Items Page Description', NULL, 'Manage expenditure line item options when submitting an approval request.', '1', NULL, '100', 'textarea', '{admin-page,admin-settings}', '0');
+<<<<<<< HEAD
+=======
+INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
+VALUES ('admin_approval_requests_page_description', '', 'Admin - Approval Requests Page Description', NULL, 'View and manage all approval requests.', '1', NULL, '100', 'textarea', '{admin-page,admin-settings}', '0');
+>>>>>>> e08265d6bde15cb1c212bc80a0d6db0fec292361
 
 -- admin email settings
 INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html") VALUES
@@ -207,6 +233,15 @@ INSERT INTO "settings" ("key", "value", "label", "description", "default_value",
 VALUES ('reimbursement_form_exceed_message', '', 'Exceeded Approved Expenses Message', 'Displayed on reimbursement request form if expenses exceed approved dollar amount.', 'You have exceeded the approved dollar amount for this travel, training, or professional development event. <br /> <br />Please verify with initial approvers before submitting this request.', '1', NULL, '200', 'textarea', '{admin-settings,reimbursement-requests}', '1');
 INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
 VALUES ('reimbursement_no_fund_transactions_message', '', 'No Fund Transactions Message', 'Displays in "Reimbursement Status" section of reimbursement request if there has been nothing entered into Aggie Expense.', 'No reimbursements have been entered into Aggie Expense yet. Please check back later.', '1', NULL, '200', 'textarea', '{admin-settings,reimbursement-requests}', '1');
+<<<<<<< HEAD
+=======
+INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
+VALUES ('reimbursement_form_receipts', '', 'Reimbursement Request Receipts Description', 'Displays above receipt repeater field on new reimbursement request page', NULL, '0', NULL, '30', 'textarea', '{reimbursement-requests,admin-settings}', '0');
+INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")
+VALUES ('reimbursement_form_label_options', '', 'Reimbursement Request Label Options', 'Populates "Label" select options on new reimbursement request.', 'Post-Trip Expenses
+Pre-Trip Expenses
+Other Expenses', '1', NULL, '30', 'textarea', '{reimbursement-requests,admin-settings}', '0');
+>>>>>>> e08265d6bde15cb1c212bc80a0d6db0fec292361
 
 -- reports
 INSERT INTO "settings" ("key", "value", "label", "description", "default_value", "use_default_value", "keywords", "settings_page_order", "input_type", "categories", "can_be_html")

@@ -1,4 +1,5 @@
 import { html } from 'lit';
+import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import '../../components/approval-request-header.js';
 import applicationOptions from '../../../../lib/utils/applicationOptions.js';
 import objectUtils from '../../../../lib/utils/objectUtils.js';
@@ -58,12 +59,12 @@ return html`
 
       </div>
       <div class='l-content'>
-        <div>
+        <section>
           <h2 class="heading--underline">Trip, Training, or Professional Development Opportunity</h2>
           <approval-request-details .approvalRequest=${this.approvalRequest}></approval-request-details>
-        </div>
+        </section>
 
-        <div>
+        <section>
           <h2 class="heading--underline">Estimated Expenses</h2>
           <div ?hidden=${!this.hasApprovedExpenses} class='u-space-mb'>
             <div class='primary bold u-space-mb'>Itemized Expenses</div>
@@ -86,11 +87,11 @@ return html`
             expenditure-total=${this.approvedExpenseTotal}
             .data=${this.approvalRequest.fundingSources || []}>
           </funding-source-select>
-        </div>
+        </section>
 
-        <div id='${this.id}--reimbursement-requests' ?hidden=${this._hideReimbursementSection}>
+        <section id='${this.id}--reimbursement-requests' ?hidden=${this._hideReimbursementSection}>
           <h2 class="heading--underline">Reimbursement Requests</h2>
-          <div>
+          <div ?hidden=${!this.reimbursementRequests.length}>
             <div class='row row--header'>
               <div class='flex flex--align-center'>Request</div>
               <div class='flex flex--align-center text-align--right'>Amount Requested</div>
@@ -119,10 +120,22 @@ return html`
                 </div>
               </div>
               `)}
+            <div ?hidden=${!this._showReimbursementStatusWarning}>
+              <div class='alert u-space-mt--large'>
+                ${unsafeHTML(this.SettingsModel.getByKey('approval_request_more_reimbursement_description'))}
+                <div class='bold u-space-mt--small'>
+                  <a class='pointer' @click=${() => this._onReimbursementWarningClick()}>${this.SettingsModel.getByKey('approval_request_more_reimbursement_action')}</a>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
+          <div ?hidden=${this.reimbursementRequests.length} class='u-space-mb'>
+            <div>No reimbursement requests have been submitted.</div>
+          </div>
+          <div class='bold u-space-mt--large'><a href='/approval-request/new-reimbursement/${this.approvalRequestId}'>Submit a new reimbursement request</a></div>
+        </section>
 
-        <div class='activity-history'>
+        <section class='activity-history'>
           <h2 class="heading--underline">Activity History</h2>
           <div>
             ${this.activity.map((action) => html`
@@ -160,7 +173,7 @@ return html`
               </div>
             `)}
           </div>
-        </div>
+        </section>
 
       </div>
     </div>

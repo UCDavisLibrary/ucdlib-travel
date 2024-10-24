@@ -105,6 +105,10 @@ CREATE TABLE approval_request (
     is_current BOOLEAN NOT NULL DEFAULT TRUE,
     approval_status VARCHAR(100) NOT NULL,
     reimbursement_status VARCHAR(100) NOT NULL,
+<<<<<<< HEAD
+=======
+    expect_more_reimbursement BOOLEAN NOT NULL DEFAULT FALSE,
+>>>>>>> e08265d6bde15cb1c212bc80a0d6db0fec292361
     employee_kerberos VARCHAR(100) REFERENCES employee(kerberos),
     label VARCHAR(100),
     organization VARCHAR(100),
@@ -127,6 +131,7 @@ CREATE TABLE approval_request (
 );
 COMMENT ON TABLE approval_request IS 'Table for storing travel approval requests.';
 COMMENT ON COLUMN approval_request.is_current IS 'Whether or not this is the current revision of the request.';
+COMMENT ON COLUMN approval_request.expect_more_reimbursement IS 'User-editable flag for helping to determine the overall reimbursement status of request - fully vs partially reimbursed/processed.';
 
 CREATE TABLE approval_request_funding_source (
     approval_request_funding_source_id SERIAL PRIMARY KEY,
@@ -213,6 +218,7 @@ CREATE TABLE reimbursement_request (
     submitted_at timestamp DEFAULT NOW()
 );
 COMMENT ON TABLE reimbursement_request IS 'Reimbursement requests for travel expenses.';
+COMMENT ON COLUMN reimbursement_request.status IS 'The overall status of the reimbursement request. Depends on the status of the individual reimbursement transactions.';
 
 CREATE TABLE reimbursement_request_fund (
     reimbursement_request_fund_id SERIAL PRIMARY KEY,
@@ -244,6 +250,10 @@ COMMENT ON COLUMN reimbursement_request_expense.details IS 'Additional details a
 CREATE TABLE reimbursement_request_receipt (
     reimbursement_request_receipt_id SERIAL PRIMARY KEY,
     reimbursement_request_id INTEGER REFERENCES reimbursement_request(reimbursement_request_id),
+<<<<<<< HEAD
+=======
+    reimbursement_request_expense_id INTEGER REFERENCES reimbursement_request_expense(reimbursement_request_expense_id),
+>>>>>>> e08265d6bde15cb1c212bc80a0d6db0fec292361
     file_path TEXT NOT NULL,
     file_type VARCHAR(100) NOT NULL,
     label VARCHAR(200),

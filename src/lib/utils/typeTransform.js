@@ -42,6 +42,15 @@ class TypeTransform {
   }
 
   /**
+   * @description Split a string into an array of lines
+   * @param {String} value - string to split
+   * @returns
+   */
+  splitStringLines(value){
+    return value.split(/\r\n|\r|\n/);
+  }
+
+  /**
    * @description Convert YYYY-MM-DD date string to Date object
    * @param {String} value - date string
    * @returns {Date|null}

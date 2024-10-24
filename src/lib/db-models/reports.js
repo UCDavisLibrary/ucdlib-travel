@@ -290,7 +290,7 @@ class Reports {
     const whereArgs = {
       'ar.is_current': true,
       'ar.approval_status': 'approved',
-      'reimbursement_status': {operator: '!=', value: 'fully-reimbursed'}
+      'ar.reimbursement_status': {operator: '!=', value: 'fully-reimbursed'}
     }
     const whereClause = sqlUtils.parseFilters(filters, whereArgs);
     const groupBy = sqlUtils.parseAggregators(aggregators);
@@ -330,7 +330,7 @@ class Reports {
       'ar.is_current': true,
       'ar.approval_status': 'approved',
       'ar.reimbursement_status': 'fully-reimbursed',
-      'rrf.reimbursement_status': 'fully-reimbursed'
+      'rrf.reimbursement_status': 'submitted'
     }
     const whereClause = sqlUtils.parseFilters(filters, whereArgs);
     const groupBy = sqlUtils.parseAggregators(aggregators);

@@ -29,7 +29,7 @@ export function render() {
             </a>
           </div>
 
-          <div ?hidden=${this.AuthModel.isCurrentUser(this.approvalRequest.employeeKerberos)} class='primary bold'>
+          <div ?hidden=${!this.alwaysShowSubmitter && this.isCurrentUser } class='primary bold'>
             ${this.approvalRequest?.employee?.firstName} ${this.approvalRequest?.employee?.lastName}
           </div>
         </div>

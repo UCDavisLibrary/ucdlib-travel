@@ -8,6 +8,20 @@ return html`
 
     <div class="vm-listing">
       <div class="vm-listing__figure has-icon category-brand--cabernet category-brand__background">
+        <a href="/admin/approval-requests">
+          <div class='icon-img'>
+            <i class="fas fa-solid fa-money-bill fa-2x"></i>
+          </div>
+        </a>
+      </div>
+      <div class="vm-listing__body">
+        <h3 class="vm-listing__title"><a href="/admin/approval-requests">Approval Requests</a></h3>
+          <div class="vm-listing__submitted">${unsafeHTML(this.SettingsModel.getByKey('admin_approval_requests_page_description'))}</div>
+      </div>
+    </div>
+    
+    <div class="vm-listing">
+      <div class="vm-listing__figure has-icon category-brand--cabernet category-brand__background">
         <a href="/admin/approvers">
           <div class='icon-img'>
             <i class="fas fa-solid fa-money-bill fa-2x"></i>
