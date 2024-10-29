@@ -322,7 +322,7 @@ export default (api) => {
         employee: (new IamEmployeeObjectAccessor(chainObj.employee)).travelAppObject,
         approverTypes: chainObj.approverTypes,
       };
-    });
+    }).filter(chainObj => chainObj.employee.kerberos !== kerberos);
     return res.json(out);
   });
 

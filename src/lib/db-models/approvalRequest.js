@@ -762,7 +762,7 @@ class ApprovalRequest {
             let isUniversityLibrarian = false;
             if((submitter?.groups || []).find(g => g.id == 1 && g.partOfOrg && g.isHead)){
               isUniversityLibrarian = true;
-            } 
+            }
 
 
             if ( !isUniversityLibrarian && !submitter?.supervisor?.iamId ) {
@@ -966,7 +966,7 @@ class ApprovalRequest {
         data = {
           approval_request_revision_id: approvalRequestRevisionId,
           approver_order: index,
-          action:  isApprover ? 'approved': 'approval-needed',
+          action:  isApprover ? 'approve': 'approval-needed',
           employee_kerberos: employee.kerberos
         };
         data = pg.prepareObjectForInsert(data);
@@ -1030,7 +1030,7 @@ class ApprovalRequest {
     }
     modifiedApprovalRequest = modifiedApprovalRequest.data[0];
 
-    const approverEmployee = modifiedApprovalRequest.approvalStatusActivity.filter((o) => o.action == 'approval-needed');
+    let approverEmployee = modifiedApprovalRequest.approvalStatusActivity.filter((o) => o.action == 'approval-needed');
 
     if(approverEmployee.length === 0){
       return out;
@@ -1057,7 +1057,7 @@ class ApprovalRequest {
     }
 
     // Email first approver
-    const approverEmployee = modifiedApprovalRequest.approvalStatusActivity.filter((o) => o.action == 'approval-needed');
+    approverEmployee = modifiedApprovalRequest.approvalStatusActivity.filter((o) => o.action == 'approval-needed');
     let tokenApprover = {preferred_username: approverEmployee[0].employeeKerberos}
     const payloadNextApprover = {
       requests: {
