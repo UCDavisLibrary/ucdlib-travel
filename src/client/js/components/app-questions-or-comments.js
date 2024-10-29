@@ -89,8 +89,8 @@ export default class AppQuestionsOrComments extends Mixin(LitElement)
    */
      _onNotificationComments(e) {
       if ( e.state !== 'loaded' ) return;
-  
-      console.log("Created Notification Comments:", e);
+
+      this.AppStateModel.showToast({message: 'Successfully Created a Notification Comment', type: 'success'});  
     }
   
 }
