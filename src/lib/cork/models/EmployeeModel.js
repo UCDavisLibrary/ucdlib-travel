@@ -88,6 +88,22 @@ class EmployeeModel extends BaseModel {
     return this.store.data.activeTitles;
   }
 
+    /**
+   * @description Get all employees from the database
+   * @returns
+   */
+  async getAllEmployees(){
+    let state = this.store.data.allEmployees;
+    try {
+      if( state && state.state === 'loading' ) {
+        await state.request;
+      } else {
+        await this.service.getAllEmployees();
+      }
+    } catch(e) {}
+    return this.store.data.allEmployees;
+  };
+
 }
 
 const model = new EmployeeModel();

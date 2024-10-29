@@ -36,7 +36,6 @@ class Email {
     const text = body;
 
     if ( text && subject && from && to && serverConfig.email.enabled ) {
-      //Initiate Hydration class
       const emailMessage = {from, to, subject, text}
 
       // Form, Curate, and Send Message with Nodemailer

@@ -1,16 +1,39 @@
 import BaseService from './BaseService.js';
 import ApprovalRequestStore from '../stores/ApprovalRequestStore.js';
+import payload from '../payload.js';
 
 class ApprovalRequestService extends BaseService {
 
   constructor() {
     super();
     this.store = ApprovalRequestStore;
+    this.basePath = '/api/approval-request';
+  }
+
+  async moreReimbursementToggle(approvalRequestId) {
+    let ido = {approvalRequestId};
+    let id = payload.getKey(ido);
+
+    await this.checkRequesting(
+      id, this.store.data.moreReimbursementToggle,
+      () => this.request({
+        url : `${this.basePath}/${approvalRequestId}/toggle-more-reimbursement`,
+        fetchOptions : {
+          method : 'POST'
+        },
+        onUpdate : resp => this.store.set(
+          payload.generate(ido, resp),
+          this.store.data.moreReimbursementToggle
+        )
+      })
+    );
+
+    return this.store.data.moreReimbursementToggle.get(id);
   }
 
   statusUpdate(approvalRequestId, action) {
     return this.request({
-      url : `/api/approval-request/${approvalRequestId}/status-update`,
+      url : `${this.basePath}/${approvalRequestId}/status-update`,
       fetchOptions : {
         method : 'POST',
         body : action,
@@ -24,7 +47,7 @@ class ApprovalRequestService extends BaseService {
 
   query(query) {
     return this.request({
-      url : `/api/approval-request${query ? '?' + query : ''}`,
+      url : `${this.basePath}${query ? '?' + query : ''}`,
       checkCached: () => this.store.data.fetched[query],
       onLoading : request => this.store.approvalRequestsFetchedLoading(request, query),
       onLoad : result => this.store.approvalRequestsFetchedLoaded(result.body, query),
@@ -34,7 +57,7 @@ class ApprovalRequestService extends BaseService {
 
   delete(id, timestamp ){
     return this.request({
-      url : `/api/approval-request/${id}`,
+      url : `${this.basePath}/${id}`,
       fetchOptions : {
         method : 'DELETE'
       },
@@ -46,7 +69,7 @@ class ApprovalRequestService extends BaseService {
 
   create(payload, timestamp, forceValidation) {
     return this.request({
-      url : '/api/approval-request' + (forceValidation ? '?force-validation' : ''),
+      url : this.basePath + (forceValidation ? '?force-validation' : ''),
       fetchOptions : {
         method : 'POST',
         body : payload
@@ -60,7 +83,7 @@ class ApprovalRequestService extends BaseService {
 
   getApprovalChain(approvalRequestId) {
     return this.request({
-      url : `/api/approval-request/${approvalRequestId}/approval-chain`,
+      url : `${this.basePath}/${approvalRequestId}/approval-chain`,
       checkCached: () => this.store.data.approvalChainByRequestId[approvalRequestId],
       onLoading : request => this.store.approvalChainLoading(request, approvalRequestId),
       onLoad : result => this.store.approvalChainLoaded(result.body, approvalRequestId),

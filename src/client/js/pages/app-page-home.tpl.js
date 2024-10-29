@@ -47,7 +47,7 @@ return html`
       <div ?hidden=${!this.approverApprovalRequests.length}>
         ${this.approverApprovalRequests.map(request => html`
           <div class='approval-request-teaser-wrapper bg-white'>
-            <approval-request-teaser .approvalRequest=${request}></approval-request-teaser>
+            <approval-request-teaser always-show-submitter .approvalRequest=${request}></approval-request-teaser>
           </div>
         `)}
         <div ?hidden=${this.approverTotalPages === 1} class="flex flex--justify-center">

@@ -263,6 +263,7 @@ function renderApprovalRequestView(){
             ${this.approvalRequests.map(ar => html`
               <div class='approval-request-teaser-wrapper'>
                 <approval-request-teaser
+                  always-show-submitter
                   .approvalRequest=${ar}
                 ></approval-request-teaser>
               </div>
