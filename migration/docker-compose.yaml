@@ -1,0 +1,36 @@
+version: '3'
+services:
+  mysql:
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: 'root_password'
+      MYSQL_DATABASE: 'db_mysql'
+      MYSQL_USER: 'user_mysql'
+      MYSQL_PASSWORD: 'localhost'
+    volumes:
+      - ./db-entrypoint:/docker-entrypoint-initdb.d
+
+  migrate:
+    build: .
+    environment:
+      PGUSER: postgres
+      PGHOST: host.docker.internal
+      PGDATABASE: postgres
+      PGPASSWORD: localhost
+      PGPORT: 5432
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: db_mysql
+      MYSQL_USER: root
+      MYSQL_PASSWORD: localhost
+      MYSQL_ROOT_PASSWORD: 'root_password'
+      UCDLIB_PERSONNEL_API_USER: ${UCDLIB_PERSONNEL_API_USER}
+      UCDLIB_PERSONNEL_API_KEY: ${UCDLIB_PERSONNEL_API_KEY}
+    volumes:
+      - ./src:/migration/src
+      - ./index.js:/migration/index.js
+    depends_on:
+      - mysql
+    command: /app/lib/tail.sh
+    #command: node index.js --year=2023 # Replace with your migration command
+
