@@ -8,6 +8,7 @@ const { Client } = pg;
 import IamEmployeeObjectAccessor from '@ucd-lib/travel-app-server/lib/utils/iamEmployeeObjectAccessor.js';
 import employee from "@ucd-lib/travel-app-server/lib/db-models/employee.js";
 import approvalRequest from '@ucd-lib/travel-app-server/lib/db-models/approvalRequest.js';
+import log from '@ucd-lib/travel-app-server/lib/utils/log.js';
 
 class Migration {
   constructor(){}
@@ -15,7 +16,7 @@ class Migration {
     // Create a connection to the MySQL database
     async connectToMySQLDatabase(){
         const pool = mysql.createPool({
-            host: process.env.MYSQL_HOST || 'mysql', 
+            host: process.env.MYSQL_HOST || 'mysql',
             port: process.env.MYSQL_PORT || '3306',
             user: process.env.MYSQL_USER || 'root',
             password: process.env.MYSQL_ROOT_PASSWORD || 'root_password',
@@ -30,12 +31,12 @@ class Migration {
     async insertIntoPostgresDatabase(rows) {
         const connection = new Client({
             user: process.env.PGUSER || 'postgres',
-            host: process.env.PGHOST || 'host.docker.internal',  
+            host: process.env.PGHOST || 'host.docker.internal',
             database: process.env.PGDATABASE || 'postgres',
             password: process.env.POSTGRES_PASSWORD || 'localhost',
             port: process.env.PGPORT || 5432
         });
-        
+
         return await this.runPostgresQuery(rows, connection);
     };
 
@@ -88,7 +89,7 @@ class Migration {
             }
 
             // create submitDraft
-            const submitResult = await approvalRequest.submitDraft(draftResult.approvalRequestRevisionId);
+            const submitResult = await approvalRequest.submitDraft(draftResult.approvalRequestId);
             if ( submitResult && submitResult.error) {
                 errorObject = {
                     formID: row.id,
@@ -100,13 +101,13 @@ class Migration {
                 continue;
             }
 
-            let approvalRequestObj = await approvalRequest.get({requestIds: [submitResult.approvalRequestRevisionId], isCurrent: true});
+            let approvalRequestObj = await approvalRequest.get({requestIds: [draftResult.approvalRequestId], isCurrent: true});
 
             approvalRequestObj = approvalRequestObj.data[0];
 
-            /* statusUpdate 
-                - submit 
-                - approver 
+            /* statusUpdate
+                - submit
+                - approver
                 - submitter
             */
 
@@ -138,7 +139,7 @@ class Migration {
 
         for(let act of dataIntersection) {
             if (!act.employee) {
-                continue; 
+                continue;
             }
 
             const query = act.employee[0].kerberosId;
@@ -195,25 +196,35 @@ class Migration {
         return result;
     }
 
+    transformLocation(bigsysLocation) {
+      const map = {
+        'In-State': 'in-state',
+        'Out-of-State': 'out-of-state',
+        'Foreign': 'foreign'
+      }
+      return map[bigsysLocation] || 'in-state';
+    }
+
     async formatJson(row, funded, exp){
         let nRow = {
             "approvalStatus": "draft",
             "reimbursementStatus": "not-submitted",
             "label": row.event_name,
             "organization": row.event_organizer,
-            "businessPurpose": '',
-            "location": row.event_instate,
+            "businessPurpose": 'None provided.',
+            "releaseTime": row.release_time || 0,
+            "location": this.transformLocation(row.event_instate),
             "locationDetails": row.event_location,
             "programStartDate": new Intl.DateTimeFormat("fr-CA", {
-                                    year: "numeric", 
-                                    month: "2-digit", 
-                                    day: "2-digit",    
+                                    year: "numeric",
+                                    month: "2-digit",
+                                    day: "2-digit",
                                     timeZone: "UTC",
                                 }).format(row.event_date),
             "programEndDate": new Intl.DateTimeFormat("fr-CA", {
-                                    year: "numeric", 
-                                    month: "2-digit", 
-                                    day: "2-digit",    
+                                    year: "numeric",
+                                    month: "2-digit",
+                                    day: "2-digit",
                                     timeZone: "UTC",
                                 }).format(row.event_end)
         }
@@ -222,16 +233,16 @@ class Migration {
             nRow["travelRequired"] = true;
             nRow["hasCustomTravelDates"] = true;
             nRow["travelStartDate"] =  new Intl.DateTimeFormat("fr-CA", {
-                                            year: "numeric", 
-                                            month: "2-digit", 
-                                            day: "2-digit",    
+                                            year: "numeric",
+                                            month: "2-digit",
+                                            day: "2-digit",
                                             timeZone: "UTC",
                                         }).format(row.travel_date);
-            
+
             nRow["travelEndDate"] =  new Intl.DateTimeFormat("fr-CA", {
-                                        year: "numeric", 
-                                        month: "2-digit", 
-                                        day: "2-digit",    
+                                        year: "numeric",
+                                        month: "2-digit",
+                                        day: "2-digit",
                                         timeZone: "UTC",
                                     }).format(row.travel_end);
         }
@@ -316,7 +327,7 @@ class Migration {
         }
 
         //Other Funding
-        if(row.fund_request_external || 
+        if(row.fund_request_external ||
            row.fund_request_yearend ||
            row.fund_request_pac ||
            row.fund_request_training ){
@@ -390,8 +401,8 @@ class Migration {
             }
             expCollection.push(obj);
         }
-        
- 
+
+
         // Ground Transportation
         if(row.exp_berkeley_num){
             const result = exp.filter((exp) => exp.expenditure_option_id == 5)[0];
@@ -426,7 +437,7 @@ class Migration {
             const result = exp.filter((exp) => exp.expenditure_option_id == 7)[0];
             let obj = {
                 "expenditureOptionId": result.expenditure_option_id,
-                "amount": row.exp_fees
+                "amount": row.exp_misc
             }
             expCollection.push(obj);
         }
@@ -498,7 +509,7 @@ class Migration {
                         WHERE
                             h.forms_id = f.id
                     ) AS activity_history,
-                    
+
                     -- Subquery for lib_user information
                     (SELECT
                         JSON_ARRAYAGG(
@@ -529,14 +540,14 @@ class Migration {
                         ${yearFilter}
                         AND ${idFilter}
                     ORDER BY
-                        f.id ASC; 
+                        f.id ASC;
                 `;
 
                 // Simple query to test the connection
                 const [rows] = await connection.query(sql);
 
                 await connection.release();
-                return rows;                    
+                return rows;
 
             } catch (error) {
                 console.error('Error connecting to the database:', error);
@@ -548,8 +559,13 @@ class Migration {
         const rows = await this.runMySQLQuery(year, single);
 
         let errorsOccured = await this.insertIntoPostgresDatabase(rows);
+        const summary = {
+          'totalForms': rows.length,
+          'totalErrors': errorsOccured.length
+        }
+        log.log("Summary:\n\n", summary);
 
-        console.log("Some Errors have occured:\n\n", errorsOccured);
+        log.log("Some Errors have occured:\n\n", errorsOccured);
 
         return;
     }
