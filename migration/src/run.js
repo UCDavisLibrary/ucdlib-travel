@@ -9,6 +9,7 @@ import IamEmployeeObjectAccessor from '@ucd-lib/travel-app-server/lib/utils/iamE
 import employee from "@ucd-lib/travel-app-server/lib/db-models/employee.js";
 import approvalRequest from '@ucd-lib/travel-app-server/lib/db-models/approvalRequest.js';
 import log from '@ucd-lib/travel-app-server/lib/utils/log.js';
+import fiscalYearUtils from '@ucd-lib/travel-app-server/lib/utils/fiscalYearUtils.js';
 
 class Migration {
   constructor(){}
@@ -123,11 +124,41 @@ class Migration {
                 continue;
             }
 
+            if ( row.status == 'approved' ){
+              const autoApproveResult = await this.autoApprove(approvalRequestObj.approvalRequestId);
+              if ( autoApproveResult && autoApproveResult.error ) {
+                errorObject = {
+                    formID: row.id,
+                    errorMessage:"Error when auto-approving",
+                    errorPayload: autoApproveResult,
+                    data: data
+                };
+                errorList.push(errorObject);
+                continue;
+              }
+            }
+
         }
 
         loader.succeed(['Insertion Completed!\n\n']);
         return errorList;
     };
+
+    async autoApprove(approvalRequestId) {
+      let approvalRequestObj = await approvalRequest.get({requestIds: [approvalRequestId], isCurrent: true});
+      approvalRequestObj = approvalRequestObj.data[0];
+
+      for (const activity of approvalRequestObj.approvalStatusActivity) {
+        if (activity.action === 'approval-needed') {
+          let payload = {action: 'approve', comments: 'Auto-approved by system during migration process due to discrepancies in funding source approval requirements.'};
+          const r = await approvalRequest.doApproverAction(approvalRequestObj.approvalRequestId, payload, activity.employeeKerberos	);
+          if ( r.error ) {
+            return r;
+          }
+        }
+      }
+
+    }
 
     async statusUpdate(data, approvalRequestObj) {
         let ap = approvalRequestObj.approvalStatusActivity;
@@ -145,10 +176,11 @@ class Migration {
             const query = act.employee[0].kerberosId;
             let employeeObj = await employee.getIamRecordById(query);
             employeeObj = (new IamEmployeeObjectAccessor(employeeObj.res)).travelAppObject;
+            const comments = this.formatText(act.comments);
 
             if(act.action == 'Approved'){
-                let payload = {action: 'approve'};
-                result.approved = await approvalRequest.doApproverAction(approvalRequestObj, payload, employeeObj.kerberos);
+                let payload = {action: 'approve', comments};
+                result.approved = await approvalRequest.doApproverAction(approvalRequestObj.approvalRequestId, payload, employeeObj.kerberos);
 
                 if ( result.approved && result.approved.error ) {
                     result.error = true;
@@ -157,8 +189,8 @@ class Migration {
             }
 
             if(act.action == 'Not Approved'){
-                let payload = {action: 'deny'};
-                result.notApproved = await approvalRequest.doApproverAction(approvalRequestObj, payload, employeeObj.kerberos);
+                let payload = {action: 'deny', comments};
+                result.notApproved = await approvalRequest.doApproverAction(approvalRequestObj.approvalRequestId, payload, employeeObj.kerberos);
                 if ( result.notApproved && result.notApproved.error ) {
                     result.error = true;
                     return
@@ -166,8 +198,8 @@ class Migration {
             }
 
             if(act.action == 'Canceled'){
-                let payload = {action: 'cancel'};
-                result.canceled = await approvalRequest.doRequesterAction(approvalRequestObj, payload);
+                let payload = {action: 'cancel', comments};
+                result.canceled = await approvalRequest.doRequesterAction(approvalRequestObj.approvalRequestId, payload);
                 if ( result.canceled && result.canceled.error ) {
                     result.error = true;
                     return
@@ -175,8 +207,8 @@ class Migration {
             }
 
             if(act.action == 'Pending'){
-                let payload = {action: 'approval-needed'};
-                result.pending = await approvalRequest.doApproverAction(approvalRequestObj, payload, employeeObj.kerberos);
+                let payload = {action: 'approval-needed', comments};
+                result.pending = await approvalRequest.doApproverAction(approvalRequestObj.approvalRequestId, payload, employeeObj.kerberos);
                 if ( result.pending && result.pending.error ) {
                     result.error = true;
                     return
@@ -184,8 +216,8 @@ class Migration {
             }
 
             if(act.action == 'Resubmit'){
-                let payload = {action: 'recall'};
-                result.resubmit = await approvalRequest.doRequesterAction(approvalRequestObj, payload);
+                let payload = {action: 'recall', comments: act.comments || ''};
+                result.resubmit = await approvalRequest.doRequesterAction(approvalRequestObj.approvalRequestId, payload);
                 if ( result.resubmit && result.resubmit.error ) {
                     result.error = true;
                     return
@@ -194,6 +226,15 @@ class Migration {
         }
 
         return result;
+    }
+
+    formatText(text){
+        text = text || '';
+
+        //unescape ampersand
+        text = text.replace(/&amp;/g, '&');
+
+        return text;
     }
 
     transformLocation(bigsysLocation) {
@@ -209,12 +250,13 @@ class Migration {
         let nRow = {
             "approvalStatus": "draft",
             "reimbursementStatus": "not-submitted",
-            "label": row.event_name,
-            "organization": row.event_organizer,
+            "label": this.formatText(row.event_name),
+            "organization": this.formatText(row.event_organizer),
             "businessPurpose": 'None provided.',
             "releaseTime": row.release_time || 0,
             "location": this.transformLocation(row.event_instate),
-            "locationDetails": row.event_location,
+            "locationDetails": this.formatText(row.event_location),
+            "comments": this.formatText(row.staff_comments),
             "programStartDate": new Intl.DateTimeFormat("fr-CA", {
                                     year: "numeric",
                                     month: "2-digit",
@@ -250,6 +292,11 @@ class Migration {
 
         nRow['fundingSources'] = await this.formatFunding(row, funded);
         nRow['expenditures'] = await this.formatExpenditures(row, exp);
+
+        if ( !nRow.expenditures.length ) {
+          nRow.noExpenditures = true;
+          nRow.reimbursementStatus = 'not-required';
+        }
 
         return nRow;
 
@@ -448,7 +495,13 @@ class Migration {
 
    // Run MySQL query
     async runMySQLQuery(year='', single='') {
-        const yearFilter = year ? `YEAR(f.date_submit) = ${year}` : '1=1'; // '1=1' for no filter
+      let yearFilter = '1=1';
+      if ( year ) {
+        const fy = fiscalYearUtils.fromStartYear(year);
+        const start = fy.startDate({isoDate: true});
+        const end = fy.endDate({isoDate: true});
+        yearFilter = `f.event_date BETWEEN '${start}' AND '${end}'`;
+      }
         const idFilter = single ? `f.id = ${single}` : '1=1'; // '1=1' for no filter
 
             try {
