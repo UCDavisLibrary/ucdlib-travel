@@ -241,7 +241,7 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
    * @param {Array} approvalRequests - All approval request versions for the current approvalRequestId
    * @returns {Array}
    */
-  _setActivity(approvalRequests){
+  async _setActivity(approvalRequests){
     let activity = [];
     approvalRequests.forEach(r => {
       r.approvalStatusActivity.forEach(action => {
@@ -269,6 +269,12 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
     activity.sort((a, b) => {
       return a.occurredDate - b.occurredDate;
     });
+
+    // a silly hack to make sure font awesome icons are displayed correctly
+    // since fa changes dom outside of lit-html, we need to make sure the icon gets updated
+    // couldnt get the live lit directive to work
+    this.activity = [];
+    await this.waitController.waitForUpdate();
 
     this.activity = activity;
   }

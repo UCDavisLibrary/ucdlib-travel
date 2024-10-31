@@ -16,4 +16,8 @@ export default (api) => {
     res.json({success});
 
   });
+
+  api.get('/auth/set-cache', async (req, res) => {
+    res.json({success: true});
+  });
 }

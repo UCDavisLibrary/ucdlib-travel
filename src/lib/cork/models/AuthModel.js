@@ -45,6 +45,10 @@ class AuthModel extends BaseModel {
 
   }
 
+  setTokenServerCache(){
+    return this.service.cacheToken();
+  }
+
   /**
    * @description Logs user out of application
    */

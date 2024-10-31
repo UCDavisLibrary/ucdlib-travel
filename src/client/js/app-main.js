@@ -296,7 +296,8 @@ export default class AppMain extends Mixin(LitElement)
   // set up listeners keycloak listeners
   kc.onAuthRefreshError = () => {AuthModel.logout();};
   kc.onAuthError = () => {AuthModel.redirectUnauthorized();};
-  kc.onAuthSuccess = () => {
+  kc.onAuthSuccess = async () => {
+    await AuthModel.setTokenServerCache();
     customElements.define('app-main', AppMain);
 
     // replace state in history to remove keycloak state
