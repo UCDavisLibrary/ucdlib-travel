@@ -112,7 +112,7 @@ class Migration {
                 - submitter
             */
 
-            const result = await this.statusUpdate(row.activity_history, approvalRequestObj);
+            const result = await this.statusUpdate(row, approvalRequestObj);
             if ( result && result.error ) {
                 errorObject = {
                     formID: row.id,
@@ -160,7 +160,8 @@ class Migration {
 
     }
 
-    async statusUpdate(data, approvalRequestObj) {
+    async statusUpdate(bigsysRecord, approvalRequestObj) {
+      const data = bigsysRecord.activity_history;
         let ap = approvalRequestObj.approvalStatusActivity;
         const dataIntersection = data.filter((obj1) =>
             ap.some((obj2) => obj1.employee && obj2.employee.kerberos === obj1.employee[0].kerberosId)
@@ -188,7 +189,7 @@ class Migration {
                 }
             }
 
-            if(act.action == 'Not Approved'){
+            if(act.action == 'Not Approved' && bigsysRecord.status != 'approved'){
                 let payload = {action: 'deny', comments};
                 result.notApproved = await approvalRequest.doApproverAction(approvalRequestObj.approvalRequestId, payload, employeeObj.kerberos);
                 if ( result.notApproved && result.notApproved.error ) {
@@ -215,8 +216,9 @@ class Migration {
                 }
             }
 
-            if(act.action == 'Resubmit'){
-                let payload = {action: 'recall', comments: act.comments || ''};
+            // bigsys does not track changes to form, so no sense in resubmitting in the new system since it will be the same
+            if(act.action == 'Resubmit' && false){
+                let payload = {action: 'recall', comments};
                 result.resubmit = await approvalRequest.doRequesterAction(approvalRequestObj.approvalRequestId, payload);
                 if ( result.resubmit && result.resubmit.error ) {
                     result.error = true;
@@ -233,6 +235,9 @@ class Migration {
 
         //unescape ampersand
         text = text.replace(/&amp;/g, '&');
+
+        // quote
+        text = text.replace(/&quot;/g, '"');
 
         return text;
     }
