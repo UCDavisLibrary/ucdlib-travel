@@ -10,6 +10,25 @@ class ApprovalRequestService extends BaseService {
     this.basePath = '/api/approval-request';
   }
 
+  async filters(userType) {
+    let ido = {userType};
+    let id = payload.getKey(ido);
+
+    await this.checkRequesting(
+      id, this.store.data.filters,
+      () => this.request({
+        url : `${this.basePath}/filters?user-type=${userType}`,
+        checkCached: () => this.store.data.filters.get(id),
+        onUpdate : resp => this.store.set(
+          payload.generate(ido, resp),
+          this.store.data.filters
+        )
+      })
+    );
+
+    return this.store.data.filters.get(id);
+  }
+
   async moreReimbursementToggle(approvalRequestId) {
     let ido = {approvalRequestId};
     let id = payload.getKey(ido);

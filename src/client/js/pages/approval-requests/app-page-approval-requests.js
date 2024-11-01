@@ -17,9 +17,9 @@ export default class AppPageApprovalRequests extends Mixin(LitElement)
   static get properties() {
     return {
       queryArgs: {type: Object},
-      page: {type: Number},
       totalPages: {type: Number},
-      approvalRequests: {type: Array}
+      approvalRequests: {type: Array},
+      filters: {type: Array}
     }
   }
 
@@ -27,20 +27,32 @@ export default class AppPageApprovalRequests extends Mixin(LitElement)
     super();
     this.render = render.bind(this);
     this.totalPages = 1;
-    this.page = 1;
     this.approvalRequests = [];
     this.draftListSelectRef = createRef();
     this.allocationSummaryRef = createRef();
     this.waitController = new WaitController(this);
+    this.filters = [];
 
     this._injectModel('AppStateModel', 'ApprovalRequestModel', 'AuthModel');
 
     this.queryArgs = {
       isCurrent: true,
       employees: this.AuthModel.getToken().id,
-      approvalStatus: applicationOptions.approvalStatuses.filter(s => s.value != 'draft').map(s => s.value),
-      page: this.page
+      approvalStatus: [],
+      fiscalYear: [],
+      reimbursementStatus: [],
+      page: 1
     };
+  }
+
+  async query(){
+    this.AppStateModel.showLoading();
+    const r = await this.ApprovalRequestModel.query(this.queryArgs)
+    if ( r.state === 'error' ){
+      this.AppStateModel.showError(r, {ele: this});
+      return;
+    }
+    this.AppStateModel.showLoaded(this.id);
   }
 
   /**
@@ -50,8 +62,6 @@ export default class AppPageApprovalRequests extends Mixin(LitElement)
   async _onAppStateUpdate(state) {
     if ( this.id !== state.page ) return;
     this.AppStateModel.showLoading();
-    this._setPage(state);
-    this.queryArgs.page = this.page;
 
     this.AppStateModel.setTitle('Your Approval Requests');
 
@@ -80,6 +90,7 @@ export default class AppPageApprovalRequests extends Mixin(LitElement)
 
     const promises = [
       this.ApprovalRequestModel.query(this.queryArgs),
+      this.ApprovalRequestModel.getFilters('submitter'),
       this.allocationSummaryRef.value.init(),
       this.draftListSelectRef.value.init()
     ]
@@ -100,23 +111,26 @@ export default class AppPageApprovalRequests extends Mixin(LitElement)
   }
 
   /**
-   * @description set the page number from the AppStateModel state
-   * @param {Object} state - AppStateModel state
-   */
-  _setPage(state){
-    this.page = typeTransform.toPositiveInt(state?.location?.query?.page) || 1;
-  }
-
-  /**
    * @description callback for when user clicks on pagination
    * @param {CustomEvent} e - page-change event
    */
   _onPageChange(e){
-    let url = this.AppStateModel.store.breadcrumbs[this.id].link;
-    if ( e.detail.page !== 1 ) {
-      url += '?page='+e.detail.page;
-    }
-    this.AppStateModel.setLocation(url);
+    this.queryArgs.page = e.detail.page;
+    this.query();
+  }
+
+  _onFilterChange(options, prop, toInt) {
+    this.queryArgs[prop] = options.map(option => toInt ? parseInt(option.value) : option.value);
+    this.queryArgs.page = 1;
+    this.approvalRequests = [];
+    this.totalPages = 1;
+    this.query();
+    this.requestUpdate();
+  }
+
+  _onApprovalRequestFiltersUpdate(e){
+    if ( e.state !== 'loaded' || e.userType != 'submitter' ) return;
+    this.filters = e.payload;
   }
 
 }

@@ -69,6 +69,10 @@ class ApprovalRequestModel extends BaseModel {
     return r;
   }
 
+  async getFilters(userType) {
+    return this.service.filters(userType);
+  }
+
   /**
    * @description Delete an approval request by id - must have always been in a draft state
    * @param {String} approvalRequestId - id of approval request to delete

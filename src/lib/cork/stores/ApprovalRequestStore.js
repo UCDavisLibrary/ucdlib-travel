@@ -12,6 +12,7 @@ class ApprovalRequestStore extends BaseStore {
       approvalChainByRequestId: {},
       statusUpdate: {},
       moreReimbursementToggle: new LruStore({name: 'approval-request.more-reimbursement-toggle'}),
+      filters: new LruStore({name: 'approval-request.filters'})
 
     };
     this.events = {

@@ -9,6 +9,7 @@ import apiUtils from "../lib/utils/apiUtils.js";
 import typeTransform from "../lib/utils/typeTransform.js";
 import applicationOptions from "../lib/utils/applicationOptions.js";
 import log from "../lib/utils/log.js";
+import fiscalYearUtils from "../lib/utils/fiscalYearUtils.js";
 
 export default (api) => {
 
@@ -38,6 +39,7 @@ export default (api) => {
     query.revisionIds = apiUtils.explode(query.revisionIds, true);
     query.requestIds = apiUtils.explode(query.requestIds, true);
     query.approvalStatus = apiUtils.explode(query.approvalStatus);
+    query.reimbursementStatus = apiUtils.explode(query.reimbursementStatus);
     query.employees = apiUtils.explode(query.employees);
     query.fundingSource = apiUtils.explode(query.fundingSource, true);
     query.department = apiUtils.explode(query.department, true);
@@ -77,6 +79,72 @@ export default (api) => {
     if ( isSingleRequest && !requestUsers.has(kerberos) && !departmentMatchCt ) return apiUtils.do403(res);
 
     res.json(results);
+  });
+
+  api.get('/approval-request/filters', protect('hasBasicAccess'), async (req, res) => {
+    const query = urlUtils.queryToCamelCase(req.query);
+    const userType = query.userType === 'approver' ? 'approver' : 'submitter';
+    const kerberos = req.auth.token.id;
+    const filterKwargs = {isCurrent: true};
+    if ( userType == 'approver' ) {
+      filterKwargs.approvers = [kerberos];
+      filterKwargs.excludeDrafts = true;
+    } else {
+      filterKwargs.employees = [kerberos];
+    }
+    const filters = [];
+    let filter = {};
+
+    // status filters
+    filter = {label: 'Approval Status', 'queryParam': 'approvalStatus', 'options': applicationOptions.approvalStatuses.map(s => ({value: s.value, label: s.label}))};
+    if ( userType == 'approver' ) {
+      filter.options = filter.options.filter(o => o.value !== 'draft');
+    }
+    filters.push(filter);
+
+    // fiscal year filters
+    filter = {label: 'Fiscal Year', 'queryParam': 'fiscalYear', 'options': []};
+    const fiscalYears = await approvalRequest.getFieldCounts('fiscal_year', filterKwargs);
+    if ( fiscalYears.error ) {
+      log.error('Error in GET /approval-request/filters', fiscalYears.error);
+      return res.status(500).json({error: true, message: 'Error getting fiscal year filters.'});
+    }
+    for ( const startYear of fiscalYears ) {
+      if ( !startYear.fiscal_year ) continue;
+      const fy = fiscalYearUtils.fromStartYear(startYear.fiscal_year);
+      filter.options.push({value: fy.startYear, label: fy.labelShort});
+    }
+    filters.push(filter);
+
+    // submitter employee filters
+    if ( userType == 'approver' ) {
+      const f = {label: 'Employee', 'queryParam': 'employees', 'options': []};
+      let r = await approvalRequest.getFieldCounts('employee_kerberos', filterKwargs);
+      if ( r.error ) {
+        log.error('Error in GET /approval-request/filters', r.error);
+        return res.status(500).json({error: true, message: 'Error getting employee filters.'});
+      }
+      const employees = await employee.get();
+      if ( employees.error ) {
+        log.error('Error in GET /approval-request/filters', employees.error);
+        return res.status(500).json({error: true, message: 'Error getting employee filters.'});
+      }
+      for ( const employee of employees ) {
+        if ( !r.find(e => e.employee_kerberos === employee.kerberos) ) continue;
+        f.options.push({value: employee.kerberos, label: `${employee.firstName} ${employee.lastName}`});
+      }
+      filters.push(f);
+    }
+
+    if ( userType == 'submitter' ) {
+
+      // reimbursement status filters
+      filter = {label: 'Reimbursement Status', 'queryParam': 'reimbursementStatus', 'options': applicationOptions.reimbursementStatuses.map(s => ({value: s.value, label: s.labelShort}))};
+      filters.push(filter);
+    }
+
+
+    return res.json(filters);
   });
 
   api.post('/approval-request', protect('hasBasicAccess'), async (req, res) => {

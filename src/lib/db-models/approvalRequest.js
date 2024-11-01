@@ -254,6 +254,12 @@ class ApprovalRequest {
 
     if ( Array.isArray(kwargs.approvalStatus) && kwargs.approvalStatus.length ){
       whereArgs['ar.approval_status'] = kwargs.approvalStatus;
+    } else if ( kwargs.excludeDrafts ){
+      whereArgs['ar.approval_status'] = {operator: '!=', value: 'draft'};
+    }
+
+    if ( Array.isArray(kwargs.reimbursementStatus) && kwargs.reimbursementStatus.length ){
+      whereArgs['ar.reimbursement_status'] = kwargs.reimbursementStatus;
     }
 
     if ( kwargs.programEndDate ){
@@ -493,6 +499,71 @@ class ApprovalRequest {
     const totalPages = noPaging ? 1 : Math.ceil(total / pageSize);
     return {data, total, page, pageSize, totalPages};
 
+  }
+
+  /**
+   * @description Get count for each unique value of an approval request field
+   * @param {String} field - the field to get counts for
+   * @param {Object} kwargs - optional query parameters including
+   * @param {Boolean} kwargs.isCurrent - whether to get only current revisions
+   * @param {Boolean} kwargs.isNotCurrent - whether to get only revisions that are not current
+   * @param {Array} kwargs.employees - array of kerberos ids representing approval request submitters
+   * @param {Array} kwargs.approvalStatus - array of approval statuses
+   * @param {Boolean} kwargs.excludeDrafts - whether to exclude drafts from the count
+   * @param {Array} kwargs.approvers - array of kerberos ids representing approvers
+   * @returns
+   */
+  async getFieldCounts(field, kwargs) {
+    const whereArgs = {"1" : "1"};
+
+    if ( kwargs.isCurrent ){
+      whereArgs['ar.is_current'] = true;
+    } else if ( kwargs.isNotCurrent ){
+      whereArgs['ar.is_current'] = false;
+    }
+
+    if ( Array.isArray(kwargs.employees) && kwargs.employees.length ){
+      whereArgs['ar.employee_kerberos'] = kwargs.employees;
+    }
+
+    if ( Array.isArray(kwargs.approvalStatus) && kwargs.approvalStatus.length ){
+      whereArgs['ar.approval_status'] = kwargs.approvalStatus;
+    } else if ( kwargs.excludeDrafts ){
+      whereArgs['ar.approval_status'] = {operator: '!=', value: 'draft'};
+    }
+
+    if ( Array.isArray(kwargs.approvers) && kwargs.approvers.length ){
+      whereArgs['approvers'] = {
+        relation: 'AND',
+        'aracl.employee_kerberos': kwargs.approvers,
+        'aracl.action': ['approval-needed', ...applicationOptions.approvalStatusActions.filter(s => s.actor === 'approver').map(s => s.value)]
+      }
+    }
+
+    if ( !field.includes('.') ){
+      field = `ar.${field}`;
+    }
+
+    const whereClause = pg.toWhereClause(whereArgs);
+    const sql = `
+      SELECT
+        ${field},
+        COUNT(DISTINCT ar.approval_request_revision_id) as count
+      FROM
+        approval_request ar
+      LEFT JOIN
+        approval_request_approval_chain_link aracl ON ar.approval_request_revision_id = aracl.approval_request_revision_id
+      WHERE
+        ${whereClause.sql}
+      GROUP BY
+        ${field}
+      ORDER BY
+        count DESC
+    `;
+
+    const res = await pg.query(sql, whereClause.values);
+    if ( res.error ) return res;
+    return res.res.rows;
   }
 
   /**
