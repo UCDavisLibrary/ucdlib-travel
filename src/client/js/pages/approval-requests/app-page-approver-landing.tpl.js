@@ -32,7 +32,7 @@ return html`
       <div ?hidden=${this.approvalRequests.length}>
         <div class='flex flex--align-center'>
           <i class='fa-solid fa-circle-exclamation fa-2x admin-blue'></i>
-          <div class='u-space-ml--small'>You have not been listed as an approver for any request.</div>
+          <div class='u-space-ml--small'>No approval requests found.</div>
         </div>
       </div>
     </div>
