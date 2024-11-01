@@ -24,8 +24,9 @@ APP_SLUG=ucdlib-travel
 # APP_URL=http://$APP_HOST
 APP_HOST=travel.staff.library.ucdavis.edu
 APP_URL=https://$APP_HOST
-# APP_HOST_PORT=3000
-# APP_CONTAINER_PORT=3000
+
+APP_HOST_PORT=3000
+APP_CONTAINER_PORT=3000
 
 # Repository tags/branchs
 # Tags should always be used for production deployments
