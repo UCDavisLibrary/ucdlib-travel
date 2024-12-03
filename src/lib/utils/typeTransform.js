@@ -165,6 +165,16 @@ class TypeTransform {
   }
 
   /**
+   * @description Compare two numbers as dollar strings
+   * @param {*} num1
+   * @param {*} num2
+   * @returns {Boolean}
+   */
+  dollarsMatch(num1, num2){
+    return this.toDollarString(num1) === this.toDollarString(num2);
+  }
+
+  /**
    * @description Cast value to a number or return 0
    * @param {*} value
    * @returns {Number}

@@ -1,5 +1,6 @@
 import pg from "./pg.js";
 import applicationOptions from "../utils/applicationOptions.js";
+import typeTransform from "../utils/typeTransform.js";
 
 /**
  * @class ApprovalRequestValidations
@@ -307,7 +308,7 @@ export default class ApprovalRequestValidations {
     // check that total amount matches the total amount of the expenditures
     const fundingTotal = value.reduce((acc, fundingSource) => acc + Number(fundingSource.amount), 0);
     const expenditureTotal = (Array.isArray(payload.expenditures) ? payload.expenditures : []).reduce((acc, expenditure) => acc + Number(expenditure.amount), 0);
-    if ( fundingTotal !== expenditureTotal ) {
+    if ( !typeTransform.dollarsMatch(fundingTotal, expenditureTotal) ) {
       this.model.entityFields.pushError(out, field, {errorType: 'invalid', message: 'The total funding amount must match the total expenditure amount'});
     }
   }

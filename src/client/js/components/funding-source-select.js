@@ -4,6 +4,7 @@ import { render } from "./funding-source-select.tpl.js";
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 
 import { LitCorkUtils, Mixin } from '@ucd-lib/cork-app-utils';
+import typeTransform from '../../../lib/utils/typeTransform.js';
 
 /**
  * @class FundingSourceSelect
@@ -109,7 +110,7 @@ export default class FundingSourceSelect extends Mixin(LitElement)
       return;
     }
 
-    if ( this.expenditureTotal !== this.fundingSourceTotal ) {
+    if ( !typeTransform.dollarsMatch(this.expenditureTotal, this.fundingSourceTotal) ) {
       this.hasError = true;
       this.errorMessage = `Total funding amount must equal total expenditure amount of $${this.expenditureTotal.toFixed(2)}`;
       return;
