@@ -1,5 +1,4 @@
-ARG NODE_TAG
-FROM node:${NODE_TAG}
+FROM node:20
 
 RUN mkdir /app
 WORKDIR /app
@@ -25,13 +24,13 @@ WORKDIR /app/deploy-utils
 
 # Backup
 RUN mkdir data/backup
-COPY deploy/utils/backup backup
-COPY deploy/utils/backup/cron /etc/cron.d/backup
+COPY utils/backup backup
+COPY utils/backup/cron /etc/cron.d/backup
 RUN chmod 0644 /etc/cron.d/backup
 
 # Init
 RUN mkdir data/init
-COPY deploy/utils/init init
+COPY utils/init init
 
 # uploads volume
 RUN mkdir /uploads
@@ -62,14 +61,6 @@ RUN node lib/subsetIcons.js
 
 # client build
 RUN cd client && npm run dist
-
-# build tags
-ARG APP_VERSION
-ENV APP_VERSION ${APP_VERSION}
-ARG BUILD_NUM
-ENV BUILD_NUM ${BUILD_NUM}
-ARG BUILD_TIME
-ENV BUILD_TIME ${BUILD_TIME}
 
 ENTRYPOINT [ "bash", "-c" ]
 CMD ["echo 'Use command arg to specify a script to run.'"]

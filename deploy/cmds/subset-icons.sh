@@ -8,4 +8,5 @@ set -e
 CMDS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd $CMDS_DIR/../..
 
+echo "Creating icon subset file..."
 node ./src/lib/subsetIcons.js

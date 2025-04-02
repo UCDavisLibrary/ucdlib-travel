@@ -1,29 +1,22 @@
 #! /bin/bash
 
 ###
-# Downloads env from google cloud secret manager
-# Usage: ./cmds/get-env.sh [-f] [-l]
+# Downloads env from google cloud secret manager and places in specified deployment directory
+# Usage: ./cmds/get-env.sh [-f] <deployment-dir>
 # -f: force overwrite of existing .env file
-# -l: download to local dev directory
+# deployment-dir: required. e.g. local-dev gets placed in compose/ucdlib-travel-local-dev/.env
 ###
 
 set -e
 CMDS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-cd $CMDS_DIR/..
+cd $CMDS_DIR
 
-source config.sh
+FORCE_OVERWRITE=false
 
-FORCE=false
-LOCAL=false
-ENV_PATH=".env"
-
-while getopts "fl" opt; do
+while getopts ":f" opt; do
   case ${opt} in
     f )
-      FORCE=true
-      ;;
-    l )
-      LOCAL=true
+      FORCE_OVERWRITE=true
       ;;
     \? )
       echo "Invalid option: -$OPTARG" 1>&2
@@ -31,20 +24,29 @@ while getopts "fl" opt; do
       ;;
   esac
 done
+shift $((OPTIND -1))
 
-if [ "$LOCAL" = true ]; then
-  if [ ! -d "$LOCAL_DEV_DIRECTORY" ]; then
-    mkdir -p "$LOCAL_DEV_DIRECTORY"
-  fi
-  ENV_PATH="$LOCAL_DEV_DIRECTORY/.env"
-fi
+DEPLOYMENT_DIR=$1
 
-if [ -f "$ENV_PATH" ] && [ "$FORCE" != true ]; then
-  echo ".env file already exists. Use -f flag to overwrite."
+if [ -z "$DEPLOYMENT_DIR" ]; then
+  echo "Deployment directory is required."
   exit 1
 fi
 
-gcloud secrets versions access latest --secret=itis-travel-env > $ENV_PATH
+DEPLOYMENT_DIR="../compose/ucdlib-travel-$DEPLOYMENT_DIR"
 
-echo "Env downloaded to deploy/$ENV_PATH"
+if [ ! -d "$DEPLOYMENT_DIR" ]; then
+  echo "Deployment directory does not exist: $DEPLOYMENT_DIR"
+  exit 1
+fi
 
+ENV_FILE="$DEPLOYMENT_DIR/.env"
+
+if [ -f "$ENV_FILE" ] && [ "$FORCE_OVERWRITE" = false ]; then
+  echo ".env file already exists. Use -f to force overwrite."
+  exit 1
+fi
+
+gcloud --project=digital-ucdavis-edu secrets versions access latest --secret=itis-travel-env > "$ENV_FILE"
+
+echo ".env file has been downloaded to $DEPLOYMENT_DIR"
