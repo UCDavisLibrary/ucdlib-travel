@@ -10,6 +10,7 @@ import typeTransform from "../lib/utils/typeTransform.js";
 import applicationOptions from "../lib/utils/applicationOptions.js";
 import log from "../lib/utils/log.js";
 import fiscalYearUtils from "../lib/utils/fiscalYearUtils.js";
+import config from '../lib/serverConfig.js';
 
 export default (api) => {
 
@@ -136,9 +137,8 @@ export default (api) => {
       filters.push(f);
     }
 
-    if ( userType == 'submitter' ) {
-
-      // reimbursement status filters
+    // reimbursement status filters
+    if ( userType == 'submitter' && config.featureFlags.reimbursementRequest ) {
       filter = {label: 'Reimbursement Status', 'queryParam': 'reimbursementStatus', 'options': applicationOptions.reimbursementStatuses.map(s => ({value: s.value, label: s.labelShort}))};
       filters.push(filter);
     }

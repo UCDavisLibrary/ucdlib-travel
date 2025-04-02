@@ -6,12 +6,13 @@ TODO: DOCUMENTATION
 
 To get the app up and running on your machine:
 
-1. `cd deploy`
-2. `./cmds/init-local-dev.sh`
-3. `./cmds/build-local-dev.sh`
-4. `./cmds/generate-deployment-files.sh`
-5. A directory called `ucdlib-travel-local-dev` will have been created.
-6. Enter it, and run `docker compose up`
+To get this application up and running for the first time:
+1. Clone this repository
+2. Checkout the branch you want to work on.
+3. Run `./deploy/cmds/init-local-dev.sh` to download gc key, env, and build js
+4. Review the env file downloaded to `./deploy/compose/ucdlib-travel-local-dev`
+5. Run `./deploy/cmds/build-local-dev.sh` to build images
+6. Enter `./deploy/compose/ucdlib-travel-local-dev`, and run `docker compose up -d`
 
 To start the JS/SCSS watch process run `cd src/client && npm run watch`
 

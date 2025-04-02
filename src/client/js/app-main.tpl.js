@@ -1,5 +1,6 @@
 import { html } from 'lit';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
+import { appConfig } from "../../lib/appGlobals.js";
 
 export function render() {
 return html`
@@ -24,7 +25,9 @@ return html`
       >
       <a href="/admin/approvers">Approvers and Funding Sources</a>
       <a href="/admin/approval-requests">Approval Requests</a>
-      <a href="/admin/reimbursement">Reimbursement Requests</a>
+      ${appConfig.featureFlags.reimbursementRequest ? html`
+        <a href="/admin/reimbursement">Reimbursement Requests</a>
+        ` : html``}
       <a href="/admin/allocations">Employee Allocations</a>
       <a href="/admin/settings">General Settings</a>
       <a href="/admin/email-settings">Email Settings</a>

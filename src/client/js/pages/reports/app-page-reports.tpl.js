@@ -7,7 +7,10 @@ import '@ucd-lib/theme-elements/brand/ucd-theme-slim-select/ucd-theme-slim-selec
 import '@ucd-lib/theme-elements/brand/ucd-theme-pagination/ucd-theme-pagination.js'
 
 import reportUtils from '../../../../lib/utils/reports/reportUtils.js';
+import featureFlags from '../../utils/featureFlags.js';
 import '../../components/approval-request-teaser.js';
+
+const metrics = featureFlags.reportMetrics(reportUtils.metrics);
 
 /**
  * @description Main render function for this element
@@ -78,7 +81,7 @@ function renderReportBuilder(){
                         >Select Value
                       </option>
                       ` : html``}
-                    ${reportUtils.metrics.map(metric => html`
+                    ${metrics.map(metric => html`
                       <option
                         value=${metric.value}
                         ?selected=${this.selectedMetrics.includes(metric.value)}
@@ -311,7 +314,7 @@ function renderHelpDialog(){
             <div>${unsafeHTML(this.SettingsModel.getByKey('metrics_description'))}</div>
           </div>
           <div>
-            ${reportUtils.metrics.map(metric => html`
+            ${metrics.map(metric => html`
               <div class='u-space-mb--small'>
                 <div class='bold primary'>${metric.label}</div>
                 <div class='small grey'>${unsafeHTML(this.SettingsModel.getByKey(metric.descriptionSettingKey))}</div>

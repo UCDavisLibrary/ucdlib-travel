@@ -1,3 +1,5 @@
+import corkBuild from "./utils/corkBuild.js";
+
 /**
  * @description Server configuration file. Reads environment variables and sets defaults.
  * To pass any of these variables to the browser, see static.js
@@ -5,7 +7,7 @@
 class ServerConfig {
   constructor() {
 
-    this.version = this.getEnv('APP_VERSION', '0.0.9');
+    this.version = corkBuild.version;
     this.env = process?.env?.APP_ENV === 'dev' ? 'dev' : 'prod';
 
     this.title = this.getEnv('APP_TITLE', 'Travel, Training, and Professional Development');
@@ -17,6 +19,10 @@ class ServerConfig {
 
     this.uploadsRoot = this.getEnv('APP_UPLOADS_ROOT', '/uploads');
     this.uploadsDir = this.getEnv('APP_UPLOADS_DIR', '/uploads');
+
+    this.featureFlags = {
+      reimbursementRequest: this.getEnv('APP_ENABLE_REIMBURSEMENT_REQUEST', false)
+    }
 
     this.port = {
       container: this.getEnv('APP_CONTAINER_PORT', 3000), // server port within docker container

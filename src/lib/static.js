@@ -34,6 +34,7 @@ export default (app) => {
         apiRoot : config.apiRoot,
         version: config.version,
         title: config.title,
+        featureFlags: config.featureFlags,
         auth: {
           requireAuth: config.auth.requireAuth,
           clientInit: config.auth.keycloakJsClient,
