@@ -1,10 +1,19 @@
+x-variables:
+  main-image: &main-image us-west1-docker.pkg.dev/digital-ucdavis-edu/pub/ucdlib-travel:v1.0.0
 services:
   app:
-    image: gcr.io/ucdlib-pubreg/ucdlib-travel:v1.0.0
+    image: *main-image
     env_file:
       - .env
     environment:
       APP_ROOT_URL: ${APP_ROOT_URL:-https://travel.staff.library.ucdavis.edu}
+      APP_REPORT_ERRORS_ENABLED: ${APP_REPORT_ERRORS_ENABLED:-true}
+      APP_LOGGER_LOG_LEVEL: ${APP_LOGGER_LOG_LEVEL:-warn}
+      APP_REPORT_ERRORS_URL: ${APP_REPORT_ERRORS_URL:-https://client-error-reporter-akwemh35fa-uw.a.run.app}
+      UCDLIB_PERSONNEL_API_ENABLE_CRON: ${UCDLIB_PERSONNEL_API_ENABLE_CRON:-true}
+      APP_SMTP_ENABLE_CRON: ${APP_SMTP_ENABLE_CRON:-true}
+      APP_SEND_EMAIL_NOTIFICATIONS: ${APP_SEND_EMAIL_NOTIFICATIONS:-true}
+      APP_SMTP_SYSTEM_EMAIL_ADDRESS: ${APP_SMTP_SYSTEM_EMAIL_ADDRESS:-librarywst@ucdavis.edu}
     ports:
       - ${APP_HOST_PORT:-3000}:${APP_CONTAINER_PORT:-3000}
     depends_on:
@@ -14,32 +23,36 @@ services:
       - uploads-data:/uploads
     command: ./start-server.sh
   init:
-    image: gcr.io/ucdlib-pubreg/ucdlib-travel:v1.0.0
+    image: *main-image
     env_file:
       - .env
     depends_on:
       - db
     environment:
+      RUN_INIT: true
+      INIT_DATA_ENV: ${INIT_DATA_ENV:-prod}
       GOOGLE_APPLICATION_CREDENTIALS: /etc/service-account.json
       GC_BACKUP_BUCKET: itis-backups/travel
       BACKUP_FILE_NAME: db.sql.gz
     volumes:
-      - ../gc-reader-key.json:/etc/service-account.json
+      - ../../secrets/gc-reader-key.json:/etc/service-account.json
       - uploads-data:/uploads
     command: ./deploy-utils/init/init.sh
   backup:
-    image: gcr.io/ucdlib-pubreg/ucdlib-travel:v1.0.0
+    image: *main-image
     env_file:
       - .env
     restart: always
     depends_on:
       - db
     environment:
+      RUN_BACKUP: true
+      BACKUP_DATA_ENV: ${BACKUP_DATA_ENV:-prod}
       GOOGLE_APPLICATION_CREDENTIALS: /etc/service-account.json
       GC_BACKUP_BUCKET: itis-backups/travel
       BACKUP_FILE_NAME: db.sql.gz
     volumes:
-      - ../gc-writer-key.json:/etc/service-account.json
+      - ../../secrets/gc-writer-key.json:/etc/service-account.json
       - uploads-data:/uploads
     command: ./deploy-utils/backup/entrypoint.sh
   db:
