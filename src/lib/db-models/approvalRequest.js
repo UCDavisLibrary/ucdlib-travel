@@ -12,6 +12,7 @@ import applicationOptions from "../utils/applicationOptions.js";
 import objectUtils from "../utils/objectUtils.js";
 import emailController from "./emailController.js";
 import fiscalYearUtils from "../utils/fiscalYearUtils.js";
+import config from '../serverConfig.js';
 
 class ApprovalRequest {
 
@@ -332,6 +333,11 @@ class ApprovalRequest {
             'ar.reimbursement_status': reimbursementStatus
           }
         }
+      }
+
+      if ( !config.featureFlags.reimbursementRequest ){
+        delete whereArgs['statusQuery'];
+        whereArgs['ar.approval_status'] = activeStatus;
       }
 
       if ( Array.isArray(kwargs.employees) && kwargs.employees.length ){

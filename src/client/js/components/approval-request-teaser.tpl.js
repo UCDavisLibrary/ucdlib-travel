@@ -1,4 +1,5 @@
 import { html } from 'lit';
+import { appConfig } from '../../../lib/appGlobals.js';
 
 
 /**
@@ -16,7 +17,7 @@ export function render() {
         class="badge approval-status">${this.approvalStatus}</div>
       <div
         title='Reimbursement Status'
-        ?hidden=${!this.reimbursementStatus}
+        ?hidden=${!this.reimbursementStatus || !appConfig.featureFlags.reimbursementRequest}
         class="badge reimbursement-status">${this.reimbursementStatus}</div>
     </div>
 

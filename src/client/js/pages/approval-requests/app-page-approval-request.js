@@ -4,6 +4,7 @@ import { LitCorkUtils, Mixin } from '@ucd-lib/cork-app-utils';
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 import { WaitController } from "@ucd-lib/theme-elements/utils/controllers/wait.js";
 
+import { appConfig } from '../../../../lib/appGlobals.js';
 import promiseUtils from '../../../../lib/utils/promiseUtils.js';
 import applicationOptions from '../../../../lib/utils/applicationOptions.js';
 import reimbursementExpenses from '../../../../lib/utils/reimbursementExpenses.js';
@@ -223,6 +224,11 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
   }
 
   _setReimbursementSectionVisibility(){
+    if ( !appConfig.featureFlags.reimbursementRequest ) {
+      this._hideReimbursementSection = true;
+      return;
+    }
+
     if ( this.approvalRequest.reimbursementStatus === 'not-required' ) {
       this._hideReimbursementSection = true;
       return;

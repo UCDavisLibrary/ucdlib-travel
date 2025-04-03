@@ -94,7 +94,7 @@ class AppStateModelImpl extends AppStateModel {
           p = 'approval-request-confirm';
         } else if ( secondaryRoute === 'approve' ){
           p = 'approver';
-        } else if ( secondaryRoute === 'new-reimbursement' ){
+        } else if ( secondaryRoute === 'new-reimbursement' && appConfig.featureFlags.reimbursementRequest ){
           p = 'reimbursement-new';
         } else {
           p = 'approval-request';

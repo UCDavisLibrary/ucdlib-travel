@@ -5,6 +5,7 @@ import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-el
 
 import typeTransform from '../../../lib/utils/typeTransform.js';
 import applicationOptions from '../../../lib/utils/applicationOptions.js';
+import { appConfig } from '../../../lib/appGlobals.js';
 
 /**
  * @class ApprovalRequestHeader
@@ -50,6 +51,9 @@ export default class ApprovalRequestHeader extends Mixin(LitElement)
           {value: 'redirect-to-form', label: 'Edit and Resubmit'},
           ...actions
         ];
+      }
+      if ( !appConfig.featureFlags.reimbursementRequest ){
+        actions = actions.filter(action => action.value !== 'create-reimbursement');
       }
       this.availableActions = actions;
     }
