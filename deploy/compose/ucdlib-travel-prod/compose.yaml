@@ -62,7 +62,7 @@ services:
     restart: always
     volumes:
       - db-data:/var/lib/postgresql/data
-      # - ./db-entrypoint:/docker-entrypoint-initdb.d
+      # - ../../db-entrypoint:/docker-entrypoint-initdb.d
 volumes:
   db-data:
   uploads-data:
