@@ -47,6 +47,7 @@ export default (api) => {
     const sender = payload.token.token.email;
     const emailContent = payload.emailContent;
 
+
     if ( !emailContent.subject || !emailContent.text ) {
       return res.status(400).json({error: true, message: 'Error with payload section emailContent. Email Subject or Email Text can not be empty'});
     }
