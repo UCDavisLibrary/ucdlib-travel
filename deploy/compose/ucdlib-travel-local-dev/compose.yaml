@@ -19,6 +19,7 @@ services:
       PGPORT: 5432
       APP_SMTP_SYSTEM_EMAIL_ADDRESS: ${APP_SMTP_SYSTEM_EMAIL_ADDRESS:-librarywst@ucdavis.edu}
       APP_REPORT_ERRORS_URL: ${APP_REPORT_ERRORS_URL:-https://client-error-reporter-akwemh35fa-uw.a.run.app}
+      BACKUP_LOG_TABLE: ${BACKUP_LOG_TABLE:-backup_log}
     volumes:
       - ../../../src:/app
       - /app/node_modules
@@ -32,7 +33,7 @@ services:
     depends_on:
       - db
     environment:
-      # RUN_INIT: true
+      RUN_INIT: true
       INIT_DATA_ENV: ${INIT_DATA_ENV:-prod}
       PGUSER: 'postgres'
       PGHOST: 'db'
@@ -57,6 +58,7 @@ services:
     environment:
       # RUN_BACKUP: true
       BACKUP_DATA_ENV: ${BACKUP_DATA_ENV:-localhost}
+      BACKUP_LOG_TABLE: ${BACKUP_LOG_TABLE:-backup_log}
       PGUSER: 'postgres'
       PGHOST: 'db'
       PGDATABASE: 'postgres'
@@ -77,7 +79,7 @@ services:
       POSTGRES_PASSWORD: localhost
     volumes:
       - db-data:/var/lib/postgresql/data
-      - ../../db-entrypoint:/docker-entrypoint-initdb.d
+      # - ../../db-entrypoint:/docker-entrypoint-initdb.d
   adminer:
     image: adminer:4.8.1
     ports:

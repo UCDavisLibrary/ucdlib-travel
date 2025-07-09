@@ -9,6 +9,7 @@ import department from './department.js';
 import employee from './employee.js';
 import reimbursementRequest from './reimbursementRequest.js';
 import reports from './reports.js';
+import health from './health.js';
 
 const router = express.Router();
 
@@ -25,5 +26,6 @@ reimbursementRequest(router);
 reports(router);
 
 export default (app) => {
+  health(app);
   app.use(config.apiRoot, router);
 }

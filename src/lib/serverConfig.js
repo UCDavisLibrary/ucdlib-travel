@@ -85,6 +85,11 @@ class ServerConfig {
         customAttributes: {appOwner: 'itis', appName: 'travel-app'}
       }
     }
+
+    this.backup = {
+      tableName: this.getEnv('BACKUP_LOG_TABLE'),
+      statusFailAfterInterval: this.getEnv('BACKUP_LOG_STATUS_FAIL_AFTER_INTERVAL', '2 days')
+    }
   }
 
   /**

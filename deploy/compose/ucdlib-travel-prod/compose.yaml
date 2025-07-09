@@ -14,6 +14,7 @@ services:
       APP_SMTP_ENABLE_CRON: ${APP_SMTP_ENABLE_CRON:-true}
       APP_SEND_EMAIL_NOTIFICATIONS: ${APP_SEND_EMAIL_NOTIFICATIONS:-true}
       APP_SMTP_SYSTEM_EMAIL_ADDRESS: ${APP_SMTP_SYSTEM_EMAIL_ADDRESS:-librarywst@ucdavis.edu}
+      BACKUP_LOG_TABLE: ${BACKUP_LOG_TABLE:-backup_log}
     ports:
       - ${APP_HOST_PORT:-3000}:${APP_CONTAINER_PORT:-3000}
     depends_on:
@@ -48,6 +49,7 @@ services:
     environment:
       RUN_BACKUP: true
       BACKUP_DATA_ENV: ${BACKUP_DATA_ENV:-prod}
+      BACKUP_LOG_TABLE: ${BACKUP_LOG_TABLE:-backup_log}
       GOOGLE_APPLICATION_CREDENTIALS: /etc/service-account.json
       GC_BACKUP_BUCKET: itis-backups/travel
       BACKUP_FILE_NAME: db.sql.gz
