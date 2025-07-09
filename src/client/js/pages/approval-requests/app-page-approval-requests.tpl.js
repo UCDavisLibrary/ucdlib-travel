@@ -10,6 +10,8 @@ export function render() {
 return html`
   <div class='l-gutter l-basic--flipped'>
     <div class='l-content'>
+      <p class='grey small'>The following are approval requests that you have created and/or submitted.
+        For a list of all approval requests that have ever been submitted for your approval, please see the <a href="/approve"><strong>Approve a Request</strong></a> section.</p>
       ${renderFilters.call(this)}
       <div ?hidden=${!this.approvalRequests.length}>
         ${this.approvalRequests.map(request => html`

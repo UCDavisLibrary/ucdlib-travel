@@ -8,8 +8,8 @@ export function render() {
 return html`
   <div class='l-gutter l-basic--flipped'>
     <div class='l-content'>
-      <p class='u-space-mb--medium'>The following are travel, training, or professional development requests
-        that you have approved or need your approval based on the funding source selected by the requester:</p>
+      <p class='grey small'>The following are travel, training, or professional development requests
+        that you have approved or need your approval based on the funding source selected by the requester.</p>
 
       ${renderFilters.call(this)}
       <div ?hidden=${!this.approvalRequests.length}>
