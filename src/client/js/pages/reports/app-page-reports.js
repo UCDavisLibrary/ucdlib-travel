@@ -357,7 +357,16 @@ export default class AppPageReports extends Mixin(LitElement)
    */
   _onHelpClick(page){
     this.helpDialogPage = page;
+    document.body.style.overflow = 'hidden';
     this.helpDialogRef.value.showModal();
+  }
+
+  /**
+   * @description Closes the help dialog
+   */
+  closeHelpDialog(){
+    document.body.style.overflow = '';
+    this.helpDialogRef.value.close();
   }
 
   /**
