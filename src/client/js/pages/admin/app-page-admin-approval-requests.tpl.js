@@ -22,7 +22,7 @@ export function render() {
             </div>
           `)}
           <ucd-theme-pagination
-            current-page=${this.page}
+            current-page=${this.queryArgs.page}
             max-pages=${this.totalPages}
             @page-change=${this._onPageChange}
             xs-screen>
@@ -39,7 +39,6 @@ export function render() {
         </div>
       </div>
       <div class='l-sidebar-first'>
-        <!-- Optional sidebar content -->
       </div>
     </div>
   `;
@@ -49,40 +48,40 @@ export function render() {
  * @description Render the filters for the allocations page
  */
 function renderFilters() {
+  const columns = ['l-first', 'l-second u-space-mt--flush', 'l-third u-space-mt--flush'];
+
+  // chunk this.filters into sets of 3
+  const filterSets = this.filters.reduce((acc, filter, i) => {
+    const index = Math.floor(i / 3);
+    if ( !acc[index] ) acc[index] = [];
+    acc[index].push({filter, column: columns[i % 3]});
+    return acc;
+  }, []);
+
   return html`
-    <div class='allocations-filters l-2col l-gap--1rem'>
-      <div class='l-first container-type--normal'>
-        <div class='field-container'>
-          <label>Approval Request Status</label>
-          <ucd-theme-slim-select @change=${e => this._onFilterChange(e.detail, 'selectedApprovalRequestFilters')}>
-            <select multiple>
-              ${this.approvalStatuses.map(s => html`
-                <option
-                  value=${s.value}
-                  ?selected=${this.selectedApprovalRequestFilters.includes(s.value)}
-                  >${s.label}
-                </option>
-              `)}
-            </select>
-          </ucd-theme-slim-select>
+    <div class='u-space-mb--large'>
+      ${filterSets.map(set => html`
+        <div class='l-3col l-gap--1rem'>
+          ${set.map(f => html`
+            <div class='container-type--normal ${f.column}'>
+              <div class='field-container'>
+                <label>${f.filter.label}</label>
+                <ucd-theme-slim-select @change=${e => this._onFilterChange(e.detail, f.filter.queryParam)}>
+                  <select multiple>
+                    ${f.filter.options.map(o => html`
+                      <option
+                        value=${o.value}
+                        ?selected=${this.queryArgs[f.filter.queryParam].includes(o.value)}
+                        >${o.label}
+                      </option>
+                    `)}
+                  </select>
+                </ucd-theme-slim-select>
+              </div>
+            </div>
+          `)}
         </div>
-      </div>
-      <div class='l-second container-type--normal u-space-mt--flush'>
-        <div class='field-container'>
-          <label>Employee</label> <!-- Changed label to Employee -->
-          <ucd-theme-slim-select @change=${e => this._onFilterChange(e.detail, 'selectedEmployeeFilters')}>
-            <select multiple>
-              ${(this.employeesInDB || []).map(s => html`
-                <option
-                  value=${s.kerberos}
-                  ?selected=${this.selectedEmployeeFilters.includes(s.kerberos)}
-                  >${s.firstName} ${s.lastName}
-                </option>
-              `)}
-            </select>
-          </ucd-theme-slim-select>
-        </div>
-      </div>
+        `)}
     </div>
   `;
 }

@@ -12,7 +12,6 @@ import urlUtils from '../../../../lib/utils/urlUtils.js';
 /**
  * @description Page for approvers to view all of their approval requests past and present
  * @property {Object} queryArgs - query arguments for fetching approval requests for approver
- * @property {Number} page - current page number
  * @property {Number} totalPages - total number of pages of approval requests
  * @property {Array} approvalRequests - list of approval requests. Set from ApprovalRequestModel
  */
@@ -22,7 +21,6 @@ export default class AppPageApproverLanding extends Mixin(LitElement)
   static get properties() {
     return {
       queryArgs: {type: Object},
-      page: {type: Number},
       totalPages: {type: Number},
       approvalRequests: {type: Array},
       filters: {type: Array}
