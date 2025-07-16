@@ -75,6 +75,8 @@ class AppStateModelImpl extends AppStateModel {
         }
       } else if ( secondaryRoute === 'approval-requests' ){
         p = 'admin-approval-requests';
+      } else if ( secondaryRoute === 'cache' ){
+        p = 'admin-cache';
       } else if ( secondaryRoute === 'line-items' ){
         p = 'admin-line-items';
       } else if ( secondaryRoute === 'email-settings' ){

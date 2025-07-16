@@ -53,6 +53,54 @@ class Cache {
     `;
     return await pg.query(text, [type, query]);
   }
+
+    /**
+   * @description Search for a cached value
+   * @param {String} query - Identifier for cache value of a category, e.g. 'user:1234'
+   * @returns
+   */
+  async search(q){
+    const conditions = [];
+    const values = [];
+
+    if (q.type) {
+      conditions.push(`type = $${values.length + 1}`);
+      values.push(q.type);
+    }
+  
+    if (q.query) {
+      conditions.push(`query ILIKE $${values.length + 1}`);
+      values.push(`%${q.query}%`);
+    }
+  
+    const whereClause = conditions.length ? 'WHERE ' + conditions.join(' AND ') : '';
+
+    const sql = `
+      SELECT id, type, query, created
+      FROM cache
+      ${whereClause}
+    `;
+
+    const res = await pg.query(sql, values);
+    if( res.error ) return res;
+
+    return res;
+  }
+
+  async getCacheCount(){
+    let text = `
+      SELECT type, COUNT(*) AS count
+      FROM cache
+      GROUP BY type
+      ORDER BY count DESC;
+    `;
+    const res = await pg.query(text);
+    if( res.error ) return res;
+
+    return res;
+
+  }
+  
 }
 
 export default new Cache();
