@@ -14,7 +14,7 @@ export default async (req, res, next) => {
     res.status(401).json({
       error: true,
       message: 'You must authenticate to access this resource.'
-    });
+    })
     return;
   }
 
