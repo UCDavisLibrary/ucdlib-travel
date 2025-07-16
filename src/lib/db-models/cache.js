@@ -76,7 +76,7 @@ class Cache {
     const whereClause = conditions.length ? 'WHERE ' + conditions.join(' AND ') : '';
 
     const sql = `
-      SELECT *
+      SELECT id, type, query, created
       FROM cache
       ${whereClause}
     `;
@@ -84,10 +84,10 @@ class Cache {
     const res = await pg.query(sql, values);
     if( res.error ) return res;
 
-    return await res;
+    return res;
   }
 
-  async getCount(){
+  async getCacheCount(){
     let text = `
       SELECT type, COUNT(*) AS count
       FROM cache

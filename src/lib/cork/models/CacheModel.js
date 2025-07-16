@@ -19,10 +19,6 @@ class CacheModel extends BaseModel {
     } catch(e) {}
     const state = this.store.data.searchCache;
 
-    if ( state && state.state === 'loaded' ) {
-      this.store.data.searchCache = {};
-    }
-
     return state;
   }
 
@@ -33,22 +29,14 @@ class CacheModel extends BaseModel {
     } catch(e) {}
     const state = this.store.data.deleteCache;
 
-    if ( state && state.state === 'loaded' ) {
-      this.store.data.deleteCache = {};
-    }
-
     return state;
   }
 
-  async getCount(){
+  async getCacheCount(){
     try {
-      await this.service.getCount();
+      await this.service.getCacheCount();
     } catch(e) {}
-    const state = this.store.data.getCount;
-
-    if ( state && state.state === 'loaded' ) {
-      this.store.data.getCount = {};
-    }
+    const state = this.store.data.getCacheCount;
 
     return state;
   }

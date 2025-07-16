@@ -71,7 +71,7 @@ export default class AppPageAdminCache extends Mixin(LitElement)
    * On success, updates the `types` property with the result data and triggers a re-render.
    * @param {Object} e - Event payload from CacheModel with `state`, `payload`, or `error`.
    */
-  async _onGetCount(e){
+  async _onGetCacheCount(e){
     if (e.state === 'loading') {
       this.logger.debug('Cache Count are loading...');
     } else if (e.state === 'loaded') {
@@ -90,7 +90,7 @@ export default class AppPageAdminCache extends Mixin(LitElement)
    */
     async getPageData(){
       const promises = [
-        await this.CacheModel.getCount()
+        await this.CacheModel.getCacheCount()
       ];
       
       const resolvedPromises = await Promise.allSettled(promises);
@@ -217,7 +217,7 @@ export default class AppPageAdminCache extends Mixin(LitElement)
   
     await this.CacheModel.searchCache(search);  
 
-    await this.CacheModel.getCount();  
+    await this.CacheModel.getCacheCount();  
 
     this.requestUpdate();
   }
@@ -251,8 +251,6 @@ export default class AppPageAdminCache extends Mixin(LitElement)
       let search = {};
 
       search.query = s;
-      // this.type = "sampleType";
-
 
       //add type query
       if(this.type != '') search.type = this.type

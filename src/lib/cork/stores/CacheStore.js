@@ -8,12 +8,12 @@ class CacheStore extends BaseStore {
     this.data = {
       searchCache: {},
       deleteCache: {},
-      getCount: {}
+      getCacheCount: {}
     };
     this.events = {
       SEARCH_CACHE: 'search-cache',
       DELETE_CACHE: 'delete-cache',
-      GET_COUNT: 'get-count',
+      GET_CACHE_COUNT: 'get-cache-count',
     };
   }
 
@@ -76,21 +76,21 @@ class CacheStore extends BaseStore {
   }
 
 
-  getCountCacheLoading(request) {
+  getCacheCountCacheLoading(request) {
     this._setCountCacheState( {
       state : this.STATE.LOADING,
       request
     });
   }
 
-  getCountCacheLoaded(payload) {
+  getCacheCountCacheLoaded(payload) {
     this._setCountCacheState( {
       state : this.STATE.LOADED,
       payload
     });
   }
 
-  getCountCacheError(error) {
+  getCacheCountCacheError(error) {
     this._setCountCacheState( {
       state : this.STATE.ERROR,
       error
@@ -98,8 +98,8 @@ class CacheStore extends BaseStore {
   }
 
   _setCountCacheState(state) {
-    this.data.getCount = state;
-    this.emit(this.events.GET_COUNT, state);
+    this.data.getCacheCount = state;
+    this.emit(this.events.GET_CACHE_COUNT, state);
   }
   
 

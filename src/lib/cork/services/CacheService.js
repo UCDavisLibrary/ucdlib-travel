@@ -21,7 +21,6 @@ class CacheService extends BaseService {
 
     return this.request({
       url: url,
-      checkCached: () => this.store.data.searchCache,
       onLoading : request => this.store.searchCacheLoading(request, q),
       onLoad : result => this.store.searchCacheLoaded(result.body, q),
       onError : e => this.store.searchCacheError(e, q)
@@ -36,22 +35,20 @@ class CacheService extends BaseService {
         body : q
       },
       json: true,
-      checkCached: () => this.store.data.deleteCache[q],
       onLoading : request => this.store.deleteCacheLoading(request, q),
       onLoad : result => this.store.deleteCacheLoaded(result.body, q),
       onError : e => this.store.deleteCacheError(e, q)
     });
   }
 
-  async getCount(){
+  async getCacheCount(){
     const url = `/api/admin/cache/count`;
 
     return this.request({
       url: url,
-      checkCached: () => this.store.data.getCount,
-      onLoading : request => this.store.getCountCacheLoading(request),
-      onLoad : result => this.store.getCountCacheLoaded(result.body),
-      onError : e => this.store.getCountCacheError(e)
+      onLoading : request => this.store.getCacheCountCacheLoading(request),
+      onLoad : result => this.store.getCacheCountCacheLoaded(result.body),
+      onError : e => this.store.getCacheCountCacheError(e)
     });
   }
 

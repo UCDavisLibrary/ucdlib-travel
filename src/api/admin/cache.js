@@ -23,7 +23,7 @@ export default (api) => {
     });
   
     /**
-     * @description Create an approver-type
+     * @description Delete cache items
      */
     api.delete('/cache', protect('hasAdminAccess'), async (req, res) => {
         const deleteBody = req.body;
@@ -51,11 +51,11 @@ export default (api) => {
      */
     api.get('/cache/count', protect('hasAdminAccess'), async (req, res) => {
 
-      const data = await cache.getCount();
+      const data = await cache.getCacheCount();
       
 
       if ( data.error ) {
-        console.error('Error in PUT /cache/count', data.error);
+        console.error('Error in GET /cache/count', data.error);
         return res.status(500).json({error: true, message: 'Error getting count.'});
       }
       res.json({data: data.res.rows, error: false});
