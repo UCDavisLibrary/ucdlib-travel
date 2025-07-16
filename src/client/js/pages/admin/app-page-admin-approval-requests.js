@@ -4,30 +4,25 @@ import { LitCorkUtils, Mixin } from '@ucd-lib/cork-app-utils';
 import { MainDomElement } from "@ucd-lib/theme-elements/utils/mixins/main-dom-element.js";
 import { WaitController } from "@ucd-lib/theme-elements/utils/controllers/wait.js";
 import promiseUtils from '../../../../lib/utils/promiseUtils.js';
-import applicationOptions from '../../../../lib/utils/applicationOptions.js';
-import typeTransform from "../../../../lib/utils/typeTransform.js";
 import urlUtils from '../../../../lib/utils/urlUtils.js';
 
 /**
  * AppPageAdminApprovalRequests
- * Admin page for managing approval requests.
+ * Admin page for viewing all approval requests.
+ * @property {Object} queryArgs - Query arguments for fetching approval requests.
+ * @property {Number} totalPages - Total number of pages of approval requests based on current filters.
+ * @property {Array} approvalRequests - List of approval requests fetched based on queryArgs.
+ * @property {Array} filters - List of filters available for approval requests.
  */
 export default class AppPageAdminApprovalRequests extends Mixin(LitElement)
   .with(LitCorkUtils, MainDomElement) {
 
   static get properties() {
     return {
-      page: { type: Number },
+      queryArgs: { type: Object },
       totalPages: { type: Number },
       approvalRequests: { type: Array },
-      isCurrent: { type: Boolean },
-      waitController: { type: Object },
-      approvalStatuses: { type: Array },
-      approvalStatus: { type: String },
-      selectedApprovalRequestFilters: { type: Array },
-      employeesInDB: { type: Array },
-      selectedEmployee: { type: String },
-      selectedEmployeeFilters: { type: Array },
+      filters: { type: Array }
     };
   }
 
@@ -35,51 +30,34 @@ export default class AppPageAdminApprovalRequests extends Mixin(LitElement)
     super();
     this.render = render.bind(this);
 
-    // Initialize state
     this.totalPages = 1;
-    this.page = 1;
     this.approvalRequests = [];
     this.waitController = new WaitController(this);
-    this.approvalStatuses = applicationOptions.approvalStatuses;
-    this.approvalStatus = '';
-    this.employeesInDB = [];
-    this.isCurrent = false;
-    this.selectedApprovalRequestFilters = [];
-    this.selectedEmployee = '';
-    this.selectedEmployeeFilters = [];
 
-    // Inject models
+    this.queryArgs = {
+      isCurrent: true,
+      approvalStatus: [],
+      employees: [],
+      fiscalYear: [],
+      page: 1
+    };
+    this.filters = [];
+
     this._injectModel('AppStateModel', 'ApprovalRequestModel', 'AuthModel', 'EmployeeModel');
   }
 
   /**
-   * Reset selected filters to default values
+   * @description Query approval requests based on current filters and page.
+   * @returns
    */
-  resetFilters() {
-    this.selectedApprovalRequestFilters = [];
-    this.selectedEmployeeFilters = [];
-  }
-
-  /**
-   * Query approval requests using the current filter values
-   */
-  async query() {
-    try {
-      this.queryState = 'loading';
-
-      // Inline query object
-      const queryObject = {
-        isCurrent: true,
-        approvalStatus: this.selectedApprovalRequestFilters || '',
-        employees: this.selectedEmployeeFilters || '',
-        page: this.page
-      };
-
-      const result = await this.ApprovalRequestModel.query(queryObject);
-      return result;
-    } catch (error) {
-      this.logger.debug('Error in querying approval requests:', error);
+  async query(){
+    this.AppStateModel.showLoading();
+    const r = await this.ApprovalRequestModel.query(this.queryArgs)
+    if ( r.state === 'error' ){
+      this.AppStateModel.showError(r, {ele: this});
+      return;
     }
+    this.AppStateModel.showLoaded(this.id);
   }
 
   /**
@@ -87,150 +65,93 @@ export default class AppPageAdminApprovalRequests extends Mixin(LitElement)
    * @param {Object} state - AppStateModel state
    */
   async _onAppStateUpdate(state) {
-    if (this.id !== state.page) return;
+    if ( this.id !== state.page ) return;
+    this.AppStateModel.showLoading();
 
-    this._setPage(state);
-    this._updateTitleAndBreadcrumbs();
-    this._onEmployeesFetched(state);  // Automatically handles the state
+    this.AppStateModel.setTitle('All Approval Requests');
 
-    try {
-      const data = await this.getPageData();
-      const hasError = data.some(e => e.status === 'rejected' || (e.value && e.value.state === 'error'));
+    const breadcrumbs = [
+      this.AppStateModel.store.breadcrumbs.home,
+      this.AppStateModel.store.breadcrumbs.admin,
+      this.AppStateModel.store.breadcrumbs[this.id]
+    ];
+    this.AppStateModel.setBreadcrumbs(breadcrumbs);
 
-      if (hasError) {
-        this.AppStateModel.showError(data, { ele: this });
-        return;
-      }
-
-      this.AppStateModel.showLoaded(this.id);
-    } catch (error) {
-      this.logger.debug('Error in handling app state update:', error);
+    const d = await this.getPageData();
+    const hasError = d.some(e => e.status === 'rejected' || e.value.state === 'error');
+    if ( hasError ) {
+      this.AppStateModel.showError(d, {ele: this});
+      return;
     }
+    await this.waitController.waitForFrames(5);
+
+    this.AppStateModel.showLoaded(this.id);
   }
+
 
   /**
-   * This method will be automatically wired up to the 'employees-fetched' event
-   * when the model changes its state (loading, loaded, error).
+   * @description Get all data required for rendering this page
    */
-  _onEmployeesFetched(e) {
-    if (e.state === 'loading') {
-      // this.logger.debug('Employees are loading...');
-    } else if (e.state === 'loaded') {
-      // this.logger.debug('Employees successfully loaded:', e.payload);
-      this._updateEmployeeList(e.payload);  // Update employee list without directly setting state
-    } else if (e.state === 'error') {
-      this.logger.debug('Error loading employees:', e.error);
-    }
-  }
-
-  /**
-   * Update the employee list in the UI without directly manipulating state here.
-   */
-  _updateEmployeeList(employeeData) {
-    // Handle the UI logic for displaying the employees.
-    // Avoid directly mutating state in the view.
-    this.employeesInDB = employeeData;  // State can still be set here, but separated from view logic.
-    // Optionally, trigger any additional rendering if needed.
-  }
-
-/**
- * Fetch all required data for rendering the page
- */
-async getPageData() {
-  try {
-    const queryObject = {
-      isCurrent: true,
-      approvalStatus: this.selectedApprovalRequestFilters || '',
-      employees: this.selectedEmployeeFilters || '',
-      page: this.page
-    };
+  async getPageData(){
+    await this.waitController.waitForUpdate();
 
     const promises = [
-      this.ApprovalRequestModel.query(queryObject),  // Fetch approval requests
-      this.EmployeeModel.getAllEmployees()  // Fetch all employees
-    ];
-
+      this.ApprovalRequestModel.query(this.queryArgs),
+      this.ApprovalRequestModel.getFilters('admin')
+    ]
     const resolvedPromises = await Promise.allSettled(promises);
-
     return promiseUtils.flattenAllSettledResults(resolvedPromises);
-
-  } catch (error) {
-    this.logger.debug('Error fetching page data:', error);
-    return [];  // Return an empty array in case of failure
   }
-}
 
   /**
-   * Handle approval requests loading event.
-   * @param {Event} e - Event containing approval request data.
+   * @description callback for when approval request filters are updated
+   * @param {Object} e - event object containing state and payload
+   * @returns
    */
-  _onApprovalRequestsRequested(e) {
-    if (e.state !== 'loaded') return;
+  _onApprovalRequestFiltersUpdate(e){
+    if ( e.state !== 'loaded' || e.userType != 'admin' ) return;
+    this.filters = e.payload;
+  }
 
-    if (!this.AppStateModel.isActivePage(this)) return;
+  /**
+   * @description callback for when approval requests have been requested
+   * @param {Object} e - event object containing state and payload
+   * @returns
+   */
+  _onApprovalRequestsRequested(e){
+    if ( e.state !== 'loaded' ) return;
 
-    // Inline query object here.
-    const queryObject = {
-      isCurrent: true,
-      approvalStatus: this.selectedApprovalRequestFilters || '',
-      employees: this.selectedEmployeeFilters || '',
-      page: this.page
-    };
-
-    const elementQueryString = urlUtils.queryObjectToKebabString(queryObject);
-    if (e.query !== elementQueryString) return;
+    // check that request was issue by this element
+    if ( !this.AppStateModel.isActivePage(this) ) return;
+    const elementQueryString = urlUtils.queryObjectToKebabString(this.queryArgs);
+    if ( e.query !== elementQueryString ) return;
 
     this.approvalRequests = e.payload.data;
     this.totalPages = e.payload.totalPages;
   }
 
   /**
-   * Set the page number from the AppStateModel state.
-   * @param {Object} state - AppStateModel state.
-   */
-  _setPage(state) {
-    this.page = typeTransform.toPositiveInt(state?.location?.query?.page) || 1;
-  }
-
-  /**
-   * Event handler for filter changes.
-   * Triggers a query to update results.
-   * @param {Array} options - Selected options.
-   * @param {String} prop - Property to update.
-   * @param {Boolean} toInt - Convert values to integers before setting property.
+   * @description bound to change event of filters
+   * @param {Array} options - The selected options from the filter
+   * @param {String} prop - The property to update in the queryArgs
+   * @param {Boolean} toInt - Whether to convert the values to integers
    */
   _onFilterChange(options, prop, toInt) {
-    this[prop] = options.map(option => toInt ? parseInt(option.value) : option.value);
-    this.page = 1;
-    this.results = [];
-    this.maxPage = 1;
+    this.queryArgs[prop] = options.map(option => toInt ? parseInt(option.value) : option.value);
+    this.queryArgs.page = 1;
+    this.approvalRequests = [];
+    this.totalPages = 1;
     this.query();
+    this.requestUpdate();
   }
 
   /**
-   * Callback for pagination change.
-   * @param {CustomEvent} e - Page-change event.
+   * @description callback for when user clicks on pagination
+   * @param {CustomEvent} e - page-change event
    */
-  _onPageChange(e) {
-    let url = this.AppStateModel.store.breadcrumbs[this.id].link;
-    if (e.detail.page !== 1) {
-      url += `?page=${e.detail.page}`;
-    }
-    this.AppStateModel.setLocation(url);
-  }
-
-  /**
-   * Update page title and breadcrumbs.
-   */
-  _updateTitleAndBreadcrumbs() {
-    this.AppStateModel.setTitle('All Approval Requests');
-
-    const breadcrumbs = [
-      this.AppStateModel.store.breadcrumbs.home,
-      this.AppStateModel.store.breadcrumbs[this.id]
-    ];
-
-    this.AppStateModel.setBreadcrumbs(breadcrumbs);
+  _onPageChange(e){
+    this.queryArgs.page = e.detail.page;
+    this.query();
   }
 
 }

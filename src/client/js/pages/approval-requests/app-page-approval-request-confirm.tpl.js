@@ -12,6 +12,9 @@ return html`
   <div class='l-gutter u-space-mb'>
     <div class='l-basic--flipped'>
       <div class='l-content'>
+        <section class="brand-textbox category-brand__background category-brand--redbud  ">
+          <p class='bold'>Please review your request, including the approval chain, before submitting.</p>
+        </section>
         <h2 class="heading--underline">Trip, Training, or Professional Development Opportunity</h2>
         <approval-request-details .approvalRequest=${this.approvalRequest}></approval-request-details>
         <h2 class="heading--underline">Estimated Expenses</h2>

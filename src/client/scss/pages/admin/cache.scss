@@ -1,0 +1,48 @@
+app-page-admin-cache {
+    .cache-item {
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid #DBEAF7;
+      padding: 20px;
+    }
+
+    /* Hover state */
+    .cache-item:hover {
+        background-color: #f0f8ff; /* light blue */
+        cursor: pointer;
+    }
+  
+    /* Clicked / selected state */
+    .cache-item.selected {
+        background-color: #cce0f3; /* darker blue */
+    }
+
+    .cache__header {
+      display: flex;
+      align-items: center;
+      margin-bottom: .25rem;
+  
+      h4 {
+        margin-right: 1rem;
+        margin-bottom: 0;
+      }
+  
+      a {
+        margin-right: .5rem;
+      }
+    }
+
+    .sticky-update-bar {
+        position: sticky;
+        bottom: 0;
+        background: white;
+        padding: 1rem;
+        border-top: 1px solid #E0E0E0;
+        z-index: 100;
+        display: flex;
+        justify-content: center;
+        box-shadow: 0px -2px 4px rgba(0, 0, 0, 0.1);
+      }
+  
+  }
+  

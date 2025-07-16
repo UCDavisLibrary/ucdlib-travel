@@ -347,6 +347,7 @@ export function renderForm() {
           >Save</button>
         <button
           type="button"
+          ?hidden=${!this.approvalFormId}
           ?disabled=${this.userCantSubmit}
           class='btn btn--primary category-brand--double-decker'
           @click=${this._onDeleteButtonClick}

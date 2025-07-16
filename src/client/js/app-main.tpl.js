@@ -29,6 +29,7 @@ return html`
         <a href="/admin/reimbursement">Reimbursement Requests</a>
         ` : html``}
       <a href="/admin/allocations">Employee Allocations</a>
+      <a href="/admin/cache">Cache Settings</a>
       <a href="/admin/settings">General Settings</a>
       <a href="/admin/email-settings">Email Settings</a>
       <a href="/admin/line-items">Line Items</a>
@@ -56,6 +57,7 @@ return html`
     <app-page-home id='home'></app-page-home>
     <app-page-admin id='admin'></app-page-admin>
     <app-page-admin-approvers id='admin-approvers'></app-page-admin-approvers>
+    <app-page-admin-cache id='admin-cache'></app-page-admin-cache>
     <app-page-admin-settings id='admin-settings'></app-page-admin-settings>
     <app-page-admin-allocations id='admin-allocations'></app-page-admin-allocations>
     <app-page-admin-allocations-new id='admin-allocations-new'></app-page-admin-allocations-new>

@@ -45,6 +45,7 @@ export default class AppDialogModal extends Mixin(LitElement)
     this.actions = e.actions;
     this.data = e.data;
 
+    document.body.style.overflow = 'hidden';
     this.dialogRef.value.showModal();
   }
 
@@ -54,9 +55,9 @@ export default class AppDialogModal extends Mixin(LitElement)
    * @param {String} action - The action value to emit
    */
   _onButtonClick(action){
+    document.body.style.overflow = '';
     this.dialogRef.value.close();
     this.AppStateModel.emit('dialog-action', {action, data: this.data});
-
   }
 
 }

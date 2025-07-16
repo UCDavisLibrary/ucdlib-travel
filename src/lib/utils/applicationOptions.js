@@ -205,7 +205,10 @@ class ApplicationOptions {
         byLine: 'Recalled By:',
         iconClass: 'fa-solid fa-rotate-left',
         brandColor: 'secondary',
-        warningText: `Recalling this request will revoke all approvals, return the request to 'draft' status, and require you to resubmit.`
+        warningText: `Recalling this request will revoke all approvals, and return the request to 'draft' status.
+        <br>From there, you can make changes and resubmit.
+        <br><br>If you you need to cancel the request, please use the 'Cancel' action instead.
+        `
       }
     ];
   }

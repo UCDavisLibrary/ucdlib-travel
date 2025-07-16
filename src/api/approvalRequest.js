@@ -84,13 +84,21 @@ export default (api) => {
 
   api.get('/approval-request/filters', protect('hasBasicAccess'), async (req, res) => {
     const query = urlUtils.queryToCamelCase(req.query);
-    const userType = query.userType === 'approver' ? 'approver' : 'submitter';
+    let userType = 'submitter';
+    if ( query?.userType === 'approver' ){
+      userType = 'approver';
+    } else if ( query?.userType === 'admin' ) {
+      userType = 'admin';
+      if ( !req.auth.token.hasAdminAccess ) {
+        return apiUtils.do403(res);
+      }
+    }
     const kerberos = req.auth.token.id;
     const filterKwargs = {isCurrent: true};
     if ( userType == 'approver' ) {
       filterKwargs.approvers = [kerberos];
       filterKwargs.excludeDrafts = true;
-    } else {
+    } else if ( userType == 'submitter' ) {
       filterKwargs.employees = [kerberos];
     }
     const filters = [];
@@ -118,7 +126,7 @@ export default (api) => {
     filters.push(filter);
 
     // submitter employee filters
-    if ( userType == 'approver' ) {
+    if ( userType == 'approver' || userType == 'admin' ) {
       const f = {label: 'Employee', 'queryParam': 'employees', 'options': []};
       let r = await approvalRequest.getFieldCounts('employee_kerberos', filterKwargs);
       if ( r.error ) {

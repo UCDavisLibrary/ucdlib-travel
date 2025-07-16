@@ -9,6 +9,7 @@
 @use './pages/admin/allocations.scss' as adminAllocations;
 @use './pages/admin/email.scss' as email;
 @use './pages//admin/reimbursement-requests.scss' as adminReimbursementRequests;
+@use './pages/admin/cache.scss' as adminCache;
 
 // pages
 @use './pages/approval-request-new.scss' as approvalRequestNew;

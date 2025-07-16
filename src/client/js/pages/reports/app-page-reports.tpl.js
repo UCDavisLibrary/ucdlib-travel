@@ -334,7 +334,7 @@ function renderHelpDialog(){
           <button
             class='btn btn--invert'
             type='button'
-            @click=${() => this.helpDialogRef.value.close()} >
+            @click=${() => this.closeHelpDialog()} >
             Close
           </button>
         </div>
