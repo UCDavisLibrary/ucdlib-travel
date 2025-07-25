@@ -1365,6 +1365,10 @@ class ApprovalRequest {
     }
     modifiedApprovalRequest = modifiedApprovalRequest.data[0];
 
+    modifiedApprovalRequest.approvalStatusActivity = modifiedApprovalRequest.approvalStatusActivity.filter(
+      item => !(item.employeeKerberos === modifiedApprovalRequest?.employeeKerberos && item.action === 'approve')
+    );
+
     let aKerberos = modifiedApprovalRequest.approvalStatusActivity.filter(
       a => a.action === 'approve' ||
       a.action === 'approve-with-changes' ||
@@ -1372,10 +1376,11 @@ class ApprovalRequest {
       a.action === 'request-revision' ||
       a.action === 'approval-needed'
     );
-    let lastApprover = aKerberos.pop();
+
+    const fullyApproved = aKerberos.every(item => item.action === 'approve' || item.action === 'approve-with-changes');
+  
 
     let token = {preferred_username: approverKerberos}
-
 
     const payloadApprover = {
       "requests": {
@@ -1385,11 +1390,13 @@ class ApprovalRequest {
       token: token,
     }
 
+    
+
     // approval notification
     if(action.value == 'approve' || action.value == 'approve-with-changes'){
       let notified;
       let notificationKerberos;
-      if(lastApprover.employeeKerberos === approverKerberos){
+      if(fullyApproved){
         notified = "request-notification";
         notification = 'chain-completed';
         notificationKerberos = modifiedApprovalRequest.employeeKerberos;
