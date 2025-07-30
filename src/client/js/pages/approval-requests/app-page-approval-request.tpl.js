@@ -159,18 +159,19 @@ return html`
                         </div>
                       `)}
                     </div>
+                    ${(action.action?.includes('notification') && this.notifications.length !== 0) ? html`<div class='primary small' @click=${() => this._onActivityClick(action)}>Show Notification</div>`:html``}
                   </div>
                   <div class='date'>
                     <div>${action.occurredDateString}</div>
                     <div>${action.occurredTimeString}</div>
                   </div>
-
                 </div>
                 <div ?hidden=${!action.comments} class='comment'>
                   <div class='bold'>Comments</div>
                   <div class='small'>${action.comments}</div>
                 </div>
               </div>
+
             `)}
           </div>
         </section>

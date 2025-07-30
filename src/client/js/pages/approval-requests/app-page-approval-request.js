@@ -52,10 +52,11 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
     this.reimbursementRequestTotal = '0.00';
     this.reimbursementRequests = [];
     this._showReimbursementStatusWarning = false;
+    this._showNotification = true;
 
     this.waitController = new WaitController(this);
 
-    this._injectModel('AppStateModel', 'ApprovalRequestModel', 'ReimbursementRequestModel', 'SettingsModel');
+    this._injectModel('AppStateModel', 'ApprovalRequestModel', 'ReimbursementRequestModel', 'SettingsModel', 'NotificationModel');
   }
 
   willUpdate(props){
@@ -71,6 +72,9 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
   async _onAppStateUpdate(state) {
     if ( this.id !== state.page ) return;
     this._showLoaded = false;
+    this.notifications = [];
+    this._showNotification = false;
+
     this.AppStateModel.showLoading();
 
     this.AppStateModel.setTitle({show: false});
@@ -83,7 +87,7 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
     }
 
     const d = await this.getPageData();
-    const hasError = d.some(e => e.status === 'rejected' || e.value.state === 'error');
+    const hasError = d.some((e, index) => index !== 3 && (e.status === 'rejected' || e.value.state === 'error'));
     if ( hasError ) {
       this.AppStateModel.showError(d, {ele: this});
       return;
@@ -109,10 +113,15 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
       includeReimbursedTotal: true
     };
 
+    const notificationQuery = {
+      approvalRequestIds: this.approvalRequestId
+    };
+
     const promises = [
       this.ApprovalRequestModel.query(this.queryObject),
       this.ReimbursementRequestModel.query(reimbursementQuery),
-      this.SettingsModel.getByCategory('approval-requests')
+      this.SettingsModel.getByCategory('approval-requests'),
+      this.NotificationModel.getNotificationHistory(notificationQuery)
     ]
     const resolvedPromises = await Promise.allSettled(promises);
     return promiseUtils.flattenAllSettledResults(resolvedPromises);
@@ -137,6 +146,66 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
    */
   _onReimbursementWarningClick(){
     this.ApprovalRequestModel.moreReimbursementToggle(this.approvalRequestId);
+  }
+
+  _onNotificationHistory(e){
+    if(e.state == 'error') {
+      this.notifications = [];
+      return;
+    }
+
+    if ( e.state !== 'loaded' ) return;
+
+    this.notifications = e.payload.data;
+    this.requestUpdate();
+  }
+    /**
+   * @description Event handler for when the delete button is clicked on an allocation
+   */
+  async _onActivityClick(activity){
+    const validTypes = {
+      'request': 'request-notification',
+      'next-approver': 'approver-notification',
+      'reimbursement': 'reimbursement-notification'
+    };
+
+    let notifyComment = this.notifications.find(not => {
+      const expectedAction = validTypes[not.notificationType];
+
+      return (
+        activity.employeeKerberos === not.employeeKerberos &&
+        activity.action === expectedAction
+      );
+    });
+
+    if (Array.isArray(notifyComment)) {
+      notifyComment = notifyComment[0];
+    }
+    
+
+
+    let subject, details, date, comment;
+
+    subject = notifyComment?.subject ? notifyComment.subject : "Subject Not Included";
+    details = notifyComment?.details;
+    date = new Date(notifyComment.createdAt).toLocaleDateString('en-US')
+
+    comment = `
+      <b>To:</b> ${details?.to ? details.to : "Recipient Not Included"}<br>
+      <b>From:</b> ${details?.from ? details.from : "Sender Not Included"}<br>
+      <b>Date:</b> ${date ? date: "No Date Included"}<br><br>
+      <pre style="font-family: inherit;">${details.body ? details.body: "No Notification Body Included"}</pre><br><br>
+      ${notifyComment?.emailSent ? `<b>This Email was sent</b>`:`<b>This Email was NOT sent</b>`}
+    `;
+
+    this.AppStateModel.showDialogModal({
+      title : `${subject}`,
+      content : `${comment}`,
+      actions : [
+        {text: 'Close', value: 'cancel', invert: true, color: 'primary'}
+      ],
+      data : {}
+    });
   }
 
   /**

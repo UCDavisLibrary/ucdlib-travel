@@ -69,6 +69,26 @@ class UrlUtils {
   }
 
   /**
+ * @description Convert a query object to snake_case
+ * @param {Object} q - query object
+ * @returns {Object}
+ */
+  queryToSnakeCase(q) {
+    const out = {};
+    for (const k in q) {
+      // Convert camelCase to snake_case
+      let newK = k.replace(/([a-z0-9])([A-Z])/g, '$1_$2');
+
+      // Convert kebab-case to snake_case
+      newK = newK.replace(/-/g, '_').toLowerCase();
+
+      out[newK] = q[k];
+    }
+    return out;
+  }
+
+
+  /**
    * @description Convert a query object to camelCase
    * @param {Object} q - query object
    * @returns {Object}
