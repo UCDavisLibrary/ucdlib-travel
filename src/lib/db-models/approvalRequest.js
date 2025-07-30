@@ -1251,7 +1251,6 @@ class ApprovalRequest {
 
     // get approval request
     const { approvalRequest, approvalRequestError, approvalRequestId } = await this._getApprovalRequest(approvalRequestObjectOrId);
-    let modifiedApprovalRequest = approvalRequest;
     if ( approvalRequestError ) return approvalRequestError;
 
     // ensure approver is next in approval chain
@@ -1358,18 +1357,25 @@ class ApprovalRequest {
     const out = {success: true, approvalRequestId, approvalRequestRevisionId};
     const notificationErrorMessage = 'Error sending system notifications for approval request approver action';
 
-    modifiedApprovalRequest = await this.get({revisionIds: [approvalRequestRevisionId]});
-    if ( modifiedApprovalRequest.error ) {
-      console.error(notificationErrorMessage, modifiedApprovalRequest);
+    let res = await this.get({revisionIds: [approvalRequestRevisionId]});
+    if ( res.error ) {
+      console.error(notificationErrorMessage, res);
       return out;
     }
-    modifiedApprovalRequest = modifiedApprovalRequest.data[0];
+    let resData = res.data[0];
 
-    modifiedApprovalRequest.approvalStatusActivity = modifiedApprovalRequest.approvalStatusActivity.filter(
-      item => !(item.employeeKerberos === modifiedApprovalRequest?.employeeKerberos && item.action === 'approve')
+    resData.approvalStatusActivity = resData.approvalStatusActivity.filter(
+      item => !(item.employeeKerberos === resData?.employeeKerberos && item.action === 'approve')
     );
 
-    let aKerberos = modifiedApprovalRequest.approvalStatusActivity.filter(
+    const newApprovalRequest = {
+      ...resData,
+      approvalStatusActivity: resData.approvalStatusActivity.filter(
+        item => !(item.employeeKerberos === resData.employeeKerberos && item.action === 'approve')
+      )
+    };    
+
+    let aKerberos = newApprovalRequest.approvalStatusActivity.filter(
       a => a.action === 'approve' ||
       a.action === 'approve-with-changes' ||
       a.action === 'deny' ||
@@ -1384,7 +1390,7 @@ class ApprovalRequest {
 
     const payloadApprover = {
       "requests": {
-        approvalRequest: modifiedApprovalRequest,
+        approvalRequest: newApprovalRequest,
         reimbursementRequest: {},
       },
       token: token,
@@ -1399,11 +1405,11 @@ class ApprovalRequest {
       if(fullyApproved){
         notified = "request-notification";
         notification = 'chain-completed';
-        notificationKerberos = modifiedApprovalRequest.employeeKerberos;
+        notificationKerberos = newApprovalRequest.employeeKerberos;
       } else {
         notified = "approver-notification";
         notification = 'next-approver';
-        notificationKerberos = applicationOptions.getNextApprover(modifiedApprovalRequest, true);
+        notificationKerberos = applicationOptions.getNextApprover(newApprovalRequest, true);
       }
       payloadApprover.token = {preferred_username: notificationKerberos};
 
@@ -1422,14 +1428,14 @@ class ApprovalRequest {
     if (action.value == 'deny' || action.value == 'request-revision') {
       notification = 'approver-change';
       payloadApprover.notificationType = notification;
-      payloadApprover.token = {preferred_username: modifiedApprovalRequest.employeeKerberos};
+      payloadApprover.token = {preferred_username: newApprovalRequest.employeeKerberos};
       const deniedNotificationSent = await emailController.sendSystemNotification( payloadApprover.notificationType,
         payloadApprover.requests.approvalRequest,
         payloadApprover.requests.reimbursementRequest,
         payloadApprover
       );
       if ( deniedNotificationSent ){
-        await this.addNotification(approvalRequestRevisionId, modifiedApprovalRequest.employeeKerberos, "request-notification");
+        await this.addNotification(approvalRequestRevisionId, newApprovalRequest.employeeKerberos, "request-notification");
       }
     }
 
