@@ -147,7 +147,7 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
    * @description Event handler for when show notification link is clicked the modal will show message
   */
   async _onActivityClick(activity){
-    let apRevisionId = this.approvalRequest.approvalRequestRevisionId;
+    let apRevisionId = activity.approvalRequestRevisionId;
 
     const notificationQuery = {
       approvalRequestIds: apRevisionId
@@ -337,7 +337,10 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
     approvalRequests.forEach(r => {
       r.approvalStatusActivity.forEach(action => {
         if ( action.action === 'approval-needed' ) return;
-        action = {...action};
+        action = {
+          ...action,
+          approvalRequestRevisionId: r.approvalRequestRevisionId
+        };
         activity.push(action);
       });
     });
