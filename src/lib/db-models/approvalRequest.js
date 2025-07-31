@@ -1357,34 +1357,19 @@ class ApprovalRequest {
     const out = {success: true, approvalRequestId, approvalRequestRevisionId};
     const notificationErrorMessage = 'Error sending system notifications for approval request approver action';
 
-    let res = await this.get({revisionIds: [approvalRequestRevisionId]});
-    if ( res.error ) {
+    let newApprovalRequest = await this.get({revisionIds: [approvalRequestRevisionId]});
+    if ( newApprovalRequest.error ) {
       console.error(notificationErrorMessage, res);
       return out;
     }
-    let resData = res.data[0];
+    newApprovalRequest = newApprovalRequest.data[0];
 
-    resData.approvalStatusActivity = resData.approvalStatusActivity.filter(
-      item => !(item.employeeKerberos === resData?.employeeKerberos && item.action === 'approve')
-    );
+    const approvalActions = ['approve', 'approve-with-changes', 'deny', 'request-revision', 'approval-needed'];
 
-    const newApprovalRequest = {
-      ...resData,
-      approvalStatusActivity: resData.approvalStatusActivity.filter(
-        item => !(item.employeeKerberos === resData.employeeKerberos && item.action === 'approve')
-      )
-    };    
-
-    let aKerberos = newApprovalRequest.approvalStatusActivity.filter(
-      a => a.action === 'approve' ||
-      a.action === 'approve-with-changes' ||
-      a.action === 'deny' ||
-      a.action === 'request-revision' ||
-      a.action === 'approval-needed'
-    );
-
-    const fullyApproved = aKerberos.every(item => item.action === 'approve' || item.action === 'approve-with-changes');
-  
+    const fullyApproved = newApprovalRequest.approvalStatusActivity
+      .filter(r => approvalActions.includes(r.action))
+      .filter(r => r.employeeKerberos !== newApprovalRequest.employeeKerberos) // assume the requester will always approve their own request
+      .every(r => r.action === 'approve' || r.action === 'approve-with-changes');
 
     let token = {preferred_username: approverKerberos}
 
@@ -1395,8 +1380,6 @@ class ApprovalRequest {
       },
       token: token,
     }
-
-    
 
     // approval notification
     if(action.value == 'approve' || action.value == 'approve-with-changes'){
