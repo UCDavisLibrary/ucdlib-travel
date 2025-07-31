@@ -28,7 +28,7 @@ class Email {
 
     let emailSent;
     let details = {};
-    body = body + `\n${serverConfig.appRoot}/${url}`
+    body = body + `\n${serverConfig.appRoot}${url}`
 
     const from = sender;
     const to = await settings._getEmail(); // This is getting the email to send help too currently donotreply@lib.ucdavis.edu
