@@ -143,14 +143,9 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
     this.ApprovalRequestModel.moreReimbursementToggle(this.approvalRequestId);
   }
 
-  // _onNotificationHistory(e){
-
-  // }
-
-  
-    /**
+  /**
    * @description Event handler for when show notification link is clicked the modal will show message
-   */
+  */
   async _onActivityClick(activity){
     let apRevisionId = this.approvalRequest.approvalRequestRevisionId;
 
