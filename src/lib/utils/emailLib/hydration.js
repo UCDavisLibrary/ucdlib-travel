@@ -200,6 +200,14 @@ _getApprovalRequestUrl(){
 }
 
 /**
+ * @description approval request approver action url
+ * @returns approval request approver action url
+ */
+_getApprovalRequestApproverActionUrl(){
+  return `${serverConfig.appRoot}/approval-request/approve/${this.approvalRequest?.approvalRequestId || ''}`;
+}
+
+/**
   * @description reimbursement url
   * @returns  reimbursement url
 */
