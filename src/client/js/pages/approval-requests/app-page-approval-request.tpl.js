@@ -159,7 +159,7 @@ return html`
                         </div>
                       `)}
                     </div>
-                    ${(action.action?.includes('notification') && this.notifications.length !== 0) ? html`<div class='primary small' @click=${() => this._onActivityClick(action)}>Show Notification</div>`:html``}
+                    ${action.action?.includes('notification') ? html`<div class='primary small' style="cursor: pointer;" @click=${() => this._onActivityClick(action)}>Show Notification</div>`:html``}
                   </div>
                   <div class='date'>
                     <div>${action.occurredDateString}</div>

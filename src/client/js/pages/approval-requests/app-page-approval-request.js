@@ -87,7 +87,7 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
     }
 
     const d = await this.getPageData();
-    const hasError = d.some((e, index) => index !== 3 && (e.status === 'rejected' || e.value.state === 'error'));
+    const hasError = d.some(e => e.status === 'rejected' || e.value.state === 'error');
     if ( hasError ) {
       this.AppStateModel.showError(d, {ele: this});
       return;
@@ -113,15 +113,10 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
       includeReimbursedTotal: true
     };
 
-    const notificationQuery = {
-      approvalRequestIds: this.approvalRequestId
-    };
-
     const promises = [
       this.ApprovalRequestModel.query(this.queryObject),
       this.ReimbursementRequestModel.query(reimbursementQuery),
       this.SettingsModel.getByCategory('approval-requests'),
-      this.NotificationModel.getNotificationHistory(notificationQuery)
     ]
     const resolvedPromises = await Promise.allSettled(promises);
     return promiseUtils.flattenAllSettledResults(resolvedPromises);
@@ -148,21 +143,45 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
     this.ApprovalRequestModel.moreReimbursementToggle(this.approvalRequestId);
   }
 
-  _onNotificationHistory(e){
-    if(e.state == 'error') {
+  // _onNotificationHistory(e){
+
+  // }
+
+  
+    /**
+   * @description Event handler for when show notification link is clicked the modal will show message
+   */
+  async _onActivityClick(activity){
+    let apRevisionId = this.approvalRequest.approvalRequestRevisionId;
+
+    const notificationQuery = {
+      approvalRequestIds: apRevisionId
+    };
+
+    const res = await this.NotificationModel.getNotificationHistory(notificationQuery)
+
+    if(res.state == 'error') {
       this.notifications = [];
+
+      this.AppStateModel.showDialogModal({
+        title : `No Notification Access`,
+        content : `You can not view this notification because either you do not have 
+                   access to this message or the request is not available for viewing.`,
+        actions : [
+          {text: 'Close', value: 'cancel', invert: true, color: 'primary'}
+        ],
+        data : {}
+      });
+
+      this.requestUpdate();
+
       return;
     }
 
-    if ( e.state !== 'loaded' ) return;
+    if ( res.state !== 'loaded' ) return;
 
-    this.notifications = e.payload.data;
-    this.requestUpdate();
-  }
-    /**
-   * @description Event handler for when the delete button is clicked on an allocation
-   */
-  async _onActivityClick(activity){
+    this.notifications = res.payload.data;
+
     const validTypes = {
       'request': 'request-notification',
       'next-approver': 'approver-notification',
@@ -173,6 +192,7 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
       const expectedAction = validTypes[not.notificationType];
 
       return (
+        apRevisionId == not.approvalRequestRevisionId &&
         activity.employeeKerberos === not.employeeKerberos &&
         activity.action === expectedAction
       );
@@ -181,8 +201,6 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
     if (Array.isArray(notifyComment)) {
       notifyComment = notifyComment[0];
     }
-    
-
 
     let subject, details, date, comment;
 
@@ -206,6 +224,9 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
       ],
       data : {}
     });
+
+    this.requestUpdate();
+
   }
 
   /**
