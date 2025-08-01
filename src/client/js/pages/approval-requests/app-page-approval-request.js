@@ -52,10 +52,11 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
     this.reimbursementRequestTotal = '0.00';
     this.reimbursementRequests = [];
     this._showReimbursementStatusWarning = false;
+    this._showNotification = true;
 
     this.waitController = new WaitController(this);
 
-    this._injectModel('AppStateModel', 'ApprovalRequestModel', 'ReimbursementRequestModel', 'SettingsModel');
+    this._injectModel('AppStateModel', 'ApprovalRequestModel', 'ReimbursementRequestModel', 'SettingsModel', 'NotificationModel');
   }
 
   willUpdate(props){
@@ -71,6 +72,9 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
   async _onAppStateUpdate(state) {
     if ( this.id !== state.page ) return;
     this._showLoaded = false;
+    this.notifications = [];
+    this._showNotification = false;
+
     this.AppStateModel.showLoading();
 
     this.AppStateModel.setTitle({show: false});
@@ -112,7 +116,7 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
     const promises = [
       this.ApprovalRequestModel.query(this.queryObject),
       this.ReimbursementRequestModel.query(reimbursementQuery),
-      this.SettingsModel.getByCategory('approval-requests')
+      this.SettingsModel.getByCategory('approval-requests'),
     ]
     const resolvedPromises = await Promise.allSettled(promises);
     return promiseUtils.flattenAllSettledResults(resolvedPromises);
@@ -137,6 +141,87 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
    */
   _onReimbursementWarningClick(){
     this.ApprovalRequestModel.moreReimbursementToggle(this.approvalRequestId);
+  }
+
+  /**
+   * @description Event handler for when show notification link is clicked the modal will show message
+  */
+  async _onActivityClick(activity){
+    let apRevisionId = activity.approvalRequestRevisionId;
+
+    const notificationQuery = {
+      approvalRequestIds: apRevisionId
+    };
+
+    const res = await this.NotificationModel.getNotificationHistory(notificationQuery)
+
+    if(res.state == 'error') {
+      this.notifications = [];
+
+      this.AppStateModel.showDialogModal({
+        title : `No Notification Access`,
+        content : `You can not view this notification because either you do not have
+                   access to this message or the request is not available for viewing.`,
+        actions : [
+          {text: 'Close', value: 'cancel', invert: true, color: 'primary'}
+        ],
+        data : {}
+      });
+
+      this.requestUpdate();
+
+      return;
+    }
+
+    if ( res.state !== 'loaded' ) return;
+
+    this.notifications = res.payload.data;
+
+    const validTypes = {
+      'request': 'request-notification',
+      'next-approver': 'approver-notification',
+      'reimbursement': 'reimbursement-notification'
+    };
+
+    let notifyComment = this.notifications.find(not => {
+      const expectedAction = validTypes[not.notificationType];
+
+      return (
+        apRevisionId == not.approvalRequestRevisionId &&
+        activity.employeeKerberos === not.employeeKerberos &&
+        activity.action === expectedAction
+      );
+    });
+
+    if (Array.isArray(notifyComment)) {
+      notifyComment = notifyComment[0];
+    }
+
+    let subject, details, date, comment;
+
+    subject = notifyComment?.subject ? notifyComment.subject : "Subject Not Included";
+    details = notifyComment?.details;
+    date = new Date(notifyComment.createdAt).toLocaleString('en-US')
+
+    comment = `
+      <b>Subject:</b> ${subject}<br>
+      <b>To:</b> ${details?.to ? details.to : "Recipient Not Included"}<br>
+      <b>From:</b> ${details?.from ? details.from : "Sender Not Included"}<br>
+      ${notifyComment?.emailSent ? `<b>Sent:</b> ${date}`:``}
+      <pre style="font-family: inherit; font-size: .875rem;">${details.body ? details.body: "No Notification Body Included"}</pre><br><br>
+    `;
+
+    this.AppStateModel.showDialogModal({
+      title : 'Notification Details',
+      content : `${comment}`,
+      actions : [
+        {text: 'Close', value: 'cancel', invert: true, color: 'primary'}
+      ],
+      data : {}
+    });
+
+    this.requestUpdate();
+
   }
 
   /**
@@ -252,7 +337,10 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
     approvalRequests.forEach(r => {
       r.approvalStatusActivity.forEach(action => {
         if ( action.action === 'approval-needed' ) return;
-        action = {...action};
+        action = {
+          ...action,
+          approvalRequestRevisionId: r.approvalRequestRevisionId
+        };
         activity.push(action);
       });
     });

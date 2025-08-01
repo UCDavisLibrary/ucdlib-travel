@@ -24,8 +24,9 @@ export default class Hydration {
 */
 approvers(){
   const approvalStatusActivity = this.approvalRequest?.approvalStatusActivity || [];
+
   if(this.type == "request" || this.type == "next-approver") return approvalStatusActivity.filter(x => x.action == 'approval-needed');
-  if(this.type == "request-cancel") return approvalStatusActivity.filter(x => (x.action == 'approved') || (x.action == 'approved-with-changes'));
+  if(this.type == "request-cancel") return approvalStatusActivity.filter(x => (x.action == 'approve') || (x.action == 'approved-with-changes'));
   return [];
 }
 /**
@@ -123,6 +124,7 @@ _getRequesterComments(){
 */
 _getNextApproverFullName(){
   let results = this.approvers();
+
   if ( !results?.length ) return '';
   return `${results[0].employee?.firstName} ${results[0].employee?.lastName}`;
 }
@@ -133,6 +135,7 @@ _getNextApproverFullName(){
 */
 _getNextApproverFundChanges(){
   let results = this.approvers();
+
   if ( !results?.length ) return '';
   return results[0]?.fundChanges || '';
 }
@@ -143,6 +146,7 @@ _getNextApproverFundChanges(){
 */
 _getNextApproverKerberos(){
   let results = this.approvers();
+
   if ( !results?.length ) return '';
   return results[0].employeeKerberos || '';
 }
@@ -193,6 +197,14 @@ _getReimbursementStatus(){
 */
 _getApprovalRequestUrl(){
   return `${serverConfig.appRoot}/approval-request/${this.approvalRequest?.approvalRequestId || ''}`;
+}
+
+/**
+ * @description approval request approver action url
+ * @returns approval request approver action url
+ */
+_getApprovalRequestApproverActionUrl(){
+  return `${serverConfig.appRoot}/approval-request/approve/${this.approvalRequest?.approvalRequestId || ''}`;
 }
 
 /**

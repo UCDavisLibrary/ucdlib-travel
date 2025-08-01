@@ -81,7 +81,7 @@ services:
       - db-data:/var/lib/postgresql/data
       # - ../../db-entrypoint:/docker-entrypoint-initdb.d
   adminer:
-    image: adminer:4.8.1
+    image: adminer
     ports:
       - ${ADMINER_HOST_PORT:-8080}:8080
 volumes:

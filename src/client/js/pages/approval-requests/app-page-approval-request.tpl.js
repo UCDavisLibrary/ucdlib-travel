@@ -138,46 +138,53 @@ return html`
         <section class='activity-history'>
           <h2 class="heading--underline">Activity History</h2>
           <div>
-            ${this.activity.map((action) => html`
-              <div class='action' action-id=${action.approvalRequestApprovalChainLinkId}>
-                <div class='action__header'>
-                  <div class='icon'>
-                    <i class='fa-solid ${action.actionObject.iconClass} ${action.actionObject.brandColor}'></i>
-                  </div>
-                  <div class='content'>
-                    ${action.reimbursementRequestId ? html`
-                      <a class='bold primary underline-hover' href='/reimbursement-request/${action.reimbursementRequestId}'>${action.actionObject.actionTakenText}</a>
-                    ` : html`
-                      <div class='bold primary'>${action.actionObject.actionTakenText}</div>
-                    `}
-                    <div class='name-role'>
-                      <div class='primary small'>${action.employee.firstName} ${action.employee.lastName}</div>
-                      ${action.approverTypes.map(t => html`
-                        <div class='flex flex--align-center'>
-                          <div class='dot'></div>
-                          <div class='small grey'>${t.approverTypeLabel}</div>
-                        </div>
-                      `)}
-                    </div>
-                  </div>
-                  <div class='date'>
-                    <div>${action.occurredDateString}</div>
-                    <div>${action.occurredTimeString}</div>
-                  </div>
-
-                </div>
-                <div ?hidden=${!action.comments} class='comment'>
-                  <div class='bold'>Comments</div>
-                  <div class='small'>${action.comments}</div>
-                </div>
-              </div>
-            `)}
+            ${this.activity.map(action => _renderActivityFeedItem.call(this, action))}
           </div>
         </section>
-
       </div>
     </div>
   </div>
-
-
 `;}
+
+function _renderActivityFeedItem(action){
+  let actionTitle = html`<div class='bold primary'>${action.actionObject.actionTakenText}</div>`;
+  if ( action.reimbursementRequestId  ) {
+    actionTitle = html`
+      <a class='bold primary underline-hover' href='/reimbursement-request/${action.reimbursementRequestId}'>${action.actionObject.actionTakenText}</a>
+    `;
+  } else if ( action.action?.includes('notification') ){
+    actionTitle = html`
+    <a class='bold primary underline-hover pointer' @click=${() => this._onActivityClick(action)} title='View Notification'>${action.actionObject.actionTakenText}</a>
+    `
+  }
+
+  return html`
+    <div class='action' action-id=${action.approvalRequestApprovalChainLinkId}>
+      <div class='action__header'>
+        <div class='icon'>
+          <i class='fa-solid ${action.actionObject.iconClass} ${action.actionObject.brandColor}'></i>
+        </div>
+        <div class='content'>
+          ${actionTitle}
+          <div class='name-role'>
+            <div class='primary small'>${action.employee.firstName} ${action.employee.lastName}</div>
+            ${action.approverTypes.map(t => html`
+              <div class='flex flex--align-center'>
+                <div class='dot'></div>
+                <div class='small grey'>${t.approverTypeLabel}</div>
+              </div>
+            `)}
+          </div>
+        </div>
+        <div class='date'>
+          <div>${action.occurredDateString}</div>
+          <div>${action.occurredTimeString}</div>
+        </div>
+      </div>
+      <div ?hidden=${!action.comments} class='comment'>
+        <div class='bold'>Comments</div>
+        <div class='small'>${action.comments}</div>
+      </div>
+    </div>
+  `;
+}
