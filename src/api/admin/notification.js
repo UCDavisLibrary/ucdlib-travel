@@ -2,6 +2,7 @@ import email  from "../../lib/db-models/emailController.js"
 import protect from "../../lib/protect.js";
 import urlUtils from "../../lib/utils/urlUtils.js";
 import ar from "../../lib/db-models/approvalRequest.js";
+import apiUtils from "../../lib/utils/apiUtils.js";
 
 
 export default (api) => {
@@ -12,9 +13,15 @@ export default (api) => {
    */
   api.get('/comments-notification', protect('hasBasicAccess'), async (req, res) => {
     const kerberos = req.auth.token.id;
-    const query = urlUtils.queryToCamelCase(req.query);
+    const query = urlUtils.queryToSnakeCase(req.query);
 
-    const data = await email.getHistory(query);
+    const normalizedQuery = Object.fromEntries(
+      Object.entries(query).map(([key, value]) => [key, Array.isArray(value) ? value : [value]])
+    );
+    
+
+    const data = await email.getHistory(normalizedQuery);
+
     if( data.error ) {
       console.error('Error in GET /notification', data.error);
       return res.status(500).json({error: true, message: 'Error getting request history.'});
@@ -22,7 +29,7 @@ export default (api) => {
 
     if( req.auth.token.hasAdminAccess) return res.json(data);
 
-    let ids = data.data.map((n) => n.approvalRequestRevisionId)
+    let ids = data.data.map((n) => n.approvalRequestRevisionId);
     let aRequest = await ar.get({revisionIds: ids});
     const approvalRequest = aRequest.data;
 

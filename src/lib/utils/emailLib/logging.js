@@ -89,9 +89,9 @@ class Logging {
   async getNotificationLogging(kwargs={}){
     const page = Number(kwargs.page) || 1;
     const pageSize = kwargs.pageSize || 10;
-    const noPaging = pageSize === -1;
-
+    const noPaging = pageSize === -1;    
     const whereArgs = {};
+
     if( kwargs.email_sent ) {
       whereArgs['n.email_sent'] = true;
     } else if( kwargs.email_sent === false ) {
@@ -103,8 +103,10 @@ class Logging {
     if( Array.isArray(kwargs.reimbursement_ids) && kwargs.reimbursement_ids ) {
       whereArgs['n.reimbursement_request_id'] = kwargs.reimbursement_ids;
     }
+    if( Array.isArray(kwargs.employee_kerberos) && kwargs.employee_kerberos ) {
+      whereArgs['n.employee_kerberos'] = kwargs.employee_kerberos;
+    }
     const whereClause = pg.toWhereClause(whereArgs);
-
 
     // get total count
     const countSql = `
@@ -138,7 +140,6 @@ class Logging {
     ${whereClause.sql ? `WHERE ${whereClause.sql}` : ''}
     ${noPaging ? '' : `LIMIT ${pageSize} OFFSET ${(page - 1) * pageSize}`}
     `;
-
 
     const res = await pg.query(query, whereClause.values);
     if( res.error ) return res;

@@ -36,7 +36,7 @@ class NotificationStore extends BaseStore {
     });
   }
   _setNotificationHistoryState(state) {
-    this.data.notificationHistory[state.query] = state;
+    this.data.notificationHistory = state;
     this.emit(this.events.NOTIFICATION_HISTORY, state);
   }
 
