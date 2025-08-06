@@ -20,6 +20,10 @@ class FeatureFlags {
     }
     return metrics;
   }
+
+  get reimbursementDisabled() {
+    return !this.flags.reimbursementRequest;
+  }
 }
 
 export default new FeatureFlags();

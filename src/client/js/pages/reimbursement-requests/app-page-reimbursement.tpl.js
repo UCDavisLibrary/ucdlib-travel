@@ -97,7 +97,7 @@ function renderStatusSection() {
                       <div class='small grey'>${transaction.accountingCode}</div>
                     </td>
                     <td>${applicationOptions.reimbursementTransactionStatuses.find(s => s.value === transaction.reimbursementStatus)?.label}</td>
-                    <td class='text-align--right'><span class='monospace-number'>$${typeTransform.toDollarString(transaction.amount)}</span></td>
+                    <td class='text-align--right'><span class='monospace-number'>${typeTransform.toDollarString(transaction.amount, true)}</span></td>
                     <td class='text-align--right'>
                       <a class='icon-link' title='Edit transaction' ?hidden=${!this.AuthModel.isSiteAdmin} @click=${() => this._onEditFundTransactionClicked(transaction)}>
                         <i class='fas fa-pen'></i>

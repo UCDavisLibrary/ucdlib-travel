@@ -1,4 +1,5 @@
 import { html } from 'lit';
+import typeTransform from '../../../lib/utils/typeTransform.js';
 
 export function render() {
   return html`
@@ -27,7 +28,7 @@ export function render() {
       </div>
       <div class='total-row'>
         <div>Total</div>
-        <div class='total-amount monospace-number'>$${this.fundingSourceTotal.toFixed(2)}</div>
+        <div class='total-amount monospace-number'>${typeTransform.toDollarString(this.fundingSourceTotal, true)}</div>
       </div>
     </div>
   `;
@@ -109,7 +110,7 @@ function renderList(){
           <div>${fundingSource.fundingSourceLabel}</div>
           <div ?hidden=${!fundingSource.description} class='small grey'>${fundingSource.description}</div>
         </div>
-        <div class='amount monospace-number'>$${fundingSource.amount.toFixed(2)}</div>
+        <div class='amount monospace-number'>${typeTransform.toDollarString(fundingSource.amount, true)}</div>
       </div>
     `)}
 
