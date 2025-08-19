@@ -87,7 +87,7 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
     }
 
     const d = await this.getPageData();
-    const hasError = d.some(e => e.staus === 'rejected' || e.value.state === 'error');
+    const hasError = d.some(e => e.status === 'rejected' || e.value.state === 'error');
     if ( hasError ) {
       this.AppStateModel.showError(d, {ele: this});
       return;
@@ -147,11 +147,9 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
    * @description Event handler for when show notification link is clicked the modal will show message
   */
   async _onActivityClick(activity){
-    let apRevisionId = activity.approvalRequestRevisionId;
     let notificationId = activity.notificationId;
 
     const notificationQuery = {
-      approvalRequestIds: apRevisionId,
       notificationId: notificationId
     };
 
