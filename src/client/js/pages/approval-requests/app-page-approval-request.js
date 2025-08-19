@@ -87,7 +87,7 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
     }
 
     const d = await this.getPageData();
-    const hasError = d.some(e => e.status === 'rejected' || e.value.state === 'error');
+    const hasError = d.some(e => e.staus === 'rejected' || e.value.state === 'error');
     if ( hasError ) {
       this.AppStateModel.showError(d, {ele: this});
       return;
@@ -148,9 +148,11 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
   */
   async _onActivityClick(activity){
     let apRevisionId = activity.approvalRequestRevisionId;
+    let notificationId = activity.notificationId;
 
     const notificationQuery = {
-      approvalRequestIds: apRevisionId
+      approvalRequestIds: apRevisionId,
+      notificationId: notificationId
     };
 
     const res = await this.NotificationModel.getNotificationHistory(notificationQuery)
@@ -177,20 +179,8 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
 
     this.notifications = res.payload.data;
 
-    const validTypes = {
-      'request': 'request-notification',
-      'next-approver': 'approver-notification',
-      'reimbursement': 'reimbursement-notification'
-    };
-
     let notifyComment = this.notifications.find(not => {
-      const expectedAction = validTypes[not.notificationType];
-
-      return (
-        apRevisionId == not.approvalRequestRevisionId &&
-        activity.employeeKerberos === not.employeeKerberos &&
-        activity.action === expectedAction
-      );
+      return not.notificationId == notificationId;
     });
 
     if (Array.isArray(notifyComment)) {

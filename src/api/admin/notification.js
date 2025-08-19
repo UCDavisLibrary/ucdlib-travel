@@ -17,8 +17,7 @@ export default (api) => {
 
     const normalizedQuery = Object.fromEntries(
       Object.entries(query).map(([key, value]) => [key, Array.isArray(value) ? value : [value]])
-    );
-    
+    );    
 
     const data = await email.getHistory(normalizedQuery);
 

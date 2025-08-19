@@ -106,6 +106,10 @@ class Logging {
     if( Array.isArray(kwargs.employee_kerberos) && kwargs.employee_kerberos ) {
       whereArgs['n.employee_kerberos'] = kwargs.employee_kerberos;
     }
+    if( Array.isArray(kwargs.notification_id) && kwargs.notification_id.length) {
+      whereArgs['n.notification_id'] = kwargs.notification_id;
+    }
+
     const whereClause = pg.toWhereClause(whereArgs);
 
     // get total count
@@ -142,6 +146,7 @@ class Logging {
     `;
 
     const res = await pg.query(query, whereClause.values);
+
     if( res.error ) return res;
 
     const data = this.entityFields.toJsonArray(res.res.rows);

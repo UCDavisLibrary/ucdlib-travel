@@ -27,7 +27,8 @@ class EmailVariables {
             {name: 'reimbursementComments'},
             {name: 'reimbursementStatus'},
             {name: 'approvalRequestUrl'},
-            {name: 'reimbursementRequestUrl'}
+            {name: 'reimbursementRequestUrl'},
+            {name: 'approvalRequestApproverActionUrl'}
         ];
     }
 
@@ -190,6 +191,13 @@ class EmailVariables {
      */
      get reimbursementRequestUrl(){
         return this.variables.find((v) => v.name == 'reimbursementRequestUrl').name;
+    }
+
+    /**
+     * @description Get reimbursementRequestUrl
+     */
+     get approvalRequestApproverActionUrl(){
+        return this.variables.find((v) => v.name == 'approvalRequestApproverActionUrl').name;
     }
 
 

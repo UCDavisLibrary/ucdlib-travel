@@ -148,6 +148,14 @@ _getNextApproverKerberos(){
 }
 
 /**
+  * @description approval request approver action
+  * @returns approval request approver action
+*/
+_getApprovalRequestApproverActionUrl(){
+  return;
+}
+
+/**
   * @description reimbursement label
   * @returns reimbursement label
 */

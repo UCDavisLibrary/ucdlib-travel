@@ -438,6 +438,7 @@ class ApprovalRequest {
             'fundChanges', aracl.fund_changes,
             'occurred', aracl.occurred,
             'reimbursementRequestId', aracl.reimbursement_request_id,
+            'notificationId', aracl.notification_id,
             'approverTypes', COALESCE(
               (SELECT json_agg(json_build_object(
                   'approverTypeId', at.approver_type_id,
