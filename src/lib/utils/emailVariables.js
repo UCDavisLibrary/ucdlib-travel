@@ -197,14 +197,6 @@ class EmailVariables {
         return this.variables.find((v) => v.name == 'reimbursementRequestUrl').name;
     }
 
-    /**
-     * @description Get reimbursementRequestUrl
-     */
-     get approvalRequestApproverActionUrl(){
-        return this.variables.find((v) => v.name == 'approvalRequestApproverActionUrl').name;
-    }
-
-
   }
 
 export default new EmailVariables();
