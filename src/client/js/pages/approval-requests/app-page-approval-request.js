@@ -162,7 +162,7 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
 
       this.AppStateModel.showDialogModal({
         title : `No Notification Access`,
-        content : `You can not view this notification because either you do not have 
+        content : `You can not view this notification because either you do not have
                    access to this message or the request is not available for viewing.`,
         actions : [
           {text: 'Close', value: 'cancel', invert: true, color: 'primary'}
@@ -191,18 +191,18 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
 
     subject = notifyComment?.subject ? notifyComment.subject : "Subject Not Included";
     details = notifyComment?.details;
-    date = new Date(notifyComment.createdAt).toLocaleDateString('en-US')
+    date = new Date(notifyComment.createdAt).toLocaleString('en-US')
 
     comment = `
+      <b>Subject:</b> ${subject}<br>
       <b>To:</b> ${details?.to ? details.to : "Recipient Not Included"}<br>
       <b>From:</b> ${details?.from ? details.from : "Sender Not Included"}<br>
-      <b>Date:</b> ${date ? date: "No Date Included"}<br><br>
-      <pre style="font-family: inherit;">${details.body ? details.body: "No Notification Body Included"}</pre><br><br>
-      ${notifyComment?.emailSent ? `<b>This Email was sent</b>`:`<b>This Email was NOT sent</b>`}
+      ${notifyComment?.emailSent ? `<b>Sent:</b> ${date}`:``}
+      <pre style="font-family: inherit; font-size: .875rem;">${details.body ? details.body: "No Notification Body Included"}</pre><br><br>
     `;
 
     this.AppStateModel.showDialogModal({
-      title : `${subject}`,
+      title : 'Notification Details',
       content : `${comment}`,
       actions : [
         {text: 'Close', value: 'cancel', invert: true, color: 'primary'}
