@@ -156,12 +156,21 @@ class TypeTransform {
   /**
    * @description Convert a number to a dollar string in the format '0.00'
    * @param {Number} num - number to convert
+   * @param {Boolean} includeDollarSign - if true, include the dollar sign in the string
    * @returns {String}
    */
-  toDollarString(num){
+  toDollarString(num, includeDollarSign = false) {
     num = Number(num);
-    if ( isNaN(num) ) return '0.00';
-    return num.toFixed(2);
+    if ( isNaN(num) ) return `${includeDollarSign ? '$' : ''}0.00`;
+    const fmtArgs = {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    };
+    if ( includeDollarSign ) {
+      fmtArgs.style = 'currency';
+      fmtArgs.currency = 'USD';
+    }
+    return new Intl.NumberFormat('en-US', fmtArgs).format(num);
   }
 
   /**

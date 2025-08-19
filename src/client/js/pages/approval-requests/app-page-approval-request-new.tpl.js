@@ -6,6 +6,7 @@ import "../../components/funding-source-select.js";
 import "../../components/approval-request-draft-list.js";
 import "../../components/character-limit-tracker.js"
 import "../../components/user-current-allocation-summary.js";
+import typeTransform from '../../../../lib/utils/typeTransform.js';
 
 
 export function render() {
@@ -300,7 +301,7 @@ export function renderForm() {
             </div>
             <div class='expenditures-total'>
               <div class='text'>Total Estimated Expenses</div>
-              <div class='amount monospace-number'>$${this.totalExpenditures.toFixed(2)}</div>
+              <div class='amount monospace-number'>${typeTransform.toDollarString(this.totalExpenditures, true)}</div>
             </div>
           </div>
         </div>
@@ -368,14 +369,13 @@ function renderExpenditureItem(expenditure) {
 
   // personal car mileage - needs special handling because it's a calculated field
   if (expenditure.expenditureOptionId == 6) {
-    value = value ? value.toFixed(2) : '0.00'
     return html`
       <div class='expenditure-item expenditure-item--calculated'>
         <div class='text'>
           <div class='primary'>${expenditure.label}</div>
           <div class='small'>Amount is computed using mileage field above</div>
         </div>
-        <div class='amount monospace-number'>$${value}</div>
+        <div class='amount monospace-number'>${typeTransform.toDollarString(value, true)}</div>
       </div>
     `;
   }

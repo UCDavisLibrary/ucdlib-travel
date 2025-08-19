@@ -6,6 +6,7 @@ import '../../components/approval-request-details.js';
 import '../../components/funding-source-select.js';
 import '../../components/user-current-allocation-summary.js';
 import applicationOptions from '../../../../lib/utils/applicationOptions.js';
+import typeTransform from '../../../../lib/utils/typeTransform.js';
 
 export function render() {
 return html`
@@ -45,12 +46,12 @@ return html`
             ${(this.approvalRequest.expenditures || []).map((expenditure) => html`
               <div class='u-space-mb--small flex flex--space-between'>
                 <div>${expenditure.expenditureOptionLabel}</div>
-                <div>$${expenditure.amount.toFixed(2)}</div>
+                <div class='monospace-number'>${typeTransform.toDollarString(expenditure.amount, true)}</div>
               </div>
             `)}
             <div class='flex flex--space-between bold u-space-py primary'>
               <div>Total</div>
-              <div>$${this.totalExpenditures.toFixed(2)}</div>
+              <div class='monospace-number'>${typeTransform.toDollarString(this.totalExpenditures, true)}</div>
             </div>
           </div>
         </div>

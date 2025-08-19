@@ -1,0 +1,2 @@
+ALTER TABLE approval_request_approval_chain_link
+ADD COLUMN notification_id INTEGER REFERENCES notification(notification_id);
