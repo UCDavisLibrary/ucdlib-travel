@@ -327,14 +327,14 @@ class ReimbursementRequest {
   }
 
   /**
-   * @description add the notification to the notification table
+   * @description add the notification to the approval request activity history table
    * @param {Number} approvalRequestRevisionId - approval request ID
    * @param {Number} reimbursementRequestId - reimbursement request ID
    * @param {String} kerb - kerberos
    * @param {String} action - action object
    * @returns
    */
-   async addNotification(approvalRequestRevisionId, reimbursementRequestId, kerb, action){
+   async addNotificationToHistory(approvalRequestRevisionId, reimbursementRequestId, kerb, action){
     // get max approver order
     let sql = `SELECT MAX(approver_order) as max_order FROM approval_request_approval_chain_link WHERE approval_request_revision_id = $1`;
     const maxOrderResApprover = await pg.query(sql, [approvalRequestRevisionId]);

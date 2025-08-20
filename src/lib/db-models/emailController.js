@@ -140,8 +140,9 @@ class Email {
     if (result.error) {
       console.error( 'error writing notification log', notification, error);
     }
+    const notificationId = result?.notificationId;
 
-    return emailSent;
+    return {emailSent, notificationId};
   }
 
   /**

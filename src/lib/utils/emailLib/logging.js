@@ -72,10 +72,6 @@ class Logging {
     const res = await pg.query(sql, data.values);
 
     if( res.error ) return res;
-
-    if( res.res.rowCount !== 1 ) {
-      throw new Error('Error creating notification');
-    }
     notificationId = res.res.rows[0].notification_id;
 
     return {success: true, notificationId};
@@ -89,7 +85,7 @@ class Logging {
   async getNotificationLogging(kwargs={}){
     const page = Number(kwargs.page) || 1;
     const pageSize = kwargs.pageSize || 10;
-    const noPaging = pageSize === -1;    
+    const noPaging = pageSize === -1;
     const whereArgs = {};
 
     if( kwargs.email_sent ) {
@@ -106,6 +102,10 @@ class Logging {
     if( Array.isArray(kwargs.employee_kerberos) && kwargs.employee_kerberos ) {
       whereArgs['n.employee_kerberos'] = kwargs.employee_kerberos;
     }
+    if( Array.isArray(kwargs.notification_id) && kwargs.notification_id.length) {
+      whereArgs['n.notification_id'] = kwargs.notification_id;
+    }
+
     const whereClause = pg.toWhereClause(whereArgs);
 
     // get total count
@@ -142,6 +142,7 @@ class Logging {
     `;
 
     const res = await pg.query(query, whereClause.values);
+
     if( res.error ) return res;
 
     const data = this.entityFields.toJsonArray(res.res.rows);

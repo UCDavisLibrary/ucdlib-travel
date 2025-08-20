@@ -112,7 +112,7 @@ export default class FundingSourceSelect extends Mixin(LitElement)
 
     if ( !typeTransform.dollarsMatch(this.expenditureTotal, this.fundingSourceTotal) ) {
       this.hasError = true;
-      this.errorMessage = `Total funding amount must equal total expenditure amount of $${this.expenditureTotal.toFixed(2)}`;
+      this.errorMessage = `Total funding amount must equal total expenditure amount of ${typeTransform.toDollarString(this.expenditureTotal, true)}.`;
       return;
     }
 

@@ -13,7 +13,7 @@ class ReportUtils {
         label: 'Amount Allocated',
         shortLabel: 'Allocated',
         value: 'allocated',
-        isDefault: true,
+        isDefault: false,
         isMonetary: true,
         reportsRequired: ['allocated']
       },

@@ -197,7 +197,6 @@ class EmailVariables {
         return this.variables.find((v) => v.name == 'reimbursementRequestUrl').name;
     }
 
-
   }
 
 export default new EmailVariables();

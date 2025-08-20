@@ -9,6 +9,7 @@ import '@ucd-lib/theme-elements/brand/ucd-theme-pagination/ucd-theme-pagination.
 import reportUtils from '../../../../lib/utils/reports/reportUtils.js';
 import featureFlags from '../../utils/featureFlags.js';
 import '../../components/approval-request-teaser.js';
+import typeTransform from '../../../../lib/utils/typeTransform.js';
 
 const metrics = featureFlags.reportMetrics(reportUtils.metrics);
 
@@ -160,7 +161,7 @@ function renderReportBuilder(){
                       ${cell.isHeader ? html`
                         <th>${cell.label}</th>
                       ` : html`
-                        <td class='${cell.isTotal ? 'bold' : ''}'>${cell.isMonetary ? Number(cell.label).toFixed(2) : cell.label}</td>
+                        <td class='${cell.isTotal ? 'bold' : ''}'>${cell.isMonetary ? typeTransform.toDollarString(cell.label, true) : cell.label}</td>
                       `}
                     `)}
                   </tr>

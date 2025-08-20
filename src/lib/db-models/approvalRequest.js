@@ -438,6 +438,7 @@ class ApprovalRequest {
             'fundChanges', aracl.fund_changes,
             'occurred', aracl.occurred,
             'reimbursementRequestId', aracl.reimbursement_request_id,
+            'notificationId', aracl.notification_id,
             'approverTypes', COALESCE(
               (SELECT json_agg(json_build_object(
                   'approverTypeId', at.approver_type_id,
@@ -956,13 +957,14 @@ class ApprovalRequest {
   }
 
   /**
-   * @description add the notification to the notification table
+   * @description add record of notification to the approval_request history table
    * @param {Number} approvalRequestRevisionId - approval request ID
    * @param {String} kerb - kerberos
    * @param {String} action - action object
+   * @param {String} notificationId - notification ID from notification table
    * @returns
    */
-  async addNotification(approvalRequestRevisionId, kerb, action){
+  async addNotificationToHistory(approvalRequestRevisionId, kerb, action, notificationId){
     // get max approver order
     let sql = `SELECT MAX(approver_order) as max_order FROM approval_request_approval_chain_link WHERE approval_request_revision_id = $1`;
     const maxOrderResApprover = await pg.query(sql, [approvalRequestRevisionId]);
@@ -974,7 +976,8 @@ class ApprovalRequest {
       approval_request_revision_id: approvalRequestRevisionId,
       approver_order: maxOrderApprover + 1,
       action: action,
-      employee_kerberos: kerb
+      employee_kerberos: kerb,
+      notification_id: notificationId
     }
     notification = pg.prepareObjectForInsert(notification);
     sql = `INSERT INTO approval_request_approval_chain_link (${notification.keysString}) VALUES (${notification.placeholdersString}) RETURNING approval_request_approval_chain_link_id`;
@@ -1123,14 +1126,15 @@ class ApprovalRequest {
       token: tokenRequest,
       notificationType: 'request'
     }
-    const requesterEmailSent = await emailController.sendSystemNotification(
+    const {emailSent: requesterEmailSent, notificationId: requesterNotificationId} = await emailController.sendSystemNotification(
       payloadRequest.notificationType,
       payloadRequest.requests.approvalRequest,
       payloadRequest.requests.reimbursementRequest,
-      payloadRequest);
+      payloadRequest
+    );
 
     if ( requesterEmailSent ){
-      await this.addNotification(approvalRequestRevisionId, modifiedApprovalRequest.employeeKerberos, "request-notification");
+      await this.addNotificationToHistory(approvalRequestRevisionId, modifiedApprovalRequest.employeeKerberos, "request-notification", requesterNotificationId);
     }
 
     // Email first approver
@@ -1144,14 +1148,14 @@ class ApprovalRequest {
       token: tokenApprover,
       notificationType: 'next-approver'
     }
-    const approverEmailSent = await emailController.sendSystemNotification(
+    const {emailSent: approverEmailSent, notificationId: approverNotificationId} = await emailController.sendSystemNotification(
       payloadNextApprover.notificationType,
       payloadNextApprover.requests.approvalRequest,
       payloadNextApprover.requests.reimbursementRequest,
       payloadNextApprover
     );
     if ( approverEmailSent ){
-      await this.addNotification(approvalRequestRevisionId, approverEmployee[0].employeeKerberos, "approver-notification");
+      await this.addNotificationToHistory(approvalRequestRevisionId, approverEmployee[0].employeeKerberos, "approver-notification", approverNotificationId);
     }
     return out;
   }
@@ -1397,13 +1401,13 @@ class ApprovalRequest {
       payloadApprover.token = {preferred_username: notificationKerberos};
 
       payloadApprover.notificationType = notification;
-      const approvalNotificationSent = await emailController.sendSystemNotification( payloadApprover.notificationType,
+      const {emailSent: approvalNotificationSent, notificationId: approvalNotificationId} = await emailController.sendSystemNotification( payloadApprover.notificationType,
         payloadApprover.requests.approvalRequest,
         payloadApprover.requests.reimbursementRequest,
         payloadApprover
       );
       if ( approvalNotificationSent ){
-        await this.addNotification(approvalRequestRevisionId, notificationKerberos, notified);
+        await this.addNotificationToHistory(approvalRequestRevisionId, notificationKerberos, notified, approvalNotificationId);
       }
     }
 
@@ -1412,13 +1416,13 @@ class ApprovalRequest {
       notification = 'approver-change';
       payloadApprover.notificationType = notification;
       payloadApprover.token = {preferred_username: newApprovalRequest.employeeKerberos};
-      const deniedNotificationSent = await emailController.sendSystemNotification( payloadApprover.notificationType,
+      const {emailSent: deniedNotificationSent, notificationId: deniedNotificationId} = await emailController.sendSystemNotification( payloadApprover.notificationType,
         payloadApprover.requests.approvalRequest,
         payloadApprover.requests.reimbursementRequest,
         payloadApprover
       );
       if ( deniedNotificationSent ){
-        await this.addNotification(approvalRequestRevisionId, newApprovalRequest.employeeKerberos, "request-notification");
+        await this.addNotificationToHistory(approvalRequestRevisionId, newApprovalRequest.employeeKerberos, "request-notification", deniedNotificationId);
       }
     }
 

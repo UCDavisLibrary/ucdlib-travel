@@ -36,15 +36,15 @@ return html`
           <div>
             <div class='u-space-mb--small flex flex--space-between flex--align-center small'>
               <div class='u-space-mr--small'>Total Approved Projected Expenses</div>
-              <div class='monospace-number'>$${this.approvedExpenseTotal}</div>
+              <div class='monospace-number'>${typeTransform.toDollarString(this.approvedExpenseTotal, true)}</div>
             </div>
             <div class='u-space-mb--small flex flex--space-between flex--align-center small'>
               <div class='u-space-mr--small'>Total Reimbursement Requested</div>
-              <div class='monospace-number'>$${this.reimbursementRequestTotal}</div>
+              <div class='monospace-number'>${typeTransform.toDollarString(this.reimbursementRequestTotal, true)}</div>
             </div>
             <div class='u-space-mb--small flex flex--space-between flex--align-center small'>
               <div class='u-space-mr--small'>Total Reimbursed</div>
-              <div class='monospace-number'>$${typeTransform.toDollarString(objectUtils.sumArray(this.reimbursementRequests || [], 'reimbursedTotal'))}</div>
+              <div class='monospace-number'>${typeTransform.toDollarString(objectUtils.sumArray(this.reimbursementRequests || [], 'reimbursedTotal'), true)}</div>
             </div>
           </div>
           <div class='u-space-mt flex flex--align-center'>
@@ -72,12 +72,12 @@ return html`
               ${(this.approvalRequest.expenditures || []).map((expenditure) => html`
                 <div class='u-space-mb--small flex flex--space-between'>
                   <div>${expenditure.expenditureOptionLabel}</div>
-                  <div><span class='monospace-number'>$${expenditure.amount.toFixed(2)}</span></div>
+                  <div><span class='monospace-number'>${typeTransform.toDollarString(expenditure.amount, true)}</span></div>
                 </div>
               `)}
               <div class='flex flex--space-between bold u-space-py'>
                 <div>Total</div>
-                <div><span class='monospace-number'>$${this.approvedExpenseTotal}</span></div>
+                <div><span class='monospace-number'>${typeTransform.toDollarString(this.approvedExpenseTotal, true)}</span></div>
               </div>
             </div>
           </div>
@@ -112,11 +112,11 @@ return html`
                 </div>
                 <div>
                   <div class='reimbursement-amount__label'>Amount Requested</div>
-                  <div class='monospace-number reimbursement-amount'>$${reimbursementExpenses.addExpenses(rr)}</div>
+                  <div class='monospace-number reimbursement-amount'>${typeTransform.toDollarString(reimbursementExpenses.addExpenses(rr), true)}</div>
                 </div>
                 <div>
                   <div class='reimbursement-amount__label'>Amount Reimbursed</div>
-                  <div class='monospace-number reimbursement-amount'>$${typeTransform.toDollarString(rr.reimbursedTotal)}</div>
+                  <div class='monospace-number reimbursement-amount'>${typeTransform.toDollarString(rr.reimbursedTotal, true)}</div>
                 </div>
               </div>
               `)}
@@ -152,7 +152,7 @@ function _renderActivityFeedItem(action){
     actionTitle = html`
       <a class='bold primary underline-hover' href='/reimbursement-request/${action.reimbursementRequestId}'>${action.actionObject.actionTakenText}</a>
     `;
-  } else if ( action.action?.includes('notification') ){
+  } else if ( action.action?.includes('notification') && action.notificationId){
     actionTitle = html`
     <a class='bold primary underline-hover pointer' @click=${() => this._onActivityClick(action)} title='View Notification'>${action.actionObject.actionTakenText}</a>
     `
