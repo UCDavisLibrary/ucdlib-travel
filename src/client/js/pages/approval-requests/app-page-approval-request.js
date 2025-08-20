@@ -177,13 +177,7 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
 
     this.notifications = res.payload.data;
 
-    let notifyComment = this.notifications.find(not => {
-      return not.notificationId == notificationId;
-    });
-
-    if (Array.isArray(notifyComment)) {
-      notifyComment = notifyComment[0];
-    }
+    let notifyComment = this.notifications.find(not => not.notificationId == notificationId);
 
     let subject, details, date, comment;
 
