@@ -152,7 +152,7 @@ function _renderActivityFeedItem(action){
     actionTitle = html`
       <a class='bold primary underline-hover' href='/reimbursement-request/${action.reimbursementRequestId}'>${action.actionObject.actionTakenText}</a>
     `;
-  } else if ( action.action?.includes('notification') ){
+  } else if ( action.action?.includes('notification') && action.notificationId){
     actionTitle = html`
     <a class='bold primary underline-hover pointer' @click=${() => this._onActivityClick(action)} title='View Notification'>${action.actionObject.actionTakenText}</a>
     `

@@ -147,10 +147,10 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
    * @description Event handler for when show notification link is clicked the modal will show message
   */
   async _onActivityClick(activity){
-    let apRevisionId = activity.approvalRequestRevisionId;
+    let notificationId = activity.notificationId;
 
     const notificationQuery = {
-      approvalRequestIds: apRevisionId
+      notificationId: notificationId
     };
 
     const res = await this.NotificationModel.getNotificationHistory(notificationQuery)
@@ -177,20 +177,8 @@ export default class AppPageApprovalRequest extends Mixin(LitElement)
 
     this.notifications = res.payload.data;
 
-    const validTypes = {
-      'request': 'request-notification',
-      'next-approver': 'approver-notification',
-      'reimbursement': 'reimbursement-notification'
-    };
-
     let notifyComment = this.notifications.find(not => {
-      const expectedAction = validTypes[not.notificationType];
-
-      return (
-        apRevisionId == not.approvalRequestRevisionId &&
-        activity.employeeKerberos === not.employeeKerberos &&
-        activity.action === expectedAction
-      );
+      return not.notificationId == notificationId;
     });
 
     if (Array.isArray(notifyComment)) {
