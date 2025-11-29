@@ -5,6 +5,7 @@ import '@ucd-lib/theme-elements/brand/ucd-theme-pagination/ucd-theme-pagination.
 
 export function render() {
 return html`
+  <app-questions-or-comments></app-questions-or-comments>
   <div class='l-gutter watercolor-bg--blue'>
     <div class="l-shrink u-space-py--large">
       <h2 class='heading--center-underline u-space-mb--large'>Your Active Requests</h2>
