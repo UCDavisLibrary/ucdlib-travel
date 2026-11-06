@@ -25,7 +25,7 @@ fi
 
 # dump pg data
 echo "Generating sqldump file"
-pg_dump | gzip > $DATA_DIR/$BACKUP_FILE_NAME
+pg_dump --exclude-table-data=cache | gzip > $DATA_DIR/$BACKUP_FILE_NAME
 echo "uploading sql dump file to cloud bucket gs://${GC_BACKUP_BUCKET}/${BACKUP_DATA_ENV}/${BACKUP_FILE_NAME}"
 gcloud auth login --quiet --cred-file=${GOOGLE_APPLICATION_CREDENTIALS}
 gsutil cp $DATA_DIR/$BACKUP_FILE_NAME "gs://${GC_BACKUP_BUCKET}/${BACKUP_DATA_ENV}/${BACKUP_FILE_NAME}"
